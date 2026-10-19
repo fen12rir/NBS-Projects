@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { ReceiptModal } from "@/components/simulator/receipt-modal";
 import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
+import { F2LookupScreen } from "@/components/simulator/f2-lookup-screen";
 import { 
   posReducer, 
   createInitialPOSState, 
@@ -23,7 +24,16 @@ import { recordScenarioAttempt } from "@/lib/progress/progress-store";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles } from "lucide-react";
+
+export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
+
+function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
+  if (!scenario) return "ACTIVE_REGISTER";
+  if (scenario.id === "scen-les-2-1") return "START_OF_DAY_VERIFY";
+  if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
+  return "ACTIVE_REGISTER";
+}
 
 function SimulatorContent() {
   const router = useRouter();
@@ -40,6 +50,15 @@ function SimulatorContent() {
     : null;
 
   const [activeScenario, setActiveScenario] = useState<TrainingScenario | null>(initialScenario);
+  const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
+    getInitialTerminalMode(initialScenario)
+  );
+
+  const [selectedSodButton, setSelectedSodButton] = useState<"YES" | "NO" | null>(null);
+  const [loginUsername, setLoginUsername] = useState("241209");
+  const [loginPassword, setLoginPassword] = useState("******");
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [selectedLogoutButton, setSelectedLogoutButton] = useState<"YES" | "NO" | null>(null);
 
   const [state, dispatch] = useReducer(
     posReducer,
@@ -49,7 +68,7 @@ function SimulatorContent() {
   const [barcodeInput, setBarcodeInput] = useState("");
   const barcodeRef = useRef<HTMLInputElement>(null);
 
-  const [qtyInput, setQtyInput] = useState("1");
+  const [qtyInput, setQtyInput] = useState("");
   const qtyInputRef = useRef<HTMLInputElement>(null);
 
   const [cashTenderInput, setCashTenderInput] = useState("500");
@@ -61,20 +80,170 @@ function SimulatorContent() {
   const [mistakes, setMistakes] = useState<
     { step: number; actionAttempted: string; expected: string; feedback: string }[]
   >([]);
-  const [scenarioStartTime] = useState<number>(Date.now());
+  const [scenarioStartTime, setScenarioStartTime] = useState<number>(Date.now());
   const [isExamCompleted, setIsExamCompleted] = useState(false);
 
+  const [now, setNow] = useState(() => new Date());
   useEffect(() => {
-    if (!state.isQuantityInputActive && !state.activeLookupOpen && !state.managerOverrideOpen && !state.paymentDialogOpen) {
+    const timer = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fmtDate = (d: Date) =>
+    d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "2-digit" })
+      .replace(",", "").replace(/ /g, "-");
+  const fmtTime = (d: Date) =>
+    d.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+  const fmtTimShort = (d: Date) =>
+    d.toLocaleTimeString("en-PH", { hour: "2-digit", minute: "2-digit", hour12: true });
+  const fmtDayName = (d: Date) =>
+    d.toLocaleDateString("en-PH", { weekday: "long" });
+  const fmtLongDate = (d: Date) =>
+    d.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
+
+  useEffect(() => {
+    if (isExamCompleted && activeScenario) {
+      const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
+      const penalty = mistakes.length * 10;
+      const score = Math.max(0, 100 - penalty);
+      recordScenarioAttempt({
+        id: "attempt-" + Date.now(),
+        scenarioId: activeScenario.id,
+        scenarioTitle: activeScenario.title,
+        timestamp: new Date().toISOString(),
+        score,
+        passed: score >= activeScenario.passingScore,
+        stepsCompleted: activeScenario.steps.length,
+        totalSteps: activeScenario.steps.length,
+        mistakes,
+        hintsUsed,
+        timeSpentSeconds: timeSpent,
+      });
+    }
+  }, [isExamCompleted]);
+
+  const handleVerifyDateYes = () => {
+    setSelectedSodButton(null);
+    setTerminalMode("START_OF_DAY_CLOSE");
+    validateScenarioStep("VERIFY_DATE_YES");
+  };
+
+  const handleCloseSodWindow = () => {
+    setTerminalMode("POS_RELOADER");
+    validateScenarioStep("CLOSE_SOD_WINDOW");
+  };
+
+  const handleReloadToLogin = () => {
+    setTerminalMode("USER_LOGIN");
+    validateScenarioStep("RELOAD_POS_LOGIN");
+  };
+
+  const handleLoginSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setTerminalMode("ACTIVE_REGISTER");
+    validateScenarioStep("LOGIN_SUBMIT", loginUsername);
+  };
+
+  const handleConfirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    setSelectedLogoutButton(null);
+    setTerminalMode("USER_LOGIN");
+    validateScenarioStep("CONFIRM_LOGOUT_YES");
+  };
+
+  const handleCancelLogout = () => {
+    setIsLogoutModalOpen(false);
+    setSelectedLogoutButton(null);
+  };
+
+  useEffect(() => {
+    if (terminalMode === "ACTIVE_REGISTER" && !state.isQuantityInputActive && !state.activeLookupOpen && !state.managerOverrideOpen && !state.paymentDialogOpen) {
       barcodeRef.current?.focus();
     }
-  }, [state.isQuantityInputActive, state.activeLookupOpen, state.managerOverrideOpen, state.paymentDialogOpen]);
+  }, [terminalMode, state.isQuantityInputActive, state.activeLookupOpen, state.managerOverrideOpen, state.paymentDialogOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key.startsWith("F") && !isNaN(Number(e.key.substring(1)))) {
-        e.preventDefault();
-        handlePhysicalFKey(e.key.toUpperCase());
+      // 1. If in START_OF_DAY_VERIFY mode
+      if (terminalMode === "START_OF_DAY_VERIFY") {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          setSelectedSodButton((prev) => {
+            if (prev === null) return "YES";
+            return prev === "YES" ? "NO" : "YES";
+          });
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (selectedSodButton === "YES") {
+            handleVerifyDateYes();
+          } else if (selectedSodButton === "NO") {
+            validateScenarioStep("VERIFY_DATE_NO");
+          }
+          return;
+        }
+      }
+
+      // 2. If in START_OF_DAY_CLOSE mode (Ctrl+Alt+C closes setup window to POS Reloader)
+      if (terminalMode === "START_OF_DAY_CLOSE") {
+        if (e.ctrlKey && e.altKey && (e.key === "c" || e.key === "C")) {
+          e.preventDefault();
+          handleCloseSodWindow();
+          return;
+        }
+      }
+
+      // 2b. If in POS_RELOADER mode 
+      if (terminalMode === "POS_RELOADER") {
+        if (e.key === "F5") {
+          e.preventDefault();
+          handleReloadToLogin();
+          return;
+        }
+      }
+
+      // 3. If in USER_LOGIN mode
+      if (terminalMode === "USER_LOGIN") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleLoginSubmit();
+          return;
+        }
+      }
+
+      // 4. If in LOGOUT confirmation modal
+      if (isLogoutModalOpen) {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          setSelectedLogoutButton((prev) => {
+            if (prev === null) return "YES";
+            return prev === "YES" ? "NO" : "YES";
+          });
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (selectedLogoutButton === "YES") {
+            handleConfirmLogout();
+          } else if (selectedLogoutButton === "NO") {
+            handleCancelLogout();
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          handleCancelLogout();
+          return;
+        }
+      }
+
+      // 5. In ACTIVE_REGISTER mode: handle physical F-keys
+      if (terminalMode === "ACTIVE_REGISTER") {
+        if (e.key.startsWith("F") && !isNaN(Number(e.key.substring(1)))) {
+          e.preventDefault();
+          handlePhysicalFKey(e.key.toUpperCase());
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -82,6 +251,13 @@ function SimulatorContent() {
   });
 
   const handlePhysicalFKey = (fKey: string) => {
+    if (state.currentPage === "LOOKUP") {
+      return;
+    }
+    if (fKey === "F1") {
+      handleAction("HELP");
+      return;
+    }
     if (fKey === "F2") {
       handleAction("LOOKUP");
       return;
@@ -123,29 +299,41 @@ function SimulatorContent() {
       setCurrentStepIndex(nextIndex);
       if (nextIndex >= activeScenario.steps.length) {
         setIsExamCompleted(true);
-        // Ignore final test/exam redirect for now: keep user in module practice mode
       }
-    } else {
-      setMistakes((prev) => [
-        ...prev,
-        {
-          step: currentStepIndex + 1,
-          actionAttempted: actionId + (dataVal ? " (" + dataVal + ")" : ""),
-          expected: currentStep.expectedAction,
-          feedback: currentStep.errorFeedback,
-        },
-      ]);
+      return;
     }
+
+  
+    const isNavigationAction = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(actionId);
+    const stepExpectsNavigation = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(currentStep.expectedAction);
+
+    if (isNavigationAction && stepExpectsNavigation) {
+      return;
+    }
+
+    setMistakes((prev) => [
+      ...prev,
+      {
+        step: currentStepIndex + 1,
+        actionAttempted: actionId + (dataVal ? " (" + dataVal + ")" : ""),
+        expected: currentStep.expectedAction,
+        feedback: currentStep.errorFeedback,
+      },
+    ]);
   };
 
   const handleAction = (actionId: string) => {
     switch (actionId) {
+      case "HELP":
+        handleShowHint();
+        break;
       case "LOOKUP":
         dispatch({ type: "OPEN_LOOKUP" });
         validateScenarioStep("LOOKUP");
         break;
       case "SET_QTY":
       case "SET_QTY_MODE":
+        setQtyInput("");
         dispatch({ type: "SET_QUANTITY_START" });
         validateScenarioStep("SET_QTY_MODE");
         break;
@@ -212,8 +400,9 @@ function SimulatorContent() {
         dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Post Void" });
         break;
       case "LOGOUT":
-        validateScenarioStep("LOGOUT");
-        router.push("/dashboard");
+        setIsLogoutModalOpen(true);
+        setSelectedLogoutButton(null);
+        validateScenarioStep("TRIGGER_LOGOUT");
         break;
       default:
         console.log("Unhandled action:", actionId);
@@ -234,7 +423,7 @@ function SimulatorContent() {
     const qty = parseInt(qtyInput, 10) || 1;
     dispatch({ type: "SET_QUANTITY_CONFIRM", quantity: qty });
     validateScenarioStep("CONFIRM_QTY", qty);
-    setQtyInput("1");
+    setQtyInput("");
   };
 
   const handleConfirmTender = (e: React.FormEvent) => {
@@ -266,6 +455,10 @@ function SimulatorContent() {
     setHintsUsed(0);
     setActiveHint(null);
     setIsExamCompleted(false);
+    setSelectedSodButton(null);
+    setSelectedLogoutButton(null);
+    setScenarioStartTime(Date.now());
+    setTerminalMode(getInitialTerminalMode(activeScenario));
   };
 
   const handleResetTerminal = () => {
@@ -283,15 +476,19 @@ function SimulatorContent() {
   const handleSelectScenario = (scenarioId: string | null) => {
     if (!scenarioId) {
       setActiveScenario(null);
+      setTerminalMode("ACTIVE_REGISTER");
     } else {
       const scen = getScenarioById(scenarioId);
       setActiveScenario(scen);
+      setTerminalMode(getInitialTerminalMode(scen));
     }
     setCurrentStepIndex(0);
     setMistakes([]);
     setHintsUsed(0);
     setActiveHint(null);
     setIsExamCompleted(false);
+    setSelectedSodButton(null);
+    setSelectedLogoutButton(null);
   };
 
   if (isLoading) {
@@ -348,8 +545,24 @@ function SimulatorContent() {
             NBS Cashier POS Screen Fidelity Simulator
           </span>
         </div>
-        <div className="text-gray-400 text-[11px]">
-          {activeScenario ? `Guided Mode: ${activeScenario.title}` : "Free Exploration Mode"}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1.5">
+            <span className="text-gray-400 text-[11px] hidden md:inline">POS Screen:</span>
+            <select
+              value={terminalMode}
+              onChange={(e) => setTerminalMode(e.target.value as POSTerminalMode)}
+              className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
+            >
+              <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
+              <option value="START_OF_DAY_CLOSE">2. Start of Day (Close Setup)</option>
+              <option value="POS_RELOADER">3. POS Reloader Screen</option>
+              <option value="USER_LOGIN">4. User Login</option>
+              <option value="ACTIVE_REGISTER">5. Active Sales Register</option>
+            </select>
+          </div>
+          <div className="text-gray-400 text-[11px] hidden sm:inline">
+            {activeScenario ? `Guided Mode: ${activeScenario.title}` : "Free Exploration Mode"}
+          </div>
         </div>
       </header>
 
@@ -367,62 +580,364 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER (Matches Slide 006) */}
+      {/* EXACT POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center">
         <div className="w-full max-w-[1080px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden">
           
-          {/* 1. TOP HEADER STATUS BAR (Trx, Clerk, Str No, Reg No) */}
-          <div className="bg-[#B0B8C0] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight">
-            <div>
-              Trx.: <span className="font-normal font-mono">0212202629990003000592</span>
-            </div>
-            <div>
-              Clerk: <span className="font-normal">Jan Angela</span>
-            </div>
-            <div>
-              Str No.: <span className="font-normal">2999</span>
-            </div>
-            <div>
-              Reg No.: <span className="font-normal">0003</span>
-            </div>
-          </div>
-
-          {/* MAIN WORKING AREA (Left 80% + Right 20% Function Column) */}
-          <div className="flex-1 grid grid-cols-12 min-h-[500px] bg-white">
-            
-            {/* LEFT 10 COLS: Scanner, Black Display, Top F-Keys, Line Items Table */}
-            <div className="col-span-10 flex flex-col border-r-2 border-gray-400">
-              
-              {/* TOP ROW: Yellow Barcode Input + Black LED Customer Display */}
-              <div className="grid grid-cols-12 border-b-2 border-gray-400">
-                
-                {/* Yellow Barcode Scanner Box (Cols 1-6) */}
-                <div className="col-span-6 bg-[#FFF275] border-r border-gray-400 p-2 flex flex-col justify-center">
-                  <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
-                    Scan or Enter UPC
+          {/* SCREEN 1: START OF DAY VERIFY */}
+          {terminalMode === "START_OF_DAY_VERIFY" && (
+            <div className="flex-1 bg-white min-h-[530px] flex flex-col items-center justify-center p-6 select-none relative">
+              <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-5">
+                <div className="space-y-1">
+                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight">
+                    Today is {fmtLongDate(now)}
                   </div>
-                  <form onSubmit={handleBarcodeSubmit}>
-                    <input
-                      ref={barcodeRef}
-                      value={barcodeInput}
-                      onChange={(e) => setBarcodeInput(e.target.value)}
-                      placeholder=""
-                      className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
-                    />
-                  </form>
+                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight">
+                    {fmtDayName(now)}
+                  </div>
+                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight font-mono">
+                    {fmtTime(now)}
+                  </div>
+                  <div className="text-[#E4002B] font-bold text-lg pt-2 font-sans">
+                    Is the date and time correct?
+                  </div>
                 </div>
 
-                {/* Black Real-Time Price/Subtotal Display Box (Cols 7-12) */}
-                <div className="col-span-6 bg-black text-white p-2 font-mono flex flex-col justify-between">
+                <div className="flex items-center justify-center space-x-6 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleVerifyDateYes}
+                    className={`min-w-[85px] px-5 py-1.5 text-sm font-bold font-sans transition-all border-2 ${
+                      selectedSodButton === "YES"
+                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                    }`}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSodButton("NO");
+                      validateScenarioStep("VERIFY_DATE_NO");
+                    }}
+                    className={`min-w-[85px] px-5 py-1.5 text-sm font-bold font-sans transition-all border-2 ${
+                      selectedSodButton === "NO"
+                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN 2: START OF DAY CLOSE */}
+          {terminalMode === "START_OF_DAY_CLOSE" && (
+            <div className="flex-1 bg-white min-h-[530px] flex flex-col items-center justify-center p-6 select-none relative">
+              <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-6">
+                <div className="space-y-2 text-[#E4002B] font-bold text-xl font-sans">
+                  <p>You can now start using your POS terminal.</p>
+                  <p>Have a nice day.</p>
+                </div>
+
+                <div className="p-4 bg-red-50 border border-red-200 text-[#E4002B] font-bold text-base leading-relaxed max-w-md">
+                  Press <kbd className="bg-white px-2 py-0.5 border border-red-300 text-red-900 font-mono text-sm">Ctrl+Alt+C</kbd> to close this window and<br />
+                  Press <kbd className="bg-white px-2 py-0.5 border border-red-300 text-red-900 font-mono text-sm">(F5)</kbd> to go to login page.
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCloseSodWindow}
+                  className="px-6 py-2.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-sm font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer font-sans"
+                >
+                  Close Window (Ctrl+Alt+C)
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN 2B: POS RELOADER */}
+          {terminalMode === "POS_RELOADER" && (
+            <div className="flex-1 bg-white min-h-[530px] flex flex-col select-none relative font-sans">
+              {/* Retro Browser Menu Bar */}
+              <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1 flex items-center space-x-4 text-xs text-gray-800 font-sans">
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">File</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Edit</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">View</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">History</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Bookmarks</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Tools</span>
+                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Help</span>
+              </div>
+
+              {/* Retro Browser Navigation / Address Bar */}
+              <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1.5 flex items-center space-x-2 text-xs">
+                {/* Back / Forward / Refresh */}
+                <div className="flex items-center space-x-1 text-gray-500 font-mono text-sm select-none">
+                  <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">{'\u2190'}</span>
+                  <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">{'\u2192'}</span>
+                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u21BA'}</span>
+                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u2715'}</span>
+                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u2302'}</span>
+                </div>
+
+                {/* URL Address Input */}
+                <div className="flex-1 bg-white border border-gray-500 px-2 py-0.5 flex items-center justify-between text-xs font-mono text-gray-900 shadow-inner">
+                  <span>http://localhost/dv3/pos_nbs/</span>
+                  <span className="text-gray-400 text-[10px]">{'\u25BC'}</span>
+                </div>
+
+                {/* Search / Go */}
+                <div className="w-36 bg-white border border-gray-500 px-2 py-0.5 text-xs text-gray-500 font-sans flex items-center justify-between shadow-inner">
+                  <span>Google</span>
+                  <span className="text-gray-400 text-[10px]">{'\u{1F50D}'}</span>
+                </div>
+              </div>
+
+              {/* Browser Bookmarks Bar */}
+              <div className="bg-[#ECE9D8] border-b border-gray-300 px-3 py-0.5 flex items-center space-x-4 text-[11px] text-gray-700">
+                <span className="flex items-center space-x-1">
+                  <span className="text-red-600 font-bold">{'\u25CF'}</span>
+                  <span>Getting Started</span>
+                </span>
+                <span className="flex items-center space-x-1">
+                  <span className="text-orange-500 font-bold">{'\u{1F4F0}'}</span>
+                  <span>Latest Headlines</span>
+                </span>
+              </div>
+
+              {/* POS Reloader Web Page Body */}
+              <div className="flex-1 bg-white p-6 flex flex-col justify-between">
+                <div>
+                  <h2 className="text-base font-serif text-gray-900">
+                    POS Reloader
+                  </h2>
+                </div>
+
+                {/* Trainee Helper Guidance Banner */}
+                <div className="border border-blue-200 bg-blue-50 p-4 max-w-lg mx-auto text-center space-y-3">
+                  <p className="text-xs text-blue-900 font-medium">
+                    The setup window has closed. The POS terminal is now in the browser reloader state.
+                  </p>
+                  <p className="text-sm font-bold text-blue-950">
+                    Press <kbd className="bg-white px-2 py-1 border border-blue-400 text-blue-900 font-mono text-sm">F5</kbd> on your keyboard to reload into the <strong>USER LOGIN</strong> page.
+                  </p>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={handleReloadToLogin}
+                      className="px-5 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer font-sans"
+                    >
+                      Reload Page (F5)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bottom spacer */}
+                <div className="h-4" />
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN 3: USER LOGIN */}
+          {terminalMode === "USER_LOGIN" && (
+            <div className="flex-1 bg-white min-h-[530px] flex flex-col select-none relative">
+              <div className="h-6 bg-[#FFF275] border-b border-gray-300" />
+
+              <div className="flex-1 bg-[#ECE9D8] flex flex-col items-center justify-center p-6">
+                <form
+                  onSubmit={handleLoginSubmit}
+                  className="w-[340px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans"
+                >
+                  <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
+                    USER LOGIN
+                  </div>
+
+                  <div className="p-4 space-y-3">
+                    <div className="text-center text-xs font-semibold text-gray-700">
+                      Enter Information
+                    </div>
+
+                    <div>
+                      <input
+                        type="text"
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
+                        placeholder="UserName"
+                        className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
+                        autoFocus
+                      />
+                      <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
+                        UserName
+                      </div>
+                    </div>
+
+                    <div>
+                      <input
+                        type="password"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        placeholder="Password"
+                        className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
+                      />
+                      <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
+                        Password
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-center space-x-3 pt-2">
+                      <button
+                        type="submit"
+                        className="min-w-[80px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                      >
+                        Ok
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLoginUsername("");
+                          setLoginPassword("");
+                        }}
+                        className="min-w-[80px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+
+                <div className="mt-4 text-xs text-gray-700 font-sans space-y-0.5 text-left">
+                  <div>Press [F2] for Lookup</div>
+                  <div>Press [F3] for Masterfile Updates</div>
+                  <div>Press [F5] for Scandos</div>
+                  <div>Press [F10] to Activate E-Gift Card</div>
+                </div>
+              </div>
+
+              <div className="h-6 bg-[#228B22]" />
+            </div>
+          )}
+
+          {/* SCREEN 4: ACTIVE REGISTER */}
+          {terminalMode === "ACTIVE_REGISTER" && (
+            <>
+              <div className="bg-[#B0B8C0] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight">
+                <div>
+                  Trx.: <span className="font-normal font-mono">0212202629990003000592</span>
+                </div>
+                <div>
+                  Clerk: <span className="font-normal">Jan Angela</span>
+                </div>
+                <div>
+                  Str No.: <span className="font-normal">2999</span>
+                </div>
+                <div>
+                  Reg No.: <span className="font-normal">0003</span>
+                </div>
+              </div>
+
+              {state.currentPage === "LOOKUP" ? (
+                <F2LookupScreen
+                  onCancel={() => {
+                    dispatch({ type: "CLOSE_LOOKUP" });
+                    validateScenarioStep("CLOSE_LOOKUP");
+                  }}
+                  onSelectItem={(sku) => {
+                    setBarcodeInput(sku);
+                    dispatch({ type: "ADD_ITEM_BY_CODE", code: sku });
+                    validateScenarioStep("ADD_ITEM", sku);
+                    dispatch({ type: "CLOSE_LOOKUP" });
+                    setBarcodeInput("");
+                  }}
+                  initialSearch={state.lookupSearchTerm}
+                />
+              ) : (
+                <>
+            {/* MAIN WORKING AREA */}
+            <div className="flex-1 grid grid-cols-12 min-h-[500px] bg-white">
+            
+            <div className="col-span-10 flex flex-col border-r-2 border-gray-400">
+              
+              <div className="grid grid-cols-12 border-b-2 border-gray-400">
+                
+                <div className="col-span-6 border-r-2 border-gray-400 flex flex-col justify-between">
+
+                  <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
+                    <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
+                      Scan or Enter UPC
+                    </div>
+                    <form onSubmit={handleBarcodeSubmit}>
+                      <input
+                        ref={barcodeRef}
+                        value={barcodeInput}
+                        onChange={(e) => setBarcodeInput(e.target.value)}
+                        placeholder=""
+                        className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
+                      />
+                    </form>
+                  </div>
+
+                  {/* 4 HORIZONTAL FUNCTION BUTTONS  */}
+                  <div className="grid grid-cols-4 bg-[#C2CAD0] border-t-2 border-gray-400 text-center font-sans h-[48px]">
+                    {/* F11 (Up Arrow) */}
+                    <button
+                      type="button"
+                      onClick={() => handleAction("PAGE_UP")}
+                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
+                    >
+                      <div className="w-0 h-0 border-x-[7px] border-x-transparent border-b-[10px] border-b-[#16A34A] mb-0.5"></div>
+                      <span className="text-[10px] font-bold text-gray-900">F11</span>
+                    </button>
+
+                    {/* F12 (Down Arrow) */}
+                    <button
+                      type="button"
+                      onClick={() => handleAction("PAGE_DOWN")}
+                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
+                    >
+                      <div className="w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-[#16A34A] mb-0.5"></div>
+                      <span className="text-[10px] font-bold text-gray-900">F12</span>
+                    </button>
+
+                    {/* F10 (CSA ON/OFF) */}
+                    <button
+                      type="button"
+                      onClick={() => handleAction("CSA_TOGGLE")}
+                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
+                    >
+                      <span className="text-[10px] font-bold text-gray-900 leading-tight">CSA</span>
+                      <span className="text-[9px] font-bold text-gray-900 leading-none">ON/OFF</span>
+                      <span className="text-[10px] font-extrabold text-[#1D4ED8]">F10</span>
+                    </button>
+
+                    {/* F2 (Lookup) */}
+                    <button
+                      type="button"
+                      onClick={() => handleAction("LOOKUP")}
+                      className="bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
+                    >
+                      <span className="text-[11px] font-bold text-gray-900 leading-tight">Lookup</span>
+                      <span className="text-[10px] font-extrabold text-[#1D4ED8]">F2</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right 6 Cols: Black Real-Time Price/Subtotal Display Box */}
+                <div className="col-span-6 bg-black text-white p-3 font-mono flex flex-col justify-between">
                   <div className="grid grid-cols-2 text-xs">
-                    <div className="space-y-0.5">
+                    <div className="space-y-1">
                       <div className="text-[#38BDF8] font-bold">SubTotal:</div>
-                      <div className="text-gray-300">Quantity:</div>
+                      <div className="text-white font-bold">Quantity:</div>
                       <div className="text-[#4ADE80] font-bold">Unit Price:</div>
                     </div>
-                    <div className="text-right space-y-0.5">
+                    <div className="text-right space-y-1">
                       <div className="text-[#38BDF8] font-bold">{totals.totalAmount.toFixed(2)}</div>
-                      <div className="text-gray-300">{totals.totalQty}</div>
+                      <div className="text-white font-bold">{totals.totalQty}</div>
                       <div className="text-[#4ADE80] font-bold">
                         {lastItem ? lastItem.unitPrice.toFixed(2) : "0.00"}
                       </div>
@@ -430,52 +945,13 @@ function SimulatorContent() {
                   </div>
 
                   {/* Huge Bright Green Total Display */}
-                  <div className="text-right text-3xl sm:text-4xl font-mono font-bold text-[#00FF66] tracking-wider pt-1">
+                  <div className="text-right text-4xl sm:text-5xl font-mono font-bold text-[#00FF66] tracking-wider pt-2">
                     {totals.totalAmount.toFixed(2)}
                   </div>
                 </div>
               </div>
 
-              {/* 4 TOP HORIZONTAL FUNCTION BUTTONS (F11 Up, F12 Down, F10 CSA, F2 Lookup) */}
-              <div className="grid grid-cols-4 bg-[#C2CAD0] border-b-2 border-gray-400 text-center font-sans">
-                <button
-                  type="button"
-                  onClick={() => handleAction("PAGE_UP")}
-                  className="p-1.5 border-r border-gray-400 hover:bg-[#B0B8C0] active:bg-gray-400 flex flex-col items-center justify-center"
-                >
-                  <div className="w-0 h-0 border-x-8 border-x-transparent border-b-[12px] border-b-[#16A34A] mb-0.5"></div>
-                  <span className="text-[10px] font-bold text-gray-800">F11</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAction("PAGE_DOWN")}
-                  className="p-1.5 border-r border-gray-400 hover:bg-[#B0B8C0] active:bg-gray-400 flex flex-col items-center justify-center"
-                >
-                  <div className="w-0 h-0 border-x-8 border-x-transparent border-t-[12px] border-t-[#16A34A] mb-0.5"></div>
-                  <span className="text-[10px] font-bold text-gray-800">F12</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAction("CSA_TOGGLE")}
-                  className="p-1.5 border-r border-gray-400 hover:bg-[#B0B8C0] active:bg-gray-400 flex flex-col items-center justify-center"
-                >
-                  <span className="text-[11px] font-bold text-gray-900 leading-tight">CSA ON/OFF</span>
-                  <span className="text-[10px] font-bold text-[#1D4ED8]">F10</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleAction("LOOKUP")}
-                  className="p-1.5 hover:bg-[#B0B8C0] active:bg-gray-400 flex flex-col items-center justify-center bg-gray-200"
-                >
-                  <span className="text-[11px] font-bold text-gray-900 leading-tight">Lookup</span>
-                  <span className="text-[10px] font-bold text-[#1D4ED8]">F2</span>
-                </button>
-              </div>
-
-              {/* TABLE COLUMN HEADERS (LN, UPC, Description, Qty, SRP, Amount, Type) */}
+              {/* TABLE COLUMN HEADERS */}
               <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-1 text-[11px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
                 <span className="col-span-1 text-left">LN</span>
                 <span className="col-span-3 text-left">UPC</span>
@@ -486,7 +962,7 @@ function SimulatorContent() {
                 <span className="col-span-1 text-right">Type</span>
               </div>
 
-              {/* LINE ITEM SCREEN PAGE (White Scrollable Rows) */}
+              {/* LINE ITEM SCREEN PAGE */}
               <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-[300px]">
                 {state.lineItems.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 italic text-xs py-16">
@@ -515,7 +991,7 @@ function SimulatorContent() {
               </div>
             </div>
 
-            {/* RIGHT 2 COLS: VERTICAL FUNCTION KEYS PANEL (Exact Red & Silver Buttons from Image) */}
+            {/* RIGHT 2 COLS: VERTICAL FUNCTION KEYS PANEL */}
             <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1">
               {rightKeys.map((kDef) => {
                 const isRed = kDef.variant === "red";
@@ -554,10 +1030,10 @@ function SimulatorContent() {
             </div>
           </div>
 
-          {/* 3. BOTTOM FOOTER STATUS BAR (Total Qty, Total Sales, Date, Time) */}
+          {/* 3. BOTTOM FOOTER STATUS BAR */}
           <div className="bg-[#B0B8C0] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch">
             
-            {/* Total Qty (Yellow box) */}
+            {/* Total Qty */}
             <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between">
               <span className="font-bold text-gray-900">Total Qty</span>
               <span className="font-mono font-bold text-base bg-white px-3 py-0.5 border border-gray-400 text-gray-900 min-w-[50px] text-center">
@@ -565,7 +1041,7 @@ function SimulatorContent() {
               </span>
             </div>
 
-            {/* Total Sales (Green bar) */}
+            {/* Total Sales */}
             <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between text-white">
               <span className="font-bold">Total Sales:</span>
               <span className="font-mono font-bold text-base bg-white px-3 py-0.5 border border-gray-400 text-gray-900 min-w-[70px] text-right">
@@ -575,18 +1051,71 @@ function SimulatorContent() {
 
             {/* Date Display */}
             <div className="col-span-2 bg-[#C2CAD0] border-r-2 border-gray-500 px-2 py-1.5 flex items-center justify-center font-bold text-gray-800 text-[11px]">
-              2026-Feb-12
+              {fmtDate(now)}
             </div>
 
             {/* Time Display */}
             <div className="col-span-2 bg-[#C2CAD0] px-2 py-1.5 flex items-center justify-center font-bold text-gray-800 text-[11px]">
-              09:04:03 AM
+              {fmtTime(now)}
             </div>
           </div>
+            </>
+          )}
+          </>
+        )}
         </div>
       </div>
 
-      {/* QUICK CATALOG PICKER (For Trainee Accessibility) */}
+      {/* LOGOUT CONFIRMATION MODAL */}
+      {isLogoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 select-none">
+          <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans">
+            {/* Green Title Bar */}
+            <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
+              LOGOUT
+            </div>
+
+            {/* Dialog Body */}
+            <div className="p-6 space-y-6">
+              <div className="text-center font-bold text-sm text-gray-900">
+                Are you sure you want to LOGOUT?
+              </div>
+
+              {/* Action Buttons: Yes & No */}
+              <div className="flex items-center justify-center space-x-6">
+                <button
+                  type="button"
+                  onClick={handleConfirmLogout}
+                  className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                    selectedLogoutButton === "YES"
+                      ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                      : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                  }`}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelLogout}
+                  className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                    selectedLogoutButton === "NO"
+                      ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                      : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                  }`}
+                >
+                  No
+                </button>
+              </div>
+
+              <div className="text-center text-[11px] text-gray-500 font-mono">
+                Press <kbd className="bg-white px-1 border text-gray-800 font-bold">TAB</kbd> to toggle, <kbd className="bg-white px-1 border text-gray-800 font-bold">ENTER</kbd> to confirm
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK CATALOG PICKER */}
       <div className="max-w-[1080px] w-full mx-auto px-4 pb-4">
         <div className="bg-gray-800 p-2 border border-gray-700 text-xs font-mono text-gray-300 flex items-center space-x-2 overflow-x-auto">
           <span className="text-yellow-400 font-bold whitespace-nowrap">Catalog Quick-Fill:</span>
@@ -603,81 +1132,84 @@ function SimulatorContent() {
         </div>
       </div>
 
-      {/* F2 LOOKUP MODAL */}
-      {state.activeLookupOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="bg-white text-gray-900 max-w-2xl w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl">
-            <div className="flex items-center justify-between border-b pb-2">
-              <h3 className="text-sm font-bold uppercase text-[#E4002B]">
-                F2 Item Inquiry / Lookup (SRP & Promo Price)
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => dispatch({ type: "CLOSE_LOOKUP" })}>
-                ESC / Close
-              </Button>
-            </div>
-            <Input
-              placeholder="Search by description or SKU..."
-              value={state.lookupSearchTerm}
-              onChange={(e) => dispatch({ type: "SEARCH_LOOKUP", term: e.target.value })}
-              className="w-full text-xs"
-            />
-            <div className="max-h-60 overflow-y-auto border border-gray-200 divide-y">
-              {state.lookupResults.map((p) => (
-                <div
-                  key={p.sku}
-                  onClick={() => {
-                    setBarcodeInput(p.sku);
-                    dispatch({ type: "CLOSE_LOOKUP" });
-                  }}
-                  className="p-2 hover:bg-red-50 cursor-pointer flex items-center justify-between"
-                >
-                  <div>
-                    <span className="font-bold block">{p.description}</span>
-                    <span className="text-[10px] text-gray-400">SKU: {p.sku} • {p.barcode}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-gray-500 line-through text-[10px] block">
-                      {p.promoPrice ? "SRP: ₱" + p.srp.toFixed(2) : ""}
-                    </span>
-                    <span className="font-bold text-[#E4002B] text-xs">
-                      ₱{(p.promoPrice ?? p.srp).toFixed(2)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* F3 QUANTITY MODAL */}
       {state.isQuantityInputActive && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 select-none">
           <form
             onSubmit={handleConfirmQuantity}
-            className="bg-white text-gray-900 max-w-sm w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl"
+            className="w-[360px] bg-[#D6D3CE] border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-2xl font-sans"
           >
-            <div className="border-b pb-2">
-              <h3 className="text-sm font-bold uppercase text-gray-900">F3 Quantity Entry</h3>
-              <p className="text-[10px] text-gray-500 mt-0.5">Enter multiplier before scanning item (Slide 29).</p>
+            {/* Window Title Bar */}
+            <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
+              <div className="flex items-center space-x-1 truncate">
+                <span className="text-[10px] leading-none">{'\u2022'}</span>
+                <span className="text-[11px] truncate tracking-wide text-gray-100">
+                  The page at http://localhost says:
+                </span>
+              </div>
+              {/* Window Controls */}
+              <div className="flex items-center space-x-0.5">
+                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                  <span className="leading-none mb-0.5">_</span>
+                </div>
+                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                  <div className="w-2 h-2 border border-gray-200" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
+                  className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
+                >
+                  {'\u2715'}
+                </button>
+              </div>
             </div>
-            <Input
-              type="number"
-              min="1"
-              max="999"
-              ref={qtyInputRef}
-              value={qtyInput}
-              onChange={(e) => setQtyInput(e.target.value)}
-              className="text-lg font-bold text-center"
-              autoFocus
-            />
-            <div className="flex space-x-2 pt-2">
-              <Button type="submit" size="sm" className="w-full bg-[#E4002B] hover:bg-[#C10024] font-bold text-xs">
-                ENTER / Confirm
-              </Button>
-              <Button type="button" variant="outline" size="sm" onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })} className="w-full text-xs">
-                Cancel
-              </Button>
+
+            {/* Window Body */}
+            <div className="p-4 bg-[#D6D3CE] space-y-4">
+              {/* Message with Question Bubble Icon */}
+              <div className="flex items-center space-x-3">
+                {/* Comic / Speech Bubble Question Icon */}
+                <div className="relative flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center shadow-inner">
+                  <span className="text-gray-800 font-extrabold text-base font-serif italic">?</span>
+                  {/* speech pointer */}
+                  <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-l-2 border-b-2 border-gray-400 transform rotate-12" />
+                </div>
+                <div className="text-[13px] font-bold text-gray-900 tracking-tight font-sans">
+                  Please enter quantity
+                </div>
+              </div>
+
+              {/* Inset Text Input Field */}
+              <div className="px-1">
+                <input
+                  type="number"
+                  min="1"
+                  max="999"
+                  ref={qtyInputRef}
+                  value={qtyInput}
+                  onChange={(e) => setQtyInput(e.target.value)}
+                  className="w-full bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-[#FFFFFF] border-b-[#FFFFFF] px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600 shadow-inner"
+                  autoFocus
+                />
+              </div>
+
+              {/* Bottom Buttons: Cancel and OK */}
+              <div className="flex items-center justify-end space-x-2 pt-1 pr-1">
+                <button
+                  type="button"
+                  onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
+                  className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </form>
         </div>
@@ -689,7 +1221,7 @@ function SimulatorContent() {
           <div className="bg-white text-gray-900 max-w-md w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl">
             <div className="flex justify-between border-b pb-2">
               <div>
-                <h3 className="text-sm font-bold uppercase text-[#E4002B]">Payment Menu • Tender Options</h3>
+                <h3 className="text-sm font-bold uppercase text-[#E4002B]">Payment Menu {'\u2022'} Tender Options</h3>
                 <span className="text-[10px] text-gray-500">
                   Total Due: <strong>{formatCurrency(totals.totalAmount)}</strong>
                 </span>
@@ -800,6 +1332,89 @@ function SimulatorContent() {
           }}
         />
       )}
+
+      {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
+      {isExamCompleted && activeScenario && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
+          <div className="bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl max-w-md w-full overflow-hidden font-sans">
+            {/* Retro Green Header */}
+            <div className="bg-[#228B22] text-white px-4 py-2 font-bold text-sm flex items-center justify-between uppercase tracking-wide">
+              <div className="flex items-center space-x-2">
+                <Trophy className="w-4 h-4 text-yellow-300" />
+                <span>PRACTICE COMPLETED!</span>
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-6 space-y-5 text-gray-900">
+              {/* Badge & Title */}
+              <div className="text-center space-y-2">
+                <div className="w-14 h-14 bg-emerald-100 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                  <CheckCircle className="w-8 h-8 text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                    Congratulations!
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-0.5 font-medium">
+                    You successfully finished all steps for:
+                  </p>
+                  <div className="text-xs font-bold text-[#E4002B] mt-1 bg-white border border-gray-400 py-1 px-2 shadow-inner font-mono">
+                    {activeScenario.title}
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance Stats */}
+              <div className="bg-white border-2 border-gray-400 p-3 grid grid-cols-3 gap-2 text-center text-xs font-mono shadow-inner">
+                <div className="border-r border-gray-300 pr-1">
+                  <div className="text-gray-500 text-[10px] uppercase font-bold">Steps</div>
+                  <div className="font-extrabold text-sm text-gray-900">
+                    {activeScenario.steps.length}/{activeScenario.steps.length}
+                  </div>
+                </div>
+                <div className="border-r border-gray-300 pr-1">
+                  <div className="text-gray-500 text-[10px] uppercase font-bold">Mistakes</div>
+                  <div className={"font-extrabold text-sm " + (mistakes.length === 0 ? "text-emerald-600" : "text-amber-600")}>
+                    {mistakes.length}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-500 text-[10px] uppercase font-bold">Score</div>
+                  <div className="font-extrabold text-sm text-emerald-600">
+                    {Math.max(0, 100 - mistakes.length * 10)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-2">
+                <button
+                  type="button"
+                  onClick={handleResetExam}
+                  className="flex-1 px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Practice Again</span>
+                </button>
+
+                <Link
+                  href={activeScenario.moduleRef ? `/modules/${activeScenario.moduleRef}` : "/dashboard"}
+                  className="flex-1"
+                >
+                  <button
+                    type="button"
+                    className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
+                  >
+                    <span>Back to Module</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -817,3 +1432,7 @@ export default function SimulatorPage() {
     </Suspense>
   );
 }
+
+
+
+

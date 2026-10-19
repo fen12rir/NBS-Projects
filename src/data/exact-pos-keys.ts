@@ -1,4 +1,4 @@
-export type POSPage = "MAIN" | "SECOND" | "THIRD" | "FOURTH" | "PAYMENT";
+export type POSPage = "MAIN" | "SECOND" | "THIRD" | "FOURTH" | "PAYMENT" | "LOOKUP";
 
 export interface RightFunctionKeyDef {
   key: string;          // e.g. "F3"
@@ -9,6 +9,7 @@ export interface RightFunctionKeyDef {
 }
 
 export const RIGHT_FUNCTION_KEYS: Record<POSPage, RightFunctionKeyDef[]> = {
+  LOOKUP: [],
   MAIN: [
     { key: "F3", label: "Quantity", actionId: "SET_QTY", variant: "silver" },
     { key: "F4", label: "Payment", actionId: "GO_PAYMENT", variant: "red" },

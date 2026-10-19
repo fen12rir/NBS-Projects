@@ -1,4 +1,4 @@
-﻿import { POSPage } from "@/data/function-keys";
+import { POSPage } from "@/data/function-keys";
 import { SyntheticProduct, SYNTHETIC_PRODUCTS } from "@/data/products";
 
 export interface POSLineItem {
@@ -194,18 +194,20 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
     case "OPEN_LOOKUP":
       return {
         ...state,
+        currentPage: "LOOKUP",
         activeLookupOpen: true,
         lookupSearchTerm: "",
         lookupResults: SYNTHETIC_PRODUCTS,
         lastMessage: {
           type: "info",
-          text: "Item Lookup opened. Search by SKU, Barcode, or description.",
+          text: "Item Lookup screen active. Search by SKU, Description, or Author.",
         },
       };
 
     case "CLOSE_LOOKUP":
       return {
         ...state,
+        currentPage: "MAIN",
         activeLookupOpen: false,
       };
 

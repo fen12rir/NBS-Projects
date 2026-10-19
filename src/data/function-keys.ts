@@ -1,4 +1,4 @@
-﻿export type POSPage = "MAIN" | "SECOND" | "THIRD" | "FOURTH" | "PAYMENT";
+export type POSPage = "MAIN" | "SECOND" | "THIRD" | "FOURTH" | "PAYMENT" | "LOOKUP";
 
 export interface FunctionKeyDef {
   key: string;       // e.g. "F2", "F3", "F11"
@@ -11,6 +11,12 @@ export interface FunctionKeyDef {
 }
 
 export const POS_FUNCTION_KEYS: Record<POSPage, FunctionKeyDef[]> = {
+  LOOKUP: [
+    { key: "F2", label: "SKU / BARCODE", subtext: "Search SKU", actionId: "LOOKUP_SKU", deckPageRef: "Slide 18" },
+    { key: "F3", label: "DESCRIPTION", subtext: "Search Name", actionId: "LOOKUP_DESC", deckPageRef: "Slide 19" },
+    { key: "F4", label: "AUTHOR", subtext: "Search Author", actionId: "LOOKUP_AUTHOR", deckPageRef: "Slide 18" },
+    { key: "ESC", label: "CANCEL", subtext: "Return to Main", actionId: "CANCEL_LOOKUP", deckPageRef: "Slide 18" },
+  ],
   MAIN: [
     { key: "F2", label: "LOOKUP", subtext: "Item Inquiry", actionId: "LOOKUP", deckPageRef: "Slides 17-18, 28" },
     { key: "F3", label: "QUANTITY", subtext: "Set count", actionId: "SET_QTY", deckPageRef: "Slides 27, 29-30" },

@@ -5,6 +5,16 @@
   deckSlideRef: string;
   instructions: string[];
   keyCallouts: string[];
+  visualAsset?: {
+    src: string;
+    caption: string;
+    alt: string;
+  };
+  visualAssets?: {
+    src: string;
+    caption: string;
+    alt: string;
+  }[];
 }
 
 export interface TrainingModule {
@@ -29,6 +39,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Introduction to Point of Sale & Terminal Layout",
         objective: "Identify the 12 key sections of the NBS POS screen including barcode entry, line items, and function keys.",
         deckSlideRef: "Slides 3-6",
+        visualAsset: {
+          src: "/assets/modules/module-1-pos-basics/images/pos-screen-details.png",
+          caption: "POS Screen Details Anatomy (National Book Store POS System)",
+          alt: "Diagram of National Book Store POS Screen Details labeling all 12 key screen regions"
+        },
         instructions: [
           "Understand that POS combines hardware (terminal, barcode scanner, receipt printer) and software.",
           "Familiarize with the 12 screen regions: Transaction No, Cashier ID, Branch Code, Barcode input, Textfield area, POS Terminal, Function Keys panel, Line item table, Total Sales, Current Date, Total Quantity, and Time.",
@@ -48,25 +63,71 @@ export const TRAINING_MODULES: TrainingModule[] = [
       {
         id: "les-2-1",
         title: "Start of Day Verification",
-        objective: "Perform proper start-of-day sequence and confirm date/time accuracy.",
+        objective: "Perform proper start-of-day sequence and confirm date/time accuracy upon booting terminal.",
         deckSlideRef: "Slides 7-9",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-2-start-of-day/images/start-of-day-verify-date.png",
+            caption: "Step 1: Check POS Date & Time, press TAB to Yes, then press ENTER.",
+            alt: "POS Start of Day date and time verification prompt"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/start-of-day-close-window.png",
+            caption: "Step 2: Start of Day setup complete prompt with instructions to close window.",
+            alt: "Start of Day setup completed message"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-reloader-screen.png",
+            caption: "Step 3: Press Ctrl+Alt+C to close the setup window. The browser displays 'POS Reloader'. Then press F5 to reload and enter the User Login page.",
+            alt: "POS Reloader screen after closing setup window"
+          }
+        ],
         instructions: [
           "Upon terminal boot, verify that the POS Date & Time matches current store opening time.",
           "Press TAB to highlight the 'YES' button, then press ENTER.",
-          "Press CTRL + ALT + C to close the setup dialog, then press F5 to enter active cashier mode."
+          "Press CTRL + ALT + C to close the setup dialog. The browser terminal displays 'POS Reloader'.",
+          "Press F5 to reload the page and proceed to the USER LOGIN screen."
         ],
-        keyCallouts: ["TAB: Navigate buttons", "ENTER: Confirm", "CTRL+ALT+C: Close dialog", "F5: Proceed"]
+        keyCallouts: ["TAB: Navigate buttons", "ENTER: Confirm", "CTRL+ALT+C: Close setup window", "F5: Reload to Login"]
       },
       {
         id: "les-2-2",
         title: "Cashier Login & Safe Logout",
         objective: "Follow the approved F5 -> F8 sequence to safely sign out of your terminal.",
         deckSlideRef: "Slides 10-15",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-login-credentials.png",
+            caption: "Cashier Login: Enter employee username (e.g. 241209) and password to open POS register.",
+            alt: "User Login window on POS terminal"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-logout-step1-f5.png",
+            caption: "Logout Step 1: On the Main Screen, press F5 (Option) to open the 2nd Screen.",
+            alt: "Main screen with F5 Option key highlighted"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-logout-step2-f8.png",
+            caption: "Logout Step 2: On the 2nd Screen, press F8 (Logout).",
+            alt: "2nd Screen with F8 Logout key highlighted"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-logout-step3-confirm.png",
+            caption: "Logout Step 3: 'Are you sure you want to LOGOUT?' Press TAB to Yes, then press ENTER.",
+            alt: "Logout confirmation prompt"
+          },
+          {
+            src: "/assets/modules/module-2-start-of-day/images/pos-logout-step4-user-login.png",
+            caption: "Logout Step 4: After logout, the terminal returns to the User Login prompt.",
+            alt: "Terminal returns to User Login prompt after successful logout"
+          }
+        ],
         instructions: [
           "Enter your assigned employee username and password to log in.",
           "To log out: Press F5 (Option) from the Main screen to view the 2nd screen.",
           "Press F8 (Logout).",
-          "Press TAB key to move focus to the 'YES' button, then press ENTER to confirm."
+          "Press TAB key to move focus to the 'YES' button, then press ENTER to confirm.",
+          "Verify the terminal displays the User Login window ready for the next shift."
         ],
         keyCallouts: ["F5: Option", "F8: Logout (on 2nd page)", "TAB -> ENTER: Confirm"]
       }
@@ -299,3 +360,4 @@ export const TRAINING_MODULES: TrainingModule[] = [
     ]
   }
 ];
+

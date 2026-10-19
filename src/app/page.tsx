@@ -212,7 +212,7 @@ export default function HomePage() {
                           </div>
                         </div>
 
-                        {/* Big Green 0.00 */}
+                        {/* Big Green*/}
                         <div className="text-right text-2xl font-mono font-bold text-[#00FF66] tracking-wider pt-0.5">
                           0.00
                         </div>
@@ -250,7 +250,7 @@ export default function HomePage() {
                       <span className="col-span-1 text-right">Type</span>
                     </div>
 
-                    {/* Line Item Screen Page (Empty Grid Canvas) */}
+                    {/* Line Item Screen Page */}
                     <div className="flex-1 bg-white p-2 flex items-center justify-center text-gray-400 italic text-[11px] font-mono">
                       Line item screen page
                     </div>

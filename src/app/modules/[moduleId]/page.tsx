@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
+import { getScenarioForLesson } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
 import { 
   ArrowLeft, 
@@ -114,6 +115,10 @@ export default function ModuleDetailPage() {
           <div className="space-y-3">
             {currentModule.lessons.map((lesson, idx) => {
               const isCompleted = progress.completedLessons.includes(lesson.id);
+              const lessonScenario = getScenarioForLesson(lesson.id);
+              const simulatorUrl = lessonScenario
+                ? `/simulator?scenario=${lessonScenario.id}`
+                : `/simulator?module=${currentModule.id}`;
 
               return (
                 <Card
@@ -138,10 +143,16 @@ export default function ModuleDetailPage() {
                       <p className="text-xs text-gray-600 mt-1 max-w-xl">
                         {lesson.objective}
                       </p>
+                      {(lesson.visualAsset || (lesson.visualAssets && lesson.visualAssets.length > 0)) && (
+                        <div className="mt-2.5 flex items-center space-x-2 text-xs text-[#E4002B] font-semibold">
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>Includes Official Visual Reference: {lesson.deckSlideRef}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="w-full sm:w-auto">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
                     <Link href={`/modules/${currentModule.id}/lessons/${lesson.id}`}>
                       <Button
                         variant={isCompleted ? "outline" : "primary"}
@@ -150,6 +161,16 @@ export default function ModuleDetailPage() {
                       >
                         <span>{isCompleted ? "Review Lesson" : "Start Lesson"}</span>
                         <ChevronRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                    <Link href={simulatorUrl}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-600 hover:border-[#E4002B] hover:text-[#E4002B]"
+                      >
+                        <Monitor className="w-3.5 h-3.5" />
+                        <span>{lessonScenario ? "Practice" : "Simulator"}</span>
                       </Button>
                     </Link>
                   </div>

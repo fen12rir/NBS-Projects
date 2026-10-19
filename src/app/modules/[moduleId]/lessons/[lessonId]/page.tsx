@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
+import { getScenarioForLesson } from "@/data/scenarios";
 import { 
   getLocalProgress, 
   markLessonAsCompleted, 
@@ -59,6 +60,12 @@ export default function LessonDetailPage() {
   }
 
   const isCompleted = progress.completedLessons.includes(currentLesson.id) || justCompleted;
+
+  // Find a scenario specific to this lesson; fall back to the module-level scenario
+  const lessonScenario = getScenarioForLesson(currentLesson.id);
+  const simulatorUrl = lessonScenario
+    ? `/simulator?scenario=${lessonScenario.id}`
+    : `/simulator?module=${currentModule.id}`;
 
   const handleMarkComplete = () => {
     const updated = markLessonAsCompleted(currentLesson.id, currentModule.id);
@@ -144,15 +151,57 @@ export default function LessonDetailPage() {
             ))}
           </div>
 
-          {/* Training Deck Slide Visual Placeholder */}
-          <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-2">
-            <div className="text-xs font-mono font-bold text-gray-500 uppercase">
-              Visual Reference Placeholder: {currentLesson.deckSlideRef}
+          {/* Training Deck Slide Visual */}
+          {(currentLesson.visualAssets && currentLesson.visualAssets.length > 0) ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-600 border-b border-gray-200 pb-2">
+                <span className="uppercase text-[#E4002B]">Official Deck Visual References</span>
+                <span>{currentLesson.deckSlideRef}</span>
+              </div>
+              <div className="space-y-4">
+                {currentLesson.visualAssets.map((asset, idx) => (
+                  <div key={idx} className="border border-gray-300 bg-white p-3 space-y-2 shadow-sm">
+                    <div className="overflow-hidden bg-gray-900 border border-gray-300 flex items-center justify-center">
+                      <img
+                        src={asset.src}
+                        alt={asset.alt}
+                        className="w-full h-auto object-contain max-h-[500px]"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-700 font-sans text-center pt-1 font-semibold">
+                      {asset.caption}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <p className="text-xs text-gray-400 max-w-md mx-auto">
-              Terminal layout and procedure screenshots correspond to {currentLesson.deckSlideRef} in the official cashier training deck.
-            </p>
-          </div>
+          ) : currentLesson.visualAsset ? (
+            <div className="border border-gray-300 bg-white p-3 space-y-2 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-600 border-b border-gray-200 pb-2">
+                <span className="uppercase text-[#E4002B]">Official Deck Visual Reference</span>
+                <span>{currentLesson.deckSlideRef}</span>
+              </div>
+              <div className="overflow-hidden bg-gray-900 border border-gray-300 flex items-center justify-center">
+                <img
+                  src={currentLesson.visualAsset.src}
+                  alt={currentLesson.visualAsset.alt}
+                  className="w-full h-auto object-contain max-h-[500px]"
+                />
+              </div>
+              <p className="text-xs text-gray-500 font-sans text-center pt-1 italic">
+                {currentLesson.visualAsset.caption}
+              </p>
+            </div>
+          ) : (
+            <div className="border border-dashed border-gray-300 bg-gray-50 p-6 text-center space-y-2">
+              <div className="text-xs font-mono font-bold text-gray-500 uppercase">
+                Visual Reference Placeholder: {currentLesson.deckSlideRef}
+              </div>
+              <p className="text-xs text-gray-400 max-w-md mx-auto">
+                Terminal layout and procedure screenshots correspond to {currentLesson.deckSlideRef} in the official cashier training deck.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Actions & Completion */}
@@ -181,13 +230,13 @@ export default function LessonDetailPage() {
               </Button>
             )}
 
-            <Link href={`/simulator?module=${currentModule.id}`}>
+            <Link href={simulatorUrl}>
               <Button
                 variant="outline"
                 className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-400"
               >
                 <Monitor className="w-3.5 h-3.5" />
-                <span>Practice in Simulator</span>
+                <span>{lessonScenario ? "Practice This Lesson" : "Practice in Simulator"}</span>
               </Button>
             </Link>
           </div>

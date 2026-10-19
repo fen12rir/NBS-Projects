@@ -1,4 +1,4 @@
-export interface ScenarioStep {
+﻿export interface ScenarioStep {
   stepNumber: number;
   instruction: string;
   expectedAction: string;
@@ -12,68 +12,129 @@ export interface TrainingScenario {
   title: string;
   description: string;
   moduleRef: string;
-  passingScore: number; // percentage, e.g. 70
+  lessonRef?: string; 
+  passingScore: number; 
   steps: ScenarioStep[];
 }
 
 export const TRAINING_SCENARIOS: TrainingScenario[] = [
   {
     id: "scen-mod-1",
-    title: "Module 1: Screen Layout & Lookup Exploration",
-    description: "Inspect the 12 key screen sections, check product lookup with F2, and practice page navigation with F5.",
+    title: "Module 1: Screen Layout & Terminal Familiarization",
+    description: "Explore the 12 key screen regions, practice item barcode lookup with F2, and navigate function pages using F5.",
     moduleRef: "mod-1",
     passingScore: 70,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Open the price and item inquiry window. Press F2 (LOOKUP).",
+        instruction: "Step 1: Open the Product Lookup screen. Press F2 (LOOKUP) under the barcode scanner.",
         expectedAction: "LOOKUP",
-        hint: "Press the F2 key on your keyboard or click F2 LOOKUP on the screen.",
+        hint: "Click F2 Lookup under the barcode scanner or press F2 on your keyboard.",
         errorFeedback: "Press F2 (LOOKUP) to inspect product pricing."
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: Press F5 (OPTION) to navigate to the 2nd screen function keys.",
-        expectedAction: "NAV_SECOND",
-        hint: "Click F5 OPTION on the right column to advance to the next screen.",
-        errorFeedback: "Press F5 (OPTION) to view the 2nd screen."
+        instruction: "Step 2: Exit the Lookup screen and return to the active terminal. Click CANCEL <Alt-B> or press ESC.",
+        expectedAction: "CLOSE_LOOKUP",
+        hint: "Click CANCEL <Alt-B> on the green bottom bar or press ESC on your keyboard.",
+        errorFeedback: "Click CANCEL <Alt-B> or press ESC to return to the Main Screen."
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: Cycle through the screens by pressing F5 (OPTION) until you return to the Main Screen.",
+        instruction: "Step 3: Explore the right function keypad. Press F5 (OPTION) to advance from the Main Screen to the 2nd Screen.",
+        expectedAction: "NAV_SECOND",
+        hint: "Click F5 OPTION on the right button column or press F5 on your keyboard.",
+        errorFeedback: "Press F5 (OPTION) on the right column to advance to the 2nd Screen."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: Press F5 (NEXT OPTION) on the 2nd Screen to advance to the 3rd Screen.",
+        expectedAction: "NAV_THIRD",
+        hint: "Click F5 NEXT OPTION on the right button column or press F5 on your keyboard.",
+        errorFeedback: "Press F5 to advance to the 3rd Screen."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5: Press F5 (NEXT OPTION) on the 3rd Screen to advance to the 4th Screen.",
+        expectedAction: "NAV_FOURTH",
+        hint: "Click F5 NEXT OPTION on the right button column or press F5 on your keyboard.",
+        errorFeedback: "Press F5 to advance to the 4th Screen."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
         expectedAction: "NAV_MAIN",
-        hint: "Cycle through the pages or press F2 on the 4th page to return to the Main screen.",
-        errorFeedback: "Navigate back to the Main screen."
+        hint: "Click F5 NEXT OPTION on the right button column to complete the page cycle.",
+        errorFeedback: "Press F5 on the 4th Screen to return to the Main Screen."
       }
     ]
   },
   {
-    id: "scen-mod-2",
-    title: "Module 2: Start of Day, CSA & Cashier Logout",
-    description: "Verify date and time, toggle Customer Service Assistant (F10), and execute safe cashier logout (F5 -> F8).",
+    id: "scen-les-2-1",
+    title: "Lesson 2-1 Practice: Start of Day Verification",
+    description: "Practice the start-of-day terminal sequence: verify date and time, close setup window with Ctrl+Alt+C, and reload with F5 to reach the login screen.",
     moduleRef: "mod-2",
+    lessonRef: "les-2-1",
     passingScore: 70,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Toggle the Customer Service Assistant indicator by pressing F10 (CSA ON/OFF).",
-        expectedAction: "CSA_TOGGLE",
-        hint: "Click F10 CSA ON/OFF at the top row of function buttons or press F10.",
-        errorFeedback: "Press F10 to toggle the CSA mode."
+        instruction: "Step 1: You're at the terminal before the store opens. Verify the date and time on the Start of Day screen. Press TAB to select [Yes] and press ENTER (or click [Yes]).",
+        expectedAction: "VERIFY_DATE_YES",
+        hint: "Press TAB to highlight the 'Yes' button and press ENTER, or click the [Yes] button.",
+        errorFeedback: "Verify the date and time by clicking [Yes] or pressing TAB then Enter."
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: Navigate to the 2nd screen where the logout option is located. Press F5 (OPTION).",
-        expectedAction: "NAV_SECOND",
-        hint: "Press F5 on the right button column.",
-        errorFeedback: "Press F5 to open the 2nd screen."
+        instruction: "Step 2: Date verified! Now close the setup window by pressing Ctrl+Alt+C (or click 'Close Window (Ctrl+Alt+C)').",
+        expectedAction: "CLOSE_SOD_WINDOW",
+        hint: "Press Ctrl+Alt+C on your keyboard or click 'Close Window (Ctrl+Alt+C)'.",
+        errorFeedback: "Press Ctrl+Alt+C or click to close the setup window."
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: Initiate safe cashier sign-out by clicking F8 (LOGOUT).",
-        expectedAction: "LOGOUT",
-        hint: "On the 2nd screen, click F8 LOGOUT in the right column.",
+        instruction: "Step 3: The browser now displays 'POS Reloader'. Press F5 (or click 'Reload Page (F5)') to reload and open the USER LOGIN screen.",
+        expectedAction: "RELOAD_POS_LOGIN",
+        hint: "Press F5 on your keyboard or click 'Reload Page (F5)' to load the login page.",
+        errorFeedback: "Press F5 or click to reload and open the login page."
+      }
+    ]
+  },
+  {
+    id: "scen-les-2-2",
+    title: "Lesson 2-2 Practice: Cashier Login & Safe Logout",
+    description: "Practice entering your credentials in USER LOGIN, opening the register, and executing the approved F5 → F8 safe logout sequence.",
+    moduleRef: "mod-2",
+    lessonRef: "les-2-2",
+    passingScore: 70,
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Step 1: In the USER LOGIN window, enter or verify UserName '241209' and Password, then click [Ok] or press ENTER to sign in.",
+        expectedAction: "LOGIN_SUBMIT",
+        hint: "Click [Ok] or press ENTER in the USER LOGIN dialog to log in.",
+        errorFeedback: "Enter your cashier credentials and click [Ok] to log in."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: You are now logged into the sales register. Navigate to the 2nd screen where cashier logout is located. Press F5 (OPTION).",
+        expectedAction: "NAV_SECOND",
+        hint: "Press F5 on your keyboard or click F5 OPTION on the right column.",
+        errorFeedback: "Press F5 to advance to the 2nd Screen."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: On the 2nd Screen, initiate safe cashier sign-out by clicking F8 (LOGOUT).",
+        expectedAction: "TRIGGER_LOGOUT",
+        hint: "Click F8 LOGOUT in the right function key column or press F8.",
         errorFeedback: "Click F8 LOGOUT on the 2nd screen."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: The LOGOUT prompt appears ('Are you sure you want to LOGOUT?'). Press TAB to [Yes] and press ENTER (or click [Yes]) to safely return to the User Login screen.",
+        expectedAction: "CONFIRM_LOGOUT_YES",
+        hint: "Click [Yes] or press TAB then ENTER to confirm logout and return to the User Login screen.",
+        errorFeedback: "Confirm logout by selecting [Yes] on the prompt."
       }
     ]
   },
@@ -162,7 +223,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Customer hands you a ₱500 bill. Enter '500' and press ENTER to confirm tender.",
+        instruction: "Step 8: Customer hands you a â‚±500 bill. Enter '500' and press ENTER to confirm tender.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 500,
         hint: "Type 500 and press Enter to complete the transaction.",
@@ -340,9 +401,22 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 ];
 
 export function getScenarioForModule(moduleRef: string): TrainingScenario | null {
-  return TRAINING_SCENARIOS.find((s) => s.moduleRef === moduleRef) || null;
+  // Prefer a module-level scenario (no lessonRef), fallback to first lesson scenario
+  return (
+    TRAINING_SCENARIOS.find((s) => s.moduleRef === moduleRef && !s.lessonRef) ||
+    TRAINING_SCENARIOS.find((s) => s.moduleRef === moduleRef) ||
+    null
+  );
 }
 
 export function getScenarioById(id: string): TrainingScenario | null {
   return TRAINING_SCENARIOS.find((s) => s.id === id) || null;
 }
+
+export function getScenarioForLesson(lessonRef: string): TrainingScenario | null {
+  return TRAINING_SCENARIOS.find((s) => s.lessonRef === lessonRef) || null;
+}
+
+
+
+
