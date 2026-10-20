@@ -139,26 +139,109 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     ]
   },
   {
+    id: "scen-les-3-1",
+    title: "Lesson 3-1 Practice: Product Lookup (SRP & Promo)",
+    description: "Inquire about item prices using F2 Lookup, search by SKU or description, and verify promotional and SRP pricing.",
+    moduleRef: "mod-3",
+    lessonRef: "les-3-1",
+    passingScore: 70,
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Step 1: Open the Product Lookup screen. Press F2 (LOOKUP) under the barcode scanner.",
+        expectedAction: "LOOKUP",
+        hint: "Press F2 on your keyboard or click F2 Lookup under the barcode scanner.",
+        errorFeedback: "Press F2 (LOOKUP) to open the product lookup screen."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: Inspect item pricing and promos. Press F3 (Description) or search by SKU/barcode.",
+        expectedAction: "LOOKUP_SEARCH",
+        hint: "Press F3 on your keyboard or click F3 Description in the lookup bar.",
+        errorFeedback: "Press F3 or use F2 to search items in lookup."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: Close lookup to return to active sale. Click CANCEL <Alt-B> (or press ESC on your keyboard).",
+        expectedAction: "CLOSE_LOOKUP",
+        hint: "Click CANCEL <Alt-B> on the green bottom bar or press ESC on your keyboard.",
+        errorFeedback: "Click CANCEL <Alt-B> or press ESC to return to the active register."
+      }
+    ]
+  },
+  {
+    id: "scen-les-3-2",
+    title: "Lesson 3-2 Practice: NBS Loyalty (LNQR Flow)",
+    description: "Complete the authentic NBS Loyalty flow: input product, proceed to payment, choose option 3 for LNQR, enter customer QR code, tender cash, observe the red blinking change, and confirm the LNQR updated dialog.",
+    moduleRef: "mod-3",
+    lessonRef: "les-3-2",
+    passingScore: 70,
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Step 1: Input a product to start the sale. Type or scan 'NBS-BK-001' into the Barcode field (or click Catalog Quick-Fill) and press ENTER.",
+        expectedAction: "ADD_ITEM",
+        expectedData: "NBS-BK-001",
+        hint: "Type NBS-BK-001 in the yellow barcode field and press Enter.",
+        errorFeedback: "Please scan or enter NBS-BK-001 into the register."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: The customer is ready to pay. Press F4 (Payment) on the right function keypad.",
+        expectedAction: "GO_PAYMENT",
+        hint: "Press F4 on your keyboard or click F4 Payment in the right column.",
+        errorFeedback: "Press F4 (Payment) to proceed to payment."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: The 'Choose Option' loyalty prompt appears. The customer has LNQR - press 3 on your keyboard (or click '3. LNQR / LNQR PLUS').",
+        expectedAction: "CHOOSE_LNQR_OPTION",
+        hint: "Press key 3 on your keyboard or click '3. LNQR / LNQR PLUS'.",
+        errorFeedback: "Press 3 to choose LNQR / LNQR PLUS."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: The LNQR input screen appears. Scan or verify the customer QR code '20221003LN000004', press TAB to highlight [Ok], then press ENTER (or click [Ok]).",
+        expectedAction: "SUBMIT_LNQR",
+        hint: "Press TAB to highlight [Ok] and press ENTER, or click the [Ok] button.",
+        errorFeedback: "Submit the customer QR code by clicking [Ok] or pressing Enter."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5: On the Cash Payment Details screen, enter the tendered cash amount '3000' and press ENTER (or click [Ok]).",
+        expectedAction: "SUBMIT_CASH_TENDER",
+        hint: "Enter 3000 in the Enter Amount field and press Enter.",
+        errorFeedback: "Enter the cash amount and press Enter to process payment."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6: The system displays the red blinking 'Change' and connects to the LNQR Server. When the 'LNQR has been updated!' confirmation appears, press ENTER (or click [OK]) to return to the active register.",
+        expectedAction: "CONFIRM_LNQR_UPDATED",
+        hint: "Click [OK] or press ENTER in the confirmation popup to finish the transaction.",
+        errorFeedback: "Confirm the LNQR updated dialog by pressing Enter or clicking [OK]."
+      }
+    ]
+  },
+  {
     id: "scen-mod-3",
-    title: "Module 3: Item Lookup & Pricing Inquiry",
-    description: "Inquire about item prices using F2 Lookup and check promotional and SRP details.",
+    title: "Module 3: Item Lookup & Customer Loyalty (LNQR)",
+    description: "Complete product lookup and customer loyalty tagging with LNQR mobile QR processing.",
     moduleRef: "mod-3",
     passingScore: 70,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Open the Product Lookup dialog by pressing F2 (LOOKUP).",
+        instruction: "Step 1: Open the Product Lookup screen. Press F2 (LOOKUP) under the barcode scanner.",
         expectedAction: "LOOKUP",
-        hint: "Click F2 LOOKUP at the top row or press F2.",
-        errorFeedback: "Press F2 to open the item lookup modal."
+        hint: "Press F2 on your keyboard or click F2 Lookup under the barcode scanner.",
+        errorFeedback: "Press F2 (LOOKUP) to open the product lookup screen."
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: Now scan or type barcode 'NBS-BK-001' into the Barcode field and press ENTER.",
-        expectedAction: "ADD_ITEM",
-        expectedData: "NBS-BK-001",
-        hint: "Type NBS-BK-001 in the yellow barcode box and press Enter.",
-        errorFeedback: "Please scan or type NBS-BK-001."
+        instruction: "Step 2: Close lookup to return to active sale. Click CANCEL <Alt-B> (or press ESC on your keyboard).",
+        expectedAction: "CLOSE_LOOKUP",
+        hint: "Click CANCEL <Alt-B> on the green bottom bar or press ESC on your keyboard.",
+        errorFeedback: "Click CANCEL <Alt-B> or press ESC to return to the active register."
       }
     ]
   },

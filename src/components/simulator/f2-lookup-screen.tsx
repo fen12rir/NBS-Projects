@@ -6,6 +6,7 @@ import { SyntheticProduct, SYNTHETIC_PRODUCTS } from "@/data/products";
 interface F2LookupScreenProps {
   onCancel: () => void;
   onSelectItem: (sku: string) => void;
+  onSearchModeChange?: (mode: string) => void;
   initialSearch?: string;
 }
 
@@ -14,6 +15,7 @@ type LookupMode = "SKU" | "DESCRIPTION" | "AUTHOR";
 export function F2LookupScreen({
   onCancel,
   onSelectItem,
+  onSearchModeChange,
   initialSearch = "",
 }: F2LookupScreenProps) {
   const [mode, setMode] = useState<LookupMode>("SKU");
@@ -23,6 +25,12 @@ export function F2LookupScreen({
   const itemsPerPage = 12;
 
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const changeMode = (newMode: LookupMode) => {
+    setMode(newMode);
+    onSearchModeChange?.(newMode);
+    inputRef.current?.focus();
+  };
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -67,20 +75,17 @@ export function F2LookupScreen({
 
       if (e.key === "F2") {
         e.preventDefault();
-        setMode("SKU");
-        inputRef.current?.focus();
+        changeMode("SKU");
         return;
       }
       if (e.key === "F3") {
         e.preventDefault();
-        setMode("DESCRIPTION");
-        inputRef.current?.focus();
+        changeMode("DESCRIPTION");
         return;
       }
       if (e.key === "F4") {
         e.preventDefault();
-        setMode("AUTHOR");
-        inputRef.current?.focus();
+        changeMode("AUTHOR");
         return;
       }
       if (e.key === "F11" || e.key === "ArrowUp") {
@@ -125,14 +130,14 @@ export function F2LookupScreen({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px]">
-      {/* 1. YELLOW BANNER — Row 1: Title */}
+      {/* 1. YELLOW BANNER - Row 1: Title */}
       <div className="bg-[#FFF275] py-1 text-center font-bold text-xs sm:text-sm text-gray-900 uppercase font-sans tracking-wide">
         {mode === "SKU" && "LOOKUP BY SKU / BARCODE"}
         {mode === "DESCRIPTION" && "LOOKUP BY DESCRIPTION"}
         {mode === "AUTHOR" && "LOOKUP BY AUTHOR"}
       </div>
 
-      {/* 1b. YELLOW BANNER — Row 2: Help & On-Hand */}
+      {/* 1b. YELLOW BANNER - Row 2: Help & On-Hand */}
       <div className="bg-[#FFF275] border-b border-gray-400 px-3 py-0.5 flex items-center justify-between text-xs font-mono font-bold">
         <button
           type="button"
@@ -176,10 +181,7 @@ export function F2LookupScreen({
           {/* F2 SKU / BARCODE */}
           <button
             type="button"
-            onClick={() => {
-              setMode("SKU");
-              inputRef.current?.focus();
-            }}
+            onClick={() => changeMode("SKU")}
             className={`w-[78px] border-r border-gray-400 flex flex-col items-center justify-center p-1 font-sans select-none transition-all cursor-pointer ${
               mode === "SKU"
                 ? "bg-[#FFF275] border-t-2 border-t-yellow-500 font-bold"
@@ -193,10 +195,7 @@ export function F2LookupScreen({
           {/* F3 DESCRIPTION */}
           <button
             type="button"
-            onClick={() => {
-              setMode("DESCRIPTION");
-              inputRef.current?.focus();
-            }}
+            onClick={() => changeMode("DESCRIPTION")}
             className={`w-[78px] border-r border-gray-400 flex flex-col items-center justify-center p-1 font-sans select-none transition-all cursor-pointer ${
               mode === "DESCRIPTION"
                 ? "bg-[#FFF275] border-t-2 border-t-yellow-500 font-bold"
@@ -210,10 +209,7 @@ export function F2LookupScreen({
           {/* F4 AUTHOR */}
           <button
             type="button"
-            onClick={() => {
-              setMode("AUTHOR");
-              inputRef.current?.focus();
-            }}
+            onClick={() => changeMode("AUTHOR")}
             className={`w-[78px] flex flex-col items-center justify-center p-1 font-sans select-none transition-all cursor-pointer ${
               mode === "AUTHOR"
                 ? "bg-[#FFF275] border-t-2 border-t-yellow-500 font-bold"

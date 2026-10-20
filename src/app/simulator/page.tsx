@@ -60,6 +60,17 @@ function SimulatorContent() {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [selectedLogoutButton, setSelectedLogoutButton] = useState<"YES" | "NO" | null>(null);
 
+  // Module 3: LNQR Loyalty States
+  const [isLoyaltyOptionOpen, setIsLoyaltyOptionOpen] = useState(false);
+  const [selectedLoyaltyOption, setSelectedLoyaltyOption] = useState<number | null>(null);
+  const [isLnqrScanScreenOpen, setIsLnqrScanScreenOpen] = useState(false);
+  const [customerQrInput, setCustomerQrInput] = useState("20221003LN000004");
+  const [selectedLnqrButton, setSelectedLnqrButton] = useState<"OK" | "CANCEL" | null>(null);
+  const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
+  const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("3000");
+  const [isLnqrTenderProcessed, setIsLnqrTenderProcessed] = useState(false);
+  const [isLnqrUpdatedModalOpen, setIsLnqrUpdatedModalOpen] = useState(false);
+
   const [state, dispatch] = useReducer(
     posReducer,
     createInitialPOSState("Jan Angela")
@@ -156,6 +167,48 @@ function SimulatorContent() {
     setSelectedLogoutButton(null);
   };
 
+  const handleSelectLoyalty = (optionNum: number) => {
+    setSelectedLoyaltyOption(optionNum);
+    if (optionNum === 3) {
+      setIsLoyaltyOptionOpen(false);
+      setIsLnqrScanScreenOpen(true);
+      setSelectedLnqrButton(null);
+      validateScenarioStep("CHOOSE_LNQR_OPTION", 3);
+    } else if (optionNum === 1) {
+      setIsLoyaltyOptionOpen(false);
+      dispatch({ type: "OPEN_PAYMENT" });
+    } else if (optionNum === 2) {
+      setIsLoyaltyOptionOpen(false);
+      dispatch({ type: "OPEN_PAYMENT" });
+    }
+  };
+
+  const handleConfirmLnqr = () => {
+    setIsLnqrScanScreenOpen(false);
+    setIsLnqrCashPaymentOpen(true);
+    setIsLnqrTenderProcessed(false);
+    validateScenarioStep("SUBMIT_LNQR", customerQrInput);
+  };
+
+  const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsLnqrTenderProcessed(true);
+    validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
+    setTimeout(() => {
+      setIsLnqrUpdatedModalOpen(true);
+    }, 1500);
+  };
+
+  const handleConfirmLnqrUpdated = () => {
+    setIsLnqrUpdatedModalOpen(false);
+    setIsLnqrCashPaymentOpen(false);
+    setIsLnqrTenderProcessed(false);
+    setIsLnqrScanScreenOpen(false);
+    setIsLoyaltyOptionOpen(false);
+    dispatch({ type: "RESET_TRANSACTION" });
+    validateScenarioStep("CONFIRM_LNQR_UPDATED");
+  };
+
   useEffect(() => {
     if (terminalMode === "ACTIVE_REGISTER" && !state.isQuantityInputActive && !state.activeLookupOpen && !state.managerOverrideOpen && !state.paymentDialogOpen) {
       barcodeRef.current?.focus();
@@ -238,6 +291,62 @@ function SimulatorContent() {
         }
       }
 
+      // 4b. Loyalty Option modal (1, 2, 3, Escape)
+      if (isLoyaltyOptionOpen) {
+        if (e.key === "1") {
+          e.preventDefault();
+          handleSelectLoyalty(1);
+          return;
+        }
+        if (e.key === "2") {
+          e.preventDefault();
+          handleSelectLoyalty(2);
+          return;
+        }
+        if (e.key === "3") {
+          e.preventDefault();
+          handleSelectLoyalty(3);
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setIsLoyaltyOptionOpen(false);
+          return;
+        }
+      }
+
+      // 4c. LNQR Scan Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
+      if (isLnqrScanScreenOpen) {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          setSelectedLnqrButton((prev) => (prev === "OK" ? "CANCEL" : "OK"));
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (selectedLnqrButton === "CANCEL") {
+            setIsLnqrScanScreenOpen(false);
+          } else {
+            handleConfirmLnqr();
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setIsLnqrScanScreenOpen(false);
+          return;
+        }
+      }
+
+      // 4d. LNQR Updated Confirmation Modal (Enter or Escape confirms)
+      if (isLnqrUpdatedModalOpen) {
+        if (e.key === "Enter" || e.key === "Escape") {
+          e.preventDefault();
+          handleConfirmLnqrUpdated();
+          return;
+        }
+      }
+
       // 5. In ACTIVE_REGISTER mode: handle physical F-keys
       if (terminalMode === "ACTIVE_REGISTER") {
         if (e.key.startsWith("F") && !isNaN(Number(e.key.substring(1)))) {
@@ -251,7 +360,7 @@ function SimulatorContent() {
   });
 
   const handlePhysicalFKey = (fKey: string) => {
-    if (state.currentPage === "LOOKUP") {
+    if (state.currentPage === "LOOKUP" || isLnqrScanScreenOpen || isLnqrCashPaymentOpen || isLoyaltyOptionOpen || isLnqrUpdatedModalOpen) {
       return;
     }
     if (fKey === "F1") {
@@ -311,6 +420,17 @@ function SimulatorContent() {
       return;
     }
 
+    // In Lesson 3-1, if step expects LOOKUP_SEARCH and trainee exits lookup or selects item:
+    if (currentStep.expectedAction === "LOOKUP_SEARCH" && (actionId === "CLOSE_LOOKUP" || actionId === "ADD_ITEM")) {
+      setActiveHint(null);
+      const nextIndex = currentStepIndex + 2;
+      setCurrentStepIndex(nextIndex);
+      if (nextIndex >= activeScenario.steps.length) {
+        setIsExamCompleted(true);
+      }
+      return;
+    }
+
     setMistakes((prev) => [
       ...prev,
       {
@@ -338,7 +458,8 @@ function SimulatorContent() {
         validateScenarioStep("SET_QTY_MODE");
         break;
       case "GO_PAYMENT":
-        dispatch({ type: "OPEN_PAYMENT" });
+        setIsLoyaltyOptionOpen(true);
+        setSelectedLoyaltyOption(null);
         validateScenarioStep("GO_PAYMENT");
         break;
       case "NAV_SECOND":
@@ -457,6 +578,15 @@ function SimulatorContent() {
     setIsExamCompleted(false);
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
+    setIsLoyaltyOptionOpen(false);
+    setSelectedLoyaltyOption(null);
+    setIsLnqrScanScreenOpen(false);
+    setCustomerQrInput("20221003LN000004");
+    setSelectedLnqrButton(null);
+    setIsLnqrCashPaymentOpen(false);
+    setLnqrCashTenderInput("3000");
+    setIsLnqrTenderProcessed(false);
+    setIsLnqrUpdatedModalOpen(false);
     setScenarioStartTime(Date.now());
     setTerminalMode(getInitialTerminalMode(activeScenario));
   };
@@ -854,8 +984,258 @@ function SimulatorContent() {
                     dispatch({ type: "CLOSE_LOOKUP" });
                     setBarcodeInput("");
                   }}
+                  onSearchModeChange={(mode) => {
+                    validateScenarioStep("LOOKUP_SEARCH", mode);
+                  }}
                   initialSearch={state.lookupSearchTerm}
                 />
+              ) : isLnqrScanScreenOpen ? (
+                /* LNQR SCAN SCREEN (Matches screenshot: No blue header, yellow title bar, scan input, green bottom bar) */
+                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
+                  {/* Yellow Banner */}
+                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase">
+                    LNQR / LNQR PLUS
+                  </div>
+
+                  {/* Center QR Input Area */}
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white">
+                    <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm font-sans font-bold text-gray-800">
+                      <span>Scan Customer QR</span>
+                      <span className="hidden sm:inline font-bold">:</span>
+                      <input
+                        type="text"
+                        value={customerQrInput}
+                        onChange={(e) => setCustomerQrInput(e.target.value)}
+                        placeholder="20221003LN000004"
+                        className="w-72 bg-white border-2 border-gray-500 px-3 py-1 font-mono font-bold text-sm text-gray-900 shadow-inner text-center focus:outline-none focus:ring-2 focus:ring-green-600"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 font-sans text-center max-w-md pt-2">
+                      Scan or manually enter the Customer LNQR Code. Press <kbd className="bg-gray-100 px-1 border border-gray-300 font-bold text-gray-800">TAB</kbd> to focus [Ok], then press <kbd className="bg-gray-100 px-1 border border-gray-300 font-bold text-gray-800">ENTER</kbd>.
+                    </div>
+                  </div>
+
+                  {/* Bottom Green Taskbar with Ok & Cancel Buttons */}
+                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700">
+                    <button
+                      type="button"
+                      onClick={handleConfirmLnqr}
+                      className={`min-w-[90px] px-6 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                        selectedLnqrButton === "OK"
+                          ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                          : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-900 hover:bg-[#E2E0DC]"
+                      }`}
+                    >
+                      Ok
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsLnqrScanScreenOpen(false)}
+                      className={`min-w-[90px] px-6 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                        selectedLnqrButton === "CANCEL"
+                          ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                          : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-900 hover:bg-[#E2E0DC]"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : isLnqrCashPaymentOpen ? (
+                /* CASH PAYMENT DETAILS SCREEN */
+                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
+                  {/* Top Yellow Bar */}
+                  <div className="bg-[#FFF275] border-b border-gray-400 h-6" />
+
+                  <div className="flex-1 grid grid-cols-12 bg-white">
+                    {/* Left Panel: Electronic Journal */}
+                    <div className="col-span-5 border-r-2 border-gray-400 flex flex-col bg-[#F3F4F6] text-[11px] font-mono p-3 overflow-y-auto">
+                      <div className="bg-[#B0B8C0] text-center font-bold font-sans py-0.5 border border-gray-400 text-xs mb-2">
+                        Electronic Journal
+                      </div>
+                      <div className="bg-white border border-gray-400 p-2 text-gray-800 leading-tight space-y-1 shadow-inner flex-1">
+                        <div className="text-center font-bold text-[10px]">
+                          ABACUS BOOK AND CARD CORP.<br />
+                          NATIONAL BOOK STORE<br />
+                          GROUND FLOOR QUAD ALPHA CENTRUM<br />
+                          125 PIONEER ST. MANDALUYONG CITY<br />
+                          VAT Registered TIN: 000-325-972-054
+                        </div>
+                        <div className="border-t border-dashed border-gray-400 my-1" />
+                        <div>TrxNo : 0511202629990005002807</div>
+                        <div>Clerk : 02122026 &nbsp;&nbsp;&nbsp;&nbsp; Term. No.: 0005</div>
+                        <div className="border-t border-dashed border-gray-400 my-1" />
+                        {state.lineItems.length > 0 ? (
+                          state.lineItems.map((item, idx) => (
+                            <div key={item.id} className="flex justify-between">
+                              <span>{idx + 1}&nbsp; {item.description}</span>
+                              <span>{formatCurrency(item.total)}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="flex justify-between">
+                            <span>1&nbsp; PHO PRKR RBALL POINT</span>
+                            <span>2,990.00</span>
+                          </div>
+                        )}
+                        <div className="border-t border-dashed border-gray-400 my-1" />
+                        <div className="flex justify-between font-bold">
+                          <span>No. of Items</span>
+                          <span>{totals.totalQty || 1}</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Amount Due</span>
+                          <span>{formatCurrency(totals.totalAmount || 2990)}</span>
+                        </div>
+                        <div className="flex justify-between font-bold">
+                          <span>Tendered Cash</span>
+                          <span>{isLnqrTenderProcessed ? formatCurrency(parseFloat(lnqrCashTenderInput) || 3000) : "0.00"}</span>
+                        </div>
+                        <div className="flex justify-between font-bold text-red-600">
+                          <span>Change Due</span>
+                          <span>{isLnqrTenderProcessed ? formatCurrency(Math.max(0, (parseFloat(lnqrCashTenderInput) || 3000) - (totals.totalAmount || 2990))) : "0.00"}</span>
+                        </div>
+                        <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
+                          ***********************************<br />
+                          Join Laking National for free!<br />
+                          Visit : lakingnational.com<br />
+                          LNQR No. : {customerQrInput}<br />
+                          Earned Sulit Coins : 29.90<br />
+                          ***********************************
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Center Panel: Green Box & Cash Payment Details */}
+                    <div className="col-span-5 flex flex-col border-r-2 border-gray-400">
+                      {/* Top Green Box: Unit, Sales, Tendered / Blinking Change */}
+                      <div className="bg-[#16A34A] p-4 text-white space-y-2 border-b-2 border-gray-400">
+                        {/* Unit */}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm">Unit</span>
+                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
+                            {totals.totalQty || 1}
+                          </span>
+                        </div>
+
+                        {/* Sales */}
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm">Sales</span>
+                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
+                            {(totals.totalAmount || 2990).toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Tendered or Blinking Red Change */}
+                        <div className="flex items-center justify-between">
+                          {isLnqrTenderProcessed ? (
+                            <span className="font-black text-sm text-red-600 bg-[#16A34A] px-1.5 py-0.5 tracking-wide animate-pulse">
+                              Change
+                            </span>
+                          ) : (
+                            <span className="font-bold text-sm">Tendered</span>
+                          )}
+                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
+                            {isLnqrTenderProcessed
+                              ? Math.max(0, (parseFloat(lnqrCashTenderInput) || 3000) - (totals.totalAmount || 2990)).toFixed(2)
+                              : "0.00"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Cash Payment Details Header */}
+                      <div className="bg-[#67B8DE] text-gray-900 font-bold px-3 py-1.5 text-sm border-b border-gray-400 text-center tracking-wide">
+                        Cash Payment Details
+                      </div>
+
+                      {/* Cash Payment Details Body */}
+                      <div className="flex-1 bg-[#ECE9D8] p-6 flex flex-col items-center justify-center">
+                        {!isLnqrTenderProcessed ? (
+                          <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-3 flex flex-col items-center">
+                            <label className="text-xs font-bold text-gray-800 text-center font-sans">
+                              Enter Amount:
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={lnqrCashTenderInput}
+                              onChange={(e) => setLnqrCashTenderInput(e.target.value)}
+                              placeholder="3000"
+                              className="w-48 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
+                              autoFocus
+                            />
+                            <button
+                              type="submit"
+                              className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                            >
+                              Process Payment (Enter)
+                            </button>
+                          </form>
+                        ) : (
+                          <div className="text-center space-y-4">
+                            <div className="text-red-600 font-black text-base tracking-tight animate-pulse font-sans">
+                              Dont press any key.. Please wait...
+                            </div>
+                            <div className="text-gray-700 font-bold text-xs font-sans">
+                              Please wait connecting LNQR Server
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Far Right: Function Keys Column */}
+                    <div className="col-span-2 bg-[#C2CAD0] flex flex-col p-1 space-y-1">
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-700">
+                        Help<br/><span className="text-[10px] text-gray-500">F1</span>
+                      </div>
+                      <div className="bg-[#FFF275] border-2 border-yellow-500 text-center py-2 text-[11px] font-black text-gray-900 shadow">
+                        Cash<br/><span className="text-[10px] text-yellow-700">F2</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        Bank Card<br/><span className="text-[10px] text-gray-500">F3</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        Check<br/><span className="text-[10px] text-gray-500">F4</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        Gift Cert.<br/><span className="text-[10px] text-gray-500">F5</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        Coupon<br/><span className="text-[10px] text-gray-500">F6</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        E-Purse<br/><span className="text-[10px] text-gray-500">F7</span>
+                      </div>
+                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                        Credit Memo<br/><span className="text-[10px] text-gray-500">F8</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bottom Footer Bar */}
+                  <div className="grid grid-cols-12 border-t-2 border-gray-400 h-8 font-sans select-none items-stretch">
+                    {/* Left 5 cols */}
+                    <div className="col-span-5 bg-[#9AA5B1] border-r-2 border-gray-400" />
+
+                    {/* Center 5 cols */}
+                    <div className="col-span-5 bg-[#16A34A] border-r-2 border-gray-400 flex items-center justify-center px-2">
+                      <button
+                        type="button"
+                        onClick={isLnqrTenderProcessed ? () => setIsLnqrUpdatedModalOpen(true) : handleConfirmLnqrCashTender}
+                        className="min-w-[95px] h-[22px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#B05090] border-b-[#B05090] outline outline-1 outline-[#D870B0] flex items-center justify-center font-bold text-xs text-[#0000CD] shadow-sm cursor-pointer"
+                      >
+                        Ok
+                      </button>
+                    </div>
+
+                    {/* Right 2 cols */}
+                    <div className="col-span-2 bg-[#16A34A] flex items-center justify-center px-1 text-gray-900 font-bold font-mono text-[11px] tracking-tight">
+                      {fmtTime(now)}
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <>
             {/* MAIN WORKING AREA */}
@@ -1109,6 +1489,107 @@ function SimulatorContent() {
 
               <div className="text-center text-[11px] text-gray-500 font-mono">
                 Press <kbd className="bg-white px-1 border text-gray-800 font-bold">TAB</kbd> to toggle, <kbd className="bg-white px-1 border text-gray-800 font-bold">ENTER</kbd> to confirm
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CHOOSE OPTION MODAL */}
+      {isLoyaltyOptionOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 select-none">
+          <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans">
+            {/* Green Header */}
+            <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
+              Choose Option
+            </div>
+
+            {/* Gray Content Body */}
+            <div className="p-6 bg-[#B0B8C0] space-y-3">
+              <button
+                type="button"
+                onClick={() => handleSelectLoyalty(1)}
+                className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+              >
+                1. None
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectLoyalty(2)}
+                className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+              >
+                2. Laking National Card
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelectLoyalty(3)}
+                className="w-full text-left px-4 py-2.5 bg-white text-gray-900 font-extrabold text-sm border-2 border-red-500 ring-2 ring-red-400 shadow-sm transition-all cursor-pointer"
+                autoFocus
+              >
+                3. LNQR / LNQR PLUS
+              </button>
+
+              <div className="text-center text-xs font-mono text-gray-700 pt-2">
+                Press key <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">1</kbd>, <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">2</kbd>, or <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">3</kbd> on your keyboard
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LNQR HAS BEEN UPDATED MODAL */}
+      {isLnqrUpdatedModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 select-none">
+          <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans">
+            {/* Window Title Bar */}
+            <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
+              <div className="flex items-center space-x-1 truncate">
+                <span className="text-[10px] leading-none">{'\u2022'}</span>
+                <span className="text-[11px] truncate tracking-wide text-gray-100">
+                  The page at http://localhost says:
+                </span>
+              </div>
+              <div className="flex items-center space-x-0.5">
+                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">_</div>
+                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                  <div className="w-2 h-2 border border-gray-200" />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleConfirmLnqrUpdated}
+                  className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
+                >
+                  {'\u2715'}
+                </button>
+              </div>
+            </div>
+
+            {/* Window Content */}
+            <div className="p-4 space-y-4">
+              <div className="flex items-start space-x-3">
+                {/* Yellow Warning Triangle Icon */}
+                <div className="text-amber-500 font-extrabold text-2xl leading-none flex-shrink-0">
+                  ⚠️
+                </div>
+                <div className="text-xs font-sans text-gray-900 space-y-1 font-semibold leading-relaxed">
+                  <div className="font-bold text-sm text-gray-900 mb-1">LNQR has been updated!</div>
+                  <div>Name: Cate Marie Gonzalez</div>
+                  <div>Card Number : 20221003LN000004</div>
+                  <div>New Sulit Coins: 32.63</div>
+                  <div>Sulit Coins Earn: 11.48</div>
+                </div>
+              </div>
+
+              {/* OK Button */}
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={handleConfirmLnqrUpdated}
+                  className="min-w-[70px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                  autoFocus
+                >
+                  OK
+                </button>
               </div>
             </div>
           </div>

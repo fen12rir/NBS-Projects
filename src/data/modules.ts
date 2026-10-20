@@ -145,25 +145,82 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Product Lookup (SRP & Promo)",
         objective: "Search items without scanning directly into an active sale to check prices or promotions.",
         deckSlideRef: "Slides 17-20",
-        instructions: [
-          "Press F2 (Lookup) from the main POS screen.",
-          "Use F2 (SKU/Barcode) to scan or type a GTIN/barcode, OR press F3 (Description) to search by item name.",
-          "Observe the right side of the lookup dialog where promotional discounts or special prices are indicated.",
-          "Press ESC or Enter to return to the active sale."
+        visualAssets: [
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/f2-lookup-by-sku.png",
+            caption: "F2 SKU/BARCODE - Search an item by its GTIN barcode or SKU number. The table shows SKU, Description, Author, SRP, and any active PROMO price.",
+            alt: "F2 Lookup by SKU / Barcode screen"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/f2-lookup-by-description.png",
+            caption: "F3 DESCRIPTION - Type a keyword (e.g. 'harvard') to find all matching titles. Red highlighted row indicates a currently active promo price on the right column.",
+            alt: "F2 Lookup by Description screen showing promo prices"
+          }
         ],
-        keyCallouts: ["F2: Lookup", "F2: SKU Search", "F3: Description Search"]
+        instructions: [
+          "Press F2 (Lookup) from the main POS screen - the Lookup screen will open.",
+          "Press F2 again inside Lookup to search by SKU / Barcode: scan or type the GTIN then press ENTER.",
+          "Press F3 inside Lookup to search by Description: type a keyword and results appear instantly.",
+          "The PROMO column on the right shows any active promotional price. Red rows indicate a promo is applied.",
+          "Press ENTER or double-click a row to select the item, or press ALT+B (CANCEL) to exit without selecting."
+        ],
+        keyCallouts: ["F2: Open Lookup", "F2 (inside Lookup): SKU/Barcode search", "F3 (inside Lookup): Description search", "F11/F12: Scroll results up/down", "ENTER: Select item"]
       },
       {
         id: "les-3-2",
         title: "NBS Loyalty (LNC & LNQR)",
-        objective: "Correctly prompt and tag customer loyalty membership during the transaction.",
+        objective: "Correctly prompt and tag customer loyalty membership and complete the LNQR flow during a transaction.",
         deckSlideRef: "Slides 21-24",
-        instructions: [
-          "Ask customer if they have Laking National QR or card: Press 1 for None, 2 for Physical LNC Card, 3 for LNQR App / LNQR Plus.",
-          "If customer has LNQR, select 3, scan the QR code or manually enter the customer ID, then press Tab to OK and Enter.",
-          "Ensure LNQR details print on the receipt to allow points accrual."
+        visualAssets: [
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-choose-option-menu.png",
+            caption: "After pressing F4 (Payment), the 'Choose Option' loyalty dialog appears. Press 1 for None, 2 for LNC Card, or 3 for LNQR / LNQR Plus.",
+            alt: "Choose Option loyalty dialog with 1. None, 2. Laking National Card, 3. LNQR/LNQR Plus"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-select-option-3.png",
+            caption: "Press 3 to select LNQR / LNQR PLUS. The option is highlighted in the dialog.",
+            alt: "Choose Option dialog with option 3 LNQR/LNQR PLUS highlighted"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-scan-input-screen.png",
+            caption: "The LNQR / LNQR PLUS input screen appears. Scan the customer's QR code or manually type the Customer LNQR Code. Press TAB to move to OK, then press ENTER.",
+            alt: "LNQR input screen showing Scan Customer QR field with sample code 20221003LN000004"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-payment-cash-input.png",
+            caption: "After confirming LNQR, the Cash Payment Details screen appears. Enter the tendered amount in the 'Enter Amount' field and press ENTER to process.",
+            alt: "Cash Payment Details screen with Enter Amount field"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-payment-change-display.png",
+            caption: "After processing, the 'Change' row turns red/blinking showing the change due to the customer. The message 'Dont press any key.. Please wait...' appears while the LNQR server is updating.",
+            alt: "Payment screen showing Change row in red and Please wait message"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-updated-modal.png",
+            caption: "A confirmation popup appears: 'LNQR has been updated!' showing the customer's name, card number, previous balance, earned Sulit Coins, and current balance. Press ENTER or click OK to return to the active register.",
+            alt: "LNQR has been updated confirmation popup showing customer details and Sulit Coins"
+          },
+          {
+            src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-updated-confirmation-popup.png",
+            caption: "The LNQR information is also printed on the receipt, including LNQR No. and Earned Sulit Coins - confirming the loyalty transaction is complete.",
+            alt: "Receipt with LNQR information printed and LNQR updated popup"
+          }
         ],
-        keyCallouts: ["1: No Loyalty", "2: LNC Card", "3: LNQR Plus Mobile"]
+        instructions: [
+          "Scan or enter the item(s) into the active register, then press F4 (Payment) to proceed to payment.",
+          "A 'Choose Option' loyalty dialog appears - ask the customer if they have an NBS Loyalty membership:",
+          "  • Press 1 - if the customer has NO loyalty card or QR code.",
+          "  • Press 2 - if the customer has a physical Laking National Card (LNC).",
+          "  • Press 3 - if the customer has LNQR or LNQR Plus (mobile app QR code).",
+          "For LNQR (option 3): The LNQR input screen opens. Scan the customer QR code OR manually type the LNQR code. Press TAB to move focus to [Ok], then press ENTER.",
+          "The Cash Payment Details screen appears. Enter the tendered cash amount and press ENTER to process the payment.",
+          "The 'Change' field turns red and blinks - hand the change to the customer. The screen shows 'Dont press any key.. Please wait...' while contacting the LNQR server.",
+          "A popup confirms: 'LNQR has been updated!' showing the customer name, card number, previous balance, earned Sulit Coins, and new balance. Press ENTER or click OK.",
+          "The terminal returns to the active register home. The receipt automatically prints LNQR details including earned Sulit Coins."
+        ],
+        keyCallouts: ["F4: Payment", "1: No Loyalty", "2: LNC Card", "3: LNQR / LNQR Plus", "TAB: Move to OK", "ENTER: Confirm", "Change = Red blinking row"]
       }
     ]
   },
