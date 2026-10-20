@@ -1,4 +1,4 @@
-﻿export interface AttemptRecord {
+export interface AttemptRecord {
   id: string;
   scenarioId: string;
   scenarioTitle: string;

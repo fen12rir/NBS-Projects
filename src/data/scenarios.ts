@@ -1,4 +1,4 @@
-﻿export interface ScenarioStep {
+export interface ScenarioStep {
   stepNumber: number;
   instruction: string;
   expectedAction: string;
@@ -23,6 +23,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 1: Screen Layout & Terminal Familiarization",
     description: "Explore the 12 key screen regions, practice item barcode lookup with F2, and navigate function pages using F5.",
     moduleRef: "mod-1",
+    lessonRef: "les-1-1",
     passingScore: 70,
     steps: [
       {
@@ -250,6 +251,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 4: Cash Sale with Quantity Multiplier",
     description: "Scan items, set multiplier quantity, tender payment in Philippine Peso cash, and generate customer official receipt.",
     moduleRef: "mod-4",
+    lessonRef: "les-4-1",
     passingScore: 70,
     steps: [
       {
@@ -319,6 +321,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 5: Second Screen Functions & Verification",
     description: "Inspect Second Screen utilities including SDV Check and screen navigation.",
     moduleRef: "mod-5",
+    lessonRef: "les-5-1",
     passingScore: 70,
     steps: [
       {
@@ -349,6 +352,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 6: Third Screen Utilities",
     description: "Navigate to the 3rd screen and inspect reprint and supervisor utilities.",
     moduleRef: "mod-6",
+    lessonRef: "les-6-1",
     passingScore: 70,
     steps: [
       {
@@ -379,6 +383,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 7: Fourth Screen Functions & Quick Return",
     description: "Navigate to the 4th screen and use F2 to return immediately to the Main Screen.",
     moduleRef: "mod-7",
+    lessonRef: "les-7-1",
     passingScore: 70,
     steps: [
       {
@@ -416,6 +421,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 8: Payment Methods & Tenders",
     description: "Scan copy paper, enter payment menu, select tender method, and finalize transaction.",
     moduleRef: "mod-8",
+    lessonRef: "les-8-1",
     passingScore: 70,
     steps: [
       {
@@ -455,6 +461,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 9: Item Void & Manager Override",
     description: "Scan an item, perform an Item Void (F7), and confirm manager override authorization.",
     moduleRef: "mod-9",
+    lessonRef: "les-9-1",
     passingScore: 70,
     steps: [
       {

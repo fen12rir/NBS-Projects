@@ -20,6 +20,7 @@ import {
   getScenarioForModule, 
   getScenarioById 
 } from "@/data/scenarios";
+import { TRAINING_MODULES } from "@/data/modules";
 import { recordScenarioAttempt } from "@/lib/progress/progress-store";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ function SimulatorContent() {
 
   const moduleParam = searchParams.get("module");
   const scenarioParam = searchParams.get("scenario");
+  const lessonParam = searchParams.get("lesson");
 
   const initialScenario = scenarioParam 
     ? getScenarioById(scenarioParam) 
@@ -50,6 +52,23 @@ function SimulatorContent() {
     : null;
 
   const [activeScenario, setActiveScenario] = useState<TrainingScenario | null>(initialScenario);
+
+  const targetLessonId = activeScenario?.lessonRef || lessonParam || (
+    activeScenario?.moduleRef 
+      ? TRAINING_MODULES.find((m) => m.id === activeScenario.moduleRef)?.lessons[0]?.id 
+      : null
+  );
+  const targetModuleId = activeScenario?.moduleRef || moduleParam || (
+    targetLessonId
+      ? TRAINING_MODULES.find((m) => m.lessons.some((l) => l.id === targetLessonId))?.id
+      : null
+  );
+
+  const returnLessonUrl = (targetModuleId && targetLessonId)
+    ? `/modules/${targetModuleId}/lessons/${targetLessonId}`
+    : targetModuleId
+    ? `/modules/${targetModuleId}`
+    : "/dashboard";
   const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
     getInitialTerminalMode(initialScenario)
   );
@@ -666,10 +685,17 @@ function SimulatorContent() {
       {/* Top Trainer Navigation Bar */}
       <header className="bg-black text-white px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
         <div className="flex items-center space-x-3">
-          <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white">
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Dashboard</span>
-          </Link>
+          {returnLessonUrl !== "/dashboard" ? (
+            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Lesson</span>
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white">
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Dashboard</span>
+            </Link>
+          )}
           <span className="text-gray-600">|</span>
           <span className="font-bold text-red-500 uppercase">
             NBS Cashier POS Screen Fidelity Simulator
@@ -1880,14 +1906,14 @@ function SimulatorContent() {
                 </button>
 
                 <Link
-                  href={activeScenario.moduleRef ? `/modules/${activeScenario.moduleRef}` : "/dashboard"}
+                  href={returnLessonUrl}
                   className="flex-1"
                 >
                   <button
                     type="button"
                     className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
                   >
-                    <span>Back to Module</span>
+                    <span>Back to Lesson</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </Link>

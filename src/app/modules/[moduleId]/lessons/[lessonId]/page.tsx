@@ -41,8 +41,31 @@ export default function LessonDetailPage() {
     setProgress(getLocalProgress());
   }, []);
 
-  const currentModule = TRAINING_MODULES.find((m) => m.id === moduleId);
-  const currentLesson = currentModule?.lessons.find((l) => l.id === lessonId);
+  const currentModuleIndex = TRAINING_MODULES.findIndex((m) => m.id === moduleId);
+  const currentModule = currentModuleIndex !== -1 ? TRAINING_MODULES[currentModuleIndex] : undefined;
+
+  const currentLessonIndex = currentModule
+    ? currentModule.lessons.findIndex((l) => l.id === lessonId)
+    : -1;
+  const currentLesson = currentLessonIndex !== -1 && currentModule
+    ? currentModule.lessons[currentLessonIndex]
+    : undefined;
+
+  const isLastLessonInModule = currentModule
+    ? currentLessonIndex === currentModule.lessons.length - 1
+    : false;
+
+  const nextLesson = (!isLastLessonInModule && currentModule && currentLessonIndex !== -1)
+    ? currentModule.lessons[currentLessonIndex + 1]
+    : null;
+
+  const nextModule = (isLastLessonInModule && currentModuleIndex < TRAINING_MODULES.length - 1)
+    ? TRAINING_MODULES[currentModuleIndex + 1]
+    : null;
+
+  const prevLesson = (currentLessonIndex > 0 && currentModule)
+    ? currentModule.lessons[currentLessonIndex - 1]
+    : null;
 
   if (!currentModule || !currentLesson) {
     return (
@@ -64,8 +87,8 @@ export default function LessonDetailPage() {
   // Find a scenario specific to this lesson; fall back to the module-level scenario
   const lessonScenario = getScenarioForLesson(currentLesson.id);
   const simulatorUrl = lessonScenario
-    ? `/simulator?scenario=${lessonScenario.id}`
-    : `/simulator?module=${currentModule.id}`;
+    ? `/simulator?scenario=${lessonScenario.id}&lesson=${currentLesson.id}&module=${currentModule.id}`
+    : `/simulator?module=${currentModule.id}&lesson=${currentLesson.id}`;
 
   const handleMarkComplete = () => {
     const updated = markLessonAsCompleted(currentLesson.id, currentModule.id);
@@ -236,9 +259,65 @@ export default function LessonDetailPage() {
                 className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-400"
               >
                 <Monitor className="w-3.5 h-3.5" />
-                <span>{lessonScenario ? "Practice This Lesson" : "Practice in Simulator"}</span>
+                <span>Practice Lesson</span>
               </Button>
             </Link>
+          </div>
+        </div>
+
+        {/* Lesson Navigation Footer */}
+        <div className="bg-white border border-gray-200 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+          {prevLesson ? (
+            <Link
+              href={`/modules/${currentModule.id}/lessons/${prevLesson.id}`}
+              className="w-full sm:w-auto"
+            >
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-700 hover:text-[#E4002B]"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Previous Lesson</span>
+              </Button>
+            </Link>
+          ) : (
+            <Link href={`/modules/${currentModule.id}`} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-700 hover:text-[#E4002B]"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Module</span>
+              </Button>
+            </Link>
+          )}
+
+          <div className="w-full sm:w-auto flex justify-end">
+            {nextLesson ? (
+              <Link
+                href={`/modules/${currentModule.id}/lessons/${nextLesson.id}`}
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-black text-sm flex items-center justify-center space-x-2 px-6 py-2.5 shadow-sm"
+                >
+                  <span>Next Lesson</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            ) : (
+              <Link
+                href={`/modules/${currentModule.id}`}
+                className="w-full sm:w-auto"
+              >
+                <Button
+                  className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-black text-sm flex items-center justify-center space-x-2 px-6 py-2.5 shadow-sm"
+                >
+                  <span>Back to Module</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
       </main>
