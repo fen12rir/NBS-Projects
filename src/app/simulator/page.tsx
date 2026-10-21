@@ -31,7 +31,7 @@ export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_CLOSE" | "PO
 
 function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
   if (!scenario) return "ACTIVE_REGISTER";
-  if (scenario.id === "scen-les-2-1") return "START_OF_DAY_VERIFY";
+  if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2") return "START_OF_DAY_VERIFY";
   if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
   return "ACTIVE_REGISTER";
 }
@@ -64,11 +64,13 @@ function SimulatorContent() {
       : null
   );
 
-  const returnLessonUrl = (targetModuleId && targetLessonId)
+  const isLessonSpecific = Boolean(lessonParam || activeScenario?.lessonRef);
+  const returnLessonUrl = isLessonSpecific && targetModuleId && targetLessonId
     ? `/modules/${targetModuleId}/lessons/${targetLessonId}`
     : targetModuleId
     ? `/modules/${targetModuleId}`
     : "/dashboard";
+  const returnButtonLabel = isLessonSpecific ? "Back to Lesson" : "Back to Module";
   const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
     getInitialTerminalMode(initialScenario)
   );
@@ -688,7 +690,7 @@ function SimulatorContent() {
           {returnLessonUrl !== "/dashboard" ? (
             <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Lesson</span>
+              <span>{returnButtonLabel}</span>
             </Link>
           ) : (
             <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white">
@@ -1913,7 +1915,7 @@ function SimulatorContent() {
                     type="button"
                     className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
                   >
-                    <span>Back to Lesson</span>
+                    <span>{returnButtonLabel}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </Link>
