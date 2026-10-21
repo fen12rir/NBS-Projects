@@ -236,6 +236,24 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Quantity Entry & Scanning Items",
         objective: "Set item multiplier before scanning to avoid repetitive single-item entries.",
         deckSlideRef: "Slides 27, 29-31",
+         visualAssets: [
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/function-keys-mainpage.png",
+            caption: "When a customer buys multiples of the same item, press F3 (Quantity), located on the function key row.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-quantity-step1-f3.png",
+            caption: "Press F3 key on keyboard and enter how many pieces of items customer will buy, then press Enter key.",
+            alt: "Checkout screen showing F3 Quantity prompt with sample input of 5"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-quantity-step2-f3.png",
+            caption: "Scan or enter the item GTIN. The line item will immediately record with the entered quantity.",
+            alt: "Checkout screen showing item scanned with quantity of 2"
+          }
+         
+        ],
         instructions: [
           "When a customer buys multiples of the same item, press F3 (Quantity).",
           "Type the number of pieces (e.g. 5) and press ENTER.",
@@ -248,6 +266,49 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Item Void & Transaction Void (Manager Override)",
         objective: "Execute line-level and transaction-level cancellations with required supervisory approval.",
         deckSlideRef: "Slides 35-43",
+
+        visualAssets: [
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step1-f7.png",
+            caption: "Press F7 (Item Void) to cancel a single line item. The system requests manager override. Enter manager override username and password, then press ENTER.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step2-f7.png",
+            caption: "Select a cancellation reason and press Alt + Enter.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step3-f7.png",
+            caption: "Select item to void and press Alt + Enter.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step4-f7.png",
+            caption: "Quantity will turn negative, indicating the item has been voided.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step1-f8.png",
+            caption: "Press F8 (Trx Void) to cancel the entire transaction. The system requests manager override. Enter manager override username and password, then press ENTER.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step2-f8.png",
+            caption: "Press Y to confirm transaction void.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step3-f8.png",
+            caption: "Select a reason for trx void, and press Alt + Enter to continue.",
+            alt: ""
+          },
+         
+        ],
+        
         instructions: [
           "For line cancellation: Press F7 (Item Void). The system requests manager override.",
           "Select the cancellation reason code and press Alt + Enter.",
