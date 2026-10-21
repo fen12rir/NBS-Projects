@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -48,9 +48,53 @@ export default function DashboardPage() {
 
   const totalLessons = TRAINING_MODULES.reduce((sum, m) => sum + m.lessons.length, 0);
   const completedLessonCount = progress.completedLessons.length;
-  const progressPercent = Math.round((completedLessonCount / totalLessons) * 100);
+  const progressPercent = totalLessons > 0 ? Math.round((completedLessonCount / totalLessons) * 100) : 0;
 
+  const allModulesCompleted = totalLessons > 0 && completedLessonCount >= totalLessons;
+  const hasAttempts = progress.scenarioAttempts.length > 0;
   const bestAttempt = progress.scenarioAttempts.find((a) => a.passed);
+  const latestAttempt = progress.scenarioAttempts[0];
+
+  type SimulatorStatusType = "Pending" | "Passed" | "Failed";
+  let simulatorStatus: SimulatorStatusType = "Pending";
+  let simulatorStatusDetail = "";
+
+  if (!allModulesCompleted) {
+    simulatorStatus = "Pending";
+    simulatorStatusDetail = `${completedLessonCount} of ${totalLessons} lessons completed • Finish all modules first`;
+  } else if (!hasAttempts) {
+    simulatorStatus = "Pending";
+    simulatorStatusDetail = "All modules completed • Awaiting simulator assessment";
+  } else if (bestAttempt) {
+    simulatorStatus = "Passed";
+    simulatorStatusDetail = `All modules completed • Assessment passed (${bestAttempt.score}%)`;
+  } else {
+    simulatorStatus = "Failed";
+    simulatorStatusDetail = `Assessment failed (${latestAttempt?.score ?? 0}%) • Retake required (70% to pass)`;
+  }
+
+  type CertificationStatusType = "Pending" | "In Progress" | "Certified";
+  let certificationStatus: CertificationStatusType = "Pending";
+  let certificationDetail = "";
+
+  const isCertified = allModulesCompleted && !!bestAttempt;
+
+  if (isCertified) {
+    certificationStatus = "Certified";
+    certificationDetail = "Congratulations for Passing the exam!";
+  } else if (completedLessonCount > 0 || hasAttempts) {
+    certificationStatus = "In Progress";
+    if (!allModulesCompleted) {
+      certificationDetail = `${completedLessonCount} of ${totalLessons} lessons completed • Assessment pending`;
+    } else {
+      certificationDetail = hasAttempts
+        ? `Assessment score (${latestAttempt?.score ?? 0}%) • Retake exam to earn certification`
+        : "All modules completed • Complete practical exam to earn certification";
+    }
+  } else {
+    certificationStatus = "Pending";
+    certificationDetail = "Complete all modules and practical assessment to unlock";
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -107,12 +151,12 @@ export default function DashboardPage() {
               <div>
                 <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Simulator Status</div>
                 <div className="text-2xl font-black text-gray-900 mt-1">
-                  {bestAttempt ? (
+                  {simulatorStatus === "Passed" ? (
                     <span className="text-emerald-600">Passed</span>
-                  ) : progress.scenarioAttempts.length > 0 ? (
-                    <span className="text-amber-600">In Progress</span>
+                  ) : simulatorStatus === "Failed" ? (
+                    <span className="text-red-600">Failed</span>
                   ) : (
-                    <span className="text-gray-400">Not Started</span>
+                    <span className="text-amber-600">Pending</span>
                   )}
                 </div>
               </div>
@@ -121,7 +165,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-xs text-gray-500">
-              {progress.scenarioAttempts.length} practical attempts logged
+              {simulatorStatusDetail}
             </div>
           </Card>
 
@@ -130,15 +174,27 @@ export default function DashboardPage() {
               <div>
                 <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Certification</div>
                 <div className="text-2xl font-black text-gray-900 mt-1">
-                  {bestAttempt ? "Eligible" : "Pending"}
+                  {certificationStatus === "Certified" ? (
+                    <span className="text-emerald-600">Certified</span>
+                  ) : certificationStatus === "In Progress" ? (
+                    <span className="text-red-600">In Progress</span>
+                  ) : (
+                    <span className="text-gray-400">Pending</span>
+                  )}
                 </div>
               </div>
               <div className="w-10 h-10 bg-red-50 text-[#E4002B] flex items-center justify-center">
                 <Award className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-3 text-xs text-gray-500">
-              Pass the Cashier Practical Assessment to unlock
+            <div className="mt-3 text-xs">
+              {certificationStatus === "Certified" ? (
+                <span className="text-emerald-600 font-bold">
+                  Congratulations for Passing the exam!
+                </span>
+              ) : (
+                <span className="text-gray-500">{certificationDetail}</span>
+              )}
             </div>
           </Card>
         </div>

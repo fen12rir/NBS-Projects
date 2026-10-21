@@ -35,7 +35,8 @@ export default function ModuleDetailPage() {
     setProgress(getLocalProgress());
   }, []);
 
-  const currentModule = TRAINING_MODULES.find((m) => m.id === moduleId);
+  const currentModuleIndex = TRAINING_MODULES.findIndex((m) => m.id === moduleId);
+  const currentModule = currentModuleIndex !== -1 ? TRAINING_MODULES[currentModuleIndex] : undefined;
 
   if (!currentModule) {
     return (
@@ -51,6 +52,11 @@ export default function ModuleDetailPage() {
       </div>
     );
   }
+
+  const prevModule = currentModuleIndex > 0 ? TRAINING_MODULES[currentModuleIndex - 1] : null;
+  const nextModule = (currentModuleIndex !== -1 && currentModuleIndex < TRAINING_MODULES.length - 1)
+    ? TRAINING_MODULES[currentModuleIndex + 1]
+    : null;
 
   const completedInMod = currentModule.lessons.filter((l) =>
     progress.completedLessons.includes(l.id)
@@ -117,8 +123,8 @@ export default function ModuleDetailPage() {
               const isCompleted = progress.completedLessons.includes(lesson.id);
               const lessonScenario = getScenarioForLesson(lesson.id);
               const simulatorUrl = lessonScenario
-                ? `/simulator?scenario=${lessonScenario.id}`
-                : `/simulator?module=${currentModule.id}`;
+                ? `/simulator?scenario=${lessonScenario.id}&lesson=${lesson.id}&module=${currentModule.id}`
+                : `/simulator?module=${currentModule.id}&lesson=${lesson.id}`;
 
               return (
                 <Card
@@ -170,7 +176,7 @@ export default function ModuleDetailPage() {
                         className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-600 hover:border-[#E4002B] hover:text-[#E4002B]"
                       >
                         <Monitor className="w-3.5 h-3.5" />
-                        <span>{lessonScenario ? "Practice" : "Simulator"}</span>
+                        <span>Practice</span>
                       </Button>
                     </Link>
                   </div>
@@ -198,6 +204,55 @@ export default function ModuleDetailPage() {
               Launch POS Terminal
             </Button>
           </Link>
+        </div>
+
+        {/* Module Navigation Footer */}
+        <div className="bg-white border border-gray-200 p-4 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          {prevModule ? (
+            <Link href={`/modules/${prevModule.id}`} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-700 hover:text-[#E4002B]"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Previous Module</span>
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/dashboard" className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto font-bold text-xs flex items-center justify-center space-x-1 border-gray-300 text-gray-700 hover:text-[#E4002B]"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Back to Dashboard</span>
+              </Button>
+            </Link>
+          )}
+
+          <div className="w-full sm:w-auto flex items-center justify-end">
+            {nextModule ? (
+              <Link href={`/modules/${nextModule.id}`} className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-black text-sm flex items-center justify-center space-x-2 px-6 py-2.5 shadow-sm"
+                >
+                  <span>Next Module</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            ) : (
+              <Link href="/dashboard" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-black text-sm flex items-center justify-center space-x-2 px-6 py-2.5 shadow-sm"
+                >
+                  <span>Complete Curriculum (Back to Dashboard)</span>
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </main>
     </div>
