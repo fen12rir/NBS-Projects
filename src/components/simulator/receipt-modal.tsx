@@ -16,8 +16,13 @@ export function ReceiptModal({ state, onClose, onReset }: ReceiptModalProps) {
   const totals = calculateTotals(state.lineItems);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white max-w-sm w-full p-6 space-y-4 font-mono text-xs border-2 border-gray-900 shadow-2xl animate-in fade-in zoom-in-95">
+    <>
+      <div
+        className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+        <div className="bg-white max-w-sm w-full p-6 space-y-4 font-mono text-xs border-2 border-gray-900 shadow-2xl animate-in fade-in zoom-in-95 pointer-events-auto">
         <div className="text-center space-y-1 border-b border-dashed border-gray-400 pb-3">
           <div className="font-bold text-sm tracking-widest text-[#E4002B]">
             NATIONAL BOOK STORE
@@ -111,5 +116,6 @@ export function ReceiptModal({ state, onClose, onReset }: ReceiptModalProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

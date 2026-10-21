@@ -171,15 +171,15 @@ export default function HomePage() {
                 className="w-full max-w-[560px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden hover:ring-4 hover:ring-[#E4002B]/40 transition-all cursor-pointer group"
               >
                 {/* 1. Header Bar */}
-                <div className="bg-[#B0B8C0] border-b border-gray-500 px-2 py-0.5 flex items-center justify-between text-[10px] font-bold text-gray-900 font-mono">
-                  <span>Trx.: 0212202629990003000592</span>
-                  <span>Clerk: Jan Angela</span>
-                  <span>Str No.: 2999</span>
-                  <span>Reg No.: 0003</span>
+                <div className="bg-[#B0B8C0] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight select-none">
+                  <div>Trx.: <span className="font-normal font-mono">0212202629990003000592</span></div>
+                  <div>Clerk: <span className="font-normal">Jan Angela</span></div>
+                  <div>Str No.: <span className="font-normal">2999</span></div>
+                  <div>Reg No.: <span className="font-normal">0003</span></div>
                 </div>
 
                 {/* 2. Main Terminal Body */}
-                <div className="grid grid-cols-12 bg-white min-h-[290px]">
+                <div className="grid grid-cols-12 bg-white min-h-[320px] select-none">
                   
                   {/* Left 10 Columns: Scanner, Display, Top Keys, Line Item Table */}
                   <div className="col-span-10 flex flex-col border-r-2 border-gray-400">
@@ -187,60 +187,71 @@ export default function HomePage() {
                     {/* Top Row: Yellow UPC Input + Black LED Display */}
                     <div className="grid grid-cols-12 border-b-2 border-gray-400">
                       
-                      {/* Yellow Barcode Box */}
-                      <div className="col-span-6 bg-[#FFF275] border-r border-gray-400 p-1.5 flex flex-col justify-center">
-                        <div className="text-center font-bold text-[10px] text-gray-900 mb-0.5">
-                          Scan or Enter UPC
+                      {/* Left 6 cols: Yellow Barcode Box + 4 Function Buttons */}
+                      <div className="col-span-6 border-r-2 border-gray-400 flex flex-col justify-between">
+                        <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
+                          <div className="text-center font-bold text-[10px] text-gray-900 tracking-wide mb-1 font-sans">
+                            Scan or Enter UPC
+                          </div>
+                          <div className="w-full bg-white border border-gray-500 px-2 py-0.5 text-xs font-mono font-bold text-gray-900 shadow-inner flex items-center justify-between h-6">
+                            <span>NBS-PAP-003</span>
+                            <span className="inline-block w-1.5 h-3.5 bg-gray-900 animate-pulse" />
+                          </div>
                         </div>
-                        <div className="w-full bg-white border border-gray-500 px-1 py-0.5 text-xs font-mono font-bold text-gray-800 shadow-inner h-6 flex items-center">
-                          <span className="inline-block w-1 h-4 bg-gray-900"></span>
+
+                        {/* 4 HORIZONTAL FUNCTION BUTTONS (F11, F12, F10, F2) */}
+                        <div className="grid grid-cols-4 bg-[#C2CAD0] border-t-2 border-gray-400 text-center font-sans h-[42px]">
+                          {/* F11 (Up Arrow) */}
+                          <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                            <div className="w-0 h-0 border-x-[5px] border-x-transparent border-b-[8px] border-b-[#16A34A] mb-0.5" />
+                            <span className="text-[9px] font-bold text-gray-900">F11</span>
+                          </div>
+
+                          {/* F12 (Down Arrow) */}
+                          <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                            <div className="w-0 h-0 border-x-[5px] border-x-transparent border-t-[8px] border-t-[#16A34A] mb-0.5" />
+                            <span className="text-[9px] font-bold text-gray-900">F12</span>
+                          </div>
+
+                          {/* F10 (CSA ON/OFF) */}
+                          <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                            <span className="text-[8px] font-bold text-gray-900 leading-tight">CSA</span>
+                            <span className="text-[7px] font-bold text-gray-700 leading-none">ON/OFF</span>
+                            <span className="text-[9px] font-extrabold text-[#1D4ED8]">F10</span>
+                          </div>
+
+                          {/* F2 (Lookup) */}
+                          <div className="bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                            <span className="text-[9px] font-bold text-gray-900 leading-none">Lookup</span>
+                            <span className="text-[9px] font-extrabold text-[#1D4ED8]">F2</span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Black LED Display */}
-                      <div className="col-span-6 bg-black text-white p-1.5 font-mono flex flex-col justify-between">
+                      {/* Right 6 cols: Black LED Display */}
+                      <div className="col-span-6 bg-black text-white p-2 font-mono flex flex-col justify-between">
                         <div className="grid grid-cols-2 text-[10px] leading-tight">
-                          <div>
+                          <div className="space-y-0.5">
                             <div className="text-[#38BDF8] font-bold">SubTotal:</div>
-                            <div className="text-gray-300">Quantity:</div>
+                            <div className="text-white font-bold">Quantity:</div>
                             <div className="text-[#4ADE80] font-bold">Unit Price:</div>
                           </div>
-                          <div className="text-right">
-                            <div className="text-[#38BDF8] font-bold">0.00</div>
-                            <div className="text-gray-300">0</div>
-                            <div className="text-[#4ADE80] font-bold">0.00</div>
+                          <div className="text-right space-y-0.5">
+                            <div className="text-[#38BDF8] font-bold">364.50</div>
+                            <div className="text-white font-bold">4</div>
+                            <div className="text-[#4ADE80] font-bold">200.00</div>
                           </div>
                         </div>
 
-                        {/* Big Green*/}
-                        <div className="text-right text-2xl font-mono font-bold text-[#00FF66] tracking-wider pt-0.5">
-                          0.00
+                        {/* Huge Bright Green LED Amount */}
+                        <div className="text-right text-3xl sm:text-4xl font-mono font-bold text-[#00FF66] tracking-wider pt-1">
+                          364.50
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Top 4 Horizontal Function Keys */}
-                    <div className="grid grid-cols-4 bg-[#C2CAD0] border-b-2 border-gray-400 text-center">
-                      <div className="p-1 border-r border-gray-400 flex flex-col items-center justify-center">
-                        <div className="w-0 h-0 border-x-4 border-x-transparent border-b-[8px] border-b-[#16A34A] mb-0.5"></div>
-                        <span className="text-[9px] font-bold text-gray-800">F11</span>
-                      </div>
-                      <div className="p-1 border-r border-gray-400 flex flex-col items-center justify-center">
-                        <div className="w-0 h-0 border-x-4 border-x-transparent border-t-[8px] border-t-[#16A34A] mb-0.5"></div>
-                        <span className="text-[9px] font-bold text-gray-800">F12</span>
-                      </div>
-                      <div className="p-1 border-r border-gray-400 flex flex-col items-center justify-center">
-                        <span className="text-[9px] font-bold text-gray-900 leading-none">CSA ON/OFF</span>
-                        <span className="text-[8px] font-bold text-[#1D4ED8]">F10</span>
-                      </div>
-                      <div className="p-1 flex flex-col items-center justify-center bg-gray-200">
-                        <span className="text-[9px] font-bold text-gray-900 leading-none">Lookup</span>
-                        <span className="text-[8px] font-bold text-[#1D4ED8]">F2</span>
                       </div>
                     </div>
 
                     {/* Table Headers */}
-                    <div className="bg-[#B8C2CC] border-b border-gray-400 px-1 py-0.5 text-[9px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
+                    <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-0.5 text-[9px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
                       <span className="col-span-1 text-left">LN</span>
                       <span className="col-span-3 text-left">UPC</span>
                       <span className="col-span-4 text-left">Description</span>
@@ -250,76 +261,107 @@ export default function HomePage() {
                       <span className="col-span-1 text-right">Type</span>
                     </div>
 
-                    {/* Line Item Screen Page */}
-                    <div className="flex-1 bg-white p-2 flex items-center justify-center text-gray-400 italic text-[11px] font-mono">
-                      Line item screen page
+                    {/* Populated Line Items Table */}
+                    <div className="flex-1 bg-white overflow-hidden p-1 font-mono text-[10px] divide-y divide-gray-100 min-h-[140px]">
+                      {/* Line Item 1 */}
+                      <div className="grid grid-cols-12 py-1 px-1 items-center text-gray-900">
+                        <span className="col-span-1 text-left font-bold">1</span>
+                        <span className="col-span-3 text-left truncate">NBS-BK-001</span>
+                        <span className="col-span-4 text-left font-bold truncate pr-1">SPIRAL NOTEBOOK 80L</span>
+                        <span className="col-span-1 text-center font-bold">2</span>
+                        <span className="col-span-1 text-right text-gray-700">39.50</span>
+                        <span className="col-span-1 text-right font-bold">79.00</span>
+                        <span className="col-span-1 text-right text-gray-500">REG</span>
+                      </div>
+
+                      {/* Line Item 2 */}
+                      <div className="grid grid-cols-12 py-1 px-1 items-center text-gray-900">
+                        <span className="col-span-1 text-left font-bold">2</span>
+                        <span className="col-span-3 text-left truncate">NBS-PEN-002</span>
+                        <span className="col-span-4 text-left font-bold truncate pr-1">PILOT G-TECH C4 0.4MM</span>
+                        <span className="col-span-1 text-center font-bold">1</span>
+                        <span className="col-span-1 text-right text-gray-700">85.50</span>
+                        <span className="col-span-1 text-right font-bold">85.50</span>
+                        <span className="col-span-1 text-right text-gray-500">REG</span>
+                      </div>
+
+                      {/* Line Item 3 (Active Highlighted Row) */}
+                      <div className="grid grid-cols-12 py-1 px-1 items-center text-blue-900 bg-blue-50 border-y border-blue-200">
+                        <span className="col-span-1 text-left font-bold text-blue-700">3</span>
+                        <span className="col-span-3 text-left truncate font-bold">NBS-PAP-003</span>
+                        <span className="col-span-4 text-left font-bold truncate pr-1">A4 COPY PAPER 70GSM</span>
+                        <span className="col-span-1 text-center font-bold">1</span>
+                        <span className="col-span-1 text-right text-gray-700">200.00</span>
+                        <span className="col-span-1 text-right font-bold text-blue-800">200.00</span>
+                        <span className="col-span-1 text-right text-gray-500">REG</span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Right 2 Columns: Red and Silver Function Buttons Column */}
-                  <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between space-y-1">
-                    <div className="bg-[#D2D7DF] p-1 text-center border border-gray-400 shadow-sm">
-                      <div className="text-[9px] font-bold text-gray-900 leading-none">Quantity</div>
-                      <div className="text-[9px] font-bold text-[#1D4ED8]">F3</div>
+                  <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1">
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Quantity</span>
+                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F3</span>
                     </div>
 
-                    <div className="bg-[#E4002B] p-1 text-center border border-red-700 shadow-sm text-white">
-                      <div className="text-[9px] font-bold leading-none">Payment</div>
-                      <div className="text-[9px] font-bold text-yellow-300">F4</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Payment</span>
+                      <span className="text-[9px] font-extrabold text-yellow-300">F4</span>
                     </div>
 
-                    <div className="bg-[#D2D7DF] p-1 text-center border border-gray-400 shadow-sm">
-                      <div className="text-[9px] font-bold text-gray-900 leading-none">Option</div>
-                      <div className="text-[9px] font-bold text-[#1D4ED8]">F5</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Option</span>
+                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F5</span>
                     </div>
 
-                    <div className="bg-[#D2D7DF] p-1 text-center border border-gray-400 shadow-sm">
-                      <div className="text-[9px] font-bold text-gray-900 leading-none">Non Mdse</div>
-                      <div className="text-[9px] font-bold text-[#1D4ED8]">F6</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Non Mdse</span>
+                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F6</span>
                     </div>
 
-                    <div className="bg-[#E4002B] p-1 text-center border border-red-700 shadow-sm text-white">
-                      <div className="text-[9px] font-bold leading-none">Item Void</div>
-                      <div className="text-[9px] font-bold text-yellow-300">F7</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Item Void</span>
+                      <span className="text-[9px] font-extrabold text-yellow-300">F7</span>
                     </div>
 
-                    <div className="bg-[#E4002B] p-1 text-center border border-red-700 shadow-sm text-white">
-                      <div className="text-[9px] font-bold leading-none">Trx Void</div>
-                      <div className="text-[9px] font-bold text-yellow-300">F8</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Trx Void</span>
+                      <span className="text-[9px] font-extrabold text-yellow-300">F8</span>
                     </div>
 
-                    <div className="bg-[#E4002B] p-1 text-center border border-red-700 shadow-sm text-white">
-                      <div className="text-[9px] font-bold leading-none">Suspend</div>
-                      <div className="text-[9px] font-bold text-yellow-300">F9</div>
+                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[9px] font-bold leading-tight uppercase">Suspend</span>
+                      <span className="text-[9px] font-extrabold text-yellow-300">F9</span>
                     </div>
 
-                    <div className="text-center font-mono text-[8px] text-gray-700 pt-0.5">
+                    <div className="text-center font-mono text-[8px] text-gray-700 pt-0.5 border-t border-gray-400">
                       Page: 0/0
                     </div>
                   </div>
                 </div>
 
                 {/* 3. Bottom Footer Bar */}
-                <div className="bg-[#B0B8C0] border-t-2 border-gray-500 grid grid-cols-12 text-[10px] font-sans items-stretch">
-                  <div className="col-span-4 bg-[#FFF275] border-r border-gray-500 px-2 py-1 flex items-center justify-between">
-                    <span className="font-bold text-gray-900">Total Qty</span>
-                    <span className="font-mono font-bold bg-white px-2 py-0.5 border border-gray-400 text-gray-900">
-                      0
+                <div className="bg-[#B0B8C0] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch select-none">
+                  <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between">
+                    <span className="font-bold text-gray-900 text-[10px]">Total Qty</span>
+                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
+                      4
                     </span>
                   </div>
 
-                  <div className="col-span-4 bg-[#16A34A] border-r border-gray-500 px-2 py-1 flex items-center justify-between text-white">
-                    <span className="font-bold">Total Sales:</span>
-                    <span className="font-mono font-bold bg-white px-2 py-0.5 border border-gray-400 text-gray-900">
-                      0.00
+                  <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between text-white">
+                    <span className="font-bold text-[10px]">Total Sales:</span>
+                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
+                      364.50
                     </span>
                   </div>
 
-                  <div className="col-span-2 bg-[#C2CAD0] border-r border-gray-500 px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px]">
+                  <div className="col-span-2 bg-[#C2CAD0] border-r border-gray-500 px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px] font-mono">
                     2026-Feb-12
                   </div>
 
-                  <div className="col-span-2 bg-[#C2CAD0] px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px]">
+                  <div className="col-span-2 bg-[#C2CAD0] px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px] font-mono">
                     09:04:03 AM
                   </div>
                 </div>

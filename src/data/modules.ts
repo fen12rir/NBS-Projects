@@ -153,7 +153,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           },
           {
             src: "/assets/modules/module-3-item-lookup-loyalty/images/f2-lookup-by-description.png",
-            caption: "F3 DESCRIPTION - Type a keyword (e.g. 'harvard') to find all matching titles. Red highlighted row indicates a currently active promo price on the right column.",
+            caption: "F3 DESCRIPTION - Type a keyword (e.g. 'harvard') to find matching titles. The highlighted row indicates the currently selected item (navigated via F11/F12), while the PROMO column on the right displays any active promotional price.",
             alt: "F2 Lookup by Description screen showing promo prices"
           }
         ],
@@ -161,7 +161,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "Press F2 (Lookup) from the main POS screen - the Lookup screen will open.",
           "Press F2 again inside Lookup to search by SKU / Barcode: scan or type the GTIN then press ENTER.",
           "Press F3 inside Lookup to search by Description: type a keyword and results appear instantly.",
-          "The PROMO column on the right shows any active promotional price. Red rows indicate a promo is applied.",
+          "The PROMO column on the right displays any active promotional price alongside the regular SRP. The highlighted bar indicates your currently selected item.",
           "Press ENTER or double-click a row to select the item, or press ALT+B (CANCEL) to exit without selecting."
         ],
         keyCallouts: ["F2: Open Lookup", "F2 (inside Lookup): SKU/Barcode search", "F3 (inside Lookup): Description search", "F11/F12: Scroll results up/down", "ENTER: Select item"]
@@ -220,7 +220,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "A popup confirms: 'LNQR has been updated!' showing the customer name, card number, previous balance, earned Sulit Coins, and new balance. Press ENTER or click OK.",
           "The terminal returns to the active register home. The receipt automatically prints LNQR details including earned Sulit Coins."
         ],
-        keyCallouts: ["F4: Payment", "1: No Loyalty", "2: LNC Card", "3: LNQR / LNQR Plus", "TAB: Move to OK", "ENTER: Confirm", "Change = Red blinking row"]
+        keyCallouts: ["F4: Payment", "1: No Loyalty", "2: LNC Card", "3: LNQR / LNQR Plus", "TAB: Move to OK", "ENTER: Confirm"]
       }
     ]
   },

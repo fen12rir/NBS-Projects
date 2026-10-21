@@ -195,7 +195,7 @@ export default function ModuleDetailPage() {
                 Ready to try this in the POS simulator?
               </h3>
               <p className="text-xs text-blue-700">
-                Launch the terminal to practice the key combinations and procedures covered in this module.
+                Launch the terminal to practice all key procedures and workflows covered across all lessons in this module.
               </p>
             </div>
           </div>

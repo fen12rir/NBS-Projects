@@ -31,7 +31,7 @@ export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_CLOSE" | "PO
 
 function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
   if (!scenario) return "ACTIVE_REGISTER";
-  if (scenario.id === "scen-les-2-1") return "START_OF_DAY_VERIFY";
+  if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2") return "START_OF_DAY_VERIFY";
   if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
   return "ACTIVE_REGISTER";
 }
@@ -64,11 +64,13 @@ function SimulatorContent() {
       : null
   );
 
-  const returnLessonUrl = (targetModuleId && targetLessonId)
+  const isLessonSpecific = Boolean(lessonParam || activeScenario?.lessonRef);
+  const returnLessonUrl = isLessonSpecific && targetModuleId && targetLessonId
     ? `/modules/${targetModuleId}/lessons/${targetLessonId}`
     : targetModuleId
     ? `/modules/${targetModuleId}`
     : "/dashboard";
+  const returnButtonLabel = isLessonSpecific ? "Back to Lesson" : "Back to Module";
   const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
     getInitialTerminalMode(initialScenario)
   );
@@ -683,12 +685,12 @@ function SimulatorContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
-      <header className="bg-black text-white px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
+      <header className="relative z-50 bg-black text-white px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
         <div className="flex items-center space-x-3">
           {returnLessonUrl !== "/dashboard" ? (
             <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white">
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Lesson</span>
+              <span>{returnButtonLabel}</span>
             </Link>
           ) : (
             <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white">
@@ -1474,152 +1476,170 @@ function SimulatorContent() {
 
       {/* LOGOUT CONFIRMATION MODAL */}
       {isLogoutModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 select-none">
-          <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans">
-            {/* Green Title Bar */}
-            <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
-              LOGOUT
-            </div>
-
-            {/* Dialog Body */}
-            <div className="p-6 space-y-6">
-              <div className="text-center font-bold text-sm text-gray-900">
-                Are you sure you want to LOGOUT?
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={handleCancelLogout}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+            <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
+              {/* Green Title Bar */}
+              <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
+                LOGOUT
               </div>
 
-              {/* Action Buttons: Yes & No */}
-              <div className="flex items-center justify-center space-x-6">
-                <button
-                  type="button"
-                  onClick={handleConfirmLogout}
-                  className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
-                    selectedLogoutButton === "YES"
-                      ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                      : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                  }`}
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancelLogout}
-                  className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
-                    selectedLogoutButton === "NO"
-                      ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                      : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                  }`}
-                >
-                  No
-                </button>
-              </div>
+              {/* Dialog Body */}
+              <div className="p-6 space-y-6">
+                <div className="text-center font-bold text-sm text-gray-900">
+                  Are you sure you want to LOGOUT?
+                </div>
 
-              <div className="text-center text-[11px] text-gray-500 font-mono">
-                Press <kbd className="bg-white px-1 border text-gray-800 font-bold">TAB</kbd> to toggle, <kbd className="bg-white px-1 border text-gray-800 font-bold">ENTER</kbd> to confirm
+                {/* Action Buttons: Yes & No */}
+                <div className="flex items-center justify-center space-x-6">
+                  <button
+                    type="button"
+                    onClick={handleConfirmLogout}
+                    className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                      selectedLogoutButton === "YES"
+                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                    }`}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelLogout}
+                    className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                      selectedLogoutButton === "NO"
+                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
+
+                <div className="text-center text-[11px] text-gray-500 font-mono">
+                  Press <kbd className="bg-white px-1 border text-gray-800 font-bold">TAB</kbd> to toggle, <kbd className="bg-white px-1 border text-gray-800 font-bold">ENTER</kbd> to confirm
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* CHOOSE OPTION MODAL */}
       {isLoyaltyOptionOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 select-none">
-          <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans">
-            {/* Green Header */}
-            <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
-              Choose Option
-            </div>
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsLoyaltyOptionOpen(false)}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+            <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
+              {/* Green Header */}
+              <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
+                Choose Option
+              </div>
 
-            {/* Gray Content Body */}
-            <div className="p-6 bg-[#B0B8C0] space-y-3">
-              <button
-                type="button"
-                onClick={() => handleSelectLoyalty(1)}
-                className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
-              >
-                1. None
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectLoyalty(2)}
-                className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
-              >
-                2. Laking National Card
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectLoyalty(3)}
-                className="w-full text-left px-4 py-2.5 bg-white text-gray-900 font-extrabold text-sm border-2 border-red-500 ring-2 ring-red-400 shadow-sm transition-all cursor-pointer"
-                autoFocus
-              >
-                3. LNQR / LNQR PLUS
-              </button>
+              {/* Gray Content Body */}
+              <div className="p-6 bg-[#B0B8C0] space-y-3">
+                <button
+                  type="button"
+                  onClick={() => handleSelectLoyalty(1)}
+                  className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+                >
+                  1. None
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectLoyalty(2)}
+                  className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+                >
+                  2. Laking National Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSelectLoyalty(3)}
+                  className="w-full text-left px-4 py-2.5 bg-white text-gray-900 font-extrabold text-sm border-2 border-red-500 ring-2 ring-red-400 shadow-sm transition-all cursor-pointer"
+                  autoFocus
+                >
+                  3. LNQR / LNQR PLUS
+                </button>
 
-              <div className="text-center text-xs font-mono text-gray-700 pt-2">
-                Press key <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">1</kbd>, <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">2</kbd>, or <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">3</kbd> on your keyboard
+                <div className="text-center text-xs font-mono text-gray-700 pt-2">
+                  Press key <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">1</kbd>, <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">2</kbd>, or <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">3</kbd> on your keyboard
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* LNQR HAS BEEN UPDATED MODAL */}
       {isLnqrUpdatedModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 select-none">
-          <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans">
-            {/* Window Title Bar */}
-            <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
-              <div className="flex items-center space-x-1 truncate">
-                <span className="text-[10px] leading-none">{'\u2022'}</span>
-                <span className="text-[11px] truncate tracking-wide text-gray-100">
-                  The page at http://localhost says:
-                </span>
-              </div>
-              <div className="flex items-center space-x-0.5">
-                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">_</div>
-                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                  <div className="w-2 h-2 border border-gray-200" />
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={handleConfirmLnqrUpdated}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+            <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto">
+              {/* Window Title Bar */}
+              <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
+                <div className="flex items-center space-x-1 truncate">
+                  <span className="text-[10px] leading-none">{'\u2022'}</span>
+                  <span className="text-[11px] truncate tracking-wide text-gray-100">
+                    The page at http://localhost says:
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleConfirmLnqrUpdated}
-                  className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
-                >
-                  {'\u2715'}
-                </button>
-              </div>
-            </div>
-
-            {/* Window Content */}
-            <div className="p-4 space-y-4">
-              <div className="flex items-start space-x-3">
-                {/* Yellow Warning Triangle Icon */}
-                <div className="text-amber-500 font-extrabold text-2xl leading-none flex-shrink-0">
-                  ⚠️
-                </div>
-                <div className="text-xs font-sans text-gray-900 space-y-1 font-semibold leading-relaxed">
-                  <div className="font-bold text-sm text-gray-900 mb-1">LNQR has been updated!</div>
-                  <div>Name: Cate Marie Gonzalez</div>
-                  <div>Card Number : 20221003LN000004</div>
-                  <div>New Sulit Coins: 32.63</div>
-                  <div>Sulit Coins Earn: 11.48</div>
+                <div className="flex items-center space-x-0.5">
+                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">_</div>
+                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                    <div className="w-2 h-2 border border-gray-200" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleConfirmLnqrUpdated}
+                    className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
+                  >
+                    {'\u2715'}
+                  </button>
                 </div>
               </div>
 
-              {/* OK Button */}
-              <div className="flex justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={handleConfirmLnqrUpdated}
-                  className="min-w-[70px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
-                  autoFocus
-                >
-                  OK
-                </button>
+              {/* Window Content */}
+              <div className="p-4 space-y-4">
+                <div className="flex items-start space-x-3">
+                  {/* Yellow Warning Triangle Icon */}
+                  <div className="text-amber-500 font-extrabold text-2xl leading-none flex-shrink-0">
+                    ⚠️
+                  </div>
+                  <div className="text-xs font-sans text-gray-900 space-y-1 font-semibold leading-relaxed">
+                    <div className="font-bold text-sm text-gray-900 mb-1">LNQR has been updated!</div>
+                    <div>Name: Cate Marie Gonzalez</div>
+                    <div>Card Number : 20221003LN000004</div>
+                    <div>New Sulit Coins: 32.63</div>
+                    <div>Sulit Coins Earn: 11.48</div>
+                  </div>
+                </div>
+
+                {/* OK Button */}
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={handleConfirmLnqrUpdated}
+                    className="min-w-[70px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                    autoFocus
+                  >
+                    OK
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* QUICK CATALOG PICKER */}
@@ -1641,180 +1661,198 @@ function SimulatorContent() {
 
       {/* F3 QUANTITY MODAL */}
       {state.isQuantityInputActive && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 select-none">
-          <form
-            onSubmit={handleConfirmQuantity}
-            className="w-[360px] bg-[#D6D3CE] border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-2xl font-sans"
-          >
-            {/* Window Title Bar */}
-            <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
-              <div className="flex items-center space-x-1 truncate">
-                <span className="text-[10px] leading-none">{'\u2022'}</span>
-                <span className="text-[11px] truncate tracking-wide text-gray-100">
-                  The page at http://localhost says:
-                </span>
-              </div>
-              {/* Window Controls */}
-              <div className="flex items-center space-x-0.5">
-                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                  <span className="leading-none mb-0.5">_</span>
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+            <form
+              onSubmit={handleConfirmQuantity}
+              className="w-[360px] bg-[#D6D3CE] border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto"
+            >
+              {/* Window Title Bar */}
+              <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
+                <div className="flex items-center space-x-1 truncate">
+                  <span className="text-[10px] leading-none">{'\u2022'}</span>
+                  <span className="text-[11px] truncate tracking-wide text-gray-100">
+                    The page at http://localhost says:
+                  </span>
                 </div>
-                <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                  <div className="w-2 h-2 border border-gray-200" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
-                  className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
-                >
-                  {'\u2715'}
-                </button>
-              </div>
-            </div>
-
-            {/* Window Body */}
-            <div className="p-4 bg-[#D6D3CE] space-y-4">
-              {/* Message with Question Bubble Icon */}
-              <div className="flex items-center space-x-3">
-                {/* Comic / Speech Bubble Question Icon */}
-                <div className="relative flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center shadow-inner">
-                  <span className="text-gray-800 font-extrabold text-base font-serif italic">?</span>
-                  {/* speech pointer */}
-                  <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-l-2 border-b-2 border-gray-400 transform rotate-12" />
-                </div>
-                <div className="text-[13px] font-bold text-gray-900 tracking-tight font-sans">
-                  Please enter quantity
+                {/* Window Controls */}
+                <div className="flex items-center space-x-0.5">
+                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                    <span className="leading-none mb-0.5">_</span>
+                  </div>
+                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
+                    <div className="w-2 h-2 border border-gray-200" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
+                    className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
+                  >
+                    {'\u2715'}
+                  </button>
                 </div>
               </div>
 
-              {/* Inset Text Input Field */}
-              <div className="px-1">
-                <input
-                  type="number"
-                  min="1"
-                  max="999"
-                  ref={qtyInputRef}
-                  value={qtyInput}
-                  onChange={(e) => setQtyInput(e.target.value)}
-                  className="w-full bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-[#FFFFFF] border-b-[#FFFFFF] px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600 shadow-inner"
-                  autoFocus
-                />
-              </div>
+              {/* Window Body */}
+              <div className="p-4 bg-[#D6D3CE] space-y-4">
+                {/* Message with Question Bubble Icon */}
+                <div className="flex items-center space-x-3">
+                  {/* Comic / Speech Bubble Question Icon */}
+                  <div className="relative flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center shadow-inner">
+                    <span className="text-gray-800 font-extrabold text-base font-serif italic">?</span>
+                    {/* speech pointer */}
+                    <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-l-2 border-b-2 border-gray-400 transform rotate-12" />
+                  </div>
+                  <div className="text-[13px] font-bold text-gray-900 tracking-tight font-sans">
+                    Please enter quantity
+                  </div>
+                </div>
 
-              {/* Bottom Buttons: Cancel and OK */}
-              <div className="flex items-center justify-end space-x-2 pt-1 pr-1">
-                <button
-                  type="button"
-                  onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
-                  className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
-                >
-                  OK
-                </button>
+                {/* Inset Text Input Field */}
+                <div className="px-1">
+                  <input
+                    type="number"
+                    min="1"
+                    max="999"
+                    ref={qtyInputRef}
+                    value={qtyInput}
+                    onChange={(e) => setQtyInput(e.target.value)}
+                    className="w-full bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-[#FFFFFF] border-b-[#FFFFFF] px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600 shadow-inner"
+                    autoFocus
+                  />
+                </div>
+
+                {/* Bottom Buttons: Cancel and OK */}
+                <div className="flex items-center justify-end space-x-2 pt-1 pr-1">
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
+                    className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
+                  >
+                    OK
+                  </button>
+                </div>
               </div>
-            </div>
-          </form>
-        </div>
+            </form>
+          </div>
+        </>
       )}
 
       {/* PAYMENT MODAL */}
       {state.paymentDialogOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="bg-white text-gray-900 max-w-md w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl">
-            <div className="flex justify-between border-b pb-2">
-              <div>
-                <h3 className="text-sm font-bold uppercase text-[#E4002B]">Payment Menu {'\u2022'} Tender Options</h3>
-                <span className="text-[10px] text-gray-500">
-                  Total Due: <strong>{formatCurrency(totals.totalAmount)}</strong>
-                </span>
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => dispatch({ type: "CLOSE_PAYMENT" })}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white text-gray-900 max-w-md w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl pointer-events-auto">
+              <div className="flex justify-between border-b pb-2">
+                <div>
+                  <h3 className="text-sm font-bold uppercase text-[#E4002B]">Payment Menu {'\u2022'} Tender Options</h3>
+                  <span className="text-[10px] text-gray-500">
+                    Total Due: <strong>{formatCurrency(totals.totalAmount)}</strong>
+                  </span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => dispatch({ type: "CLOSE_PAYMENT" })}>
+                  Cancel / ESC
+                </Button>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => dispatch({ type: "CLOSE_PAYMENT" })}>
-                Cancel / ESC
-              </Button>
-            </div>
 
-            {!state.selectedPaymentMethod ? (
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <Button
-                  onClick={() => handleAction("PAY_CASH")}
-                  className="bg-[#E4002B] hover:bg-[#C10024] text-white font-bold py-3 text-xs flex flex-col items-center"
-                >
-                  <span>F2 CASH</span>
-                  <span className="text-[9px] opacity-80">Philippine Peso</span>
-                </Button>
-                <Button
-                  onClick={() => handleAction("PAY_CARD")}
-                  className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 text-xs flex flex-col items-center"
-                >
-                  <span>F3 BANK CARD</span>
-                  <span className="text-[9px] opacity-80">Credit / GCash</span>
-                </Button>
-              </div>
-            ) : (
-              <form onSubmit={handleConfirmTender} className="space-y-4 pt-2">
-                <div className="bg-gray-100 p-3 space-y-1">
-                  <div className="text-[10px] text-gray-500">Tender Method:</div>
-                  <div className="font-bold text-sm text-gray-900">{state.selectedPaymentMethod}</div>
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-xs">Enter Cash Amount Handed (PHP):</label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={cashTenderInput}
-                    onChange={(e) => setCashTenderInput(e.target.value)}
-                    className="text-lg font-bold text-center"
-                    autoFocus
-                  />
-                </div>
-                <div className="flex space-x-2 pt-2">
-                  <Button type="submit" className="w-full bg-[#E4002B] hover:bg-[#C10024] font-bold text-xs">
-                    Confirm Payment & Print OR
+              {!state.selectedPaymentMethod ? (
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <Button
+                    onClick={() => handleAction("PAY_CASH")}
+                    className="bg-[#E4002B] hover:bg-[#C10024] text-white font-bold py-3 text-xs flex flex-col items-center"
+                  >
+                    <span>F2 CASH</span>
+                    <span className="text-[9px] opacity-80">Philippine Peso</span>
                   </Button>
-                  <Button type="button" variant="outline" onClick={() => dispatch({ type: "SELECT_PAYMENT_METHOD", method: "" })} className="text-xs">
-                    Back
+                  <Button
+                    onClick={() => handleAction("PAY_CARD")}
+                    className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 text-xs flex flex-col items-center"
+                  >
+                    <span>F3 BANK CARD</span>
+                    <span className="text-[9px] opacity-80">Credit / GCash</span>
                   </Button>
                 </div>
-              </form>
-            )}
+              ) : (
+                <form onSubmit={handleConfirmTender} className="space-y-4 pt-2">
+                  <div className="bg-gray-100 p-3 space-y-1">
+                    <div className="text-[10px] text-gray-500">Tender Method:</div>
+                    <div className="font-bold text-sm text-gray-900">{state.selectedPaymentMethod}</div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="font-bold text-xs">Enter Cash Amount Handed (PHP):</label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={cashTenderInput}
+                      onChange={(e) => setCashTenderInput(e.target.value)}
+                      className="text-lg font-bold text-center"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex space-x-2 pt-2">
+                    <Button type="submit" className="w-full bg-[#E4002B] hover:bg-[#C10024] font-bold text-xs">
+                      Confirm Payment & Print OR
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => dispatch({ type: "SELECT_PAYMENT_METHOD", method: "" })} className="text-xs">
+                      Back
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* MANAGER OVERRIDE MODAL */}
       {state.managerOverrideOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4">
-          <div className="bg-white text-gray-900 max-w-sm w-full p-6 space-y-4 font-mono text-xs border-4 border-amber-600 shadow-2xl">
-            <div className="border-b border-amber-200 pb-2">
-              <div className="flex items-center space-x-2 text-amber-700 font-bold uppercase text-xs">
-                <ShieldAlert className="w-4 h-4" />
-                <span>Manager Authorization Required</span>
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white text-gray-900 max-w-sm w-full p-6 space-y-4 font-mono text-xs border-4 border-amber-600 shadow-2xl pointer-events-auto">
+              <div className="border-b border-amber-200 pb-2">
+                <div className="flex items-center space-x-2 text-amber-700 font-bold uppercase text-xs">
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>Manager Authorization Required</span>
+                </div>
+                <p className="text-[10px] text-gray-500 mt-1">Action: <strong>{state.managerOverrideTarget}</strong></p>
               </div>
-              <p className="text-[10px] text-gray-500 mt-1">Action: <strong>{state.managerOverrideTarget}</strong></p>
-            </div>
-            <Input
-              type="password"
-              value={overridePass}
-              onChange={(e) => setOverridePass(e.target.value)}
-              placeholder="Enter mock password..."
-              className="text-xs font-mono"
-              autoFocus
-            />
-            <div className="flex space-x-2 pt-2">
-              <Button onClick={handleConfirmOverride} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase">
-                Approve (Training)
-              </Button>
-              <Button variant="outline" onClick={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })} className="w-full text-xs">
-                Cancel
-              </Button>
+              <Input
+                type="password"
+                value={overridePass}
+                onChange={(e) => setOverridePass(e.target.value)}
+                placeholder="Enter mock password..."
+                className="text-xs font-mono"
+                autoFocus
+              />
+              <div className="flex space-x-2 pt-2">
+                <Button onClick={handleConfirmOverride} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase">
+                  Approve (Training)
+                </Button>
+                <Button variant="outline" onClick={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })} className="w-full text-xs">
+                  Cancel
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* OFFICIAL RECEIPT MODAL */}
@@ -1842,85 +1880,97 @@ function SimulatorContent() {
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
       {isExamCompleted && activeScenario && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 select-none animate-in fade-in duration-200">
-          <div className="bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl max-w-md w-full overflow-hidden font-sans">
-            {/* Retro Green Header */}
-            <div className="bg-[#228B22] text-white px-4 py-2 font-bold text-sm flex items-center justify-between uppercase tracking-wide">
-              <div className="flex items-center space-x-2">
-                <Trophy className="w-4 h-4 text-yellow-300" />
-                <span>PRACTICE COMPLETED!</span>
-              </div>
-            </div>
-
-            {/* Content Body */}
-            <div className="p-6 space-y-5 text-gray-900">
-              {/* Badge & Title */}
-              <div className="text-center space-y-2">
-                <div className="w-14 h-14 bg-emerald-100 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                  <CheckCircle className="w-8 h-8 text-emerald-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-gray-900 tracking-tight">
-                    Congratulations!
-                  </h3>
-                  <p className="text-xs text-gray-600 mt-0.5 font-medium">
-                    You successfully finished all steps for:
-                  </p>
-                  <div className="text-xs font-bold text-[#E4002B] mt-1 bg-white border border-gray-400 py-1 px-2 shadow-inner font-mono">
-                    {activeScenario.title}
-                  </div>
+        <>
+          <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity" />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-200 pointer-events-none">
+            <div className="bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl max-w-md w-full overflow-hidden font-sans pointer-events-auto">
+              {/* Retro Green Header */}
+              <div className="bg-[#228B22] text-white px-4 py-2 font-bold text-sm flex items-center justify-between uppercase tracking-wide">
+                <div className="flex items-center space-x-2">
+                  <Trophy className="w-4 h-4 text-yellow-300" />
+                  <span>PRACTICE COMPLETED!</span>
                 </div>
               </div>
 
-              {/* Performance Stats */}
-              <div className="bg-white border-2 border-gray-400 p-3 grid grid-cols-3 gap-2 text-center text-xs font-mono shadow-inner">
-                <div className="border-r border-gray-300 pr-1">
-                  <div className="text-gray-500 text-[10px] uppercase font-bold">Steps</div>
-                  <div className="font-extrabold text-sm text-gray-900">
-                    {activeScenario.steps.length}/{activeScenario.steps.length}
+              {/* Content Body */}
+              <div className="p-6 space-y-5 text-gray-900">
+                {/* Badge & Title */}
+                <div className="text-center space-y-2">
+                  <div className="w-14 h-14 bg-emerald-100 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <CheckCircle className="w-8 h-8 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 tracking-tight">
+                      Congratulations!
+                    </h3>
+                    <p className="text-xs text-gray-600 mt-0.5 font-medium">
+                      You successfully finished all steps for:
+                    </p>
+                    <div className="text-xs font-bold text-[#E4002B] mt-1 bg-white border border-gray-400 py-1 px-2 shadow-inner font-mono">
+                      {activeScenario.title}
+                    </div>
                   </div>
                 </div>
-                <div className="border-r border-gray-300 pr-1">
-                  <div className="text-gray-500 text-[10px] uppercase font-bold">Mistakes</div>
-                  <div className={"font-extrabold text-sm " + (mistakes.length === 0 ? "text-emerald-600" : "text-amber-600")}>
-                    {mistakes.length}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-gray-500 text-[10px] uppercase font-bold">Score</div>
-                  <div className="font-extrabold text-sm text-emerald-600">
-                    {Math.max(0, 100 - mistakes.length * 10)}%
-                  </div>
-                </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={handleResetExam}
-                  className="flex-1 px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Practice Again</span>
-                </button>
+                {/* Performance Stats */}
+                <div className="bg-white border-2 border-gray-400 p-3 grid grid-cols-3 gap-2 text-center text-xs font-mono shadow-inner">
+                  <div className="border-r border-gray-300 pr-1">
+                    <div className="text-gray-500 text-[10px] uppercase font-bold">Steps</div>
+                    <div className="font-extrabold text-sm text-gray-900">
+                      {activeScenario.steps.length}/{activeScenario.steps.length}
+                    </div>
+                  </div>
+                  <div className="border-r border-gray-300 pr-1">
+                    <div className="text-gray-500 text-[10px] uppercase font-bold">Mistakes</div>
+                    <div className={"font-extrabold text-sm " + (mistakes.length === 0 ? "text-emerald-600" : "text-amber-600")}>
+                      {mistakes.length}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-[10px] uppercase font-bold">Score</div>
+                    <div className="font-extrabold text-sm text-emerald-600">
+                      {Math.max(0, 100 - mistakes.length * 10)}%
+                    </div>
+                  </div>
+                </div>
 
-                <Link
-                  href={returnLessonUrl}
-                  className="flex-1"
-                >
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-2">
                   <button
                     type="button"
-                    className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
+                    onClick={handleResetExam}
+                    className="flex-1 px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
                   >
-                    <span>Back to Lesson</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Practice Again</span>
                   </button>
-                </Link>
+
+                  {(() => {
+                    const finalScore = Math.max(0, 100 - mistakes.length * 10);
+                    const modalReturnUrl = isLessonSpecific
+                      ? `${returnLessonUrl}?fromPractice=true&score=${finalScore}`
+                      : returnLessonUrl;
+
+                    return (
+                      <Link
+                        href={modalReturnUrl}
+                        className="flex-1"
+                      >
+                        <button
+                          type="button"
+                          className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
+                        >
+                          <span>{returnButtonLabel}</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      </Link>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

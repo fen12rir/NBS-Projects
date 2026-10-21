@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,11 +24,16 @@ import {
   Sparkles 
 } from "lucide-react";
 
-export default function LessonDetailPage() {
+function LessonDetailContent() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const moduleId = params.moduleId as string;
   const lessonId = params.lessonId as string;
+
+  const fromPractice = searchParams.get("fromPractice") === "true";
+  const scoreParam = searchParams.get("score");
+  const practiceScore = scoreParam ? parseInt(scoreParam, 10) : null;
 
   const [progress, setProgress] = useState<UserProgress>({
     completedLessons: [],
@@ -115,6 +120,40 @@ export default function LessonDetailPage() {
             Source: {currentLesson.deckSlideRef}
           </span>
         </div>
+
+        {/* Returned from Practice Callout Banner */}
+        {fromPractice && !isCompleted && (
+          <div className="bg-emerald-50 border-2 border-emerald-400 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-start space-x-3.5">
+              <div className="w-9 h-9 bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs uppercase font-extrabold text-emerald-800 tracking-wider">
+                    Practice Simulation Completed
+                  </span>
+                  {practiceScore !== null && (
+                    <span className="bg-emerald-200 text-emerald-900 text-[11px] font-mono font-bold px-2 py-0.5 rounded">
+                      Score: {practiceScore}%
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-emerald-900 font-medium leading-snug">
+                  Great job practicing this procedure! If you feel confident with the steps, mark this lesson complete to record your progress.
+                </p>
+              </div>
+            </div>
+
+            <Button
+              onClick={handleMarkComplete}
+              className="w-full sm:w-auto font-bold text-xs bg-[#E4002B] hover:bg-[#C10024] text-white flex items-center justify-center space-x-1.5 shadow whitespace-nowrap px-4 py-2.5 flex-shrink-0"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Mark Lesson Complete</span>
+            </Button>
+          </div>
+        )}
 
         {/* Lesson Title & Objective Card */}
         <div className="bg-white border border-gray-200 p-6 sm:p-8 space-y-4">
@@ -322,5 +361,19 @@ export default function LessonDetailPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function LessonDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center font-mono text-sm text-gray-500">
+          Loading lesson details...
+        </div>
+      }
+    >
+      <LessonDetailContent />
+    </Suspense>
   );
 }

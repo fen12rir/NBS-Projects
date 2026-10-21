@@ -1,3 +1,5 @@
+﻿import { TRAINING_MODULES } from "./modules";
+
 export interface ScenarioStep {
   stepNumber: number;
   instruction: string;
@@ -23,7 +25,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 1: Screen Layout & Terminal Familiarization",
     description: "Explore the 12 key screen regions, practice item barcode lookup with F2, and navigate function pages using F5.",
     moduleRef: "mod-1",
-    lessonRef: "les-1-1",
     passingScore: 70,
     steps: [
       {
@@ -140,6 +141,64 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     ]
   },
   {
+    id: "scen-mod-2",
+    title: "Module 2: Complete Opening & Cashier Shift Routine",
+    description: "Practice the complete start-of-day sequence across all Module 2 lessons: verify date and time, close setup window, reload POS, sign in with credentials, navigate options, and execute approved cashier sign-out.",
+    moduleRef: "mod-2",
+    passingScore: 70,
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Step 1 (Lesson 2-1): You're at the terminal before store opening. Verify date & time on Start of Day screen. Press TAB to [Yes] and press ENTER (or click [Yes]).",
+        expectedAction: "VERIFY_DATE_YES",
+        hint: "Press TAB to highlight the 'Yes' button and press ENTER, or click the [Yes] button.",
+        errorFeedback: "Verify the date and time by clicking [Yes] or pressing TAB then Enter."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2 (Lesson 2-1): Date verified! Now close the setup window by pressing Ctrl+Alt+C (or click 'Close Window (Ctrl+Alt+C)').",
+        expectedAction: "CLOSE_SOD_WINDOW",
+        hint: "Press Ctrl+Alt+C on your keyboard or click 'Close Window (Ctrl+Alt+C)'.",
+        errorFeedback: "Press Ctrl+Alt+C or click to close the setup window."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3 (Lesson 2-1): The browser displays 'POS Reloader'. Press F5 (or click 'Reload Page (F5)') to reload and open the USER LOGIN screen.",
+        expectedAction: "RELOAD_POS_LOGIN",
+        hint: "Press F5 on your keyboard or click 'Reload Page (F5)' to load the login page.",
+        errorFeedback: "Press F5 or click to reload and open the login page."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4 (Lesson 2-2): In the USER LOGIN window, verify UserName '241209' and Password, then click [Ok] or press ENTER to sign in.",
+        expectedAction: "LOGIN_SUBMIT",
+        hint: "Click [Ok] or press ENTER in the USER LOGIN dialog to log in.",
+        errorFeedback: "Enter your cashier credentials and click [Ok] to log in."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5 (Lesson 2-2): You are now logged into the sales register. Navigate to the 2nd screen to access logout. Press F5 (OPTION).",
+        expectedAction: "NAV_SECOND",
+        hint: "Press F5 on your keyboard or click F5 OPTION on the right column.",
+        errorFeedback: "Press F5 to advance to the 2nd Screen."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6 (Lesson 2-2): On the 2nd Screen, initiate safe cashier sign-out by clicking F8 (LOGOUT).",
+        expectedAction: "TRIGGER_LOGOUT",
+        hint: "Click F8 LOGOUT in the right function key column or press F8.",
+        errorFeedback: "Click F8 LOGOUT on the 2nd screen."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7 (Lesson 2-2): The LOGOUT prompt appears ('Are you sure you want to LOGOUT?'). Press TAB to [Yes] and press ENTER (or click [Yes]).",
+        expectedAction: "CONFIRM_LOGOUT_YES",
+        hint: "Click [Yes] or press TAB then ENTER to confirm logout and return to the User Login screen.",
+        errorFeedback: "Confirm logout by selecting [Yes] on the prompt."
+      }
+    ]
+  },
+  {
     id: "scen-les-3-1",
     title: "Lesson 3-1 Practice: Product Lookup (SRP & Promo)",
     description: "Inquire about item prices using F2 Lookup, search by SKU or description, and verify promotional and SRP pricing.",
@@ -225,24 +284,74 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   },
   {
     id: "scen-mod-3",
-    title: "Module 3: Item Lookup & Customer Loyalty (LNQR)",
-    description: "Complete product lookup and customer loyalty tagging with LNQR mobile QR processing.",
+    title: "Module 3: Complete Item Inquiry & Loyalty (LNQR) Routine",
+    description: "Complete all Module 3 procedures: inspect item pricing and promos via F2 Lookup, return to the sale, scan item barcode, proceed to payment, tag the customer's LNQR mobile barcode, enter cash tender, and confirm transaction completion.",
     moduleRef: "mod-3",
     passingScore: 70,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Open the Product Lookup screen. Press F2 (LOOKUP) under the barcode scanner.",
+        instruction: "Step 1 (Lesson 3-1): Customer inquires about item pricing. Open Product Lookup by pressing F2 (LOOKUP).",
         expectedAction: "LOOKUP",
         hint: "Press F2 on your keyboard or click F2 Lookup under the barcode scanner.",
         errorFeedback: "Press F2 (LOOKUP) to open the product lookup screen."
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: Close lookup to return to active sale. Click CANCEL <Alt-B> (or press ESC on your keyboard).",
+        instruction: "Step 2 (Lesson 3-1): Inspect item details and promos. Press F3 (Description) or search by SKU/barcode.",
+        expectedAction: "LOOKUP_SEARCH",
+        hint: "Press F3 on your keyboard or click F3 Description in the lookup bar.",
+        errorFeedback: "Press F3 or use F2 to search items in lookup."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3 (Lesson 3-1): Close lookup to return to active sale. Click CANCEL <Alt-B> (or press ESC on your keyboard).",
         expectedAction: "CLOSE_LOOKUP",
         hint: "Click CANCEL <Alt-B> on the green bottom bar or press ESC on your keyboard.",
         errorFeedback: "Click CANCEL <Alt-B> or press ESC to return to the active register."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4 (Lesson 3-2): Customer wants to purchase. Scan or enter 'NBS-BK-001' into the Barcode field and press ENTER.",
+        expectedAction: "ADD_ITEM",
+        expectedData: "NBS-BK-001",
+        hint: "Type NBS-BK-001 in the yellow barcode field and press Enter.",
+        errorFeedback: "Please scan or enter NBS-BK-001 into the register."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5 (Lesson 3-2): The customer is ready to pay. Press F4 (Payment) on the right function keypad.",
+        expectedAction: "GO_PAYMENT",
+        hint: "Press F4 on your keyboard or click F4 Payment in the right column.",
+        errorFeedback: "Press F4 (Payment) to proceed to payment."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6 (Lesson 3-2): The 'Choose Option' loyalty prompt appears. Customer has LNQR - press 3 on your keyboard (or click '3. LNQR / LNQR PLUS').",
+        expectedAction: "CHOOSE_LNQR_OPTION",
+        hint: "Press key 3 on your keyboard or click '3. LNQR / LNQR PLUS'.",
+        errorFeedback: "Press 3 to choose LNQR / LNQR PLUS."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7 (Lesson 3-2): The LNQR input screen appears. Scan or verify the customer QR code '20221003LN000004', press TAB to highlight [Ok], then press ENTER (or click [Ok]).",
+        expectedAction: "SUBMIT_LNQR",
+        hint: "Press TAB to highlight [Ok] and press ENTER, or click the [Ok] button.",
+        errorFeedback: "Submit the customer QR code by clicking [Ok] or pressing Enter."
+      },
+      {
+        stepNumber: 8,
+        instruction: "Step 8 (Lesson 3-2): On the Cash Payment Details screen, enter the tendered cash amount '3000' and press ENTER (or click [Ok]).",
+        expectedAction: "SUBMIT_CASH_TENDER",
+        hint: "Enter 3000 in the Enter Amount field and press Enter.",
+        errorFeedback: "Enter the cash amount and press Enter to process payment."
+      },
+      {
+        stepNumber: 9,
+        instruction: "Step 9 (Lesson 3-2): The system displays the red blinking 'Change' and updates LNQR. When the 'LNQR has been updated!' confirmation appears, press ENTER (or click [OK]) to return to the active register.",
+        expectedAction: "CONFIRM_LNQR_UPDATED",
+        hint: "Click [OK] or press ENTER in the confirmation popup to finish the transaction.",
+        errorFeedback: "Confirm the LNQR updated dialog by pressing Enter or clicking [OK]."
       }
     ]
   },
@@ -251,7 +360,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 4: Cash Sale with Quantity Multiplier",
     description: "Scan items, set multiplier quantity, tender payment in Philippine Peso cash, and generate customer official receipt.",
     moduleRef: "mod-4",
-    lessonRef: "les-4-1",
     passingScore: 70,
     steps: [
       {
@@ -308,7 +416,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Customer hands you a â‚±500 bill. Enter '500' and press ENTER to confirm tender.",
+        instruction: "Step 8: Customer hands you a 500 bill. Enter '500' and press ENTER to confirm tender.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 500,
         hint: "Type 500 and press Enter to complete the transaction.",
@@ -321,7 +429,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 5: Second Screen Functions & Verification",
     description: "Inspect Second Screen utilities including SDV Check and screen navigation.",
     moduleRef: "mod-5",
-    lessonRef: "les-5-1",
     passingScore: 70,
     steps: [
       {
@@ -352,7 +459,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 6: Third Screen Utilities",
     description: "Navigate to the 3rd screen and inspect reprint and supervisor utilities.",
     moduleRef: "mod-6",
-    lessonRef: "les-6-1",
     passingScore: 70,
     steps: [
       {
@@ -383,7 +489,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 7: Fourth Screen Functions & Quick Return",
     description: "Navigate to the 4th screen and use F2 to return immediately to the Main Screen.",
     moduleRef: "mod-7",
-    lessonRef: "les-7-1",
     passingScore: 70,
     steps: [
       {
@@ -421,7 +526,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 8: Payment Methods & Tenders",
     description: "Scan copy paper, enter payment menu, select tender method, and finalize transaction.",
     moduleRef: "mod-8",
-    lessonRef: "les-8-1",
     passingScore: 70,
     steps: [
       {
@@ -461,7 +565,6 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     title: "Module 9: Item Void & Manager Override",
     description: "Scan an item, perform an Item Void (F7), and confirm manager override authorization.",
     moduleRef: "mod-9",
-    lessonRef: "les-9-1",
     passingScore: 70,
     steps: [
       {
@@ -504,7 +607,13 @@ export function getScenarioById(id: string): TrainingScenario | null {
 }
 
 export function getScenarioForLesson(lessonRef: string): TrainingScenario | null {
-  return TRAINING_SCENARIOS.find((s) => s.lessonRef === lessonRef) || null;
+  const direct = TRAINING_SCENARIOS.find((s) => s.lessonRef === lessonRef);
+  if (direct) return direct;
+  const mod = TRAINING_MODULES.find((m) => m.lessons.some((l) => l.id === lessonRef));
+  if (mod) {
+    return getScenarioForModule(mod.id);
+  }
+  return null;
 }
 
 
