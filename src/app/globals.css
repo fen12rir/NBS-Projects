@@ -1,10 +1,77 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* NBS Brand Palette */
+    --nbs-red: #E4002B;
+    --nbs-red-hover: #C10024;
+    --nbs-red-active: #9B001D;
+    --nbs-red-light: #FFF1F2;
+
+    /* NBS POS Hardware & Chassis */
+    --pos-frame: #B0B8C0;
+    --pos-frame-border: #7A8A99;
+    --pos-panel-gray: #C2CAD0;
+    --pos-panel-dark: #9AA5B1;
+
+    /* POS Screen Colors */
+    --pos-scanner-yellow: #FFF275;
+    --pos-table-header: #B8C2CC;
+    --pos-btn-silver: #D2D7DF;
+    --pos-btn-red: #E4002B;
+    --pos-retro-gray: #D4D0C8;
+    --pos-retro-light: #D6D3CE;
+    --pos-status-green: #16A34A;
+    --pos-status-dark-green: #228B22;
+
+    /* POS LED Display */
+    --pos-led-black: #000000;
+    --pos-led-cyan: #38BDF8;
+    --pos-led-unitprice: #4ADE80;
+    --pos-led-total: #00FF66;
+  }
+
   body {
     @apply bg-gray-50 text-gray-900 antialiased font-sans;
+  }
+}
+
+@layer components {
+  /* POS Outer Terminal Chassis Frame */
+  .pos-terminal-frame {
+    @apply bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden;
+  }
+
+  /* POS 3D Beveled Function Key - Silver */
+  .pos-btn-3d-silver {
+    @apply bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm hover:bg-[#E2E6EC] active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white active:bg-[#B8BFC9] transition-all;
+  }
+
+  /* POS 3D Beveled Function Key - Red */
+  .pos-btn-3d-red {
+    @apply bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm hover:bg-[#C10024] active:border-t-[#800010] active:border-l-[#800010] active:border-r-[#FF6680] active:border-b-[#FF6680] active:bg-[#9B001D] transition-all;
+  }
+
+  /* POS 3D Dialog Action Button - Retro Windows 98/2000 style */
+  .pos-btn-3d-retro {
+    @apply bg-[#D4D0C8] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm hover:bg-[#E2E0DC] active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white active:bg-[#BDB8AF] transition-all;
+  }
+
+  /* POS Scanner UPC Banner */
+  .pos-scanner-box {
+    @apply bg-[#FFF275] border-r-2 border-gray-400 p-2;
+  }
+
+  /* POS LED Real-time Totals Box */
+  .pos-led-box {
+    @apply bg-black text-white p-2 sm:p-3 font-mono flex flex-col justify-between;
+  }
+
+  /* POS Line Items Table Header */
+  .pos-table-header {
+    @apply bg-[#B8C2CC] border-b border-gray-400 px-2 py-0.5 text-[9px] sm:text-[10px] font-bold text-gray-800 uppercase tracking-tight;
   }
 }
 

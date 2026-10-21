@@ -29,6 +29,32 @@ const config: Config = {
           }
         },
         pos: {
+          frame: "#B0B8C0",
+          frameBorder: "#7A8A99",
+          yellow: "#FFF275",
+          tableHeader: "#B8C2CC",
+          panelGray: "#C2CAD0",
+          panelDark: "#9AA5B1",
+          silver: "#D2D7DF",
+          silverHover: "#E2E6EC",
+          silverActive: "#B8BFC9",
+          red: "#E4002B",
+          redHover: "#C10024",
+          redActive: "#9B001D",
+          green: "#16A34A",
+          darkGreen: "#228B22",
+          retroGray: "#D4D0C8",
+          retroLight: "#D6D3CE",
+          blueDark: "#1C4158",
+          blueMedium: "#2E5874",
+          keyBlue: "#1D4ED8",
+          led: {
+            black: "#000000",
+            cyan: "#38BDF8",
+            lightGreen: "#4ADE80",
+            neonGreen: "#00FF66",
+          },
+          // Legacy aliases for backward compatibility
           bg: "#0B192C",
           surface: "#1E3E62",
           header: "#000000",
@@ -38,9 +64,7 @@ const config: Config = {
           btn: "#2563EB",
           btnHover: "#1D4ED8",
           btnDisabled: "#9CA3AF",
-          green: "#16A34A",
           amber: "#D97706",
-          red: "#DC2626"
         }
       },
       fontFamily: {

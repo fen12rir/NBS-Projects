@@ -52,7 +52,7 @@ export function GuidedStepBar({
   // Free Exploration Sandbox
   if (!scenario) {
     return (
-      <div className="bg-[#0f172a] border-b-2 border-emerald-500/80 text-white p-3 space-y-2">
+      <div className="relative z-50 bg-[#0f172a] border-b-2 border-emerald-500/80 text-white p-3 space-y-2 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <span className="bg-emerald-600 text-white px-2 py-0.5 text-xs font-bold rounded flex items-center space-x-1">
@@ -118,7 +118,7 @@ export function GuidedStepBar({
   const isFinished = currentStepIndex >= totalSteps;
 
   return (
-    <div className="bg-[#0B192C] border-2 border-yellow-500/80 text-white p-3 space-y-2">
+    <div className="relative z-50 bg-[#0B192C] border-2 border-yellow-500/80 text-white p-3 space-y-2 shadow-md">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-700 pb-2">
         <div className="flex items-center space-x-2">
           <span className="text-xs font-mono font-bold uppercase text-yellow-300 flex items-center space-x-1">

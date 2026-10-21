@@ -1,4 +1,4 @@
-import { TRAINING_MODULES } from "./modules";
+﻿import { TRAINING_MODULES } from "./modules";
 
 export interface ScenarioStep {
   stepNumber: number;
@@ -416,7 +416,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Customer hands you a â‚±500 bill. Enter '500' and press ENTER to confirm tender.",
+        instruction: "Step 8: Customer hands you a 500 bill. Enter '500' and press ENTER to confirm tender.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 500,
         hint: "Type 500 and press Enter to complete the transaction.",
