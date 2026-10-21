@@ -464,6 +464,52 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Cashier (Y) Reading & Terminal (Z) Reading",
         objective: "Perform formal shift and daily reconciliations mandated by store accounting.",
         deckSlideRef: "Slides 68-76",
+
+        visualAssets: [
+
+           {
+            src: "/assets/modules/module-6-third-page-functions/images/function-keys-3rdpage.png",
+            caption: "",
+            alt: ""
+          },
+        
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/function-keys-3rdpage-2.png",
+            caption: "Press F5 twice to navigate from Main -> 2nd -> 3rd Page.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-cashierread-step1-f8.png",
+            caption: "Press F8 (Cashier Reading) to access the cashier reading function.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-cashierread-step2-f8.png",
+            caption: " Press ENTER to print Y reading.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step1-f9.png",
+            caption: "Press F9 (Terminal Reading) to access the terminal reading function.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step2-f9.png",
+            caption: "A prompt will open. Click TAB to go to YES, then press ENTER",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step3-f9.png",
+            caption: "Press ENTER to generate Z-reading.",
+            alt: ""
+          }
+        ],
+
         instructions: [
           "Press F5 twice to navigate from Main -> 2nd -> 3rd Page.",
           "For cashier change of shift: Press F8 (Cashier Reading) to print the Y-Reading summary.",
@@ -476,6 +522,21 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Sales Data Verification (SDV)",
         objective: "Ensure sales header, item detail, and payment tallies align across the POS database.",
         deckSlideRef: "Slides 70-71",
+        visualAssets: [
+          
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-sdv-step1-f10.png",
+            caption: "On the 3rd Page, press F10 (SDV).",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-sdv-step2-f10.png",
+            caption: "Check the counts for Header, Detail, and PayDetail.",
+            alt: ""
+          }
+        
+        ],
         instructions: [
           "On the 3rd Page, press F10 (SDV).",
           "Check whether the Header, Detail, and PayDetail counts are listed as 'Tally'.",
