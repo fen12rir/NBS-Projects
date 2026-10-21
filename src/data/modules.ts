@@ -331,6 +331,59 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Transaction Discounts (Senior Citizen, PWD, Employee)",
         objective: "Apply mandated statutory or company discounts with supervisor authorization.",
         deckSlideRef: "Slides 48, 50-53, 63-66",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/functionkeys-2ndpage.png",
+            caption: "Press F5 (Option) from the Main Screen to enter the 2nd Page.",
+            alt: ""
+          },
+        
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step1-f6.png",
+            caption: "Navigate to 2nd page of POS.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step2-f6.png",
+            caption: "Press F6 (TRX Disc) to open the discount category list.",
+            alt: ""
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step3-f6.png",
+            caption: "Select the appropriate type of discount and press Alt + Enter.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step4-f6.png",
+            caption: "Input manager override credentials when prompted.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step1-f6.png",
+            caption: "Navigate to 2nd page of POS, and press F6 (TRX Disc) to open the discount category list.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step2-f6.png",
+            caption: "Select the ZQFD LNQR family discount option and press Alt + Enter.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step3-f6.png",
+            caption: "Input manager override credentials when prompted. Press TAB key to YES and Enter to confirm.",
+            alt: ""
+          },
+         {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step4-f6.png",
+            caption: "Scan or enter manually the customers QR code. Press TAB key to OK, then click Enter key.",
+            alt: ""
+          }
+         
+        ],
         instructions: [
           "Press F5 (Option) from the Main Screen to enter the 2nd Page.",
           "Press F6 (TRX Disc) to open the discount category list.",
@@ -344,6 +397,52 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Suspend, Recall, and Reprint",
         objective: "Safely hold transactions when a customer needs to grab an extra item, and reprint past receipts.",
         deckSlideRef: "Slides 44, 48, 55-61",
+
+        visualAssets: [
+
+           {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-suspend-f9.png",
+            caption: "On Main Screen, Press F9 (Suspend) to access the suspend function.",
+            alt: ""
+          },
+        
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step1-f7.png",
+            caption: "Press F7 (Recall) to access the recall function.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step2-f7.png",
+            caption: "The system requests manager override. Enter manager override username and password, then press ENTER.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step3-f7.png",
+            caption: "Select the suspended transaction to recall and press Alt + Enter.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step1-f2.png",
+            caption: "On the second page. Press F2 (Reprint) to access the reprint function.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step2-f2.png",
+            caption: "Enter manager override credentials when prompted. Press TAB key to YES, then press ENTER.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step3-f2.png",
+            caption: "Select OR Number and press Enter.",
+            alt: ""
+          }
+        ],
         instructions: [
           "To suspend: Press F9 (Suspend) on Main Page, then press ENTER.",
           "To recall: Go to 2nd Page via F5, press F7 (Recall), provide override, and pick the suspended transaction.",
