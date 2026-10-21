@@ -558,6 +558,34 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Transaction Comments (TIN & Corporate Billing)",
         objective: "Enter BIR-compliant customer details for corporate or tax-exempt transactions.",
         deckSlideRef: "Slides 83, 86-88",
+        visualAssets: [
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/functionkeys-4thpage.png",
+            caption: "Press F5 three times to navigate from Main -> 2nd -> 3rd -> 4th Page.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step1-f3.png",
+            caption: "Press F3 (TRX Comment) on the 4th Page.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step2-f3.png",
+            caption: "Enter the details of the customer, ensuring the spelling is correct, then press OK",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step3-f3.png",
+            caption: "The trx comment will print on the receipt, and can be checked on payment.",
+            alt: ""
+          },
+
+
+        ],
         instructions: [
           "Press F5 three times to advance to the 4th Page.",
           "Press F3 (TRX Comment).",
@@ -571,6 +599,59 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Returns, Refunds, and Zero-Rated Transactions",
         objective: "Execute returns and refunds with supervisory approval and original receipt references.",
         deckSlideRef: "Slides 90-99",
+        visualAssets: [
+           {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step1-f8.png",
+            caption: "Press F8 (Return) on the 4th Page, Then enter manager override credentials when prompted.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step2-f8.png",
+            caption: "Select a reason and input the SI of customer, then press ALT + ENTER.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step2-f8.png",
+            caption: "Enter the GTIN of the item that the customer will return, and it will automatically after pressing enter key.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-refund-step1-f10.png",
+            caption: "Press F10 (Refund) on the 4th Page, Then enter manager override credentials when prompted.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-refund-step1-f10.png",
+            caption: "Enter the original ORNO for the refund, then press ALT + ENTER to proceed.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step1-f7.png",
+            caption: "Press F7 (Zero Rated) on the 4th Page.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step2-f7.png",
+            caption: "Enter Manager Override credentials when prompted.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step3-f7.png",
+            caption: "Scan the items the customer wants to buy.",
+            alt: ""
+          },
+
+          
+
+
+        ],
         instructions: [
           "For Returns: Press F8 (Return) on 4th Page, enter override, input customer Sales Invoice (SI), and enter returned GTIN.",
           "For Refunds: Press F10 (Refund), supply manager override, and enter the original ORNO.",
