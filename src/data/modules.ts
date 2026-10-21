@@ -673,6 +673,20 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Cash Tender & Change Computation",
         objective: "Navigate to the payment screen, enter tender amount, and confirm change balance.",
         deckSlideRef: "Slides 102-103",
+        visualAssets: [
+           {
+            src: "/assets/modules/module-8-payment-screens/images/functionkeys-paymentscreen.png",
+            caption: "Press F4 on main page screen to open the payment screen.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cashpayment-step1-f2.png",
+            caption: "Press F2 (Cash) on the Payment Screen.",
+            alt: ""
+          }
+
+        ],
         instructions: [
           "When all items are entered on the Main screen, press F4 (Payment).",
           "Press F2 (Cash) on the Payment screen.",
@@ -687,6 +701,76 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Bank Cards, GCash, Gift Certificates & Sulit Coins",
         objective: "Tender electronic payments, mobile wallets, and voucher codes.",
         deckSlideRef: "Slides 104-116",
+
+        visualAssets: [
+           {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step1-f3.png",
+            caption: "Press F3 (Bank Card) on the Payment Screen and select Credit Card, and then enter the credit card number.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step2-f3.png",
+            caption: "Fill out the needed details of the card.",
+            alt: ""
+          },
+
+           {
+            src: "/assets/modules/module-8-payment-screens/images/pos-gcash-step1-f3.png",
+            caption: "Press F3 (Bank Card) on the Payment Screen and select GCash, and fill in the required reference number.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcard-step1-f3.png",
+            caption: "Press F3 (Bank Card) on the Payment Screen. Then select NBS Giftcard, and input the details on the voucher code.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcert-step1-f5.png",
+            caption: "Press F5 gift cert and choose within without series, with series, or specialty store gc. After that, scan the gc barcode or enter the gc number.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcert-step2-f5.png",
+            caption: "Fill in the required details of the gift certificate.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step1-f6.png",
+            caption: "Press F6 coupon and choose within without series and with series. After that, select a coupon type.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step2-f6.png",
+            caption: "Fill in the required details of the coupon.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step1.png",
+            caption: "Press F3 (Bank Card) on the Payment Screen and select LNQR Sulit Coins, Press TAB key to OK, then click Enter key.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step2.png",
+            caption: "Enter the LNQR Sulit Coins Amount to be redeemed. Press TAB to go to next field. Scan or manually enter customer’s LNQR. Press TAB key to OK, then click Enter key.",
+            alt: ""
+          },
+
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step3.png",
+            caption: "A confirmation message will display once the processing of LNQR is done. Press ENTER key twice to proceed.",
+            alt: ""
+          },
+
+
+        ],
         instructions: [
           "From Payment screen: Press F3 (Bank Card) for Credit Card, GCash, or NBS Gift Card.",
           "For GCash: Enter the 12-digit transaction reference number.",
@@ -709,6 +793,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Final Review & Assessment Readiness",
         objective: "Verify comprehension of function key mappings and prepare for practical simulation.",
         deckSlideRef: "Slides 119-120",
+
+        visualAssets:[ {
+            src: "/assets/modules/module-9-finalreview/images/exam-feedback.png",
+            caption: "Exam Feedback",
+            alt: ""
+          },],
+        
         instructions: [
           "Review function key actions across all 5 POS screens (Main, 2nd, 3rd, 4th, Payment).",
           "Ensure you remember which operations require a manager override (Item Void, Trx Void, Reprint, Discounts, Readings).",
