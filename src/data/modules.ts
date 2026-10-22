@@ -1,20 +1,19 @@
-﻿export interface Lesson {
+export interface VisualAsset {
+  src: string;
+  caption: string;
+  alt: string;
+  type?: "image" | "video";
+}
+
+export interface Lesson {
   id: string;
   title: string;
   objective: string;
   deckSlideRef: string;
   instructions: string[];
   keyCallouts: string[];
-  visualAsset?: {
-    src: string;
-    caption: string;
-    alt: string;
-  };
-  visualAssets?: {
-    src: string;
-    caption: string;
-    alt: string;
-  }[];
+  visualAsset?: VisualAsset;
+  visualAssets?: VisualAsset[];
 }
 
 export interface TrainingModule {
@@ -27,6 +26,9 @@ export interface TrainingModule {
 }
 
 export const TRAINING_MODULES: TrainingModule[] = [
+  // =========================================================================
+  // MODULE 1: POS Basics and Screen Layout
+  // =========================================================================
   {
     id: "mod-1",
     number: 1,
@@ -39,11 +41,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Introduction to Point of Sale & Terminal Layout",
         objective: "Identify the 12 key sections of the NBS POS screen including barcode entry, line items, and function keys.",
         deckSlideRef: "Slides 3-6",
-        visualAsset: {
-          src: "/assets/modules/module-1-pos-basics/images/pos-screen-details.png",
-          caption: "POS Screen Details Anatomy (National Book Store POS System)",
-          alt: "Diagram of National Book Store POS Screen Details labeling all 12 key screen regions"
-        },
+        visualAssets: [
+          {
+            src: "/assets/modules/module-1-pos-basics/images/pos-screen-details.png",
+            caption: "POS Screen Anatomy: Key screen regions including Transaction Info, Barcode Scanner Box, Function Keys Panel, and Totals Display.",
+            alt: "Diagram of National Book Store POS Screen Details labeling all 12 key screen regions"
+          }
+        ],
         instructions: [
           "Understand that POS combines hardware (terminal, barcode scanner, receipt printer) and software.",
           "Familiarize with the 12 screen regions: Transaction No, Cashier ID, Branch Code, Barcode input, Textfield area, POS Terminal, Function Keys panel, Line item table, Total Sales, Current Date, Total Quantity, and Time.",
@@ -53,6 +57,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 2: Start of Day, Login, and Logout
+  // =========================================================================
   {
     id: "mod-2",
     number: 2,
@@ -68,7 +76,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
         visualAssets: [
           {
             src: "/assets/modules/module-2-start-of-day/images/start-of-day-verify-date.png",
-            caption: "Step 1: Check POS Date & Time, press TAB to Yes, then press ENTER.",
+            caption: "Step 1: Check POS Date & Time, press TAB to highlight [Yes], then press ENTER to verify.",
             alt: "POS Start of Day date and time verification prompt"
           },
           {
@@ -78,7 +86,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           },
           {
             src: "/assets/modules/module-2-start-of-day/images/pos-reloader-screen.png",
-            caption: "Step 3: Press Ctrl+Alt+C to close the setup window. The browser displays 'POS Reloader'. Then press F5 to reload and enter the User Login page.",
+            caption: "Step 3: Press Ctrl+Alt+C to close the setup window. The terminal displays 'POS Reloader'. Press F5 to reload and enter the User Login page.",
             alt: "POS Reloader screen after closing setup window"
           }
         ],
@@ -113,12 +121,12 @@ export const TRAINING_MODULES: TrainingModule[] = [
           },
           {
             src: "/assets/modules/module-2-start-of-day/images/pos-logout-step3-confirm.png",
-            caption: "Logout Step 3: 'Are you sure you want to LOGOUT?' Press TAB to Yes, then press ENTER.",
+            caption: "Logout Step 3: 'Are you sure you want to LOGOUT?' Press TAB to highlight [Yes], then press ENTER.",
             alt: "Logout confirmation prompt"
           },
           {
             src: "/assets/modules/module-2-start-of-day/images/pos-logout-step4-user-login.png",
-            caption: "Logout Step 4: After logout, the terminal returns to the User Login prompt.",
+            caption: "Logout Step 4: After logout, the terminal returns to the User Login prompt for the next shift.",
             alt: "Terminal returns to User Login prompt after successful logout"
           }
         ],
@@ -133,6 +141,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 3: Item Lookup & Customer Loyalty (LNQR)
+  // =========================================================================
   {
     id: "mod-3",
     number: 3,
@@ -224,6 +236,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 4: Main-Page Keys & Transaction Basics
+  // =========================================================================
   {
     id: "mod-4",
     number: 4,
@@ -236,6 +252,28 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Quantity Entry & Scanning Items",
         objective: "Set item multiplier before scanning to avoid repetitive single-item entries.",
         deckSlideRef: "Slides 27, 29-31",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/function-keys-mainpage.png",
+            caption: "Main POS Screen Function Key Panel: F3 Quantity multiplier key located on the right function keys panel.",
+            alt: "Main POS screen function keys column highlighting F3 Quantity button"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-quantity-step1-f3.png",
+            caption: "Step 1: Press F3 (Quantity) to open the quantity multiplier prompt, enter the number of pieces (e.g. 5), then press ENTER.",
+            alt: "Checkout screen displaying the F3 Quantity prompt with multiplier input"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-quantity-step2-f3.png",
+            caption: "Step 2: Scan or type the item GTIN barcode. The line item automatically records with the designated multiplier quantity.",
+            alt: "Line item table showing scanned merchandise with multiplied quantity"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/videos/pos-quantity-video-f3.mp4",
+            caption: "Video Walkthrough: Demonstrating setting item quantity multiplier via F3 and scanning items.",
+            alt: "Video demonstration of setting item quantity in POS"
+          }
+        ],
         instructions: [
           "When a customer buys multiples of the same item, press F3 (Quantity).",
           "Type the number of pieces (e.g. 5) and press ENTER.",
@@ -248,6 +286,53 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Item Void & Transaction Void (Manager Override)",
         objective: "Execute line-level and transaction-level cancellations with required supervisory approval.",
         deckSlideRef: "Slides 35-43",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step1-f7.png",
+            caption: "Item Void Step 1: Press F7 (Item Void). Enter Manager Override username and password, then press ENTER.",
+            alt: "Manager Override dialog for Item Void"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step2-f7.png",
+            caption: "Item Void Step 2: Select a cancellation reason code from the menu and press Alt + Enter.",
+            alt: "Item void reason code selection prompt"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step3-f7.png",
+            caption: "Item Void Step 3: Highlight the line item to void and press Alt + Enter.",
+            alt: "Selecting line item to cancel from the transaction list"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-itemvoid-step4-f7.png",
+            caption: "Item Void Step 4: Line item quantity turns negative with red strikethrough in the transaction log.",
+            alt: "Audit log showing negative voided line item"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/videos/pos-itemvoid-video-f7.mp4",
+            caption: "Video Walkthrough: Demonstrating single line Item Void with supervisor override.",
+            alt: "Video demonstration of Item Void procedure"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step1-f8.png",
+            caption: "Trx Void Step 1: Press F8 (Trx Void) to cancel the entire sale. Enter Manager Override credentials and press ENTER.",
+            alt: "Manager Override authorization prompt for Transaction Void"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step2-f8.png",
+            caption: "Trx Void Step 2: Press Y to confirm total transaction void cancellation.",
+            alt: "Transaction void confirmation prompt"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/images/pos-trxvoid-step3-f8.png",
+            caption: "Trx Void Step 3: Select the reason code for transaction void and press Alt + Enter to finalize.",
+            alt: "Transaction void reason code selection"
+          },
+          {
+            src: "/assets/modules/module-4-main-page-keys/videos/pos-trxvoid-video-f8.mp4",
+            caption: "Video Walkthrough: Demonstrating full Transaction Void cancellation.",
+            alt: "Video demonstration of Transaction Void procedure"
+          }
+        ],
         instructions: [
           "For line cancellation: Press F7 (Item Void). The system requests manager override.",
           "Select the cancellation reason code and press Alt + Enter.",
@@ -258,6 +343,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 5: Second-Page Functions & Discounts
+  // =========================================================================
   {
     id: "mod-5",
     number: 5,
@@ -270,6 +359,53 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Transaction Discounts (Senior Citizen, PWD, Employee)",
         objective: "Apply mandated statutory or company discounts with supervisor authorization.",
         deckSlideRef: "Slides 48, 50-53, 63-66",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/functionkeys-2ndpage.png",
+            caption: "Press F5 (Option) from the Main Screen to enter the 2nd Screen function key panel.",
+            alt: "2nd Screen function key layout showing Reprint, Trx Disc, Recall, and Logout"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step1-f6.png",
+            caption: "Step 1: Navigate to the 2nd Screen of the POS register.",
+            alt: "2nd Screen of POS register"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step2-f6.png",
+            caption: "Step 2: Press F6 (TRX Disc) to open the discount category list.",
+            alt: "Discount category list showing Senior, PWD, and Employee options"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step3-f6.png",
+            caption: "Step 3: Select the appropriate statutory discount type (e.g. Senior 20%) and press Alt + Enter.",
+            alt: "Selecting discount code and pressing Alt Enter"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-trxdisc-step4-f6.png",
+            caption: "Step 4: Input Manager Override credentials when prompted to apply the discount.",
+            alt: "Manager Override authorization prompt for Transaction Discount"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step1-f6.png",
+            caption: "LNQR Family Discount: Navigate to the 2nd Screen and press F6 (TRX Disc).",
+            alt: "2nd Screen with F6 TRX Disc highlighted for family discount"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step2-f6.png",
+            caption: "Select the ZQFD LNQR Family Discount option and press Alt + Enter.",
+            alt: "Selecting ZQFD LNQR family discount option"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step3-f6.png",
+            caption: "Enter Manager Override credentials, press TAB to YES, and press ENTER to confirm.",
+            alt: "Manager Override confirmation for LNQR Family Discount"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-famdisc-step4-f6.png",
+            caption: "Scan or manually enter customer's mobile QR code, press TAB to OK, and press ENTER.",
+            alt: "Customer QR code entry screen for Family Discount"
+          }
+        ],
         instructions: [
           "Press F5 (Option) from the Main Screen to enter the 2nd Page.",
           "Press F6 (TRX Disc) to open the discount category list.",
@@ -283,6 +419,48 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Suspend, Recall, and Reprint",
         objective: "Safely hold transactions when a customer needs to grab an extra item, and reprint past receipts.",
         deckSlideRef: "Slides 44, 48, 55-61",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-suspend-f9.png",
+            caption: "Suspend Step: On Main Screen, press F9 (Suspend) to temporarily place the active sale in the holding buffer.",
+            alt: "Main screen with F9 Suspend highlighted"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step1-f7.png",
+            caption: "Recall Step 1: Navigate to 2nd Screen (F5) and press F7 (Recall) to access held transactions.",
+            alt: "2nd Screen with F7 Recall highlighted"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step2-f7.png",
+            caption: "Recall Step 2: The system requests manager override. Enter manager credentials, then press ENTER.",
+            alt: "Manager Override dialog for Recall Transaction"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-recall-step3-f7.png",
+            caption: "Recall Step 3: Select the suspended transaction from the queue and press Alt + Enter to restore.",
+            alt: "Selecting suspended transaction from buffer list"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/videos/pos-recall-video.mp4",
+            caption: "Video Walkthrough: Demonstrating transaction suspension on Main Screen and recall on 2nd Screen.",
+            alt: "Video demonstration of Suspend and Recall procedure"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step1-f2.png",
+            caption: "Reprint Step 1: On the 2nd Screen, press F2 (Reprint) to initiate Official Receipt reprinting.",
+            alt: "2nd Screen with F2 Reprint button highlighted"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step2-f2.png",
+            caption: "Reprint Step 2: Enter Manager Override credentials when prompted, press TAB to YES, and press ENTER.",
+            alt: "Manager Override authorization for Reprint Receipt"
+          },
+          {
+            src: "/assets/modules/module-5-second-page-functions/images/pos-reprint-step3-f2.png",
+            caption: "Reprint Step 3: Select the desired Official Receipt (OR) Number and press ENTER to print duplicate.",
+            alt: "Selecting Official Receipt number for reprint"
+          }
+        ],
         instructions: [
           "To suspend: Press F9 (Suspend) on Main Page, then press ENTER.",
           "To recall: Go to 2nd Page via F5, press F7 (Recall), provide override, and pick the suspended transaction.",
@@ -292,6 +470,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 6: Third-Page Functions & Store Readings
+  // =========================================================================
   {
     id: "mod-6",
     number: 6,
@@ -304,6 +486,43 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Cashier (Y) Reading & Terminal (Z) Reading",
         objective: "Perform formal shift and daily reconciliations mandated by store accounting.",
         deckSlideRef: "Slides 68-76",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/function-keys-3rdpage.png",
+            caption: "3rd Screen Function Keys Overview: Post Void, Sales Journal, Cashier Reading, Terminal Reading, and SDV.",
+            alt: "3rd Screen function keys column diagram"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/function-keys-3rdpage-2.png",
+            caption: "Press F5 twice to cycle through function screens: Main -> 2nd -> 3rd Screen.",
+            alt: "Navigation sequence to reach 3rd screen"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-cashierread-step1-f8.png",
+            caption: "Cashier Y-Reading Step 1: Press F8 (Cashier Rdg) on the 3rd Screen for end-of-shift reconciliation.",
+            alt: "3rd Screen with F8 Cashier Rdg button highlighted"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-cashierread-step2-f8.png",
+            caption: "Cashier Y-Reading Step 2: Press ENTER to generate and print the shift Y-Reading financial summary.",
+            alt: "Generating Y-Reading summary printout"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step1-f9.png",
+            caption: "Terminal Z-Reading Step 1: Press F9 (Terminal Rdg) on the 3rd Screen for end-of-day store closing.",
+            alt: "3rd Screen with F9 Terminal Rdg button highlighted"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step2-f9.png",
+            caption: "Terminal Z-Reading Step 2: A confirmation prompt appears. Press TAB to highlight [Yes], then press ENTER.",
+            alt: "Terminal Reading confirmation prompt"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-terminalread-step3-f9.png",
+            caption: "Terminal Z-Reading Step 3: Press ENTER to generate and print the final Z-Reading report.",
+            alt: "Final Z-Reading accounting report generation"
+          }
+        ],
         instructions: [
           "Press F5 twice to navigate from Main -> 2nd -> 3rd Page.",
           "For cashier change of shift: Press F8 (Cashier Reading) to print the Y-Reading summary.",
@@ -316,6 +535,18 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Sales Data Verification (SDV)",
         objective: "Ensure sales header, item detail, and payment tallies align across the POS database.",
         deckSlideRef: "Slides 70-71",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-sdv-step1-f10.png",
+            caption: "SDV Step 1: On the 3rd Screen, press F10 (SDV) at the bottom of the function key column.",
+            alt: "3rd Screen with F10 SDV button highlighted"
+          },
+          {
+            src: "/assets/modules/module-6-third-page-functions/images/pos-sdv-step2-f10.png",
+            caption: "SDV Step 2: Inspect the SDV audit table and ensure Header, Detail, and PayDetail counts indicate 'Tally'.",
+            alt: "Sales Data Verification audit screen confirming all counts tally"
+          }
+        ],
         instructions: [
           "On the 3rd Page, press F10 (SDV).",
           "Check whether the Header, Detail, and PayDetail counts are listed as 'Tally'.",
@@ -325,6 +556,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 7: Fourth-Page Functions & Exceptions
+  // =========================================================================
   {
     id: "mod-7",
     number: 7,
@@ -337,6 +572,28 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Transaction Comments (TIN & Corporate Billing)",
         objective: "Enter BIR-compliant customer details for corporate or tax-exempt transactions.",
         deckSlideRef: "Slides 83, 86-88",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/functionkeys-4thpage.png",
+            caption: "Press F5 three times to advance from Main -> 2nd -> 3rd -> 4th Screen.",
+            alt: "4th Screen function key layout showing Best Buy, Trx Comment, Non Sales, Zero Rated, Return, Refund"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step1-f3.png",
+            caption: "Step 1: Press F3 (TRX Comment) on the 4th Screen to open corporate billing details.",
+            alt: "4th Screen with F3 TRX Comment button highlighted"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step2-f3.png",
+            caption: "Step 2: Enter customer company name, registered business address, and TIN, then press OK.",
+            alt: "Transaction Comment entry dialog for corporate customer details"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-trxcomment-step3-f3.png",
+            caption: "Step 3: The transaction comments are recorded and will automatically print on the official sales invoice receipt.",
+            alt: "Receipt preview with corporate TIN and buyer address printed"
+          }
+        ],
         instructions: [
           "Press F5 three times to advance to the 4th Page.",
           "Press F3 (TRX Comment).",
@@ -350,6 +607,58 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Returns, Refunds, and Zero-Rated Transactions",
         objective: "Execute returns and refunds with supervisory approval and original receipt references.",
         deckSlideRef: "Slides 90-99",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step1-f8.png",
+            caption: "Return Step 1: Press F8 (Return) on the 4th Screen and enter Manager Override credentials when prompted.",
+            alt: "Manager Override prompt for Item Return"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step2-f8.png",
+            caption: "Return Step 2: Select the return reason code, input the customer's Sales Invoice (SI) number, and press Alt + Enter.",
+            alt: "Return reason code and Sales Invoice entry screen"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-return-step3-f8.png",
+            caption: "Return Step 3: Enter the GTIN barcode of the returned item; credit calculations reflect automatically upon pressing ENTER.",
+            alt: "Scanning returned item GTIN barcode"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/videos/pos-return-video.mp4",
+            caption: "Video Walkthrough: Demonstrating customer item Return/Exchange workflow.",
+            alt: "Video demonstration of Item Return procedure"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-refund-step1-f10.png",
+            caption: "Refund Step 1: Press F10 (Refund) on the 4th Screen and enter Manager Override credentials when prompted.",
+            alt: "Manager Override prompt for Cash Refund"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-refund-step2-f10.png",
+            caption: "Refund Step 2: Enter the original Official Receipt (OR) Number for the refund, then press Alt + Enter to proceed.",
+            alt: "Entering original OR number for cash refund"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step1-f7.png",
+            caption: "Zero-Rated Step 1: Press F7 (Zero Rated) on the 4th Screen before scanning items.",
+            alt: "4th Screen with F7 Zero Rated button highlighted"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step2-f7.png",
+            caption: "Zero-Rated Step 2: Enter Manager Override credentials to authorize VAT-exempt status.",
+            alt: "Manager Override authorization for Zero-Rated Sale"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-zerorated-step3-f7.png",
+            caption: "Zero-Rated Step 3: Scan tax-exempt items with VAT automatically removed from the total.",
+            alt: "Scanning items under Zero-Rated VAT exemption"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/videos/pos-zerorated-video.mp4",
+            caption: "Video Walkthrough: Demonstrating Zero-Rated sale authorization and scanning.",
+            alt: "Video demonstration of Zero-Rated transaction"
+          }
+        ],
         instructions: [
           "For Returns: Press F8 (Return) on 4th Page, enter override, input customer Sales Invoice (SI), and enter returned GTIN.",
           "For Refunds: Press F10 (Refund), supply manager override, and enter the original ORNO.",
@@ -359,6 +668,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 8: Payment Screen & Tender Methods
+  // =========================================================================
   {
     id: "mod-8",
     number: 8,
@@ -371,30 +684,110 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Cash Tender & Change Computation",
         objective: "Navigate to the payment screen, enter tender amount, and confirm change balance.",
         deckSlideRef: "Slides 102-103",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-8-payment-screens/images/functionkeys-paymentscreen.png",
+            caption: "Payment Screen Function Keys: F1 Cancel, F2 Cash, F3 Bank Card, F5 Gift Cert, F6 Coupon, F8 Credit Memo, F9 Sulit Coins.",
+            alt: "Payment screen tender buttons layout"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cashpayment-step1-f2.png",
+            caption: "Cash Tender: Press F2 (Cash) on Payment Screen to enter amount handed by customer.",
+            alt: "Payment screen with F2 Cash tender button highlighted"
+          }
+        ],
         instructions: [
           "When all items are entered on the Main screen, press F4 (Payment).",
-          "Press F2 (Cash) on the Payment screen.",
-          "Type the amount handed by the customer (e.g. 500.00).",
-          "Press Tab to select OK, then press ENTER.",
+          "In the Choose Option dialog, select option 1 (None) if the customer has no loyalty card (or 2 for LNC / 3 for LNQR).",
+          "On the authentic Payment Screen, cash payment is active by default (or press F2 Cash).",
+          "Type the amount handed by the customer (e.g. 250.00 or 500.00).",
+          "Press Enter or click [Ok] to confirm tender.",
           "Observe the calculated Change due to the customer and wait for the simulated receipt to generate."
         ],
-        keyCallouts: ["F4: Open Payment", "F2: Cash Tender", "Tab -> Enter: Confirm"]
+        keyCallouts: ["F4: Payment Flow", "1: None (or 2/3 for Loyalty)", "F2 / Enter: Cash Tender"]
       },
       {
         id: "les-8-2",
         title: "Bank Cards, GCash, Gift Certificates & Sulit Coins",
         objective: "Tender electronic payments, mobile wallets, and voucher codes.",
         deckSlideRef: "Slides 104-116",
-        instructions: [
-          "From Payment screen: Press F3 (Bank Card) for Credit Card, GCash, or NBS Gift Card.",
-          "For GCash: Enter the 12-digit transaction reference number.",
-          "For Gift Certificates: Press F5 (Gift Cert), select series type, and enter the certificate code.",
-          "For Sulit Coins: Press F9 (Sulit Coins), input coin amount, and enter the customer's LNQR code."
+        visualAssets: [
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step1-f3.png",
+            caption: "Card Payment Step 1: Press F3 (Bank Card) on Payment Screen, choose Credit Card, and enter the card number.",
+            alt: "Credit Card tender entry screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step2-f3.png",
+            caption: "Card Payment Step 2: Fill out required authorization details and confirmation.",
+            alt: "Card authorization details prompt"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-gcash-step1-f3.png",
+            caption: "GCash Tender: Press F3 (Bank Card), select GCash option, and enter the 12-digit transaction reference number.",
+            alt: "GCash mobile wallet payment entry screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcard-step1-f3.png",
+            caption: "NBS Gift Card: Press F3 (Bank Card), select NBS Giftcard, and input the voucher credentials.",
+            alt: "NBS Gift Card redemption screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcert-step1-f5.png",
+            caption: "Gift Certificate Step 1: Press F5 (Gift Cert), select certificate series type, and scan or type GC number.",
+            alt: "Gift Certificate category selection"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-giftcert-step2-f5.png",
+            caption: "Gift Certificate Step 2: Fill in the required verification details of the gift certificate.",
+            alt: "Gift Certificate details entry prompt"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step1-f6.png",
+            caption: "Coupon Step 1: Press F6 (Coupon), choose series category, and select the promotional coupon type.",
+            alt: "Coupon category selection screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step2-f6.png",
+            caption: "Coupon Step 2: Fill in the required details of the promotional coupon.",
+            alt: "Coupon details entry prompt"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step1.png",
+            caption: "Sulit Coins Step 1: Press F3 (Bank Card), select LNQR Sulit Coins, press TAB to highlight [Ok], and press ENTER.",
+            alt: "Selecting LNQR Sulit Coins option on Payment screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step2.png",
+            caption: "Sulit Coins Step 2: Enter the Sulit Coins amount to redeem, press TAB, scan customer's LNQR barcode, and confirm.",
+            alt: "Sulit Coins amount and customer QR code entry screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step3.png",
+            caption: "Sulit Coins Step 3: Confirmation popup displays completed LNQR processing; press ENTER to finalize receipt.",
+            alt: "Confirmation popup for completed Sulit Coins redemption"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/videos/pos-sulitcoins-video.mp4",
+            caption: "Video Walkthrough: Demonstrating full LNQR Sulit Coins loyalty redemption and payment.",
+            alt: "Video demonstration of Sulit Coins payment flow"
+          }
         ],
-        keyCallouts: ["F3: Bank Card / GCash", "F5: Gift Certificate", "F6: Coupon", "F8: Credit Memo", "F9: Sulit Coins"]
+        instructions: [
+          "When items are entered, press F4 (Payment) and select loyalty option (Option 1 None if no loyalty, 2 for LNC, 3 for LNQR).",
+          "On the Payment Screen, press F3 (Bank Card) for Credit/Debit Card, GCash, or QR PH.",
+          "For GCash: Enter the 12-digit transaction reference number and tender amount.",
+          "For Gift Certificates: Press F5 (Gift Cert), select series type, and enter the certificate code.",
+          "For Sulit Coins: Press F3 (Bank Card), select LNQR Sulit Coins, input coin amount, and enter the customer's LNQR code."
+        ],
+        keyCallouts: ["F4: Payment", "Option 1: None", "F3: Bank Card / GCash", "F5: Gift Cert", "F6: Coupon"]
       }
     ]
   },
+
+  // =========================================================================
+  // MODULE 9: Knowledge Check & Practical Certification
+  // =========================================================================
   {
     id: "mod-9",
     number: 9,
@@ -407,6 +800,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
         title: "Final Review & Assessment Readiness",
         objective: "Verify comprehension of function key mappings and prepare for practical simulation.",
         deckSlideRef: "Slides 119-120",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-9-finalreview/images/exam-feedback.png",
+            caption: "Practical Certification Assessment Preview: Comprehensive evaluation across all 5 POS screens and function keys.",
+            alt: "Exam feedback overview illustrating practical simulator certification assessment"
+          }
+        ],
         instructions: [
           "Review function key actions across all 5 POS screens (Main, 2nd, 3rd, 4th, Payment).",
           "Ensure you remember which operations require a manager override (Item Void, Trx Void, Reprint, Discounts, Readings).",
@@ -417,4 +817,3 @@ export const TRAINING_MODULES: TrainingModule[] = [
     ]
   }
 ];
-

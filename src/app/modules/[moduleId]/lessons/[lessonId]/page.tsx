@@ -21,7 +21,9 @@ import {
   Monitor, 
   BookOpen, 
   Key, 
-  Sparkles 
+  Sparkles,
+  Video,
+  FileImage
 } from "lucide-react";
 
 function LessonDetailContent() {
@@ -217,24 +219,54 @@ function LessonDetailContent() {
           {(currentLesson.visualAssets && currentLesson.visualAssets.length > 0) ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-600 border-b border-gray-200 pb-2">
-                <span className="uppercase text-[#E4002B]">Official Deck Visual References</span>
+                <span className="uppercase text-[#E4002B]">Official Deck Visual References & Demonstrations</span>
                 <span>{currentLesson.deckSlideRef}</span>
               </div>
               <div className="space-y-4">
-                {currentLesson.visualAssets.map((asset, idx) => (
-                  <div key={idx} className="border border-gray-300 bg-white p-3 space-y-2 shadow-sm">
-                    <div className="overflow-hidden bg-gray-900 border border-gray-300 flex items-center justify-center">
-                      <img
-                        src={asset.src}
-                        alt={asset.alt}
-                        className="w-full h-auto object-contain max-h-[500px]"
-                      />
+                {currentLesson.visualAssets.map((asset, idx) => {
+                  const isVideo = asset.src.endsWith(".mp4");
+                  return (
+                    <div key={idx} className="border border-gray-300 bg-white p-3 space-y-2 shadow-sm">
+                      <div className="flex items-center justify-between text-[11px] font-mono text-gray-500 pb-1">
+                        <span className="flex items-center font-bold">
+                          {isVideo ? (
+                            <>
+                              <Video className="w-3.5 h-3.5 text-blue-600 mr-1.5" />
+                              <span className="text-blue-700 uppercase">Video Walkthrough</span>
+                            </>
+                          ) : (
+                            <>
+                              <FileImage className="w-3.5 h-3.5 text-gray-500 mr-1.5" />
+                              <span className="text-gray-600 uppercase">Visual Reference {idx + 1}</span>
+                            </>
+                          )}
+                        </span>
+                      </div>
+                      <div className="overflow-hidden bg-black border border-gray-300 flex items-center justify-center">
+                        {isVideo ? (
+                          <video
+                            controls
+                            playsInline
+                            preload="metadata"
+                            className="w-full max-h-[500px] bg-black"
+                            src={asset.src}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                        ) : (
+                          <img
+                            src={asset.src}
+                            alt={asset.alt}
+                            className="w-full h-auto object-contain max-h-[500px]"
+                          />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-700 font-sans text-center pt-1 font-semibold">
+                        {asset.caption}
+                      </p>
                     </div>
-                    <p className="text-xs text-gray-700 font-sans text-center pt-1 font-semibold">
-                      {asset.caption}
-                    </p>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ) : currentLesson.visualAsset ? (
@@ -244,11 +276,23 @@ function LessonDetailContent() {
                 <span>{currentLesson.deckSlideRef}</span>
               </div>
               <div className="overflow-hidden bg-gray-900 border border-gray-300 flex items-center justify-center">
-                <img
-                  src={currentLesson.visualAsset.src}
-                  alt={currentLesson.visualAsset.alt}
-                  className="w-full h-auto object-contain max-h-[500px]"
-                />
+                {currentLesson.visualAsset.src.endsWith(".mp4") ? (
+                  <video
+                    controls
+                    playsInline
+                    preload="metadata"
+                    className="w-full max-h-[500px] bg-black"
+                    src={currentLesson.visualAsset.src}
+                  >
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <img
+                    src={currentLesson.visualAsset.src}
+                    alt={currentLesson.visualAsset.alt}
+                    className="w-full h-auto object-contain max-h-[500px]"
+                  />
+                )}
               </div>
               <p className="text-xs text-gray-500 font-sans text-center pt-1 italic">
                 {currentLesson.visualAsset.caption}
