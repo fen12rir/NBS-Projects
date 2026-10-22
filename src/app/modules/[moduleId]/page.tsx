@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
@@ -12,12 +12,12 @@ import { getScenarioForLesson } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
 import { 
   ArrowLeft, 
-  BookOpen, 
   CheckCircle2, 
   Circle, 
   ChevronRight, 
   Monitor, 
-  FileText 
+  FileText,
+  Award
 } from "lucide-react";
 
 export default function ModuleDetailPage() {
@@ -152,7 +152,10 @@ export default function ModuleDetailPage() {
                       {(lesson.visualAsset || (lesson.visualAssets && lesson.visualAssets.length > 0)) && (
                         <div className="mt-2.5 flex items-center space-x-2 text-xs text-[#E4002B] font-semibold">
                           <FileText className="w-3.5 h-3.5" />
-                          <span>Includes Official Visual Reference: {lesson.deckSlideRef}</span>
+                          <span>
+                            Includes Official Visual Reference: {lesson.deckSlideRef}
+                            {lesson.visualAssets?.some((a) => a.src.endsWith(".mp4")) ? " • Video Walkthrough" : ""}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -187,21 +190,28 @@ export default function ModuleDetailPage() {
         </div>
 
         {/* Start Practical Assessment Action */}
-        <div className="border border-blue-200 bg-blue-50 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center space-x-3">
-            <Monitor className="w-8 h-8 text-blue-700 flex-shrink-0" />
-            <div>
-              <h3 className="text-sm font-bold text-blue-900 uppercase">
-                Ready to try this in the POS simulator?
-              </h3>
-              <p className="text-xs text-blue-700">
-                Launch the terminal to practice all key procedures and workflows covered across all lessons in this module.
+        <div className="border-2 border-[#0B192C]/15 bg-gradient-to-r from-[#0B192C] to-[#162944] text-white p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+          <div className="flex items-start sm:items-center space-x-3.5">
+            <div className="w-11 h-11 rounded bg-[#E4002B] flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Award className="w-6 h-6 text-white" />
+            </div>
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 bg-yellow-400/20 text-yellow-300 border border-yellow-400/40">
+                  End-of-Module Test
+                </span>
+                <h3 className="text-sm font-black text-white uppercase tracking-wide">
+                  Ready for the Module Practical Assessment?
+                </h3>
+              </div>
+              <p className="text-xs text-gray-200 leading-relaxed max-w-2xl">
+                Put everything you learned across all lessons in this module to the test. You will handle a combined real-world cashier scenario with new items and sequence variations to verify your mastery.
               </p>
             </div>
           </div>
-          <Link href={`/simulator?module=${currentModule.id}`}>
-            <Button size="sm" className="bg-[#E4002B] hover:bg-[#C10024] font-bold text-xs whitespace-nowrap">
-              Launch POS Terminal
+          <Link href={`/simulator?module=${currentModule.id}`} className="w-full sm:w-auto flex-shrink-0">
+            <Button size="sm" className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs whitespace-nowrap px-4 py-2.5 shadow-sm">
+              Take Module Assessment
             </Button>
           </Link>
         </div>

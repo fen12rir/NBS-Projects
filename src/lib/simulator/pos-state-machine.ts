@@ -33,6 +33,10 @@ export interface POSTransactionState {
   changeDue: number;
   isTransactionCompleted: boolean;
   isSuspended: boolean;
+  appliedDiscount: { name: string; percent: number } | null;
+  isZeroRated: boolean;
+  transactionComments: { customerName: string; address: string; tin: string; remarks?: string } | null;
+  suspendedTransactions: { id: string; trxNumber: string; items: POSLineItem[]; timeStr: string; total: number }[];
   lastMessage: {
     type: "info" | "success" | "error" | "warning";
     text: string;
@@ -67,6 +71,10 @@ export function createInitialPOSState(cashierName: string = "Maria Santos (Train
     changeDue: 0,
     isTransactionCompleted: false,
     isSuspended: false,
+    appliedDiscount: null,
+    isZeroRated: false,
+    transactionComments: null,
+    suspendedTransactions: [],
     lastMessage: {
       type: "info",
       text: "Terminal Ready. Scan item or press F2 for Lookup, F3 for Quantity.",
@@ -74,15 +82,22 @@ export function createInitialPOSState(cashierName: string = "Maria Santos (Train
   };
 }
 
-export function calculateTotals(items: POSLineItem[]) {
+export function calculateTotals(items: POSLineItem[], discountPercent: number = 0, isZeroRated: boolean = false) {
   const activeItems = items.filter((item) => !item.isVoided);
-  const totalAmount = activeItems.reduce((acc, item) => acc + item.total, 0);
+  const rawTotal = activeItems.reduce((acc, item) => acc + item.total, 0);
   const totalQty = activeItems.reduce((acc, item) => acc + item.quantity, 0);
+
+  const baseTotal = isZeroRated ? rawTotal / 1.12 : rawTotal;
+  const discountAmount = discountPercent > 0 ? (baseTotal * discountPercent) / 100 : 0;
+  const totalAmount = Math.max(0, baseTotal - discountAmount);
+
   return {
-    subtotal: totalAmount,
+    subtotal: rawTotal,
+    discountAmount,
     totalAmount,
     totalQty,
     itemCount: activeItems.length,
+    isZeroRated,
   };
 }
 
@@ -105,9 +120,18 @@ export type POSAction =
   | { type: "VOID_ITEM"; itemId: string }
   | { type: "VOID_TRANSACTION" }
   | { type: "SUSPEND_TRANSACTION" }
-  | { type: "RECALL_TRANSACTION" }
+  | { type: "RECALL_TRANSACTION"; transactionId?: string }
   | { type: "TRIGGER_READING"; readingType: "Y" | "Z" }
   | { type: "RUN_SDV_CHECK" }
+  | { type: "APPLY_DISCOUNT"; discount: { name: string; percent: number } }
+  | { type: "SET_ZERO_RATED"; isZeroRated: boolean }
+  | { type: "SET_TRANSACTION_COMMENTS"; comments: { customerName: string; address: string; tin: string; remarks?: string } }
+  | { type: "PROCESS_RETURN_ITEM"; sku: string; reason: string; siNumber: string }
+  | { type: "PROCESS_REFUND"; orNumber: string; reason: string }
+  | { type: "CHANGE_ITEM_PRICE"; itemId: string; newPrice: number; reason: string }
+  | { type: "ADD_NON_MDSE_ITEM"; description: string; amount: number; referenceNo: string }
+  | { type: "POST_VOID_TRANSACTION"; orNumber: string; reason: string }
+  | { type: "APPLY_BEST_BUY"; promoName: string; promoSku: string; promoPrice: number }
   | { type: "RESET_TRANSACTION" };
 
 export function posReducer(state: POSTransactionState, action: POSAction): POSTransactionState {
@@ -227,7 +251,7 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
     }
 
     case "OPEN_PAYMENT": {
-      const totals = calculateTotals(state.lineItems);
+      const totals = calculateTotals(state.lineItems, state.appliedDiscount?.percent || 0, state.isZeroRated);
       if (totals.totalAmount <= 0) {
         return {
           ...state,
@@ -260,7 +284,7 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       };
 
     case "TENDER_PAYMENT": {
-      const totals = calculateTotals(state.lineItems);
+      const totals = calculateTotals(state.lineItems, state.appliedDiscount?.percent || 0, state.isZeroRated);
       const amount = action.amount;
       if (amount < totals.totalAmount) {
         return {
@@ -303,16 +327,34 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         },
       };
 
-    case "CONFIRM_MANAGER_OVERRIDE":
+    case "CONFIRM_MANAGER_OVERRIDE": {
+      let updatedLineItems = state.lineItems;
+      let lastMsg = "Manager Override approved (Training Mode Authorization).";
+
+      if (state.managerOverrideTarget === "Item Void") {
+        const lastActiveIndex = state.lineItems.map((i) => !i.isVoided).lastIndexOf(true);
+        if (lastActiveIndex >= 0) {
+          updatedLineItems = state.lineItems.map((item, idx) =>
+            idx === lastActiveIndex ? { ...item, isVoided: true } : item
+          );
+          lastMsg = "Item voided by Manager Override.";
+        }
+      } else if (state.managerOverrideTarget === "Transaction Void") {
+        updatedLineItems = [];
+        lastMsg = "Entire transaction voided by Manager Override.";
+      }
+
       return {
         ...state,
         managerOverrideOpen: false,
         managerOverrideTarget: null,
+        lineItems: updatedLineItems,
         lastMessage: {
           type: "success",
-          text: "Manager Override approved (Training Mode Authorization).",
+          text: lastMsg,
         },
       };
+    }
 
     case "CANCEL_MANAGER_OVERRIDE":
       return {
@@ -326,9 +368,12 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       };
 
     case "VOID_ITEM": {
-      const updated = state.lineItems.map((item) =>
-        item.id === action.itemId ? { ...item, isVoided: true } : item
-      );
+      const matchIndex = state.lineItems
+        .map((i) => !i.isVoided && (i.id === action.itemId || i.sku.toUpperCase() === action.itemId.toUpperCase()))
+        .lastIndexOf(true);
+      const updated = matchIndex >= 0
+        ? state.lineItems.map((item, idx) => (idx === matchIndex ? { ...item, isVoided: true } : item))
+        : state.lineItems.map((item) => (item.id === action.itemId ? { ...item, isVoided: true } : item));
       return {
         ...state,
         lineItems: updated,
@@ -351,23 +396,126 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
     }
 
     case "SUSPEND_TRANSACTION": {
+      const activeLines = state.lineItems.filter((i) => !i.isVoided);
+      const totals = calculateTotals(state.lineItems, state.appliedDiscount?.percent || 0, state.isZeroRated);
+      const newSuspended = {
+        id: "susp-" + Date.now(),
+        trxNumber: state.transactionNumber,
+        items: [...state.lineItems],
+        timeStr: state.timeStr,
+        total: totals.totalAmount,
+      };
+
       return {
         ...state,
         isSuspended: true,
+        lineItems: [],
+        suspendedTransactions: [...state.suspendedTransactions, newSuspended],
         lastMessage: {
           type: "info",
-          text: "Transaction suspended. You may recall it on the 2nd Page (F7 Recall).",
+          text: `Transaction ${state.transactionNumber} suspended (${activeLines.length} items, ₱${totals.totalAmount.toFixed(2)}). You may recall it on the 2nd Page (F7 Recall).`,
         },
       };
     }
 
     case "RECALL_TRANSACTION": {
+      if (state.suspendedTransactions.length === 0) {
+        return {
+          ...state,
+          lastMessage: {
+            type: "warning",
+            text: "No suspended transactions found in holding buffer.",
+          },
+        };
+      }
+
+      const targetSusp = action.transactionId
+        ? state.suspendedTransactions.find((s) => s.id === action.transactionId) || state.suspendedTransactions[state.suspendedTransactions.length - 1]
+        : state.suspendedTransactions[state.suspendedTransactions.length - 1];
+
       return {
         ...state,
         isSuspended: false,
+        lineItems: targetSusp.items,
+        suspendedTransactions: state.suspendedTransactions.filter((s) => s.id !== targetSusp.id),
         lastMessage: {
           type: "success",
-          text: "Suspended transaction successfully recalled to active terminal.",
+          text: `Suspended transaction ${targetSusp.trxNumber} successfully recalled to active terminal.`,
+        },
+      };
+    }
+
+    case "APPLY_DISCOUNT": {
+      return {
+        ...state,
+        appliedDiscount: action.discount,
+        lastMessage: {
+          type: "success",
+          text: `Applied ${action.discount.name} (${action.discount.percent}% discount).`,
+        },
+      };
+    }
+
+    case "SET_ZERO_RATED": {
+      return {
+        ...state,
+        isZeroRated: action.isZeroRated,
+        lastMessage: {
+          type: "success",
+          text: action.isZeroRated
+            ? "VAT Zero-Rating enabled. 12% VAT exemption applied to vatable items."
+            : "VAT Zero-Rating disabled. Regular retail VAT applied.",
+        },
+      };
+    }
+
+    case "SET_TRANSACTION_COMMENTS": {
+      return {
+        ...state,
+        transactionComments: action.comments,
+        lastMessage: {
+          type: "success",
+          text: `Corporate comments recorded for ${action.comments.customerName} (TIN: ${action.comments.tin}).`,
+        },
+      };
+    }
+
+    case "PROCESS_RETURN_ITEM": {
+      const cleanSku = action.sku.trim().toUpperCase();
+      const product = SYNTHETIC_PRODUCTS.find(
+        (p) => p.sku.toUpperCase() === cleanSku || p.barcode === cleanSku
+      );
+
+      const price = product ? (product.promoPrice ?? product.srp) : 100;
+      const desc = product ? product.description : `Returned Item (${cleanSku})`;
+
+      const returnItem: POSLineItem = {
+        id: "ret-" + Date.now(),
+        sku: cleanSku,
+        description: `[RETURN: ${action.reason}] ${desc}`,
+        quantity: -1,
+        unitPrice: price,
+        total: -price,
+        isVoided: false,
+      };
+
+      return {
+        ...state,
+        lineItems: [...state.lineItems, returnItem],
+        lastMessage: {
+          type: "warning",
+          text: `Processed Return/Exchange for SI ${action.siNumber}: Credit ₱${price.toFixed(2)} for ${desc}.`,
+        },
+      };
+    }
+
+    case "PROCESS_REFUND": {
+      return {
+        ...state,
+        lineItems: [],
+        lastMessage: {
+          type: "success",
+          text: `Authorized cash refund for OR ${action.orNumber} (${action.reason}). Transaction closed.`,
         },
       };
     }
@@ -388,6 +536,72 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         lastMessage: {
           type: "success",
           text: "Sales Data Verification (SDV): Header, Detail, and PayDetail counts are TALLY.",
+        },
+      };
+    }
+
+    case "CHANGE_ITEM_PRICE": {
+      const updatedLineItems = state.lineItems.map((item) =>
+        item.id === action.itemId
+          ? { ...item, unitPrice: action.newPrice, total: action.newPrice * item.quantity }
+          : item
+      );
+      return {
+        ...state,
+        lineItems: updatedLineItems,
+        lastMessage: {
+          type: "success",
+          text: `Price changed to ${action.newPrice.toFixed(2)} PHP (${action.reason}).`,
+        },
+      };
+    }
+
+    case "ADD_NON_MDSE_ITEM": {
+      const nonMdseItem: POSLineItem = {
+        id: `NMDSE-${Date.now()}`,
+        sku: `VAR-${action.referenceNo || "001"}`,
+        description: `NON-MDSE: ${action.description}`,
+        quantity: 1,
+        unitPrice: action.amount,
+        total: action.amount,
+        isVoided: false,
+      };
+      return {
+        ...state,
+        lineItems: [...state.lineItems, nonMdseItem],
+        lastMessage: {
+          type: "info",
+          text: `Added Non-Merchandise line: ${action.description} (${action.amount.toFixed(2)} PHP).`,
+        },
+      };
+    }
+
+    case "POST_VOID_TRANSACTION": {
+      return {
+        ...state,
+        lastMessage: {
+          type: "success",
+          text: `Transaction ${action.orNumber} has been Post-Voided (${action.reason}).`,
+        },
+      };
+    }
+
+    case "APPLY_BEST_BUY": {
+      const bestBuyItem: POSLineItem = {
+        id: `BB-${Date.now()}`,
+        sku: action.promoSku,
+        description: `BEST BUY: ${action.promoName}`,
+        quantity: 1,
+        unitPrice: action.promoPrice,
+        total: action.promoPrice,
+        isVoided: false,
+      };
+      return {
+        ...state,
+        lineItems: [...state.lineItems, bestBuyItem],
+        lastMessage: {
+          type: "success",
+          text: `Best Buy promo applied: ${action.promoName} (${action.promoPrice.toFixed(2)} PHP).`,
         },
       };
     }

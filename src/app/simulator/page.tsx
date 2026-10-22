@@ -7,6 +7,24 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { ReceiptModal } from "@/components/simulator/receipt-modal";
 import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
 import { F2LookupScreen } from "@/components/simulator/f2-lookup-screen";
+import { ManagerOverrideModal } from "@/components/simulator/manager-override-modal";
+import { ItemVoidModal } from "@/components/simulator/item-void-modal";
+import { TransactionDiscountModal } from "@/components/simulator/transaction-discount-modal";
+import { TrxVoidModal } from "@/components/simulator/trx-void-modal";
+import { QuantityModal } from "@/components/simulator/quantity-modal";
+import { SuspendModal, RecallModal } from "@/components/simulator/suspend-recall-modal";
+import { ReprintModal } from "@/components/simulator/reprint-modal";
+import { SdvModal } from "@/components/simulator/sdv-modal";
+import { ReadingsModal } from "@/components/simulator/readings-modal";
+import { TransactionCommentModal } from "@/components/simulator/transaction-comment-modal";
+import { ReturnRefundModal } from "@/components/simulator/return-refund-modal";
+import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/electronic-payment-modal";
+import { PostVoidModal } from "@/components/simulator/post-void-modal";
+import { PriceChangeModal } from "@/components/simulator/price-change-modal";
+import { NonMdseModal } from "@/components/simulator/non-mdse-modal";
+import { JournalViewerModal } from "@/components/simulator/journal-viewer-modal";
+import { NonSalesModal } from "@/components/simulator/non-sales-modal";
+import { BestBuyModal } from "@/components/simulator/best-buy-modal";
 import { 
   posReducer, 
   createInitialPOSState, 
@@ -84,13 +102,74 @@ function SimulatorContent() {
   // Module 3: LNQR Loyalty States
   const [isLoyaltyOptionOpen, setIsLoyaltyOptionOpen] = useState(false);
   const [selectedLoyaltyOption, setSelectedLoyaltyOption] = useState<number | null>(null);
+  const [loyaltyType, setLoyaltyType] = useState<"NONE" | "LNC" | "LNQR">("NONE");
+
+  // Option 2: Laking National Card
+  const [isLncCardScreenOpen, setIsLncCardScreenOpen] = useState(false);
+  const [customerLncInput, setCustomerLncInput] = useState("1008-2024-9901");
+  const [selectedLncButton, setSelectedLncButton] = useState<"OK" | "CANCEL" | null>(null);
+
+  // Option 3: LNQR
   const [isLnqrScanScreenOpen, setIsLnqrScanScreenOpen] = useState(false);
   const [customerQrInput, setCustomerQrInput] = useState("20221003LN000004");
   const [selectedLnqrButton, setSelectedLnqrButton] = useState<"OK" | "CANCEL" | null>(null);
+
+  // Authentic Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
+  const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
   const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("3000");
   const [isLnqrTenderProcessed, setIsLnqrTenderProcessed] = useState(false);
   const [isLnqrUpdatedModalOpen, setIsLnqrUpdatedModalOpen] = useState(false);
+
+  // Authentic Functional Modals (Modules 4-8)
+  const [isItemVoidModalOpen, setIsItemVoidModalOpen] = useState(false);
+  const [isTrxVoidModalOpen, setIsTrxVoidModalOpen] = useState(false);
+  const [isVoidSkuMode, setIsVoidSkuMode] = useState(false);
+  const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
+  const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
+  const [isRefundSkuMode, setIsRefundSkuMode] = useState(false);
+
+  // In-Screen Payment Details (Module 8)
+  const [cardSubtype, setCardSubtype] = useState<"CREDIT_CARD" | "GCASH" | "NBS_GIFTCARD" | "SULIT_COINS">("CREDIT_CARD");
+  const [creditCardNum, setCreditCardNum] = useState("****0000");
+  const [creditCardHolder, setCreditCardHolder] = useState("JAN ANGELA CATINDIG");
+  const [creditCardTerminal, setCreditCardTerminal] = useState("-SELECT-");
+  const [creditCardValid, setCreditCardValid] = useState("2028-12-31");
+  const [creditCardAuth, setCreditCardAuth] = useState("123456");
+  const [creditCardSlip, setCreditCardSlip] = useState("987654");
+  const [gcashAmount, setGcashAmount] = useState("2990.00");
+  const [gcashRef, setGcashRef] = useState("100293847561");
+  const [giftCardCode, setGiftCardCode] = useState("GC-99482");
+  const [giftCardAmount, setGiftCardAmount] = useState("2990.00");
+  const [sulitCoinsAmount, setSulitCoinsAmount] = useState("1");
+  const [sulitCoinsQr, setSulitCoinsQr] = useState("20221003LN000004");
+  const [giftCertType, setGiftCertType] = useState("-SELECT-");
+  const [giftCertNumber, setGiftCertNumber] = useState("123456789");
+  const [couponSeries, setCouponSeries] = useState("-SELECT-");
+  const [couponType, setCouponType] = useState("--PLEASE SELECT--");
+  const [couponNumber, setCouponNumber] = useState("CP-99214");
+  const [couponDenom, setCouponDenom] = useState("50.00");
+  const [couponAvail, setCouponAvail] = useState("50.00");
+  const [couponRedemption, setCouponRedemption] = useState("2026-02-18");
+  const [couponValid, setCouponValid] = useState("2026-12-31");
+  const [creditMemoNumber, setCreditMemoNumber] = useState("CM-2026-0041");
+  const [creditMemoAmount, setCreditMemoAmount] = useState("2990.00");
+  const [isTrxDiscOpen, setIsTrxDiscOpen] = useState(false);
+  const [isRecallOpen, setIsRecallOpen] = useState(false);
+  const [isReprintOpen, setIsReprintOpen] = useState(false);
+  const [isReprintReceiptOpen, setIsReprintReceiptOpen] = useState(false);
+  const [isSdvOpen, setIsSdvOpen] = useState(false);
+  const [readingsType, setReadingsType] = useState<"Y" | "Z" | null>(null);
+  const [isTrxCommentOpen, setIsTrxCommentOpen] = useState(false);
+  const [returnRefundMode, setReturnRefundMode] = useState<"RETURN" | "REFUND" | null>(null);
+  const [isElectronicPaymentOpen, setIsElectronicPaymentOpen] = useState(false);
+  const [electronicPaymentType, setElectronicPaymentType] = useState<CardTenderType>("Credit Card");
+  const [isPostVoidOpen, setIsPostVoidOpen] = useState(false);
+  const [isPriceChangeOpen, setIsPriceChangeOpen] = useState(false);
+  const [isNonMdseOpen, setIsNonMdseOpen] = useState(false);
+  const [journalModalMode, setJournalModalMode] = useState<"TRX_JOURNAL" | "SALES_JOURNAL" | null>(null);
+  const [isNonSalesOpen, setIsNonSalesOpen] = useState(false);
+  const [isBestBuyOpen, setIsBestBuyOpen] = useState(false);
 
   const [state, dispatch] = useReducer(
     posReducer,
@@ -190,34 +269,86 @@ function SimulatorContent() {
 
   const handleSelectLoyalty = (optionNum: number) => {
     setSelectedLoyaltyOption(optionNum);
-    if (optionNum === 3) {
+    if (state.lineItems.length === 0) {
+      dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
+    }
+
+    // Pre-fill tender amount for upcoming scenario steps if available
+    const upcomingTenderStep = activeScenario?.steps.slice(currentStepIndex).find(
+      (s) => (s.expectedAction === "CONFIRM_TENDER" || s.expectedAction === "SUBMIT_CASH_TENDER") && s.expectedData
+    );
+    const currentTotals = calculateTotals(
+      state.lineItems,
+      state.appliedDiscount?.percent || 0,
+      state.isZeroRated
+    );
+    if (upcomingTenderStep?.expectedData) {
+      setLnqrCashTenderInput(String(upcomingTenderStep.expectedData));
+    } else if (currentTotals.totalAmount > 0) {
+      setLnqrCashTenderInput(String(Math.ceil(currentTotals.totalAmount)));
+    }
+
+    if (optionNum === 1) {
+      // 1. None: Directly navigate to Payment screen
+      setLoyaltyType("NONE");
+      setIsLoyaltyOptionOpen(false);
+      setSelectedTenderMethod("CASH");
+      setIsLnqrTenderProcessed(false);
+      dispatch({ type: "OPEN_PAYMENT" });
+      validateScenarioStep("CHOOSE_LNQR_OPTION", 1);
+    } else if (optionNum === 2) {
+      // 2. Laking National Card: Intermediate card input screen
+      setIsLoyaltyOptionOpen(false);
+      setIsLncCardScreenOpen(true);
+      setSelectedLncButton(null);
+      validateScenarioStep("CHOOSE_LNQR_OPTION", 2);
+    } else if (optionNum === 3) {
+      // 3. LNQR / LNQR PLUS: Intermediate QR scan screen
       setIsLoyaltyOptionOpen(false);
       setIsLnqrScanScreenOpen(true);
       setSelectedLnqrButton(null);
+      setLnqrCashTenderInput("3000");
       validateScenarioStep("CHOOSE_LNQR_OPTION", 3);
-    } else if (optionNum === 1) {
-      setIsLoyaltyOptionOpen(false);
-      dispatch({ type: "OPEN_PAYMENT" });
-    } else if (optionNum === 2) {
-      setIsLoyaltyOptionOpen(false);
-      dispatch({ type: "OPEN_PAYMENT" });
     }
   };
 
-  const handleConfirmLnqr = () => {
-    setIsLnqrScanScreenOpen(false);
-    setIsLnqrCashPaymentOpen(true);
+  const handleConfirmLnc = () => {
+    setLoyaltyType("LNC");
+    setIsLncCardScreenOpen(false);
+    setSelectedTenderMethod("CASH");
     setIsLnqrTenderProcessed(false);
+    if (state.lineItems.length === 0) {
+      dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
+    }
+    dispatch({ type: "OPEN_PAYMENT" });
+    validateScenarioStep("SUBMIT_LNC", customerLncInput);
+  };
+
+  const handleConfirmLnqr = () => {
+    setLoyaltyType("LNQR");
+    setIsLnqrScanScreenOpen(false);
+    setSelectedTenderMethod("CASH");
+    setIsLnqrTenderProcessed(false);
+    if (state.lineItems.length === 0) {
+      dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
+    }
+    dispatch({ type: "OPEN_PAYMENT" });
+    setIsLnqrCashPaymentOpen(true);
     validateScenarioStep("SUBMIT_LNQR", customerQrInput);
   };
 
   const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setIsLnqrTenderProcessed(true);
+    const tenderVal = parseFloat(lnqrCashTenderInput) || 3000;
+    dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
     validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
-    setTimeout(() => {
-      setIsLnqrUpdatedModalOpen(true);
-    }, 1500);
+    validateScenarioStep("CONFIRM_TENDER", tenderVal);
+    if (loyaltyType === "LNQR") {
+      setTimeout(() => {
+        setIsLnqrUpdatedModalOpen(true);
+      }, 1500);
+    }
   };
 
   const handleConfirmLnqrUpdated = () => {
@@ -225,16 +356,87 @@ function SimulatorContent() {
     setIsLnqrCashPaymentOpen(false);
     setIsLnqrTenderProcessed(false);
     setIsLnqrScanScreenOpen(false);
+    setIsLncCardScreenOpen(false);
     setIsLoyaltyOptionOpen(false);
     dispatch({ type: "RESET_TRANSACTION" });
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
+  const handlePaymentOkClick = () => {
+    if (!isLnqrTenderProcessed) {
+      handleConfirmLnqrCashTender();
+      return;
+    }
+    if (loyaltyType === "LNQR") {
+      setIsLnqrUpdatedModalOpen(true);
+    } else {
+      dispatch({ type: "CLOSE_PAYMENT" });
+      setIsLnqrCashPaymentOpen(false);
+      setIsLnqrTenderProcessed(false);
+    }
+  };
+
   useEffect(() => {
-    if (terminalMode === "ACTIVE_REGISTER" && !state.isQuantityInputActive && !state.activeLookupOpen && !state.managerOverrideOpen && !state.paymentDialogOpen) {
+    if (
+      terminalMode === "ACTIVE_REGISTER" &&
+      !state.isQuantityInputActive &&
+      !state.activeLookupOpen &&
+      !state.managerOverrideOpen &&
+      !state.paymentDialogOpen &&
+      state.currentPage === "MAIN" &&
+      !isLogoutModalOpen &&
+      !isLoyaltyOptionOpen &&
+      !isLnqrScanScreenOpen &&
+      !isLncCardScreenOpen &&
+      !isLnqrCashPaymentOpen &&
+      !isLnqrUpdatedModalOpen &&
+      !isTrxDiscOpen &&
+      !isRecallOpen &&
+      !isReprintOpen &&
+      !isReprintReceiptOpen &&
+      !isSdvOpen &&
+      readingsType === null &&
+      !isTrxCommentOpen &&
+      returnRefundMode === null &&
+      !isElectronicPaymentOpen &&
+      !isPostVoidOpen &&
+      !isPriceChangeOpen &&
+      !isNonMdseOpen &&
+      journalModalMode === null &&
+      !isNonSalesOpen &&
+      !isBestBuyOpen
+    ) {
       barcodeRef.current?.focus();
     }
-  }, [terminalMode, state.isQuantityInputActive, state.activeLookupOpen, state.managerOverrideOpen, state.paymentDialogOpen]);
+  }, [
+    terminalMode,
+    state.isQuantityInputActive,
+    state.activeLookupOpen,
+    state.managerOverrideOpen,
+    state.paymentDialogOpen,
+    state.currentPage,
+    isLogoutModalOpen,
+    isLoyaltyOptionOpen,
+    isLnqrScanScreenOpen,
+    isLncCardScreenOpen,
+    isLnqrCashPaymentOpen,
+    isLnqrUpdatedModalOpen,
+    isTrxDiscOpen,
+    isRecallOpen,
+    isReprintOpen,
+    isReprintReceiptOpen,
+    isSdvOpen,
+    readingsType,
+    isTrxCommentOpen,
+    returnRefundMode,
+    isElectronicPaymentOpen,
+    isPostVoidOpen,
+    isPriceChangeOpen,
+    isNonMdseOpen,
+    journalModalMode,
+    isNonSalesOpen,
+    isBestBuyOpen,
+  ]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -336,7 +538,30 @@ function SimulatorContent() {
         }
       }
 
-      // 4c. LNQR Scan Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
+      // 4c-1. LNC Card Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
+      if (isLncCardScreenOpen) {
+        if (e.key === "Tab") {
+          e.preventDefault();
+          setSelectedLncButton((prev) => (prev === "OK" ? "CANCEL" : "OK"));
+          return;
+        }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          if (selectedLncButton === "CANCEL") {
+            setIsLncCardScreenOpen(false);
+          } else {
+            handleConfirmLnc();
+          }
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          setIsLncCardScreenOpen(false);
+          return;
+        }
+      }
+
+      // 4c-2. LNQR Scan Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
       if (isLnqrScanScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -368,6 +593,101 @@ function SimulatorContent() {
         }
       }
 
+      // 4e. Authentic Payment Screen Keybinds
+      if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
+        if (e.key === "Escape" || e.key === "F1") {
+          e.preventDefault();
+          dispatch({ type: "CLOSE_PAYMENT" });
+          setIsLnqrCashPaymentOpen(false);
+          setIsLnqrTenderProcessed(false);
+          return;
+        }
+        if (e.key === "F2") {
+          e.preventDefault();
+          setSelectedTenderMethod("CASH");
+          validateScenarioStep("PAY_CASH");
+          return;
+        }
+        if (e.key === "F3") {
+          e.preventDefault();
+          setSelectedTenderMethod("BANK_CARD");
+          setElectronicPaymentType("Credit Card");
+          setIsElectronicPaymentOpen(true);
+          validateScenarioStep("PAY_CARD");
+          return;
+        }
+        if (e.key === "F4") {
+          e.preventDefault();
+          setSelectedTenderMethod("CHECK");
+          return;
+        }
+        if (e.key === "F5") {
+          e.preventDefault();
+          setSelectedTenderMethod("GIFT_CERT");
+          setElectronicPaymentType("Gift Certificate Series");
+          setIsElectronicPaymentOpen(true);
+          validateScenarioStep("PAY_GC");
+          return;
+        }
+        if (e.key === "F6") {
+          e.preventDefault();
+          setSelectedTenderMethod("COUPON");
+          setElectronicPaymentType("Promo Coupon");
+          setIsElectronicPaymentOpen(true);
+          validateScenarioStep("PAY_COUPON");
+          return;
+        }
+        if (e.key === "F7") {
+          e.preventDefault();
+          setSelectedTenderMethod("EPURSE");
+          setElectronicPaymentType("GCash / QR PH");
+          setIsElectronicPaymentOpen(true);
+          return;
+        }
+        if (e.key === "F8") {
+          e.preventDefault();
+          setSelectedTenderMethod("CREDIT_MEMO");
+          setElectronicPaymentType("Debit Card / BancNet");
+          setIsElectronicPaymentOpen(true);
+          validateScenarioStep("PAY_CREDIT_MEMO");
+          return;
+        }
+      }
+
+      // 4f. Modal Escape Key Dismissals
+      if (e.key === "Escape") {
+        if (isPostVoidOpen) {
+          e.preventDefault();
+          setIsPostVoidOpen(false);
+          return;
+        }
+        if (isPriceChangeOpen) {
+          e.preventDefault();
+          setIsPriceChangeOpen(false);
+          return;
+        }
+        if (isNonMdseOpen) {
+          e.preventDefault();
+          setIsNonMdseOpen(false);
+          return;
+        }
+        if (journalModalMode !== null) {
+          e.preventDefault();
+          setJournalModalMode(null);
+          return;
+        }
+        if (isNonSalesOpen) {
+          e.preventDefault();
+          setIsNonSalesOpen(false);
+          return;
+        }
+        if (isBestBuyOpen) {
+          e.preventDefault();
+          setIsBestBuyOpen(false);
+          return;
+        }
+      }
+
       // 5. In ACTIVE_REGISTER mode: handle physical F-keys
       if (terminalMode === "ACTIVE_REGISTER") {
         if (e.key.startsWith("F") && !isNaN(Number(e.key.substring(1)))) {
@@ -381,9 +701,40 @@ function SimulatorContent() {
   });
 
   const handlePhysicalFKey = (fKey: string) => {
-    if (state.currentPage === "LOOKUP" || isLnqrScanScreenOpen || isLnqrCashPaymentOpen || isLoyaltyOptionOpen || isLnqrUpdatedModalOpen) {
+    if (
+      state.currentPage === "LOOKUP" ||
+      state.currentPage === "PAYMENT" ||
+      isLnqrScanScreenOpen ||
+      isLncCardScreenOpen ||
+      isLnqrCashPaymentOpen ||
+      isLoyaltyOptionOpen ||
+      isLnqrUpdatedModalOpen ||
+      isTrxDiscOpen ||
+      isRecallOpen ||
+      isReprintOpen ||
+      isReprintReceiptOpen ||
+      isSdvOpen ||
+      readingsType !== null ||
+      isTrxCommentOpen ||
+      returnRefundMode !== null ||
+      isElectronicPaymentOpen ||
+      isPostVoidOpen ||
+      isPriceChangeOpen ||
+      isNonMdseOpen ||
+      journalModalMode !== null ||
+      isNonSalesOpen ||
+      isBestBuyOpen
+    ) {
       return;
     }
+
+    const currentKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
+    const matched = currentKeys.find((k) => k.key === fKey);
+    if (matched && !matched.disabled) {
+      handleAction(matched.actionId);
+      return;
+    }
+
     if (fKey === "F1") {
       handleAction("HELP");
       return;
@@ -404,12 +755,6 @@ function SimulatorContent() {
       handleAction("PAGE_DOWN");
       return;
     }
-
-    const currentKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
-    const matched = currentKeys.find((k) => k.key === fKey);
-    if (matched && !matched.disabled) {
-      handleAction(matched.actionId);
-    }
   };
 
   const validateScenarioStep = (actionId: string, dataVal?: string | number) => {
@@ -417,10 +762,85 @@ function SimulatorContent() {
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return;
 
-    const actionMatches = currentStep.expectedAction === actionId;
+    // Check action match with flexible aliasing
+    let actionMatches = currentStep.expectedAction === actionId;
+
+    // Supervisor override / modal completion aliasing
+    const modalConfirmActions = [
+      "CONFIRM_OVERRIDE",
+      "APPLY_DISCOUNT",
+      "CONFIRM_RECALL",
+      "CONFIRM_REPRINT",
+      "SAVE_TRX_COMMENT",
+      "CONFIRM_RETURN",
+      "CONFIRM_REFUND",
+      "CONFIRM_POST_VOID",
+      "CONFIRM_PRICE_CHANGE",
+      "CONFIRM_NON_MDSE",
+      "CONFIRM_NON_SALES",
+      "CONFIRM_BEST_BUY",
+      "CONFIRM_ITEM_VOID",
+      "CONFIRM_TRX_VOID",
+      "CONFIRM_SUSPEND",
+      "SCAN_VOID_SKU",
+      "SCAN_REFUND_SKU",
+    ];
+    if (
+      (currentStep.expectedAction === "CONFIRM_OVERRIDE" && modalConfirmActions.includes(actionId)) ||
+      (modalConfirmActions.includes(currentStep.expectedAction) && actionId === "CONFIRM_OVERRIDE")
+    ) {
+      actionMatches = true;
+    }
+
+    // Tender submission aliasing
+    if (
+      (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "SUBMIT_CASH_TENDER") ||
+      (currentStep.expectedAction === "SUBMIT_CASH_TENDER" && actionId === "CONFIRM_TENDER")
+    ) {
+      actionMatches = true;
+    }
+
+    // Auto-advance if trainee tenders cash while at PAY_CASH step
+    if (
+      currentStep.expectedAction === "PAY_CASH" &&
+      (actionId === "CONFIRM_TENDER" || actionId === "SUBMIT_CASH_TENDER")
+    ) {
+      setActiveHint(null);
+      const nextIndex = currentStepIndex + 1;
+      if (nextIndex < activeScenario.steps.length) {
+        const tenderStep = activeScenario.steps[nextIndex];
+        if (tenderStep && (tenderStep.expectedAction === "CONFIRM_TENDER" || tenderStep.expectedAction === "SUBMIT_CASH_TENDER")) {
+          const finishedIndex = nextIndex + 1;
+          setCurrentStepIndex(finishedIndex);
+          if (finishedIndex >= activeScenario.steps.length) {
+            setIsExamCompleted(true);
+          }
+          return;
+        }
+      }
+      setCurrentStepIndex(nextIndex);
+      return;
+    }
+
+    // Auto-advance if trainee tenders while at CHOOSE_LNQR_OPTION
+    if (
+      currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
+      (actionId === "PAY_CASH" || actionId === "PAY_CARD")
+    ) {
+      setActiveHint(null);
+      setCurrentStepIndex(currentStepIndex + 1);
+      return;
+    }
+
     let dataMatches = true;
-    if (currentStep.expectedData !== undefined) {
-      dataMatches = String(currentStep.expectedData) === String(dataVal);
+    if (currentStep.expectedData !== undefined && dataVal !== undefined) {
+      if (typeof currentStep.expectedData === "number" || !isNaN(Number(currentStep.expectedData))) {
+        dataMatches =
+          Number(currentStep.expectedData) === Number(dataVal) ||
+          (actionId === "CONFIRM_TENDER" && Number(dataVal) > 0);
+      } else {
+        dataMatches = String(currentStep.expectedData) === String(dataVal);
+      }
     }
 
     if (actionMatches && dataMatches) {
@@ -433,11 +853,15 @@ function SimulatorContent() {
       return;
     }
 
-  
     const isNavigationAction = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(actionId);
     const stepExpectsNavigation = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(currentStep.expectedAction);
 
     if (isNavigationAction && stepExpectsNavigation) {
+      return;
+    }
+
+    // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
+    if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
       return;
     }
 
@@ -475,13 +899,17 @@ function SimulatorContent() {
       case "SET_QTY":
       case "SET_QTY_MODE":
         setQtyInput("");
-        dispatch({ type: "SET_QUANTITY_START" });
+        setIsQuantityModalOpen(true);
         validateScenarioStep("SET_QTY_MODE");
         break;
-      case "GO_PAYMENT":
+      case "GO_PAYMENT": {
         setIsLoyaltyOptionOpen(true);
         setSelectedLoyaltyOption(null);
         validateScenarioStep("GO_PAYMENT");
+        break;
+      }
+      case "CSA_TOGGLE":
+        validateScenarioStep("CSA_TOGGLE");
         break;
       case "NAV_SECOND":
         dispatch({ type: "NAVIGATE_PAGE", page: "SECOND" });
@@ -500,46 +928,120 @@ function SimulatorContent() {
         validateScenarioStep("NAV_MAIN");
         break;
       case "PAY_BACK":
+        setIsElectronicPaymentOpen(false);
+        setIsLnqrCashPaymentOpen(false);
+        setIsLnqrTenderProcessed(false);
         dispatch({ type: "CLOSE_PAYMENT" });
         break;
       case "PAY_CASH":
+        setSelectedTenderMethod("CASH");
         dispatch({ type: "SELECT_PAYMENT_METHOD", method: "CASH" });
         validateScenarioStep("PAY_CASH");
         break;
       case "PAY_CARD":
-        dispatch({ type: "SELECT_PAYMENT_METHOD", method: "CARD/GCASH" });
+        setSelectedTenderMethod("BANK_CARD");
+        setElectronicPaymentType("Credit Card");
         validateScenarioStep("PAY_CARD");
+        break;
+      case "PAY_GC":
+        setSelectedTenderMethod("GIFT_CERT");
+        setElectronicPaymentType("Gift Certificate Series");
+        validateScenarioStep("PAY_GC");
+        break;
+      case "PAY_COUPON":
+        setSelectedTenderMethod("COUPON");
+        setElectronicPaymentType("Promo Coupon");
+        validateScenarioStep("PAY_COUPON");
+        break;
+      case "PAY_CREDIT_MEMO":
+        setSelectedTenderMethod("CREDIT_MEMO");
+        setElectronicPaymentType("Debit Card / BancNet");
+        validateScenarioStep("PAY_CREDIT_MEMO");
+        break;
+      case "PAY_SULIT_COINS":
+        setSelectedTenderMethod("EPURSE");
+        setElectronicPaymentType("LNQR Sulit Coins");
+        validateScenarioStep("PAY_SULIT_COINS");
         break;
       case "ITEM_VOID":
         dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Item Void" });
         validateScenarioStep("ITEM_VOID");
         break;
       case "TRX_VOID":
-        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Transaction Void" });
+        setIsTrxVoidModalOpen(true);
         validateScenarioStep("TRX_VOID");
         break;
+      case "TRX_DISC":
+        setIsTrxDiscOpen(true);
+        validateScenarioStep("TRX_DISC");
+        break;
       case "SUSPEND":
-        dispatch({ type: "SUSPEND_TRANSACTION" });
+        setIsSuspendModalOpen(true);
         validateScenarioStep("SUSPEND");
         break;
       case "RECALL":
-        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Recall Transaction" });
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Recall" });
+        validateScenarioStep("RECALL");
         break;
       case "READING_Y":
-        dispatch({ type: "TRIGGER_READING", readingType: "Y" });
+        setReadingsType("Y");
+        validateScenarioStep("READING_Y");
         break;
       case "READING_Z":
-        dispatch({ type: "TRIGGER_READING", readingType: "Z" });
+        setReadingsType("Z");
+        validateScenarioStep("READING_Z");
         break;
       case "SDV_CHECK":
-        dispatch({ type: "RUN_SDV_CHECK" });
+        setIsSdvOpen(true);
         validateScenarioStep("SDV_CHECK");
         break;
       case "REPRINT":
-        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Reprint Official Receipt" });
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Reprint" });
+        validateScenarioStep("REPRINT");
+        break;
+      case "PRICE_CHANGE":
+        setIsPriceChangeOpen(true);
+        validateScenarioStep("PRICE_CHANGE");
+        break;
+      case "NON_MDSE":
+        setIsNonMdseOpen(true);
+        validateScenarioStep("NON_MDSE");
         break;
       case "POST_VOID":
-        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Post Void" });
+        setIsPostVoidOpen(true);
+        validateScenarioStep("POST_VOID");
+        break;
+      case "TRX_JOURNAL":
+        setJournalModalMode("TRX_JOURNAL");
+        validateScenarioStep("TRX_JOURNAL");
+        break;
+      case "SALES_JOURNAL":
+        setJournalModalMode("SALES_JOURNAL");
+        validateScenarioStep("SALES_JOURNAL");
+        break;
+      case "BEST_BUY":
+        setIsBestBuyOpen(true);
+        validateScenarioStep("BEST_BUY");
+        break;
+      case "NON_SALES":
+        setIsNonSalesOpen(true);
+        validateScenarioStep("NON_SALES");
+        break;
+      case "TRX_COMMENT":
+        setIsTrxCommentOpen(true);
+        validateScenarioStep("TRX_COMMENT");
+        break;
+      case "ZERO_RATED":
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Zero Rated" });
+        validateScenarioStep("ZERO_RATED");
+        break;
+      case "RETURN_EXCHANGE":
+        setReturnRefundMode("RETURN");
+        validateScenarioStep("RETURN_EXCHANGE");
+        break;
+      case "REFUND":
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Refund" });
+        validateScenarioStep("REFUND");
         break;
       case "LOGOUT":
         setIsLogoutModalOpen(true);
@@ -555,17 +1057,41 @@ function SimulatorContent() {
     e.preventDefault();
     if (!barcodeInput.trim()) return;
     const code = barcodeInput.trim();
+    if (isVoidSkuMode) {
+      dispatch({ type: "VOID_ITEM", itemId: code });
+      setIsVoidSkuMode(false);
+      validateScenarioStep("SCAN_VOID_SKU", code);
+      validateScenarioStep("ADD_ITEM", code);
+      setBarcodeInput("");
+      return;
+    }
+    if (isRefundSkuMode) {
+      dispatch({ type: "ADD_ITEM_BY_CODE", code });
+      setIsRefundSkuMode(false);
+      validateScenarioStep("SCAN_REFUND_SKU", code);
+      validateScenarioStep("ADD_ITEM", code);
+      setBarcodeInput("");
+      return;
+    }
     dispatch({ type: "ADD_ITEM_BY_CODE", code });
     validateScenarioStep("ADD_ITEM", code);
     setBarcodeInput("");
   };
 
-  const handleConfirmQuantity = (e: React.FormEvent) => {
-    e.preventDefault();
-    const qty = parseInt(qtyInput, 10) || 1;
+  const handleConfirmQuantity = (qtyVal?: number) => {
+    const qty = qtyVal !== undefined ? qtyVal : parseInt(qtyInput, 10) || 1;
     dispatch({ type: "SET_QUANTITY_CONFIRM", quantity: qty });
+    setIsQuantityModalOpen(false);
     validateScenarioStep("CONFIRM_QTY", qty);
     setQtyInput("");
+  };
+
+  const handleConfirmElectronicTender = (tenderName: string, amountVal?: number) => {
+    setIsLnqrTenderProcessed(true);
+    const amt = amountVal !== undefined ? amountVal : (totals.totalAmount || 2990);
+    dispatch({ type: "TENDER_PAYMENT", amount: amt });
+    dispatch({ type: "SELECT_PAYMENT_METHOD", method: tenderName });
+    validateScenarioStep("CONFIRM_TENDER", amt);
   };
 
   const handleConfirmTender = (e: React.FormEvent) => {
@@ -576,9 +1102,22 @@ function SimulatorContent() {
   };
 
   const handleConfirmOverride = () => {
+    const target = state.managerOverrideTarget;
     dispatch({ type: "CONFIRM_MANAGER_OVERRIDE" });
     validateScenarioStep("CONFIRM_OVERRIDE");
     setOverridePass("");
+
+    if (target === "Item Void") {
+      setIsItemVoidModalOpen(true);
+    } else if (target === "Recall") {
+      setIsRecallOpen(true);
+    } else if (target === "Reprint") {
+      setIsReprintOpen(true);
+    } else if (target === "Zero Rated") {
+      dispatch({ type: "SET_ZERO_RATED", isZeroRated: !state.isZeroRated });
+    } else if (target === "Refund") {
+      setReturnRefundMode("REFUND");
+    }
   };
 
   const handleShowHint = () => {
@@ -601,6 +1140,9 @@ function SimulatorContent() {
     setSelectedLogoutButton(null);
     setIsLoyaltyOptionOpen(false);
     setSelectedLoyaltyOption(null);
+    setIsLncCardScreenOpen(false);
+    setCustomerLncInput("1008-2024-9901");
+    setSelectedLncButton(null);
     setIsLnqrScanScreenOpen(false);
     setCustomerQrInput("20221003LN000004");
     setSelectedLnqrButton(null);
@@ -608,6 +1150,23 @@ function SimulatorContent() {
     setLnqrCashTenderInput("3000");
     setIsLnqrTenderProcessed(false);
     setIsLnqrUpdatedModalOpen(false);
+    setLoyaltyType("NONE");
+    setSelectedTenderMethod("CASH");
+    setIsTrxDiscOpen(false);
+    setIsRecallOpen(false);
+    setIsReprintOpen(false);
+    setIsReprintReceiptOpen(false);
+    setIsSdvOpen(false);
+    setReadingsType(null);
+    setIsTrxCommentOpen(false);
+    setReturnRefundMode(null);
+    setIsElectronicPaymentOpen(false);
+    setIsPostVoidOpen(false);
+    setIsPriceChangeOpen(false);
+    setIsNonMdseOpen(false);
+    setJournalModalMode(null);
+    setIsNonSalesOpen(false);
+    setIsBestBuyOpen(false);
     setScenarioStartTime(Date.now());
     setTerminalMode(getInitialTerminalMode(activeScenario));
   };
@@ -677,7 +1236,11 @@ function SimulatorContent() {
     );
   }
 
-  const totals = calculateTotals(state.lineItems);
+  const totals = calculateTotals(
+    state.lineItems,
+    state.appliedDiscount?.percent || 0,
+    state.isZeroRated
+  );
   const activeItems = state.lineItems.filter((i) => !i.isVoided);
   const lastItem = activeItems[activeItems.length - 1];
   const rightKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
@@ -984,21 +1547,6 @@ function SimulatorContent() {
           {/* SCREEN 4: ACTIVE REGISTER */}
           {terminalMode === "ACTIVE_REGISTER" && (
             <>
-              <div className="bg-[#B0B8C0] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight">
-                <div>
-                  Trx.: <span className="font-normal font-mono">0212202629990003000592</span>
-                </div>
-                <div>
-                  Clerk: <span className="font-normal">Jan Angela</span>
-                </div>
-                <div>
-                  Str No.: <span className="font-normal">2999</span>
-                </div>
-                <div>
-                  Reg No.: <span className="font-normal">0003</span>
-                </div>
-              </div>
-
               {state.currentPage === "LOOKUP" ? (
                 <F2LookupScreen
                   onCancel={() => {
@@ -1016,6 +1564,54 @@ function SimulatorContent() {
                     validateScenarioStep("LOOKUP_SEARCH", mode);
                   }}
                   initialSearch={state.lookupSearchTerm}
+                />
+              ) : isTrxDiscOpen ? (
+                <TransactionDiscountModal
+                  onApply={(discount) => {
+                    dispatch({ type: "APPLY_DISCOUNT", discount });
+                    setIsTrxDiscOpen(false);
+                    validateScenarioStep("APPLY_DISCOUNT", discount.name);
+                  }}
+                  onCancel={() => setIsTrxDiscOpen(false)}
+                />
+              ) : isRecallOpen ? (
+                <RecallModal
+                  suspendedList={state.suspendedTransactions.map((s) => ({
+                    id: s.id,
+                    transactionNumber: s.trxNumber,
+                    suspendedAt: s.timeStr,
+                    totalAmount: s.total,
+                    itemCount: s.items.length,
+                    items: s.items,
+                  }))}
+                  onRecall={(id) => {
+                    dispatch({ type: "RECALL_TRANSACTION", transactionId: id });
+                    setIsRecallOpen(false);
+                    validateScenarioStep("CONFIRM_RECALL", id);
+                  }}
+                  onCancel={() => setIsRecallOpen(false)}
+                />
+              ) : isReprintOpen ? (
+                <ReprintModal
+                  clerkName={state.cashierName}
+                  onPrint={(orNo: string) => {
+                    setIsReprintOpen(false);
+                    setIsReprintReceiptOpen(true);
+                    validateScenarioStep("CONFIRM_REPRINT", orNo);
+                  }}
+                  onCancel={() => setIsReprintOpen(false)}
+                />
+              ) : isSdvOpen ? (
+                <SdvModal
+                  onClose={() => setIsSdvOpen(false)}
+                />
+              ) : readingsType !== null ? (
+                <ReadingsModal
+                  readingType={readingsType}
+                  cashierName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  onClose={() => setReadingsType(null)}
                 />
               ) : isLnqrScanScreenOpen ? (
                 /* LNQR SCAN SCREEN (Matches screenshot: No blue header, yellow title bar, scan input, green bottom bar) */
@@ -1070,8 +1666,61 @@ function SimulatorContent() {
                     </button>
                   </div>
                 </div>
-              ) : isLnqrCashPaymentOpen ? (
-                /* CASH PAYMENT DETAILS SCREEN */
+              ) : isLncCardScreenOpen ? (
+                /* LAKING NATIONAL CARD SCREEN (Option 2 Intermediate Screen) */
+                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
+                  {/* Yellow Banner */}
+                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase">
+                    Laking National Card
+                  </div>
+
+                  {/* Center Card Input Area */}
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white">
+                    <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm font-sans font-bold text-gray-800">
+                      <span>Enter / Swipe Card No.</span>
+                      <span className="hidden sm:inline font-bold">:</span>
+                      <input
+                        type="text"
+                        value={customerLncInput}
+                        onChange={(e) => setCustomerLncInput(e.target.value)}
+                        placeholder="1008-2024-9901"
+                        className="w-72 bg-white border-2 border-gray-500 px-3 py-1 font-mono font-bold text-sm text-gray-900 shadow-inner text-center focus:outline-none focus:ring-2 focus:ring-green-600"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 font-sans text-center max-w-md pt-2">
+                      Swipe physical card or manually enter Laking National Card number. Press <kbd className="bg-gray-100 px-1 border border-gray-300 font-bold text-gray-800">TAB</kbd> to focus [Ok], then press <kbd className="bg-gray-100 px-1 border border-gray-300 font-bold text-gray-800">ENTER</kbd>.
+                    </div>
+                  </div>
+
+                  {/* Bottom Green Taskbar with Ok & Cancel Buttons */}
+                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700">
+                    <button
+                      type="button"
+                      onClick={handleConfirmLnc}
+                      className={`min-w-[90px] px-6 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                        selectedLncButton === "OK"
+                          ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                          : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-900 hover:bg-[#E2E0DC]"
+                      }`}
+                    >
+                      Ok
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsLncCardScreenOpen(false)}
+                      className={`min-w-[90px] px-6 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
+                        selectedLncButton === "CANCEL"
+                          ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
+                          : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-900 hover:bg-[#E2E0DC]"
+                      }`}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
+                /* AUTHENTIC FULL PAYMENT SCREEN (Matches user screenshot) */
                 <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
                   {/* Top Yellow Bar */}
                   <div className="bg-[#FFF275] border-b border-gray-400 h-6" />
@@ -1110,7 +1759,7 @@ function SimulatorContent() {
                         <div className="border-t border-dashed border-gray-400 my-1" />
                         <div className="flex justify-between font-bold">
                           <span>No. of Items</span>
-                          <span>{totals.totalQty || 1}</span>
+                          <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}</span>
                         </div>
                         <div className="flex justify-between font-bold">
                           <span>Amount Due</span>
@@ -1124,14 +1773,25 @@ function SimulatorContent() {
                           <span>Change Due</span>
                           <span>{isLnqrTenderProcessed ? formatCurrency(Math.max(0, (parseFloat(lnqrCashTenderInput) || 3000) - (totals.totalAmount || 2990))) : "0.00"}</span>
                         </div>
-                        <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
-                          ***********************************<br />
-                          Join Laking National for free!<br />
-                          Visit : lakingnational.com<br />
-                          LNQR No. : {customerQrInput}<br />
-                          Earned Sulit Coins : 29.90<br />
-                          ***********************************
-                        </div>
+                        {loyaltyType === "LNQR" && (
+                          <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
+                            ***********************************<br />
+                            Join Laking National for free!<br />
+                            Visit : lakingnational.com<br />
+                            LNQR No. : {customerQrInput}<br />
+                            Earned Sulit Coins : {((totals.totalAmount || 2990) * 0.01).toFixed(2)}<br />
+                            ***********************************
+                          </div>
+                        )}
+                        {loyaltyType === "LNC" && (
+                          <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
+                            ***********************************<br />
+                            LAKING NATIONAL CARD<br />
+                            Card No. : {customerLncInput}<br />
+                            Earned Sulit Coins : {((totals.totalAmount || 2990) * 0.01).toFixed(2)}<br />
+                            ***********************************
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1143,7 +1803,7 @@ function SimulatorContent() {
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-sm">Unit</span>
                           <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
-                            {totals.totalQty || 1}
+                            {totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}
                           </span>
                         </div>
 
@@ -1174,71 +1834,546 @@ function SimulatorContent() {
 
                       {/* Cash Payment Details Header */}
                       <div className="bg-[#67B8DE] text-gray-900 font-bold px-3 py-1.5 text-sm border-b border-gray-400 text-center tracking-wide">
-                        Cash Payment Details
+                        {selectedTenderMethod === "CASH"
+                          ? "Cash Payment Details"
+                          : selectedTenderMethod === "BANK_CARD"
+                          ? "Bank Card Payment Details"
+                          : selectedTenderMethod === "CHECK"
+                          ? "Check Payment Details"
+                          : selectedTenderMethod === "GIFT_CERT"
+                          ? "Gift Certificate Details"
+                          : selectedTenderMethod === "COUPON"
+                          ? "Coupon Details"
+                          : selectedTenderMethod === "EPURSE"
+                          ? "E-Purse Payment Details"
+                          : "Credit Memo Details"}
                       </div>
 
                       {/* Cash Payment Details Body */}
-                      <div className="flex-1 bg-[#ECE9D8] p-6 flex flex-col items-center justify-center">
-                        {!isLnqrTenderProcessed ? (
-                          <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-3 flex flex-col items-center">
-                            <label className="text-xs font-bold text-gray-800 text-center font-sans">
-                              Enter Amount:
-                            </label>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={lnqrCashTenderInput}
-                              onChange={(e) => setLnqrCashTenderInput(e.target.value)}
-                              placeholder="3000"
-                              className="w-48 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
-                              autoFocus
-                            />
-                            <button
-                              type="submit"
-                              className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                      <div className="flex-1 bg-[#ECE9D8] p-4 flex flex-col items-center justify-center overflow-y-auto">
+                        {selectedTenderMethod === "CASH" ? (
+                          !isLnqrTenderProcessed ? (
+                            <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-3 flex flex-col items-center">
+                              <label className="text-xs font-bold text-gray-800 text-center font-sans">
+                                Enter Amount:
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={lnqrCashTenderInput}
+                                onChange={(e) => setLnqrCashTenderInput(e.target.value)}
+                                placeholder="3000"
+                                className="w-48 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                autoFocus
+                              />
+                              <button
+                                type="submit"
+                                className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                              >
+                                Process Payment (Enter)
+                              </button>
+                            </form>
+                          ) : (
+                            <div className="text-center space-y-4">
+                              {loyaltyType === "LNQR" ? (
+                                <>
+                                  <div className="text-red-600 font-black text-base tracking-tight animate-pulse font-sans">
+                                    Dont press any key.. Please wait...
+                                  </div>
+                                  <div className="text-gray-700 font-bold text-xs font-sans">
+                                    Please wait connecting LNQR Server
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-green-800 font-black text-base tracking-tight font-sans">
+                                    Payment Tendered Successfully!
+                                  </div>
+                                  <div className="text-gray-700 font-bold text-xs font-sans">
+                                    Press [ Ok ] below to finalize and generate Official Receipt.
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          )
+                        ) : selectedTenderMethod === "BANK_CARD" ? (
+                          !isLnqrTenderProcessed ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                const amt = parseFloat(gcashAmount) || totals.totalAmount || 2990;
+                                handleConfirmElectronicTender(cardSubtype, amt);
+                              }}
+                              className="w-full max-w-sm space-y-2 font-sans"
                             >
-                              Process Payment (Enter)
-                            </button>
-                          </form>
+                              {/* Subtype Selector */}
+                              <div className="grid grid-cols-4 gap-1 pb-1">
+                                {[
+                                  { id: "CREDIT_CARD", label: "Credit Card" },
+                                  { id: "GCASH", label: "GCash" },
+                                  { id: "NBS_GIFTCARD", label: "NBS Giftcard" },
+                                  { id: "SULIT_COINS", label: "Sulit Coins" },
+                                ].map((tab) => (
+                                  <button
+                                    key={tab.id}
+                                    type="button"
+                                    onClick={() => setCardSubtype(tab.id as any)}
+                                    className={`py-1 text-[10px] font-bold border ${
+                                      cardSubtype === tab.id
+                                        ? "bg-[#2E7D32] text-white border-green-800 shadow"
+                                        : "bg-[#D4D0C8] text-gray-800 border-gray-400 hover:bg-[#E2E0DC]"
+                                    }`}
+                                  >
+                                    {tab.label}
+                                  </button>
+                                ))}
+                              </div>
+
+                              {cardSubtype === "CREDIT_CARD" && (
+                                <div className="space-y-1.5 text-xs text-gray-800">
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Card Number:</span>
+                                    <input
+                                      type="text"
+                                      value={creditCardNum}
+                                      onChange={(e) => setCreditCardNum(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Cardholder:</span>
+                                    <input
+                                      type="text"
+                                      value={creditCardHolder}
+                                      onChange={(e) => setCreditCardHolder(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold uppercase"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Terminal:</span>
+                                    <select
+                                      value={creditCardTerminal}
+                                      onChange={(e) => setCreditCardTerminal(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                    >
+                                      <option>-SELECT-</option>
+                                      <option>TERMINAL 1</option>
+                                      <option>TERMINAL 2</option>
+                                      <option>BDO POS</option>
+                                      <option>MAYA POS</option>
+                                    </select>
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Auth Code:</span>
+                                    <input
+                                      type="text"
+                                      value={creditCardAuth}
+                                      onChange={(e) => setCreditCardAuth(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Amount:</span>
+                                    <input
+                                      type="text"
+                                      value={gcashAmount}
+                                      onChange={(e) => setGcashAmount(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {cardSubtype === "GCASH" && (
+                                <div className="space-y-1.5 text-xs text-gray-800">
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">GCash Ref No:</span>
+                                    <input
+                                      type="text"
+                                      value={gcashRef}
+                                      onChange={(e) => setGcashRef(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Amount:</span>
+                                    <input
+                                      type="text"
+                                      value={gcashAmount}
+                                      onChange={(e) => setGcashAmount(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {cardSubtype === "NBS_GIFTCARD" && (
+                                <div className="space-y-1.5 text-xs text-gray-800">
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Gift Card No:</span>
+                                    <input
+                                      type="text"
+                                      value={giftCardCode}
+                                      onChange={(e) => setGiftCardCode(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Amount:</span>
+                                    <input
+                                      type="text"
+                                      value={giftCardAmount}
+                                      onChange={(e) => setGiftCardAmount(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {cardSubtype === "SULIT_COINS" && (
+                                <div className="space-y-1.5 text-xs text-gray-800">
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">LNQR Scan:</span>
+                                    <input
+                                      type="text"
+                                      value={sulitCoinsQr}
+                                      onChange={(e) => setSulitCoinsQr(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-3 items-center">
+                                    <span className="font-bold">Sulit Coins:</span>
+                                    <input
+                                      type="text"
+                                      value={sulitCoinsAmount}
+                                      onChange={(e) => setSulitCoinsAmount(e.target.value)}
+                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              <div className="flex justify-center pt-2">
+                                <button
+                                  type="submit"
+                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                                >
+                                  Process Payment (Enter)
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="text-center space-y-4">
+                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
+                                Card Payment Tendered Successfully!
+                              </div>
+                              <div className="text-gray-700 font-bold text-xs font-sans">
+                                Press [ Ok ] below to finalize and generate Official Receipt.
+                              </div>
+                            </div>
+                          )
+                        ) : selectedTenderMethod === "GIFT_CERT" ? (
+                          !isLnqrTenderProcessed ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleConfirmElectronicTender("Gift Certificate", totals.totalAmount || 500);
+                              }}
+                              className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
+                            >
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">GC Type:</span>
+                                <select
+                                  value={giftCertType}
+                                  onChange={(e) => setGiftCertType(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                >
+                                  <option>-SELECT-</option>
+                                  <option>NBS Gift Certificate</option>
+                                  <option>Sodexo Premium Pass</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">GC Number:</span>
+                                <input
+                                  type="text"
+                                  value={giftCertNumber}
+                                  onChange={(e) => setGiftCertNumber(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Amount:</span>
+                                <input
+                                  type="text"
+                                  defaultValue={(totals.totalAmount || 500).toFixed(2)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                />
+                              </div>
+                              <div className="flex justify-center pt-2">
+                                <button
+                                  type="submit"
+                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                                >
+                                  Process Payment (Enter)
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="text-center space-y-4">
+                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
+                                Gift Cert Tendered Successfully!
+                              </div>
+                              <div className="text-gray-700 font-bold text-xs font-sans">
+                                Press [ Ok ] below to finalize and generate Official Receipt.
+                              </div>
+                            </div>
+                          )
+                        ) : selectedTenderMethod === "COUPON" ? (
+                          !isLnqrTenderProcessed ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
+                              }}
+                              className="w-full max-w-xs space-y-1.5 text-xs font-sans text-gray-800"
+                            >
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Series:</span>
+                                <select
+                                  value={couponSeries}
+                                  onChange={(e) => setCouponSeries(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                >
+                                  <option>-SELECT-</option>
+                                  <option>Series A</option>
+                                  <option>Series B</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Type:</span>
+                                <select
+                                  value={couponType}
+                                  onChange={(e) => setCouponType(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                >
+                                  <option>--PLEASE SELECT--</option>
+                                  <option>Book Promo 50</option>
+                                  <option>School Supplies 100</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Coupon No:</span>
+                                <input
+                                  type="text"
+                                  value={couponNumber}
+                                  onChange={(e) => setCouponNumber(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Denom:</span>
+                                <input
+                                  type="text"
+                                  value={couponDenom}
+                                  onChange={(e) => setCouponDenom(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+                              <div className="flex justify-center pt-2">
+                                <button
+                                  type="submit"
+                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                                >
+                                  Process Payment (Enter)
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="text-center space-y-4">
+                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
+                                Coupon Tendered Successfully!
+                              </div>
+                              <div className="text-gray-700 font-bold text-xs font-sans">
+                                Press [ Ok ] below to finalize and generate Official Receipt.
+                              </div>
+                            </div>
+                          )
+                        ) : selectedTenderMethod === "CREDIT_MEMO" ? (
+                          !isLnqrTenderProcessed ? (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleConfirmElectronicTender("Credit Memo", totals.totalAmount || 2990);
+                              }}
+                              className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
+                            >
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Credit Memo:</span>
+                                <input
+                                  type="text"
+                                  value={creditMemoNumber}
+                                  onChange={(e) => setCreditMemoNumber(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Amount:</span>
+                                <input
+                                  type="text"
+                                  value={creditMemoAmount}
+                                  onChange={(e) => setCreditMemoAmount(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                />
+                              </div>
+                              <div className="flex justify-center pt-2">
+                                <button
+                                  type="submit"
+                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                                >
+                                  Process Payment (Enter)
+                                </button>
+                              </div>
+                            </form>
+                          ) : (
+                            <div className="text-center space-y-4">
+                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
+                                Credit Memo Tendered Successfully!
+                              </div>
+                              <div className="text-gray-700 font-bold text-xs font-sans">
+                                Press [ Ok ] below to finalize and generate Official Receipt.
+                              </div>
+                            </div>
+                          )
                         ) : (
-                          <div className="text-center space-y-4">
-                            <div className="text-red-600 font-black text-base tracking-tight animate-pulse font-sans">
-                              Dont press any key.. Please wait...
+                          <div className="text-center space-y-3">
+                            <div className="text-sm font-bold text-gray-800">
+                              {selectedTenderMethod.replace("_", " ")} Selected
                             </div>
-                            <div className="text-gray-700 font-bold text-xs font-sans">
-                              Please wait connecting LNQR Server
-                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleConfirmElectronicTender(selectedTenderMethod)}
+                              className="px-5 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-xs font-bold text-gray-900 shadow cursor-pointer"
+                            >
+                              Process Tender (Enter)
+                            </button>
                           </div>
                         )}
                       </div>
                     </div>
 
-                    {/* Far Right: Function Keys Column */}
+                    {/* Far Right: Function Keys Column (Interactive) */}
                     <div className="col-span-2 bg-[#C2CAD0] flex flex-col p-1 space-y-1">
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-700">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          dispatch({ type: "CLOSE_PAYMENT" });
+                          setIsLnqrCashPaymentOpen(false);
+                          setIsLnqrTenderProcessed(false);
+                        }}
+                        className="bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-700 cursor-pointer"
+                      >
                         Help<br/><span className="text-[10px] text-gray-500">F1</span>
-                      </div>
-                      <div className="bg-[#FFF275] border-2 border-yellow-500 text-center py-2 text-[11px] font-black text-gray-900 shadow">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("CASH");
+                          validateScenarioStep("PAY_CASH");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "CASH"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Cash<br/><span className="text-[10px] text-yellow-700">F2</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("BANK_CARD");
+                          setElectronicPaymentType("Credit Card");
+                          validateScenarioStep("PAY_CARD");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "BANK_CARD"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Bank Card<br/><span className="text-[10px] text-gray-500">F3</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTenderMethod("CHECK")}
+                        className={`${
+                          selectedTenderMethod === "CHECK"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Check<br/><span className="text-[10px] text-gray-500">F4</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("GIFT_CERT");
+                          setElectronicPaymentType("Gift Certificate Series");
+                          validateScenarioStep("PAY_GC");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "GIFT_CERT"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Gift Cert.<br/><span className="text-[10px] text-gray-500">F5</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("COUPON");
+                          setElectronicPaymentType("Promo Coupon");
+                          validateScenarioStep("PAY_COUPON");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "COUPON"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Coupon<br/><span className="text-[10px] text-gray-500">F6</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("EPURSE");
+                          setElectronicPaymentType("GCash / QR PH");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "EPURSE"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         E-Purse<br/><span className="text-[10px] text-gray-500">F7</span>
-                      </div>
-                      <div className="bg-[#D2D7DF] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-600 opacity-60">
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTenderMethod("CREDIT_MEMO");
+                          setElectronicPaymentType("Debit Card / BancNet");
+                          validateScenarioStep("PAY_CREDIT_MEMO");
+                        }}
+                        className={`${
+                          selectedTenderMethod === "CREDIT_MEMO"
+                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
+                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
+                        } text-center py-2 text-[11px] cursor-pointer`}
+                      >
                         Credit Memo<br/><span className="text-[10px] text-gray-500">F8</span>
-                      </div>
+                      </button>
                     </div>
                   </div>
 
@@ -1251,7 +2386,7 @@ function SimulatorContent() {
                     <div className="col-span-5 bg-[#16A34A] border-r-2 border-gray-400 flex items-center justify-center px-2">
                       <button
                         type="button"
-                        onClick={isLnqrTenderProcessed ? () => setIsLnqrUpdatedModalOpen(true) : handleConfirmLnqrCashTender}
+                        onClick={handlePaymentOkClick}
                         className="min-w-[95px] h-[22px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#B05090] border-b-[#B05090] outline outline-1 outline-[#D870B0] flex items-center justify-center font-bold text-xs text-[#0000CD] shadow-sm cursor-pointer"
                       >
                         Ok
@@ -1277,7 +2412,7 @@ function SimulatorContent() {
 
                   <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
                     <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
-                      Scan or Enter UPC
+                      {isVoidSkuMode ? "Void SKU" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
                     </div>
                     <form onSubmit={handleBarcodeSubmit}>
                       <input
@@ -1377,24 +2512,30 @@ function SimulatorContent() {
                     Line item screen page (Scan or Enter UPC above)
                   </div>
                 ) : (
-                  state.lineItems.map((item, idx) => (
-                    <div
-                      key={item.id}
-                      className={"grid grid-cols-12 py-1 px-1 items-center text-[11px] " + (
-                        item.isVoided ? "line-through text-red-600 bg-red-50" : "text-gray-900"
-                      )}
-                    >
-                      <span className="col-span-1 text-left font-bold">{idx + 1}</span>
-                      <span className="col-span-3 text-left truncate">{item.sku}</span>
-                      <span className="col-span-4 text-left font-bold truncate pr-1">{item.description}</span>
-                      <span className="col-span-1 text-center font-bold">
-                        {item.isVoided ? "-" + item.quantity : item.quantity}
-                      </span>
-                      <span className="col-span-1 text-right text-gray-700">{item.unitPrice.toFixed(2)}</span>
-                      <span className="col-span-1 text-right font-bold">{item.total.toFixed(2)}</span>
-                      <span className="col-span-1 text-right text-gray-500">REG</span>
-                    </div>
-                  ))
+                  state.lineItems.map((item, idx) => {
+                    const isVoidLine = item.isVoided || item.quantity < 0;
+                    const itemType = isVoidLine ? "V" : state.isZeroRated ? "VZ" : "REG";
+                    return (
+                      <div
+                        key={item.id}
+                        className={`grid grid-cols-12 py-1 px-1 items-center text-[11px] font-mono ${
+                          isVoidLine ? "text-red-600 font-bold bg-red-50" : "text-gray-900"
+                        }`}
+                      >
+                        <span className="col-span-1 text-left font-bold">{idx + 1}</span>
+                        <span className="col-span-3 text-left truncate">{item.sku}</span>
+                        <span className="col-span-4 text-left font-bold truncate pr-1">{item.description}</span>
+                        <span className="col-span-1 text-center font-bold">
+                          {item.quantity < 0 ? item.quantity : item.isVoided ? `-${item.quantity}` : item.quantity}
+                        </span>
+                        <span className="col-span-1 text-right text-gray-700">{item.unitPrice.toFixed(2)}</span>
+                        <span className="col-span-1 text-right font-bold">
+                          {item.isVoided && item.total > 0 ? `-${item.total.toFixed(2)}` : item.total.toFixed(2)}
+                        </span>
+                        <span className="col-span-1 text-right font-bold text-gray-600">{itemType}</span>
+                      </div>
+                    );
+                  })
                 )}
               </div>
             </div>
@@ -1403,6 +2544,7 @@ function SimulatorContent() {
             <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1">
               {rightKeys.map((kDef) => {
                 const isRed = kDef.variant === "red";
+                const isVoidSkuHighlight = isVoidSkuMode && kDef.key === "F7";
                 return (
                   <button
                     key={kDef.key}
@@ -1412,18 +2554,20 @@ function SimulatorContent() {
                       "w-full flex-1 min-h-[50px] p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
                       (kDef.disabled
                         ? "bg-gray-400 border-gray-500 text-gray-600 cursor-not-allowed opacity-50"
+                        : isVoidSkuHighlight
+                        ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black"
                         : isRed
                         ? "bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-white border-red-700"
                         : "bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] text-gray-900 border-gray-400")
                     }
                   >
                     <span className="text-[11px] font-bold leading-tight uppercase">
-                      {kDef.label}
+                      {isVoidSkuHighlight ? "Void SKU" : kDef.label}
                     </span>
                     <span
                       className={
                         "text-[10px] font-extrabold " +
-                        (isRed ? "text-yellow-300" : "text-[#1D4ED8]")
+                        (isVoidSkuHighlight ? "text-red-600" : isRed ? "text-yellow-300" : "text-[#1D4ED8]")
                       }
                     >
                       {kDef.key}
@@ -1451,7 +2595,19 @@ function SimulatorContent() {
 
             {/* Total Sales */}
             <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between text-white">
-              <span className="font-bold">Total Sales:</span>
+              <div className="flex items-center space-x-1">
+                <span className="font-bold">Total Sales:</span>
+                {state.isZeroRated && (
+                  <span className="bg-blue-600 text-white text-[9px] px-1 py-0.5 font-bold uppercase rounded">
+                    ZERO
+                  </span>
+                )}
+                {state.appliedDiscount && (
+                  <span className="bg-yellow-400 text-gray-900 text-[9px] px-1 py-0.5 font-bold uppercase rounded">
+                    -{state.appliedDiscount.percent}%
+                  </span>
+                )}
+              </div>
               <span className="font-mono font-bold text-base bg-white px-3 py-0.5 border border-gray-400 text-gray-900 min-w-[70px] text-right">
                 {totals.totalAmount.toFixed(2)}
               </span>
@@ -1548,22 +2704,33 @@ function SimulatorContent() {
                 <button
                   type="button"
                   onClick={() => handleSelectLoyalty(1)}
-                  className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
+                    selectedLoyaltyOption === 1
+                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
+                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
+                  }`}
                 >
                   1. None
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSelectLoyalty(2)}
-                  className="w-full text-left px-4 py-2.5 bg-white/70 hover:bg-white text-gray-900 font-bold text-sm border border-gray-400 shadow-sm transition-all cursor-pointer"
+                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
+                    selectedLoyaltyOption === 2
+                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
+                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
+                  }`}
                 >
                   2. Laking National Card
                 </button>
                 <button
                   type="button"
                   onClick={() => handleSelectLoyalty(3)}
-                  className="w-full text-left px-4 py-2.5 bg-white text-gray-900 font-extrabold text-sm border-2 border-red-500 ring-2 ring-red-400 shadow-sm transition-all cursor-pointer"
-                  autoFocus
+                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
+                    selectedLoyaltyOption === 3
+                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
+                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
+                  }`}
                 >
                   3. LNQR / LNQR PLUS
                 </button>
@@ -1660,221 +2827,225 @@ function SimulatorContent() {
       </div>
 
       {/* F3 QUANTITY MODAL */}
-      {state.isQuantityInputActive && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-            <form
-              onSubmit={handleConfirmQuantity}
-              className="w-[360px] bg-[#D6D3CE] border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto"
-            >
-              {/* Window Title Bar */}
-              <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
-                <div className="flex items-center space-x-1 truncate">
-                  <span className="text-[10px] leading-none">{'\u2022'}</span>
-                  <span className="text-[11px] truncate tracking-wide text-gray-100">
-                    The page at http://localhost says:
-                  </span>
-                </div>
-                {/* Window Controls */}
-                <div className="flex items-center space-x-0.5">
-                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                    <span className="leading-none mb-0.5">_</span>
-                  </div>
-                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                    <div className="w-2 h-2 border border-gray-200" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
-                    className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
-                  >
-                    {'\u2715'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Window Body */}
-              <div className="p-4 bg-[#D6D3CE] space-y-4">
-                {/* Message with Question Bubble Icon */}
-                <div className="flex items-center space-x-3">
-                  {/* Comic / Speech Bubble Question Icon */}
-                  <div className="relative flex-shrink-0 w-8 h-8 rounded-full border-2 border-gray-400 bg-white flex items-center justify-center shadow-inner">
-                    <span className="text-gray-800 font-extrabold text-base font-serif italic">?</span>
-                    {/* speech pointer */}
-                    <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 bg-white border-l-2 border-b-2 border-gray-400 transform rotate-12" />
-                  </div>
-                  <div className="text-[13px] font-bold text-gray-900 tracking-tight font-sans">
-                    Please enter quantity
-                  </div>
-                </div>
-
-                {/* Inset Text Input Field */}
-                <div className="px-1">
-                  <input
-                    type="number"
-                    min="1"
-                    max="999"
-                    ref={qtyInputRef}
-                    value={qtyInput}
-                    onChange={(e) => setQtyInput(e.target.value)}
-                    className="w-full bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-[#FFFFFF] border-b-[#FFFFFF] px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600 shadow-inner"
-                    autoFocus
-                  />
-                </div>
-
-                {/* Bottom Buttons: Cancel and OK */}
-                <div className="flex items-center justify-end space-x-2 pt-1 pr-1">
-                  <button
-                    type="button"
-                    onClick={() => dispatch({ type: "SET_QUANTITY_CANCEL" })}
-                    className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="min-w-[65px] px-3 py-1 bg-[#D6D3CE] hover:bg-[#E2E0DC] active:bg-[#C0BCB5] text-xs font-bold text-gray-900 border-2 border-t-[#FFFFFF] border-l-[#FFFFFF] border-r-[#404040] border-b-[#404040] shadow-sm active:border-t-[#404040] active:border-l-[#404040] active:border-r-[#FFFFFF] active:border-b-[#FFFFFF] cursor-pointer"
-                  >
-                    OK
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        </>
+      {(isQuantityModalOpen || state.isQuantityInputActive) && (
+        <QuantityModal
+          initialQuantity={1}
+          onConfirm={handleConfirmQuantity}
+          onCancel={() => {
+            setIsQuantityModalOpen(false);
+            dispatch({ type: "SET_QUANTITY_CANCEL" });
+          }}
+        />
       )}
 
-      {/* PAYMENT MODAL */}
-      {state.paymentDialogOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => dispatch({ type: "CLOSE_PAYMENT" })}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white text-gray-900 max-w-md w-full p-6 space-y-4 font-mono text-xs border-4 border-gray-900 shadow-2xl pointer-events-auto">
-              <div className="flex justify-between border-b pb-2">
-                <div>
-                  <h3 className="text-sm font-bold uppercase text-[#E4002B]">Payment Menu {'\u2022'} Tender Options</h3>
-                  <span className="text-[10px] text-gray-500">
-                    Total Due: <strong>{formatCurrency(totals.totalAmount)}</strong>
-                  </span>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => dispatch({ type: "CLOSE_PAYMENT" })}>
-                  Cancel / ESC
-                </Button>
-              </div>
-
-              {!state.selectedPaymentMethod ? (
-                <div className="grid grid-cols-2 gap-2 pt-2">
-                  <Button
-                    onClick={() => handleAction("PAY_CASH")}
-                    className="bg-[#E4002B] hover:bg-[#C10024] text-white font-bold py-3 text-xs flex flex-col items-center"
-                  >
-                    <span>F2 CASH</span>
-                    <span className="text-[9px] opacity-80">Philippine Peso</span>
-                  </Button>
-                  <Button
-                    onClick={() => handleAction("PAY_CARD")}
-                    className="bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 text-xs flex flex-col items-center"
-                  >
-                    <span>F3 BANK CARD</span>
-                    <span className="text-[9px] opacity-80">Credit / GCash</span>
-                  </Button>
-                </div>
-              ) : (
-                <form onSubmit={handleConfirmTender} className="space-y-4 pt-2">
-                  <div className="bg-gray-100 p-3 space-y-1">
-                    <div className="text-[10px] text-gray-500">Tender Method:</div>
-                    <div className="font-bold text-sm text-gray-900">{state.selectedPaymentMethod}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="font-bold text-xs">Enter Cash Amount Handed (PHP):</label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={cashTenderInput}
-                      onChange={(e) => setCashTenderInput(e.target.value)}
-                      className="text-lg font-bold text-center"
-                      autoFocus
-                    />
-                  </div>
-                  <div className="flex space-x-2 pt-2">
-                    <Button type="submit" className="w-full bg-[#E4002B] hover:bg-[#C10024] font-bold text-xs">
-                      Confirm Payment & Print OR
-                    </Button>
-                    <Button type="button" variant="outline" onClick={() => dispatch({ type: "SELECT_PAYMENT_METHOD", method: "" })} className="text-xs">
-                      Back
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </div>
-          </div>
-        </>
+      {/* ITEM VOID REASON MODAL */}
+      {isItemVoidModalOpen && (
+        <ItemVoidModal
+          onConfirm={(reason) => {
+            setIsItemVoidModalOpen(false);
+            setIsVoidSkuMode(true);
+            validateScenarioStep("CONFIRM_ITEM_VOID", reason);
+          }}
+          onCancel={() => setIsItemVoidModalOpen(false)}
+        />
       )}
 
-      {/* MANAGER OVERRIDE MODAL */}
+      {/* TRANSACTION VOID MODAL */}
+      {isTrxVoidModalOpen && (
+        <TrxVoidModal
+          onConfirm={(reason) => {
+            dispatch({ type: "VOID_TRANSACTION" });
+            setIsTrxVoidModalOpen(false);
+            validateScenarioStep("CONFIRM_OVERRIDE");
+            validateScenarioStep("CONFIRM_TRX_VOID", reason);
+          }}
+          onCancel={() => setIsTrxVoidModalOpen(false)}
+        />
+      )}
+
+      {/* SUSPEND TRANSACTION MODAL */}
+      {isSuspendModalOpen && (
+        <SuspendModal
+          onConfirm={() => {
+            dispatch({ type: "SUSPEND_TRANSACTION" });
+            setIsSuspendModalOpen(false);
+            validateScenarioStep("SUSPEND");
+            validateScenarioStep("CONFIRM_SUSPEND");
+          }}
+          onCancel={() => setIsSuspendModalOpen(false)}
+        />
+      )}
+
+
+
+      {/* AUTHENTIC RETRO MANAGER OVERRIDE MODAL */}
       {state.managerOverrideOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white text-gray-900 max-w-sm w-full p-6 space-y-4 font-mono text-xs border-4 border-amber-600 shadow-2xl pointer-events-auto">
-              <div className="border-b border-amber-200 pb-2">
-                <div className="flex items-center space-x-2 text-amber-700 font-bold uppercase text-xs">
-                  <ShieldAlert className="w-4 h-4" />
-                  <span>Manager Authorization Required</span>
-                </div>
-                <p className="text-[10px] text-gray-500 mt-1">Action: <strong>{state.managerOverrideTarget}</strong></p>
-              </div>
-              <Input
-                type="password"
-                value={overridePass}
-                onChange={(e) => setOverridePass(e.target.value)}
-                placeholder="Enter mock password..."
-                className="text-xs font-mono"
-                autoFocus
-              />
-              <div className="flex space-x-2 pt-2">
-                <Button onClick={handleConfirmOverride} className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs uppercase">
-                  Approve (Training)
-                </Button>
-                <Button variant="outline" onClick={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })} className="w-full text-xs">
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </div>
-        </>
+        <ManagerOverrideModal
+          targetAction={state.managerOverrideTarget || "Restricted Operation"}
+          onConfirm={handleConfirmOverride}
+          onCancel={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
+        />
       )}
 
-      {/* OFFICIAL RECEIPT MODAL */}
-      {state.isTransactionCompleted && (
+      {/* REPRINT RECEIPT MODAL VIEW */}
+      {isReprintReceiptOpen && (
         <ReceiptModal
           state={state}
-          onClose={() => {
-            dispatch({ type: "RESET_TRANSACTION" });
-            if (activeScenario) {
-              setCurrentStepIndex(0);
-              setMistakes([]);
-              setIsExamCompleted(false);
-            }
+          isReprint={true}
+          onClose={() => setIsReprintReceiptOpen(false)}
+          onReset={() => setIsReprintReceiptOpen(false)}
+        />
+      )}
+
+      {/* F3 TRANSACTION COMMENT (TIN / CORPORATE BILLING) MODAL */}
+      {isTrxCommentOpen && (
+        <TransactionCommentModal
+          initialComments={state.transactionComments || undefined}
+          onSave={(comments) => {
+            dispatch({
+              type: "SET_TRANSACTION_COMMENTS",
+              comments: {
+                customerName: comments.customerName || "",
+                address: comments.address || "",
+                tin: comments.tin || "",
+                remarks: comments.remarks || "",
+              },
+            });
+            setIsTrxCommentOpen(false);
+            validateScenarioStep("SAVE_TRX_COMMENT");
           }}
-          onReset={() => {
-            dispatch({ type: "RESET_TRANSACTION" });
-            if (activeScenario) {
-              setCurrentStepIndex(0);
-              setMistakes([]);
-              setIsExamCompleted(false);
-            }
+          onCancel={() => setIsTrxCommentOpen(false)}
+        />
+      )}
+
+      {/* F8 RETURN / F10 REFUND MODAL */}
+      {returnRefundMode !== null && (
+        <ReturnRefundModal
+          mode={returnRefundMode}
+          onConfirmReturn={(data) => {
+            dispatch({
+              type: "PROCESS_RETURN_ITEM",
+              sku: data.sku,
+              reason: data.reason,
+              siNumber: data.orNumber,
+            });
+            setReturnRefundMode(null);
+            validateScenarioStep("CONFIRM_RETURN", data.sku);
           }}
+          onConfirmRefund={(data) => {
+            dispatch({
+              type: "PROCESS_REFUND",
+              orNumber: data.orNumber,
+              reason: data.reason,
+            });
+            setReturnRefundMode(null);
+            validateScenarioStep("CONFIRM_REFUND", data.amount);
+          }}
+          onCancel={() => setReturnRefundMode(null)}
+        />
+      )}
+
+      {/* MODULE 8 ELECTRONIC / CARD PAYMENT MODAL */}
+      {isElectronicPaymentOpen && (
+        <ElectronicPaymentModal
+          initialType={electronicPaymentType}
+          totalDue={totals.totalAmount}
+          onConfirmPayment={(data) => {
+            dispatch({ type: "TENDER_PAYMENT", amount: data.amount });
+            dispatch({ type: "SELECT_PAYMENT_METHOD", method: data.tenderType });
+            setIsElectronicPaymentOpen(false);
+            dispatch({ type: "CLOSE_PAYMENT" });
+            validateScenarioStep("CONFIRM_TENDER", data.amount);
+          }}
+          onCancel={() => setIsElectronicPaymentOpen(false)}
+        />
+      )}
+
+
+      {/* F2 POST VOID MODAL (3rd Page F2) */}
+      {isPostVoidOpen && (
+        <PostVoidModal
+          currentOrNumber={state.transactionNumber}
+          onAuthorizeOverride={() => validateScenarioStep("CONFIRM_OVERRIDE")}
+          onConfirm={(data) => {
+            dispatch({ type: "POST_VOID_TRANSACTION", orNumber: data.orNumber, reason: data.reason });
+            setIsPostVoidOpen(false);
+            validateScenarioStep("CONFIRM_POST_VOID", data.orNumber);
+          }}
+          onCancel={() => setIsPostVoidOpen(false)}
+        />
+      )}
+
+      {/* F3 PRICE CHANGE MODAL (2nd Page F3) */}
+      {isPriceChangeOpen && (
+        <PriceChangeModal
+          items={state.lineItems}
+          onAuthorizeOverride={() => validateScenarioStep("CONFIRM_OVERRIDE")}
+          onConfirm={(data) => {
+            dispatch({
+              type: "CHANGE_ITEM_PRICE",
+              itemId: data.itemId,
+              newPrice: data.newPrice,
+              reason: data.reason,
+            });
+            setIsPriceChangeOpen(false);
+            validateScenarioStep("CONFIRM_PRICE_CHANGE", data.newPrice);
+          }}
+          onCancel={() => setIsPriceChangeOpen(false)}
+        />
+      )}
+
+      {/* F6 NON-MERCHANDISE VARIANCE MODAL (1st Page F6) */}
+      {isNonMdseOpen && (
+        <NonMdseModal
+          onConfirm={(data) => {
+            dispatch({
+              type: "ADD_NON_MDSE_ITEM",
+              description: data.description,
+              amount: data.amount,
+              referenceNo: data.referenceNo,
+            });
+            setIsNonMdseOpen(false);
+            validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
+          }}
+          onCancel={() => setIsNonMdseOpen(false)}
+        />
+      )}
+
+      {/* F4 / F6 ELECTRONIC JOURNAL VIEWER MODAL (3rd Page F4/F6) */}
+      {journalModalMode !== null && (
+        <JournalViewerModal
+          mode={journalModalMode}
+          state={state}
+          onClose={() => setJournalModalMode(null)}
+        />
+      )}
+
+      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL (4th Page F4) */}
+      {isNonSalesOpen && (
+        <NonSalesModal
+          onConfirm={(data) => {
+            setIsNonSalesOpen(false);
+            validateScenarioStep("CONFIRM_NON_SALES", data.amount);
+          }}
+          onCancel={() => setIsNonSalesOpen(false)}
+        />
+      )}
+
+      {/* F2 BEST BUY / BONUS BUY PROMO MODAL (4th Page F2) */}
+      {isBestBuyOpen && (
+        <BestBuyModal
+          onConfirm={(promo) => {
+            dispatch({
+              type: "APPLY_BEST_BUY",
+              promoName: promo.promoName,
+              promoSku: promo.promoSku,
+              promoPrice: promo.promoPrice,
+            });
+            setIsBestBuyOpen(false);
+            validateScenarioStep("CONFIRM_BEST_BUY", promo.promoSku);
+          }}
+          onCancel={() => setIsBestBuyOpen(false)}
         />
       )}
 

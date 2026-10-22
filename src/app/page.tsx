@@ -193,10 +193,7 @@ export default function HomePage() {
                           <div className="text-center font-bold text-[10px] text-gray-900 tracking-wide mb-1 font-sans">
                             Scan or Enter UPC
                           </div>
-                          <div className="w-full bg-white border border-gray-500 px-2 py-0.5 text-xs font-mono font-bold text-gray-900 shadow-inner flex items-center justify-between h-6">
-                            <span>NBS-PAP-003</span>
-                            <span className="inline-block w-1.5 h-3.5 bg-gray-900 animate-pulse" />
-                          </div>
+                          <div className="w-full bg-white border border-gray-500 px-2 py-0.5 text-xs font-mono font-bold text-gray-900 shadow-inner h-6 flex items-center" />
                         </div>
 
                         {/* 4 HORIZONTAL FUNCTION BUTTONS (F11, F12, F10, F2) */}
@@ -237,15 +234,15 @@ export default function HomePage() {
                             <div className="text-[#4ADE80] font-bold">Unit Price:</div>
                           </div>
                           <div className="text-right space-y-0.5">
-                            <div className="text-[#38BDF8] font-bold">364.50</div>
-                            <div className="text-white font-bold">4</div>
-                            <div className="text-[#4ADE80] font-bold">200.00</div>
+                            <div className="text-[#38BDF8] font-bold">0.00</div>
+                            <div className="text-white font-bold">0</div>
+                            <div className="text-[#4ADE80] font-bold">0.00</div>
                           </div>
                         </div>
 
                         {/* Huge Bright Green LED Amount */}
                         <div className="text-right text-3xl sm:text-4xl font-mono font-bold text-[#00FF66] tracking-wider pt-1">
-                          364.50
+                          0.00
                         </div>
                       </div>
                     </div>
@@ -254,47 +251,18 @@ export default function HomePage() {
                     <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-0.5 text-[9px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
                       <span className="col-span-1 text-left">LN</span>
                       <span className="col-span-3 text-left">UPC</span>
-                      <span className="col-span-4 text-left">Description</span>
-                      <span className="col-span-1">Qty</span>
-                      <span className="col-span-1 text-right">SRP</span>
-                      <span className="col-span-1 text-right">Amount</span>
+                      <span className="col-span-3 text-left">Description</span>
+                      <span className="col-span-1 text-center">Qty</span>
+                      <span className="col-span-2 text-right pr-2">SRP</span>
+                      <span className="col-span-1 text-right pr-1">Amount</span>
                       <span className="col-span-1 text-right">Type</span>
                     </div>
 
-                    {/* Populated Line Items Table */}
-                    <div className="flex-1 bg-white overflow-hidden p-1 font-mono text-[10px] divide-y divide-gray-100 min-h-[140px]">
-                      {/* Line Item 1 */}
-                      <div className="grid grid-cols-12 py-1 px-1 items-center text-gray-900">
-                        <span className="col-span-1 text-left font-bold">1</span>
-                        <span className="col-span-3 text-left truncate">NBS-BK-001</span>
-                        <span className="col-span-4 text-left font-bold truncate pr-1">SPIRAL NOTEBOOK 80L</span>
-                        <span className="col-span-1 text-center font-bold">2</span>
-                        <span className="col-span-1 text-right text-gray-700">39.50</span>
-                        <span className="col-span-1 text-right font-bold">79.00</span>
-                        <span className="col-span-1 text-right text-gray-500">REG</span>
-                      </div>
-
-                      {/* Line Item 2 */}
-                      <div className="grid grid-cols-12 py-1 px-1 items-center text-gray-900">
-                        <span className="col-span-1 text-left font-bold">2</span>
-                        <span className="col-span-3 text-left truncate">NBS-PEN-002</span>
-                        <span className="col-span-4 text-left font-bold truncate pr-1">PILOT G-TECH C4 0.4MM</span>
-                        <span className="col-span-1 text-center font-bold">1</span>
-                        <span className="col-span-1 text-right text-gray-700">85.50</span>
-                        <span className="col-span-1 text-right font-bold">85.50</span>
-                        <span className="col-span-1 text-right text-gray-500">REG</span>
-                      </div>
-
-                      {/* Line Item 3 (Active Highlighted Row) */}
-                      <div className="grid grid-cols-12 py-1 px-1 items-center text-blue-900 bg-blue-50 border-y border-blue-200">
-                        <span className="col-span-1 text-left font-bold text-blue-700">3</span>
-                        <span className="col-span-3 text-left truncate font-bold">NBS-PAP-003</span>
-                        <span className="col-span-4 text-left font-bold truncate pr-1">A4 COPY PAPER 70GSM</span>
-                        <span className="col-span-1 text-center font-bold">1</span>
-                        <span className="col-span-1 text-right text-gray-700">200.00</span>
-                        <span className="col-span-1 text-right font-bold text-blue-800">200.00</span>
-                        <span className="col-span-1 text-right text-gray-500">REG</span>
-                      </div>
+                    {/* Line Item Screen Page (Empty Ready State) */}
+                    <div className="flex-1 bg-white overflow-hidden p-2 font-mono text-[10px] min-h-[140px] flex items-center justify-center">
+                      <span className="text-gray-400 italic text-center">
+                        Line item screen page (Scan or Enter UPC above)
+                      </span>
                     </div>
                   </div>
 
@@ -346,14 +314,14 @@ export default function HomePage() {
                   <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between">
                     <span className="font-bold text-gray-900 text-[10px]">Total Qty</span>
                     <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
-                      4
+                      0
                     </span>
                   </div>
 
                   <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between text-white">
                     <span className="font-bold text-[10px]">Total Sales:</span>
                     <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
-                      364.50
+                      0.00
                     </span>
                   </div>
 

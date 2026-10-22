@@ -4,16 +4,15 @@ import React from "react";
 import Link from "next/link";
 import { TrainingScenario, TRAINING_SCENARIOS } from "@/data/scenarios";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { 
   HelpCircle, 
   CheckCircle, 
   RotateCcw, 
-  Sparkles, 
   Compass, 
   BookOpen, 
   Barcode,
-  ArrowRight
+  ArrowRight,
+  Award
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -52,7 +51,7 @@ export function GuidedStepBar({
   // Free Exploration Sandbox
   if (!scenario) {
     return (
-      <div className="relative z-50 bg-[#0f172a] border-b-2 border-emerald-500/80 text-white p-3 space-y-2 shadow-md">
+      <div className="relative z-50 bg-gray-900 border-b-2 border-emerald-500/80 text-white p-3 space-y-2 shadow-md">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <span className="bg-emerald-600 text-white px-2 py-0.5 text-xs font-bold rounded flex items-center space-x-1">
@@ -70,10 +69,10 @@ export function GuidedStepBar({
               onChange={(e) => onSelectScenario(e.target.value || null)}
               className="bg-gray-800 border border-gray-600 text-white text-xs px-2 py-1 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans"
             >
-              <option value="">Switch to Guided Module...</option>
+              <option value="">Switch to Guided Scenario...</option>
               {TRAINING_SCENARIOS.map((scen) => (
                 <option key={scen.id} value={scen.id}>
-                  {scen.title}
+                  {scen.lessonRef ? `[Lesson] ${scen.title}` : `[Module Assessment] ${scen.title}`}
                 </option>
               ))}
             </select>
@@ -112,18 +111,25 @@ export function GuidedStepBar({
     );
   }
 
-  // Module-Guided Practice Mode
+  // Lesson Practice or Module Practical Assessment Mode
   const currentStep = scenario.steps[currentStepIndex];
   const totalSteps = scenario.steps.length;
   const isFinished = currentStepIndex >= totalSteps;
+  const isLessonPractice = Boolean(scenario.lessonRef);
 
   return (
-    <div className="relative z-50 bg-[#0B192C] border-2 border-yellow-500/80 text-white p-3 space-y-2 shadow-md">
+    <div className="relative z-50 bg-gray-900 border-2 border-yellow-500/80 text-white p-3 space-y-2 shadow-md">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-700 pb-2">
         <div className="flex items-center space-x-2">
           <span className="text-xs font-mono font-bold uppercase text-yellow-300 flex items-center space-x-1">
-            <BookOpen className="w-3.5 h-3.5 text-yellow-400 mr-1" />
-            <span>PRACTICE: {scenario.title}</span>
+            {isLessonPractice ? (
+              <BookOpen className="w-3.5 h-3.5 text-yellow-400 mr-1" />
+            ) : (
+              <Award className="w-3.5 h-3.5 text-yellow-400 mr-1" />
+            )}
+            <span>
+              {isLessonPractice ? "LESSON PRACTICE" : "MODULE ASSESSMENT"}: {scenario.title}
+            </span>
           </span>
         </div>
         <div className="flex items-center space-x-3 text-xs font-mono">
@@ -156,10 +162,12 @@ export function GuidedStepBar({
               <div className="space-y-1">
                 <div className="text-emerald-400 font-bold flex items-center space-x-1 text-sm">
                   <CheckCircle className="w-4 h-4" />
-                  <span>Module Practice Complete! You finished all steps for {scenario.title}.</span>
+                  <span>
+                    {isLessonPractice ? "Lesson Practice Complete!" : "Module Practical Assessment Complete!"} You finished all steps for {scenario.title}.
+                  </span>
                 </div>
                 <div className="text-xs text-gray-300 font-normal">
-                  You can repeat this practice anytime or return to Free Exploration.
+                  You can repeat this {isLessonPractice ? "practice" : "assessment"} anytime or return to Free Exploration.
                 </div>
               </div>
             ) : (
@@ -193,7 +201,7 @@ export function GuidedStepBar({
                 className="text-xs bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800"
               >
                 <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                <span>Reset Practice</span>
+                <span>Reset {isLessonPractice ? "Practice" : "Assessment"}</span>
               </Button>
             </>
           ) : (
@@ -205,7 +213,7 @@ export function GuidedStepBar({
                 className="text-xs bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900 font-bold"
               >
                 <RotateCcw className="w-3.5 h-3.5 mr-1" />
-                <span>Practice Again</span>
+                <span>{isLessonPractice ? "Practice Again" : "Retake Assessment"}</span>
               </Button>
 
               <Button

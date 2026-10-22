@@ -1,4 +1,4 @@
-﻿export interface SyntheticProduct {
+export interface SyntheticProduct {
   sku: string;
   barcode: string;
   description: string;
@@ -10,6 +10,33 @@
 }
 
 export const SYNTHETIC_PRODUCTS: SyntheticProduct[] = [
+  {
+    sku: "505",
+    barcode: "505",
+    description: "PHO PRKR RBALL POINT REG SONN",
+    category: "Writing Instruments",
+    author: "Parker",
+    srp: 2990.00,
+    isVatable: true,
+  },
+  {
+    sku: "12",
+    barcode: "12",
+    description: "CRNA MATH NOTEBOOK 660P",
+    category: "Notebooks",
+    author: "Corona",
+    srp: 61.50,
+    isVatable: true,
+  },
+  {
+    sku: "15",
+    barcode: "15",
+    description: "CRNA MATH NOTEBOOK 7100P",
+    category: "Notebooks",
+    author: "Corona",
+    srp: 44.64,
+    isVatable: true,
+  },
   {
     sku: "142219631",
     barcode: "142219631",
