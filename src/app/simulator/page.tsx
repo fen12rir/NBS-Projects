@@ -178,6 +178,26 @@ function SimulatorContent() {
     createInitialPOSState("Jan Angela")
   );
 
+  const [showItemNotFound, setShowItemNotFound] = useState(false);
+
+  useEffect(() => {
+    const isItemNotFound =
+      state.lastMessage.type === "error" &&
+      state.lastMessage.text.includes("not found");
+
+    if (!isItemNotFound) {
+      setShowItemNotFound(false);
+      return;
+    }
+
+    setShowItemNotFound(true);
+    const timeoutId = window.setTimeout(() => {
+      setShowItemNotFound(false);
+    }, 2500);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [state.lastMessage]);
+
   const [barcodeInput, setBarcodeInput] = useState("");
   const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -1350,8 +1370,16 @@ function SimulatorContent() {
 
       {/* EXACT POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center">
-        <div className="w-full max-w-[1080px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden">
-          
+        <div className="relative w-full max-w-[1080px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden">
+          {showItemNotFound && (
+            <div
+              role="alert"
+              className="pointer-events-none absolute left-3 top-3 z-30 border-2 border-gray-800 bg-white px-4 py-3 font-bold text-black shadow-lg"
+            >
+              Item not found
+            </div>
+          )}
+
           {/* SCREEN 1: START OF DAY VERIFY */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
             <div className="flex-1 bg-white min-h-[530px] flex flex-col items-center justify-center p-6 select-none relative">
