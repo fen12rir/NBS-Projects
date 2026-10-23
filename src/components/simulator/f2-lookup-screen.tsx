@@ -20,6 +20,7 @@ export function F2LookupScreen({
 }: F2LookupScreenProps) {
   const [mode, setMode] = useState<LookupMode>("SKU");
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [submittedSearch, setSubmittedSearch] = useState<string | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
@@ -40,9 +41,14 @@ export function F2LookupScreen({
   }, [initialSearch]);
 
   // Filter products based on active mode & search term
-  const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
+  /*const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
     if (!searchTerm.trim()) return true;
-    const term = searchTerm.toLowerCase().trim();
+    const term = searchTerm.toLowerCase().trim();*/
+
+  const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
+  if (submittedSearch === null) return false;
+
+  const term = submittedSearch.toLowerCase().trim();
     if (mode === "SKU") {
       return item.sku.toLowerCase().includes(term) || item.barcode.toLowerCase().includes(term);
     } else if (mode === "DESCRIPTION") {
@@ -98,12 +104,28 @@ export function F2LookupScreen({
         setSelectedIndex((prev) => Math.min(currentPageProducts.length - 1, prev + 1));
         return;
       }
+
       if (e.key === "Enter") {
+        if (e.target instanceof HTMLButtonElement) return;
+
         e.preventDefault();
-        const chosen = currentPageProducts[selectedIndex];
-        if (chosen) {
-          onSelectItem(chosen.sku);
+
+        if (e.altKey) {
+          handleContinue();
+          return;
         }
+
+        if (document.activeElement === inputRef.current) {
+          const query = searchTerm.trim();
+          if (query) {
+            setSubmittedSearch(query);
+            setPage(1);
+            setSelectedIndex(0);
+          }
+          return;
+        }
+
+        handleContinue();
         return;
       }
       if (e.key === "ArrowLeft") {
@@ -126,6 +148,11 @@ export function F2LookupScreen({
 
   const handleRowDoubleClick = (item: SyntheticProduct) => {
     onSelectItem(item.sku);
+  };
+
+  const handleContinue = () => {
+    const chosen = currentPageProducts[selectedIndex];
+    if (chosen) onSelectItem(chosen.sku);
   };
 
   return (
@@ -248,12 +275,17 @@ export function F2LookupScreen({
       </div>
 
       {/* 6. TABLE BODY ROWS */}
-      <div className="flex-1 min-h-[300px] overflow-y-auto bg-white divide-y divide-gray-200 font-mono text-xs">
-        {currentPageProducts.length === 0 ? (
-          <div className="p-12 text-center text-gray-500 italic">
-            No items matching "{searchTerm}" found.
-          </div>
-        ) : (
+     <div className="flex-1 min-h-[300px] overflow-y-auto bg-white divide-y divide-gray-200 font-mono text-xs">
+  {submittedSearch === null ? (
+    <div className="p-12 text-center text-gray-500 italic">
+      Enter a search and press Enter to see items.
+    </div>
+  ) : currentPageProducts.length === 0 ? (
+    <div className="p-12 text-center text-gray-500 italic">
+      No items matching "{submittedSearch}" found.
+    </div>
+  ) : (
+        
           currentPageProducts.map((item, idx) => {
             const isSelected = idx === selectedIndex;
             return (
@@ -292,7 +324,7 @@ export function F2LookupScreen({
       <div className="bg-[#48BB78] border-t-2 border-gray-500 px-3 py-1.5 flex items-center justify-between">
         <div className="w-[100px]" />
 
-        {/* Centered Bevel Buttons: PREV, NEXT, CANCEL */}
+        {/* Centered Bevel Buttons: PREV, NEXT, CONTINUE, CANCEL */}
         <div className="flex items-center space-x-1.5">
           <button
             type="button"
@@ -320,6 +352,20 @@ export function F2LookupScreen({
           >
             <span className="text-[12px] font-black leading-tight uppercase text-[#0B25B7]">NEXT</span>
             <span className="text-[9px] font-bold text-gray-800 leading-none">&lt;Right-Arrow&gt;</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!currentPageProducts[selectedIndex]}
+            className={`w-[85px] h-[40px] px-2 py-0.5 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all ${
+              !currentPageProducts[selectedIndex]
+                ? "bg-gray-400 border-gray-500 text-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] text-gray-900 border-gray-400 cursor-pointer"
+            }`}
+          >
+            <span className="text-[12px] font-black leading-tight uppercase text-[#0B25B7]">CONTINUE</span>
+            <span className="text-[9px] font-bold text-gray-800 leading-none">&lt;Alt+Enter&gt;</span>
           </button>
 
           <button
