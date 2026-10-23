@@ -91,4 +91,20 @@ describe("POS State Machine", () => {
     expect(totals.totalAmount).toBe(0);
     expect(totals.totalQty).toBe(0);
   });
+
+  it("does not void an item when manager override is confirmed for Item Void", () => {
+    let state = createInitialPOSState();
+    state = posReducer(state, { type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
+    state = posReducer(state, {
+      type: "REQUEST_MANAGER_OVERRIDE",
+      targetAction: "Item Void",
+    });
+
+    state = posReducer(state, { type: "CONFIRM_MANAGER_OVERRIDE" });
+
+    expect(state.lineItems).toHaveLength(1);
+    expect(state.lineItems[0].isVoided).toBe(false);
+    expect(state.managerOverrideOpen).toBe(false);
+    expect(state.managerOverrideTarget).toBeNull();
+  });
 });

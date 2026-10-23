@@ -331,15 +331,7 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       let updatedLineItems = state.lineItems;
       let lastMsg = "Manager Override approved (Training Mode Authorization).";
 
-      if (state.managerOverrideTarget === "Item Void") {
-        const lastActiveIndex = state.lineItems.map((i) => !i.isVoided).lastIndexOf(true);
-        if (lastActiveIndex >= 0) {
-          updatedLineItems = state.lineItems.map((item, idx) =>
-            idx === lastActiveIndex ? { ...item, isVoided: true } : item
-          );
-          lastMsg = "Item voided by Manager Override.";
-        }
-      } else if (state.managerOverrideTarget === "Transaction Void") {
+      if (state.managerOverrideTarget === "Transaction Void") {
         updatedLineItems = [];
         lastMsg = "Entire transaction voided by Manager Override.";
       }
@@ -368,12 +360,23 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       };
 
     case "VOID_ITEM": {
-      const matchIndex = state.lineItems
-        .map((i) => !i.isVoided && (i.id === action.itemId || i.sku.toUpperCase() === action.itemId.toUpperCase()))
-        .lastIndexOf(true);
-      const updated = matchIndex >= 0
-        ? state.lineItems.map((item, idx) => (idx === matchIndex ? { ...item, isVoided: true } : item))
-        : state.lineItems.map((item) => (item.id === action.itemId ? { ...item, isVoided: true } : item));
+      const matchIndex = state.lineItems.findIndex(
+        (item) => !item.isVoided && item.id === action.itemId
+      );
+
+      if (matchIndex < 0) {
+        return {
+          ...state,
+          lastMessage: {
+            type: "warning",
+            text: "No active item selected to void.",
+          },
+        };
+      }
+
+      const updated = state.lineItems.map((item, idx) =>
+        idx === matchIndex ? { ...item, isVoided: true } : item
+      );
       return {
         ...state,
         lineItems: updated,

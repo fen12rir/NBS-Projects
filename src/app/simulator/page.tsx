@@ -124,6 +124,8 @@ function SimulatorContent() {
   // Authentic Functional Modals (Modules 4-8)
   const [isItemVoidModalOpen, setIsItemVoidModalOpen] = useState(false);
   const [isTrxVoidModalOpen, setIsTrxVoidModalOpen] = useState(false);
+  const [selectedVoidItemId, setSelectedVoidItemId] = useState<string | null>(null);
+  const [pendingVoidReason, setPendingVoidReason] = useState<string | null>(null);
   const [isVoidSkuMode, setIsVoidSkuMode] = useState(false);
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
@@ -440,6 +442,55 @@ function SimulatorContent() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (
+        isVoidSkuMode &&
+        !e.altKey &&
+        (e.key === "ArrowUp" || e.key === "ArrowDown")
+      ) {
+        e.preventDefault();
+        const activeItems = state.lineItems.filter((item) => !item.isVoided);
+        if (activeItems.length === 0) return;
+
+        const selectedIndex = activeItems.findIndex(
+          (item) => item.id === selectedVoidItemId
+        );
+        const nextIndex =
+          selectedIndex < 0
+            ? e.key === "ArrowDown"
+              ? 0
+              : activeItems.length - 1
+            : e.key === "ArrowDown"
+              ? Math.min(selectedIndex + 1, activeItems.length - 1)
+              : Math.max(selectedIndex - 1, 0);
+
+        setSelectedVoidItemId(activeItems[nextIndex].id);
+        return;
+      }
+
+      if (isVoidSkuMode && e.altKey && e.key === "Enter") {
+        e.preventDefault();
+        const selectedItem = state.lineItems.find(
+          (item) => item.id === selectedVoidItemId && !item.isVoided
+        );
+
+        if (!selectedItem || !pendingVoidReason) return;
+
+        dispatch({ type: "VOID_ITEM", itemId: selectedItem.id });
+        setIsVoidSkuMode(false);
+        setSelectedVoidItemId(null);
+        setPendingVoidReason(null);
+        validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
+        return;
+      }
+
+      if (isVoidSkuMode && e.key === "Escape") {
+        e.preventDefault();
+        setIsVoidSkuMode(false);
+        setSelectedVoidItemId(null);
+        setPendingVoidReason(null);
+        return;
+      }
+
       // 1. If in START_OF_DAY_VERIFY mode
       if (terminalMode === "START_OF_DAY_VERIFY") {
         if (e.key === "Tab") {
@@ -1055,16 +1106,9 @@ function SimulatorContent() {
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isVoidSkuMode) return;
     if (!barcodeInput.trim()) return;
     const code = barcodeInput.trim();
-    if (isVoidSkuMode) {
-      dispatch({ type: "VOID_ITEM", itemId: code });
-      setIsVoidSkuMode(false);
-      validateScenarioStep("SCAN_VOID_SKU", code);
-      validateScenarioStep("ADD_ITEM", code);
-      setBarcodeInput("");
-      return;
-    }
     if (isRefundSkuMode) {
       dispatch({ type: "ADD_ITEM_BY_CODE", code });
       setIsRefundSkuMode(false);
@@ -1107,9 +1151,12 @@ function SimulatorContent() {
     validateScenarioStep("CONFIRM_OVERRIDE");
     setOverridePass("");
 
-    if (target === "Item Void") {
+        if (target === "Item Void") {
+      setIsVoidSkuMode(false);
+      setSelectedVoidItemId(null);
+      setPendingVoidReason(null);
       setIsItemVoidModalOpen(true);
-    } else if (target === "Recall") {
+    }else if (target === "Recall") {
       setIsRecallOpen(true);
     } else if (target === "Reprint") {
       setIsReprintOpen(true);
@@ -2412,13 +2459,14 @@ function SimulatorContent() {
 
                   <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
                     <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
-                      {isVoidSkuMode ? "Void SKU" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
+                      {isVoidSkuMode ? "Select Item to Void" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
                     </div>
                     <form onSubmit={handleBarcodeSubmit}>
                       <input
                         ref={barcodeRef}
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
+                        disabled={isVoidSkuMode}
                         placeholder=""
                         className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
                       />
@@ -2507,6 +2555,11 @@ function SimulatorContent() {
 
               {/* LINE ITEM SCREEN PAGE */}
               <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-[300px]">
+                {isVoidSkuMode/* && (
+                  <div className="bg-yellow-100 px-2 py-1 text-center font-bold text-xs">
+                    Use Up/Down to select an active item, then press Alt+Enter to void it. Press Escape to cancel.
+                  </div>
+                )*/}
                 {state.lineItems.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 italic text-xs py-16">
                     Line item screen page (Scan or Enter UPC above)
@@ -2518,8 +2571,19 @@ function SimulatorContent() {
                     return (
                       <div
                         key={item.id}
+                        onClick={() => {
+                          if (isVoidSkuMode && !item.isVoided) {
+                            setSelectedVoidItemId(item.id);
+                          }
+                        }}
                         className={`grid grid-cols-12 py-1 px-1 items-center text-[11px] font-mono ${
-                          isVoidLine ? "text-red-600 font-bold bg-red-50" : "text-gray-900"
+                          selectedVoidItemId === item.id
+                            ? "ring-2 ring-inset ring-blue-600 bg-blue-50"
+                            : isVoidLine
+                              ? "text-red-600 font-bold bg-red-50"
+                              : isVoidSkuMode
+                                ? "text-gray-900 cursor-pointer hover:bg-blue-50"
+                                : "text-gray-900"
                         }`}
                       >
                         <span className="col-span-1 text-left font-bold">{idx + 1}</span>
@@ -2842,11 +2906,18 @@ function SimulatorContent() {
       {isItemVoidModalOpen && (
         <ItemVoidModal
           onConfirm={(reason) => {
+            setPendingVoidReason(reason);
+            setSelectedVoidItemId(null);
             setIsItemVoidModalOpen(false);
             setIsVoidSkuMode(true);
             validateScenarioStep("CONFIRM_ITEM_VOID", reason);
           }}
-          onCancel={() => setIsItemVoidModalOpen(false)}
+          onCancel={() => {
+            setIsItemVoidModalOpen(false);
+            setIsVoidSkuMode(false);
+            setSelectedVoidItemId(null);
+            setPendingVoidReason(null);
+          }}
         />
       )}
 
@@ -3160,7 +3231,3 @@ export default function SimulatorPage() {
     </Suspense>
   );
 }
-
-
-
-
