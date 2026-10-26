@@ -79,6 +79,12 @@ function generateApprovalCode() {
   ).join("");
 }
 
+function generateGcashReferenceNumber() {
+  return Math.floor(Math.random() * 10_000_000_000)
+    .toString()
+    .padStart(10, "0");
+}
+
 const TERMINAL_OPTIONS = [
   "-SELECT-",
   "BDO POS",
@@ -200,6 +206,7 @@ function SimulatorContent() {
   const [bankCardSlipNo, setBankCardSlipNo] = useState("");
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
+  const [gcashReferenceNumber, setGcashReferenceNumber] = useState("");
   const [receiptAuthCode, setReceiptAuthCode] = useState("");
   const [receiptInvoiceNumber, setReceiptInvoiceNumber] = useState("");
   const [receiptGeneratedAt, setReceiptGeneratedAt] = useState<Date | null>(null);
@@ -498,6 +505,17 @@ function SimulatorContent() {
     setBankCardStep("SWIPE_CARD");
   };
 
+  const handleConfirmEwalletType = (cardType: string) => {
+  setSelectedBankCardType(cardType);
+  setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
+  setGcashReferenceNumber(
+    cardType.toUpperCase() === "GCASH"
+      ? generateGcashReferenceNumber()
+      : ""
+  );
+  setBankCardStep("EWALLET_DETAILS");
+};
+
   const handlePaymentOkClick = () => {
     if (selectedTenderMethod === "BANK_CARD") {
       if (bankCardStep === "SELECT_TYPE") {
@@ -507,11 +525,12 @@ function SimulatorContent() {
           setSelectedBankCardType("CREDIT CARD");
         }
         if (isEwalletCardType(cardType)) {
-          setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
-          setBankCardStep("EWALLET_DETAILS");
-        } else {
-          setBankCardStep("SWIPE_CARD");
+          handleConfirmEwalletType(cardType);
         }
+        
+        else {
+         handleConfirmBankCardType();
+          }
         return;
       }
       if (bankCardStep === "SWIPE_CARD") {
@@ -555,6 +574,7 @@ function SimulatorContent() {
         validateScenarioStep("CONFIRM_LNQR_UPDATED");
         return;
       }
+     
     }
 
     if (!isLnqrTenderProcessed) {
@@ -2589,8 +2609,10 @@ function SimulatorContent() {
                                     if (isEwalletCardType(cardType)) {
                                       setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
                                       setBankCardStep("EWALLET_DETAILS");
-                                    } else {
-                                      setBankCardStep("SWIPE_CARD");
+                                    } 
+                                    
+                                    else {
+                                            handleConfirmBankCardType();
                                     }
                                   }}
                                   className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
@@ -3434,6 +3456,25 @@ function SimulatorContent() {
              </div>
            </aside>
          )}
+
+         {selectedTenderMethod === "BANK_CARD" &&
+          selectedBankCardType === "GCASH" &&
+          bankCardStep === "EWALLET_DETAILS" && (
+            <aside
+              aria-label="GCash payment terminal"
+              className="w-full max-w-[240px] self-center border-2 border-gray-600 bg-gray-900 p-4 shadow-xl"
+            >
+              <div className="mb-4 border-b border-gray-600 pb-2 text-center font-bold text-white">
+                GCASH
+              </div>
+              <div className="min-h-[180px] space-y-3 text-center text-sm text-white">
+              <div>GCash reference number</div>
+              <div className="font-mono text-lg font-bold">
+                {gcashReferenceNumber}
+              </div>
+            </div>
+            </aside>
+          )}
       </div>
 
       {/* LOGOUT CONFIRMATION MODAL */}
