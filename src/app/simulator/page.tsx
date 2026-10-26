@@ -66,6 +66,19 @@ const CARD_TYPES = [
   "LNQR Sulit Coins",
 ];
 
+function generateInvoiceNumber() {
+  return Math.floor(Math.random() * 1_000_000)
+    .toString()
+    .padStart(6, "0");
+}
+
+function generateApprovalCode() {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  return Array.from({ length: 6 }, () =>
+    characters[Math.floor(Math.random() * characters.length)]
+  ).join("");
+}
+
 const TERMINAL_OPTIONS = [
   "-SELECT-",
   "BDO POS",
@@ -183,10 +196,15 @@ function SimulatorContent() {
   const [bankCardHolder, setBankCardHolder] = useState("X");
   const [bankCardTerminal, setBankCardTerminal] = useState("BDO POS");
   const [bankCardValidUntil, setBankCardValidUntil] = useState("2028-12-31");
-  const [bankCardAuthCode, setBankCardAuthCode] = useState("000000");
-  const [bankCardSlipNo, setBankCardSlipNo] = useState("000000");
+  const [bankCardAuthCode, setBankCardAuthCode] = useState("");
+  const [bankCardSlipNo, setBankCardSlipNo] = useState("");
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
+  const [receiptAuthCode, setReceiptAuthCode] = useState("");
+  const [receiptInvoiceNumber, setReceiptInvoiceNumber] = useState("");
+  const [receiptGeneratedAt, setReceiptGeneratedAt] = useState<Date | null>(null);
+  const [cardReceiptGeneratedAt, setCardReceiptGeneratedAt] = useState<Date | null>(null);
+
 
   // In-Screen Payment Details (Module 8)
   const [cardSubtype, setCardSubtype] = useState<"CREDIT_CARD" | "GCASH" | "NBS_GIFTCARD" | "SULIT_COINS">("CREDIT_CARD");
@@ -361,6 +379,7 @@ function SimulatorContent() {
       setIsLoyaltyOptionOpen(false);
       setSelectedTenderMethod("CASH");
       setIsLnqrTenderProcessed(false);
+      setReceiptGeneratedAt(new Date());
       dispatch({ type: "OPEN_PAYMENT" });
       validateScenarioStep("CHOOSE_LNQR_OPTION", 1);
     } else if (optionNum === 2) {
@@ -386,6 +405,7 @@ function SimulatorContent() {
     if (state.lineItems.length === 0) {
       dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
     }
+    setReceiptGeneratedAt(new Date());
     dispatch({ type: "OPEN_PAYMENT" });
     validateScenarioStep("SUBMIT_LNC", customerLncInput);
   };
@@ -398,6 +418,7 @@ function SimulatorContent() {
     if (state.lineItems.length === 0) {
       dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
     }
+    setReceiptGeneratedAt(new Date());
     dispatch({ type: "OPEN_PAYMENT" });
     setIsLnqrCashPaymentOpen(true);
     validateScenarioStep("SUBMIT_LNQR", customerQrInput);
@@ -458,6 +479,25 @@ function SimulatorContent() {
     setIsFinalTenderStep(true);
   };
 
+  const handleConfirmBankCardType = () => {
+    const cardType =
+      selectedBankCardType === "-SELECT-" ? "CREDIT CARD" : selectedBankCardType;
+    setSelectedBankCardType(cardType);
+
+    if (cardType === "CREDIT CARD") {
+      setReceiptInvoiceNumber(generateInvoiceNumber());
+      setReceiptAuthCode(generateApprovalCode());
+      setCardReceiptGeneratedAt(new Date());
+
+    } else {
+      setReceiptInvoiceNumber("");
+      setReceiptAuthCode("");
+      setCardReceiptGeneratedAt(null);
+    }
+
+    setBankCardStep("SWIPE_CARD");
+  };
+
   const handlePaymentOkClick = () => {
     if (selectedTenderMethod === "BANK_CARD") {
       if (bankCardStep === "SELECT_TYPE") {
@@ -505,8 +545,11 @@ function SimulatorContent() {
         setBankCardHolder("X");
         setBankCardTerminal("BDO POS");
         setBankCardValidUntil("2028-12-31");
-        setBankCardAuthCode("000000");
-        setBankCardSlipNo("000000");
+        setBankCardAuthCode("");
+        setBankCardSlipNo("");
+        setReceiptAuthCode("");
+        setReceiptInvoiceNumber("");
+        setCardReceiptGeneratedAt(null);
         setBankCardRefNo("");
         setBankCardAmountInput("");
         validateScenarioStep("CONFIRM_LNQR_UPDATED");
@@ -1595,8 +1638,8 @@ function SimulatorContent() {
       />
 
       {/* EXACT POS TERMINAL CONTAINER */}
-      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center overflow-y-auto min-h-0">
-        <div className="relative w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
+      <div className="flex-1 p-2 sm:p-4 grid grid-cols-1 2xl:grid-cols-[minmax(0,1080px)_240px] items-center justify-center gap-4 overflow-y-auto min-h-0">
+      <div className="relative w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
           {showItemNotFound && (
             <div
               role="alert"
@@ -2147,8 +2190,18 @@ function SimulatorContent() {
                             </div>
 
                             <div className="flex justify-between pt-1">
-                              <span>{new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
-                              <span>{now.toLocaleTimeString("en-US", { hour12: false })}</span>
+                              <span>
+                                {receiptGeneratedAt?.toLocaleDateString("en-US", {
+                                  month: "2-digit",
+                                  day: "2-digit",
+                                  year: "numeric",
+                                }) ?? "--/--/----"}
+                              </span>
+                              <span>
+                                {receiptGeneratedAt?.toLocaleTimeString("en-US", {
+                                  hour12: false,
+                                }) ?? "--:--:--"}
+                              </span>
                             </div>
                             <div>
                               <div>TrxNo &nbsp; &nbsp; &nbsp;: {state.transactionNumber}</div>
@@ -2624,7 +2677,7 @@ function SimulatorContent() {
                                   className="w-full max-w-sm space-y-1.5 text-xs font-sans text-gray-900 px-2"
                                 >
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Card Number:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Card Number</span>
                                     <input
                                       type="text"
                                       readOnly
@@ -2637,7 +2690,7 @@ function SimulatorContent() {
                                     />
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Card Holder:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Card Holder</span>
                                     <input
                                       type="text"
                                       value={bankCardHolder}
@@ -2646,7 +2699,7 @@ function SimulatorContent() {
                                     />
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Card Terminal/Hypercom:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Card Terminal/Hypercom</span>
                                     <select
                                       value={bankCardTerminal}
                                       onChange={(e) => setBankCardTerminal(e.target.value)}
@@ -2660,7 +2713,7 @@ function SimulatorContent() {
                                     </select>
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Valid Until:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Valid Until</span>
                                     <input
                                       type="text"
                                       value={bankCardValidUntil}
@@ -2670,7 +2723,7 @@ function SimulatorContent() {
                                     />
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Credit Amount:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Credit Amount</span>
                                     <input
                                       type="text"
                                       readOnly
@@ -2679,20 +2732,34 @@ function SimulatorContent() {
                                     />
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Authorization Code:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Authorization Code</span>
                                     <input
                                       type="text"
                                       value={bankCardAuthCode}
-                                      onChange={(e) => setBankCardAuthCode(e.target.value)}
+                                      maxLength={6}
+                                      onChange={(e) =>
+                                        setBankCardAuthCode(
+                                          e.target.value
+                                            .toUpperCase()
+                                            .replace(/[^A-Z0-9]/g, "")
+                                            .slice(0, 6)
+                                        )
+                                      }
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                                     />
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
-                                    <span className="col-span-2 font-bold text-gray-800">Sales Slip No.:</span>
+                                    <span className="col-span-2 font-bold text-gray-800">Sales Slip No.</span>
                                     <input
                                       type="text"
                                       value={bankCardSlipNo}
-                                      onChange={(e) => setBankCardSlipNo(e.target.value)}
+                                      inputMode="numeric"
+                                      maxLength={6}
+                                      onChange={(e) =>
+                                        setBankCardSlipNo(
+                                          e.target.value.replace(/\D/g, "").slice(0, 6)
+                                        )
+                                      }
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                                     />
                                   </div>
@@ -3309,6 +3376,64 @@ function SimulatorContent() {
           </>
         )}
         </div>
+        {selectedTenderMethod === "BANK_CARD" &&
+         selectedBankCardType === "CREDIT CARD" &&
+         bankCardStep !== "SELECT_TYPE" && (
+           <aside
+             aria-label="External card terminal receipt preview"
+             className="w-full max-w-[240px] self-center rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl"
+           >
+             <div className="mb-2 text-center font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
+               Card Terminal
+             </div>
+             <div className="mx-auto min-h-[380px] w-full max-w-[190px] bg-[#fffef8] px-3 py-5 font-mono text-[9px] leading-tight text-gray-900 shadow-md">
+               <header className="mb-4 text-center">
+                 <div className="mb-2 text-3xl font-black tracking-tight">BDO</div>
+                 <div>NATIONAL BOOK STORE</div>
+                 <div>OWNED &amp; OPERATED BY:</div>
+                 <div>ABACUS BOOK &amp; CARD CORPORATION</div>
+                 <div>QUAD ALPHA CENTRUM 125 PIONEER ST.</div>
+                 <div>HIGHWAY HILLS 1550 MANDALUYONG CITY</div>
+                 <div>VAT Registered TIN: 000-299-299-00000</div>
+                 <div>MIN : 140355124</div>
+                 <div>TERMINAL: 00000000</div>
+               </header>
+
+               <div className="space-y-1">
+                 <div className="text-center text-[12px] font-bold tracking-widest"> INVOICE: {receiptInvoiceNumber} </div>
+                 <div className="flex justify-between gap-2">
+                   <span>{new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
+                   <span>{cardReceiptGeneratedAt?.toLocaleTimeString("en-US", { hour12: false }) ?? "--:--:--"}</span>
+                 </div>
+               </div>
+
+               <div className="my-3 border-t border-dashed border-gray-500" />
+               <div className="text-center font-bold tracking-widest">CARD SALE</div>
+               <div className="mt-2 space-y-1">
+                 <div>CARD: ************</div>
+                 <div>CARD TYPE: CREDIT</div>
+                 <div className="font-bold text-[12px]">
+                   APPROVAL CODE: {receiptAuthCode}
+                 </div>
+               </div>
+
+               <div className="my-3 border-t border-dashed border-gray-500" />
+               <div className="flex justify-between gap-2 text-[12px] font-bold">
+                 <span>AMOUNT:</span>
+                 <span>PHP {totals.totalAmount.toLocaleString("en-US", {
+                   minimumFractionDigits: 2,
+                   maximumFractionDigits: 2,
+                 })}</span>
+               </div>
+
+               <footer className="mt-5 space-y-1 text-center">
+                 <div>PLEASE KEEP THIS COPY</div>
+                 <div className="mt-3 font-bold">*** CUSTOMER COPY ***</div>
+                 <div className="mt-3 text-[8px]">THANK YOU</div>
+               </footer>
+             </div>
+           </aside>
+         )}
       </div>
 
       {/* LOGOUT CONFIRMATION MODAL */}
