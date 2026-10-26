@@ -41,7 +41,7 @@ export function JournalViewerModal({
           </div>
 
           {/* Filter Bar */}
-          <div className="bg-[#B0B8C0] px-4 py-2 border-b border-gray-400 flex items-center justify-between text-xs font-sans">
+          <div className="bg-[#D4D0C8] px-4 py-2 border-b border-gray-400 flex items-center justify-between text-xs font-sans">
             <div className="flex items-center space-x-2">
               <span className="font-bold text-gray-800">Filter OR:</span>
               <input

@@ -168,10 +168,10 @@ export default function HomePage() {
             <div className="lg:col-span-6 flex justify-center">
               <div
                 onClick={handleLaunchClick}
-                className="w-full max-w-[560px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden hover:ring-4 hover:ring-[#E4002B]/40 transition-all cursor-pointer group"
+                className="w-full max-w-[560px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden hover:ring-4 hover:ring-[#E4002B]/40 transition-all cursor-pointer group"
               >
                 {/* 1. Header Bar */}
-                <div className="bg-[#B0B8C0] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight select-none">
+                <div className="bg-[#D4D0C8] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight select-none">
                   <div>Trx.: <span className="font-normal font-mono">0212202629990003000592</span></div>
                   <div>Clerk: <span className="font-normal">Jan Angela</span></div>
                   <div>Str No.: <span className="font-normal">2999</span></div>
@@ -310,7 +310,7 @@ export default function HomePage() {
                 </div>
 
                 {/* 3. Bottom Footer Bar */}
-                <div className="bg-[#B0B8C0] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch select-none">
+                <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch select-none">
                   <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between">
                     <span className="font-bold text-gray-900 text-[10px]">Total Qty</span>
                     <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">

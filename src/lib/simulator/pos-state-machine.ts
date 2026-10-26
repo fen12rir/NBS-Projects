@@ -43,17 +43,21 @@ export interface POSTransactionState {
   };
 }
 
-export function createInitialPOSState(cashierName: string = "Maria Santos (Trainee)"): POSTransactionState {
+export function createInitialPOSState(
+  cashierName: string = "Jan Angela",
+  terminalId: string = "0004",
+  branchCode: string = "2999"
+): POSTransactionState {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
-  const randomTrx = "TRX-" + Math.floor(100000 + Math.random() * 900000);
+  const randomTrx = "102320262999000400" + Math.floor(1000 + Math.random() * 9000);
 
   return {
     currentPage: "MAIN",
     transactionNumber: randomTrx,
-    terminalId: "TERM-02",
-    branchCode: "BR-014",
+    terminalId,
+    branchCode,
     cashierName,
     dateStr,
     timeStr,
@@ -131,7 +135,7 @@ export type POSAction =
   | { type: "CHANGE_ITEM_PRICE"; itemId: string; newPrice: number; reason: string }
   | { type: "ADD_NON_MDSE_ITEM"; description: string; amount: number; referenceNo: string }
   | { type: "POST_VOID_TRANSACTION"; orNumber: string; reason: string }
-  | { type: "APPLY_BEST_BUY"; promoName: string; promoSku: string; promoPrice: number }
+  | { type: "APPLY_BEST_BUY"; promoName: string; promoSku: string; promoPrice: number; quantity?: number }
   | { type: "RESET_TRANSACTION" };
 
 export function posReducer(state: POSTransactionState, action: POSAction): POSTransactionState {
@@ -587,13 +591,14 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
     }
 
     case "APPLY_BEST_BUY": {
+      const qty = action.quantity || 1;
       const bestBuyItem: POSLineItem = {
         id: `BB-${Date.now()}`,
         sku: action.promoSku,
-        description: `BEST BUY: ${action.promoName}`,
-        quantity: 1,
+        description: action.promoName,
+        quantity: qty,
         unitPrice: action.promoPrice,
-        total: action.promoPrice,
+        total: action.promoPrice * qty,
         isVoided: false,
       };
       return {
@@ -601,13 +606,13 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         lineItems: [...state.lineItems, bestBuyItem],
         lastMessage: {
           type: "success",
-          text: `Best Buy promo applied: ${action.promoName} (${action.promoPrice.toFixed(2)} PHP).`,
+          text: `Added ${action.promoName} (${(action.promoPrice * qty).toFixed(2)} PHP).`,
         },
       };
     }
 
     case "RESET_TRANSACTION":
-      return createInitialPOSState(state.cashierName);
+      return createInitialPOSState(state.cashierName, state.terminalId, state.branchCode);
 
     default:
       return state;

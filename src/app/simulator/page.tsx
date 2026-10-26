@@ -24,7 +24,8 @@ import { PriceChangeModal } from "@/components/simulator/price-change-modal";
 import { NonMdseModal } from "@/components/simulator/non-mdse-modal";
 import { JournalViewerModal } from "@/components/simulator/journal-viewer-modal";
 import { NonSalesModal } from "@/components/simulator/non-sales-modal";
-import { BestBuyModal } from "@/components/simulator/best-buy-modal";
+import { BonusBuyScreen } from "@/components/simulator/bonus-buy-screen";
+import { ChooseOptionScreen } from "@/components/simulator/choose-option-screen";
 import { 
   posReducer, 
   createInitialPOSState, 
@@ -46,6 +47,31 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles } from "lucide-react";
 
 export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
+
+const CARD_TYPES = [
+  "-SELECT-",
+  "CREDIT CARD",
+  "SODEXHO",
+  "SWEEP",
+  "DEPOSIT",
+  "TAX WITHHELD",
+  "Art Bar Shopee",
+  "ATOME",
+  "BILLEASE",
+  "BPI QRPH",
+  "Globe Rewards",
+  "GCASH",
+  "LNQR E-GC",
+  "LNQR Sulit Coins",
+];
+
+const TERMINAL_OPTIONS = [
+  "-SELECT-",
+  "BDO POS",
+  "MAYA POS",
+  "TERMINAL 1",
+  "TERMINAL 2",
+];
 
 function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
   if (!scenario) return "ACTIVE_REGISTER";
@@ -117,8 +143,10 @@ function SimulatorContent() {
   // Authentic Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
   const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
-  const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("3000");
+  const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("");
   const [isLnqrTenderProcessed, setIsLnqrTenderProcessed] = useState(false);
+  const [isFinalTenderStep, setIsFinalTenderStep] = useState(false);
+  const tenderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isLnqrUpdatedModalOpen, setIsLnqrUpdatedModalOpen] = useState(false);
 
   // Authentic Functional Modals (Modules 4-8)
@@ -128,6 +156,18 @@ function SimulatorContent() {
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
   const [isRefundSkuMode, setIsRefundSkuMode] = useState(false);
+  const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
+  const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
+
+  // Authentic Bank Card In-Screen 4-Step Flow
+  const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
+  const [selectedBankCardType, setSelectedBankCardType] = useState("-SELECT-");
+  const [bankCardSwipeNum, setBankCardSwipeNum] = useState("");
+  const [bankCardHolder, setBankCardHolder] = useState("X");
+  const [bankCardTerminal, setBankCardTerminal] = useState("BDO POS");
+  const [bankCardValidUntil, setBankCardValidUntil] = useState("2028-12-31");
+  const [bankCardAuthCode, setBankCardAuthCode] = useState("000000");
+  const [bankCardSlipNo, setBankCardSlipNo] = useState("000000");
 
   // In-Screen Payment Details (Module 8)
   const [cardSubtype, setCardSubtype] = useState<"CREDIT_CARD" | "GCASH" | "NBS_GIFTCARD" | "SULIT_COINS">("CREDIT_CARD");
@@ -169,7 +209,6 @@ function SimulatorContent() {
   const [isNonMdseOpen, setIsNonMdseOpen] = useState(false);
   const [journalModalMode, setJournalModalMode] = useState<"TRX_JOURNAL" | "SALES_JOURNAL" | null>(null);
   const [isNonSalesOpen, setIsNonSalesOpen] = useState(false);
-  const [isBestBuyOpen, setIsBestBuyOpen] = useState(false);
 
   const [state, dispatch] = useReducer(
     posReducer,
@@ -181,6 +220,8 @@ function SimulatorContent() {
 
   const [qtyInput, setQtyInput] = useState("");
   const qtyInputRef = useRef<HTMLInputElement>(null);
+  const paymentOkBtnRef = useRef<HTMLButtonElement>(null);
+  const cashTenderInputRef = useRef<HTMLInputElement>(null);
 
   const [cashTenderInput, setCashTenderInput] = useState("500");
   const [overridePass, setOverridePass] = useState("");
@@ -273,20 +314,7 @@ function SimulatorContent() {
       dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
     }
 
-    // Pre-fill tender amount for upcoming scenario steps if available
-    const upcomingTenderStep = activeScenario?.steps.slice(currentStepIndex).find(
-      (s) => (s.expectedAction === "CONFIRM_TENDER" || s.expectedAction === "SUBMIT_CASH_TENDER") && s.expectedData
-    );
-    const currentTotals = calculateTotals(
-      state.lineItems,
-      state.appliedDiscount?.percent || 0,
-      state.isZeroRated
-    );
-    if (upcomingTenderStep?.expectedData) {
-      setLnqrCashTenderInput(String(upcomingTenderStep.expectedData));
-    } else if (currentTotals.totalAmount > 0) {
-      setLnqrCashTenderInput(String(Math.ceil(currentTotals.totalAmount)));
-    }
+    setLnqrCashTenderInput("");
 
     if (optionNum === 1) {
       // 1. None: Directly navigate to Payment screen
@@ -307,7 +335,6 @@ function SimulatorContent() {
       setIsLoyaltyOptionOpen(false);
       setIsLnqrScanScreenOpen(true);
       setSelectedLnqrButton(null);
-      setLnqrCashTenderInput("3000");
       validateScenarioStep("CHOOSE_LNQR_OPTION", 3);
     }
   };
@@ -339,42 +366,151 @@ function SimulatorContent() {
 
   const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const tenderVal = parseFloat(lnqrCashTenderInput);
+    if (isNaN(tenderVal) || tenderVal <= 0) {
+      return;
+    }
+    if (tenderVal < totals.totalAmount) {
+      alert(`Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${totals.totalAmount.toFixed(2)})!`);
+      return;
+    }
     setIsLnqrTenderProcessed(true);
-    const tenderVal = parseFloat(lnqrCashTenderInput) || 3000;
+    setIsFinalTenderStep(false);
     dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
     validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
     validateScenarioStep("CONFIRM_TENDER", tenderVal);
-    if (loyaltyType === "LNQR") {
-      setTimeout(() => {
-        setIsLnqrUpdatedModalOpen(true);
-      }, 1500);
+
+    if (tenderTimerRef.current) {
+      clearTimeout(tenderTimerRef.current);
     }
+
+    // Show "Dont press any key.. Please wait..." then transition to final tear-off / close register screen
+    tenderTimerRef.current = setTimeout(() => {
+      setIsFinalTenderStep(true);
+    }, 7000);
   };
 
   const handleConfirmLnqrUpdated = () => {
+    if (tenderTimerRef.current) {
+      clearTimeout(tenderTimerRef.current);
+      tenderTimerRef.current = null;
+    }
     setIsLnqrUpdatedModalOpen(false);
     setIsLnqrCashPaymentOpen(false);
     setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
     setIsLnqrScanScreenOpen(false);
     setIsLncCardScreenOpen(false);
     setIsLoyaltyOptionOpen(false);
+    setHasBonusBuyBeenPrompted(false);
+    setLoyaltyType("NONE");
+    setSelectedTenderMethod("CASH");
+    setBankCardStep("SELECT_TYPE");
+    setBankCardSwipeNum("");
     dispatch({ type: "RESET_TRANSACTION" });
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
+  const handleConfirmBankCardPayment = () => {
+    dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
+    dispatch({ type: "SELECT_PAYMENT_METHOD", method: "BANK_CARD" });
+    validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
+    setBankCardStep("FINAL_TEAROFF");
+    setIsFinalTenderStep(true);
+  };
+
   const handlePaymentOkClick = () => {
+    if (selectedTenderMethod === "BANK_CARD") {
+      if (bankCardStep === "SELECT_TYPE") {
+        if (selectedBankCardType === "-SELECT-") {
+          setSelectedBankCardType("CREDIT CARD");
+        }
+        setBankCardStep("SWIPE_CARD");
+        return;
+      }
+      if (bankCardStep === "SWIPE_CARD") {
+        setBankCardStep("DETAILS");
+        return;
+      }
+      if (bankCardStep === "DETAILS") {
+        handleConfirmBankCardPayment();
+        return;
+      }
+      if (bankCardStep === "FINAL_TEAROFF" || isFinalTenderStep) {
+        if (tenderTimerRef.current) {
+          clearTimeout(tenderTimerRef.current);
+          tenderTimerRef.current = null;
+        }
+        dispatch({ type: "CLOSE_PAYMENT" });
+        dispatch({ type: "RESET_TRANSACTION" });
+        setIsLnqrCashPaymentOpen(false);
+        setIsLnqrTenderProcessed(false);
+        setIsFinalTenderStep(false);
+        setLnqrCashTenderInput("");
+        setIsLnqrScanScreenOpen(false);
+        setIsLncCardScreenOpen(false);
+        setIsLoyaltyOptionOpen(false);
+        setIsLnqrUpdatedModalOpen(false);
+        setHasBonusBuyBeenPrompted(false);
+        setLoyaltyType("NONE");
+        setSelectedTenderMethod("CASH");
+        setBankCardStep("SELECT_TYPE");
+        setBankCardSwipeNum("");
+        setBankCardHolder("X");
+        setBankCardTerminal("BDO POS");
+        setBankCardValidUntil("2028-12-31");
+        setBankCardAuthCode("000000");
+        setBankCardSlipNo("000000");
+        validateScenarioStep("CONFIRM_LNQR_UPDATED");
+        return;
+      }
+    }
+
     if (!isLnqrTenderProcessed) {
       handleConfirmLnqrCashTender();
       return;
     }
-    if (loyaltyType === "LNQR") {
-      setIsLnqrUpdatedModalOpen(true);
-    } else {
-      dispatch({ type: "CLOSE_PAYMENT" });
-      setIsLnqrCashPaymentOpen(false);
-      setIsLnqrTenderProcessed(false);
+    if (!isFinalTenderStep) {
+      setIsFinalTenderStep(true);
+      return;
     }
+    if (tenderTimerRef.current) {
+      clearTimeout(tenderTimerRef.current);
+      tenderTimerRef.current = null;
+    }
+    dispatch({ type: "CLOSE_PAYMENT" });
+    dispatch({ type: "RESET_TRANSACTION" });
+    setIsLnqrCashPaymentOpen(false);
+    setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
+    setLnqrCashTenderInput("");
+    setIsLnqrScanScreenOpen(false);
+    setIsLncCardScreenOpen(false);
+    setIsLoyaltyOptionOpen(false);
+    setIsLnqrUpdatedModalOpen(false);
+    setHasBonusBuyBeenPrompted(false);
+    setLoyaltyType("NONE");
+    setSelectedTenderMethod("CASH");
+    setBankCardStep("SELECT_TYPE");
+    setBankCardSwipeNum("");
+    validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
+
+  useEffect(() => {
+    if (isFinalTenderStep) {
+      paymentOkBtnRef.current?.focus();
+    }
+  }, [isFinalTenderStep, bankCardStep]);
+
+  useEffect(() => {
+    if (
+      (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) &&
+      !isLnqrTenderProcessed &&
+      selectedTenderMethod === "CASH"
+    ) {
+      cashTenderInputRef.current?.focus();
+    }
+  }, [state.currentPage, isLnqrCashPaymentOpen, isLnqrTenderProcessed, selectedTenderMethod]);
 
   useEffect(() => {
     if (
@@ -404,7 +540,7 @@ function SimulatorContent() {
       !isNonMdseOpen &&
       journalModalMode === null &&
       !isNonSalesOpen &&
-      !isBestBuyOpen
+      !isBonusBuyOpen
     ) {
       barcodeRef.current?.focus();
     }
@@ -435,7 +571,7 @@ function SimulatorContent() {
     isNonMdseOpen,
     journalModalMode,
     isNonSalesOpen,
-    isBestBuyOpen,
+    isBonusBuyOpen,
   ]);
 
   useEffect(() => {
@@ -538,7 +674,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4c-1. LNC Card Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
+      // 4c-1. LNC Card Input Screen 
       if (isLncCardScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -561,7 +697,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4c-2. LNQR Scan Input Screen (Tab to toggle Ok/Cancel, Enter to confirm, Escape)
+      // 4c-2. LNQR Scan Input Screen 
       if (isLnqrScanScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -595,24 +731,64 @@ function SimulatorContent() {
 
       // 4e. Authentic Payment Screen Keybinds
       if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
-        if (e.key === "Escape" || e.key === "F1") {
+        if (isLnqrTenderProcessed || isFinalTenderStep) {
+          if (!isFinalTenderStep) {
+            // Block all keys during "Dont press any key.. Please wait..."
+            e.preventDefault();
+            return;
+          }
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handlePaymentOkClick();
+          }
+          return;
+        }
+        if (e.key === "Escape") {
           e.preventDefault();
+          if (selectedTenderMethod === "BANK_CARD") {
+            setSelectedTenderMethod("CASH");
+            setBankCardStep("SELECT_TYPE");
+            return;
+          }
+          if (tenderTimerRef.current) {
+            clearTimeout(tenderTimerRef.current);
+            tenderTimerRef.current = null;
+          }
           dispatch({ type: "CLOSE_PAYMENT" });
           setIsLnqrCashPaymentOpen(false);
           setIsLnqrTenderProcessed(false);
+          setIsFinalTenderStep(false);
+          setSelectedTenderMethod("CASH");
+          setBankCardStep("SELECT_TYPE");
+          return;
+        }
+        if (e.key === "F1") {
+          e.preventDefault();
+          if (tenderTimerRef.current) {
+            clearTimeout(tenderTimerRef.current);
+            tenderTimerRef.current = null;
+          }
+          dispatch({ type: "CLOSE_PAYMENT" });
+          setIsLnqrCashPaymentOpen(false);
+          setIsLnqrTenderProcessed(false);
+          setIsFinalTenderStep(false);
+          setSelectedTenderMethod("CASH");
+          setBankCardStep("SELECT_TYPE");
           return;
         }
         if (e.key === "F2") {
           e.preventDefault();
+          if (isLnqrTenderProcessed || isFinalTenderStep) return;
           setSelectedTenderMethod("CASH");
+          setBankCardStep("SELECT_TYPE");
           validateScenarioStep("PAY_CASH");
           return;
         }
         if (e.key === "F3") {
           e.preventDefault();
+          if (isLnqrTenderProcessed || isFinalTenderStep) return;
           setSelectedTenderMethod("BANK_CARD");
-          setElectronicPaymentType("Credit Card");
-          setIsElectronicPaymentOpen(true);
+          setBankCardStep("SELECT_TYPE");
           validateScenarioStep("PAY_CARD");
           return;
         }
@@ -681,11 +857,6 @@ function SimulatorContent() {
           setIsNonSalesOpen(false);
           return;
         }
-        if (isBestBuyOpen) {
-          e.preventDefault();
-          setIsBestBuyOpen(false);
-          return;
-        }
       }
 
       // 5. In ACTIVE_REGISTER mode: handle physical F-keys
@@ -723,7 +894,7 @@ function SimulatorContent() {
       isNonMdseOpen ||
       journalModalMode !== null ||
       isNonSalesOpen ||
-      isBestBuyOpen
+      isBonusBuyOpen
     ) {
       return;
     }
@@ -903,8 +1074,16 @@ function SimulatorContent() {
         validateScenarioStep("SET_QTY_MODE");
         break;
       case "GO_PAYMENT": {
-        setIsLoyaltyOptionOpen(true);
-        setSelectedLoyaltyOption(null);
+        if (state.lineItems.length === 0) {
+          return;
+        }
+        if (!hasBonusBuyBeenPrompted) {
+          setIsBonusBuyOpen(true);
+          setHasBonusBuyBeenPrompted(true);
+        } else {
+          setIsLoyaltyOptionOpen(true);
+          setSelectedLoyaltyOption(null);
+        }
         validateScenarioStep("GO_PAYMENT");
         break;
       }
@@ -940,7 +1119,7 @@ function SimulatorContent() {
         break;
       case "PAY_CARD":
         setSelectedTenderMethod("BANK_CARD");
-        setElectronicPaymentType("Credit Card");
+        setBankCardStep("SELECT_TYPE");
         validateScenarioStep("PAY_CARD");
         break;
       case "PAY_GC":
@@ -1019,9 +1198,10 @@ function SimulatorContent() {
         setJournalModalMode("SALES_JOURNAL");
         validateScenarioStep("SALES_JOURNAL");
         break;
+      case "BONUS_BUY":
       case "BEST_BUY":
-        setIsBestBuyOpen(true);
-        validateScenarioStep("BEST_BUY");
+        setIsBonusBuyOpen(true);
+        validateScenarioStep("BONUS_BUY");
         break;
       case "NON_SALES":
         setIsNonSalesOpen(true);
@@ -1130,6 +1310,10 @@ function SimulatorContent() {
   };
 
   const handleResetExam = () => {
+    if (tenderTimerRef.current) {
+      clearTimeout(tenderTimerRef.current);
+      tenderTimerRef.current = null;
+    }
     dispatch({ type: "RESET_TRANSACTION" });
     setCurrentStepIndex(0);
     setMistakes([]);
@@ -1147,8 +1331,9 @@ function SimulatorContent() {
     setCustomerQrInput("20221003LN000004");
     setSelectedLnqrButton(null);
     setIsLnqrCashPaymentOpen(false);
-    setLnqrCashTenderInput("3000");
+    setLnqrCashTenderInput("");
     setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
     setIsLnqrUpdatedModalOpen(false);
     setLoyaltyType("NONE");
     setSelectedTenderMethod("CASH");
@@ -1166,14 +1351,25 @@ function SimulatorContent() {
     setIsNonMdseOpen(false);
     setJournalModalMode(null);
     setIsNonSalesOpen(false);
-    setIsBestBuyOpen(false);
+    setIsBonusBuyOpen(false);
+    setHasBonusBuyBeenPrompted(false);
     setScenarioStartTime(Date.now());
     setTerminalMode(getInitialTerminalMode(activeScenario));
   };
 
   const handleResetTerminal = () => {
+    if (tenderTimerRef.current) {
+      clearTimeout(tenderTimerRef.current);
+      tenderTimerRef.current = null;
+    }
     dispatch({ type: "RESET_TRANSACTION" });
     setBarcodeInput("");
+    setIsLnqrCashPaymentOpen(false);
+    setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
+    setLnqrCashTenderInput("");
+    setIsBonusBuyOpen(false);
+    setHasBonusBuyBeenPrompted(false);
   };
 
   const handleFillBarcode = (code: string) => {
@@ -1301,13 +1497,13 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER */}
-      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center">
-        <div className="w-full max-w-[1080px] bg-[#B0B8C0] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden">
+      {/* EXACT POS TERMINAL CONTAINER (Adjusted base size so footer is never cutoff across any screen) */}
+      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center overflow-y-auto min-h-0">
+        <div className="w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
           
           {/* SCREEN 1: START OF DAY VERIFY */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
-            <div className="flex-1 bg-white min-h-[530px] flex flex-col items-center justify-center p-6 select-none relative">
+            <div className="flex-1 h-full min-h-0 bg-white flex flex-col items-center justify-center p-6 select-none relative">
               <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-5">
                 <div className="space-y-1">
                   <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight">
@@ -1358,7 +1554,7 @@ function SimulatorContent() {
 
           {/* SCREEN 2: START OF DAY CLOSE */}
           {terminalMode === "START_OF_DAY_CLOSE" && (
-            <div className="flex-1 bg-white min-h-[530px] flex flex-col items-center justify-center p-6 select-none relative">
+            <div className="flex-1 h-full min-h-0 bg-white flex flex-col items-center justify-center p-6 select-none relative">
               <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-6">
                 <div className="space-y-2 text-[#E4002B] font-bold text-xl font-sans">
                   <p>You can now start using your POS terminal.</p>
@@ -1383,7 +1579,7 @@ function SimulatorContent() {
 
           {/* SCREEN 2B: POS RELOADER */}
           {terminalMode === "POS_RELOADER" && (
-            <div className="flex-1 bg-white min-h-[530px] flex flex-col select-none relative font-sans">
+            <div className="flex-1 h-full min-h-0 bg-white flex flex-col select-none relative font-sans">
               {/* Retro Browser Menu Bar */}
               <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1 flex items-center space-x-4 text-xs text-gray-800 font-sans">
                 <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">File</span>
@@ -1466,7 +1662,7 @@ function SimulatorContent() {
 
           {/* SCREEN 3: USER LOGIN */}
           {terminalMode === "USER_LOGIN" && (
-            <div className="flex-1 bg-white min-h-[530px] flex flex-col select-none relative">
+            <div className="flex-1 h-full min-h-0 bg-white flex flex-col select-none relative">
               <div className="h-6 bg-[#FFF275] border-b border-gray-300" />
 
               <div className="flex-1 bg-[#ECE9D8] flex flex-col items-center justify-center p-6">
@@ -1549,6 +1745,10 @@ function SimulatorContent() {
             <>
               {state.currentPage === "LOOKUP" ? (
                 <F2LookupScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber || "1023202629990004001558"}
                   onCancel={() => {
                     dispatch({ type: "CLOSE_LOOKUP" });
                     validateScenarioStep("CLOSE_LOOKUP");
@@ -1613,16 +1813,61 @@ function SimulatorContent() {
                   branchCode={state.branchCode}
                   onClose={() => setReadingsType(null)}
                 />
+              ) : isBonusBuyOpen ? (
+                <BonusBuyScreen
+                  transactionTotal={totals.subtotal}
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber || "1023202629990004001559"}
+                  onConfirm={(promo) => {
+                    if (promo) {
+                      dispatch({
+                        type: "APPLY_BEST_BUY",
+                        promoName: promo.promoItem,
+                        promoSku: promo.promoCode,
+                        promoPrice: promo.eventPrice,
+                        quantity: promo.quantity,
+                      });
+                    }
+                    setIsBonusBuyOpen(false);
+                  }}
+                  onCancel={() => {
+                    setIsBonusBuyOpen(false);
+                  }}
+                />
+              ) : isLoyaltyOptionOpen ? (
+                <ChooseOptionScreen
+                  trxNumber={state.transactionNumber || "1023202629990004001560"}
+                  clerkName={state.cashierName}
+                  branchCode={state.branchCode}
+                  terminalId={state.terminalId}
+                  onSelectOption={(optionNum) => {
+                    handleSelectLoyalty(optionNum);
+                  }}
+                  onCancel={() => {
+                    setIsLoyaltyOptionOpen(false);
+                  }}
+                />
               ) : isLnqrScanScreenOpen ? (
-                /* LNQR SCAN SCREEN (Matches screenshot: No blue header, yellow title bar, scan input, green bottom bar) */
-                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
+                /* LNQR SCAN SCREEN (Matches screenshot: Top header, yellow title bar, scan input, green bottom bar) */
+                <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state.terminalId || "0004"}</span>
+                    <span className="font-bold">{fmtDate(now)}</span>
+                  </div>
+
                   {/* Yellow Banner */}
-                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase">
+                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase flex-shrink-0">
                     LNQR / LNQR PLUS
                   </div>
 
                   {/* Center QR Input Area */}
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white">
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white min-h-0 overflow-y-auto">
                     <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm font-sans font-bold text-gray-800">
                       <span>Scan Customer QR</span>
                       <span className="hidden sm:inline font-bold">:</span>
@@ -1641,7 +1886,7 @@ function SimulatorContent() {
                   </div>
 
                   {/* Bottom Green Taskbar with Ok & Cancel Buttons */}
-                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700">
+                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700 flex-shrink-0">
                     <button
                       type="button"
                       onClick={handleConfirmLnqr}
@@ -1668,14 +1913,23 @@ function SimulatorContent() {
                 </div>
               ) : isLncCardScreenOpen ? (
                 /* LAKING NATIONAL CARD SCREEN (Option 2 Intermediate Screen) */
-                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
+                <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state.terminalId || "0004"}</span>
+                    <span className="font-bold">{fmtDate(now)}</span>
+                  </div>
+
                   {/* Yellow Banner */}
-                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase">
+                  <div className="bg-[#FFF275] border-b border-gray-400 py-2 text-center font-bold text-sm text-gray-900 tracking-wide uppercase flex-shrink-0">
                     Laking National Card
                   </div>
 
                   {/* Center Card Input Area */}
-                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white">
+                  <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-4 bg-white min-h-0 overflow-y-auto">
                     <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-4 text-sm font-sans font-bold text-gray-800">
                       <span>Enter / Swipe Card No.</span>
                       <span className="hidden sm:inline font-bold">:</span>
@@ -1694,7 +1948,7 @@ function SimulatorContent() {
                   </div>
 
                   {/* Bottom Green Taskbar with Ok & Cancel Buttons */}
-                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700">
+                  <div className="bg-[#228B22] px-4 py-2 flex items-center justify-center space-x-4 border-t border-green-700 flex-shrink-0">
                     <button
                       type="button"
                       onClick={handleConfirmLnc}
@@ -1721,530 +1975,657 @@ function SimulatorContent() {
                 </div>
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
                 /* AUTHENTIC FULL PAYMENT SCREEN (Matches user screenshot) */
-                <div className="flex-1 flex flex-col min-h-[500px] bg-white font-sans select-none">
-                  {/* Top Yellow Bar */}
-                  <div className="bg-[#FFF275] border-b border-gray-400 h-6" />
+                <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state.terminalId || "0004"}</span>
+                    <span className="font-bold">{fmtDate(now)}</span>
+                  </div>
 
-                  <div className="flex-1 grid grid-cols-12 bg-white">
+                  {/* Top Yellow Bar across columns 1-10 */}
+                  <div className="grid grid-cols-12 h-6 border-b border-gray-400 flex-shrink-0">
+                    <div className="col-span-10 bg-[#FFF275]" />
+                    <div className="col-span-2 bg-[#9AA5B1]" />
+                  </div>
+
+                  <div className="flex-1 grid grid-cols-12 bg-white min-h-0 overflow-hidden">
                     {/* Left Panel: Electronic Journal */}
-                    <div className="col-span-5 border-r-2 border-gray-400 flex flex-col bg-[#F3F4F6] text-[11px] font-mono p-3 overflow-y-auto">
-                      <div className="bg-[#B0B8C0] text-center font-bold font-sans py-0.5 border border-gray-400 text-xs mb-2">
+                    <div className="col-span-5 border-r-2 border-gray-400 flex flex-col bg-[#F3F4F6] text-[11px] font-mono p-2 overflow-hidden min-h-0">
+                      <div className="bg-[#D4D0C8] text-center font-bold font-sans py-1 border border-gray-400 text-xs mb-1.5 flex-shrink-0 shadow-sm">
                         Electronic Journal
                       </div>
-                      <div className="bg-white border border-gray-400 p-2 text-gray-800 leading-tight space-y-1 shadow-inner flex-1">
-                        <div className="text-center font-bold text-[10px]">
-                          ABACUS BOOK AND CARD CORP.<br />
-                          NATIONAL BOOK STORE<br />
-                          GROUND FLOOR QUAD ALPHA CENTRUM<br />
-                          125 PIONEER ST. MANDALUYONG CITY<br />
-                          VAT Registered TIN: 000-325-972-054
-                        </div>
-                        <div className="border-t border-dashed border-gray-400 my-1" />
-                        <div>TrxNo : 0511202629990005002807</div>
-                        <div>Clerk : 02122026 &nbsp;&nbsp;&nbsp;&nbsp; Term. No.: 0005</div>
-                        <div className="border-t border-dashed border-gray-400 my-1" />
-                        {state.lineItems.length > 0 ? (
-                          state.lineItems.map((item, idx) => (
-                            <div key={item.id} className="flex justify-between">
-                              <span>{idx + 1}&nbsp; {item.description}</span>
-                              <span>{formatCurrency(item.total)}</span>
+                      {(() => {
+                        const totalSales = totals.totalAmount;
+                        const vatable = state.isZeroRated ? 0 : totalSales / 1.12;
+                        const vatAmount = state.isZeroRated ? 0 : totalSales - vatable;
+                        const tenderVal = isLnqrTenderProcessed && parseFloat(lnqrCashTenderInput) ? parseFloat(lnqrCashTenderInput) : 0;
+                        const changeVal = Math.max(0, tenderVal - totalSales);
+
+                        return (
+                          <div className="bg-white border border-gray-400 p-2 text-gray-900 leading-tight space-y-1 shadow-inner flex-1 overflow-y-auto font-mono text-[10px] min-h-0">
+                            <div className="text-center font-bold uppercase leading-tight space-y-0.5">
+                              <div>NATIONAL BOOK STORE</div>
+                              <div>OWNED &amp; OPERATED BY:</div>
+                              <div>ABACUS BOOK &amp; CARD CORPORATION</div>
+                              <div>QUAD ALPHA CENTRUM 125 PIONEER ST.</div>
+                              <div>HIGHWAY HILLS 1550 MANDALUYONG CITY</div>
+                              <div>VAT Registered TIN: 000-299-299-00000</div>
+                              <div>MIN : 140355124</div>
+                              <div>Serial No. : AT14-AP0164</div>
+                              <div>ACCREDTN : </div>
                             </div>
-                          ))
-                        ) : (
-                          <div className="flex justify-between">
-                            <span>1&nbsp; PHO PRKR RBALL POINT</span>
-                            <span>2,990.00</span>
+
+                            <div className="flex justify-between pt-1">
+                              <span>{new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
+                              <span>{now.toLocaleTimeString("en-US", { hour12: false })}</span>
+                            </div>
+                            <div>
+                              <div>TrxNo &nbsp; &nbsp; &nbsp;: {state.transactionNumber}</div>
+                              <div className="flex justify-between">
+                                <span>Clerk &nbsp; &nbsp; &nbsp;: 241209</span>
+                                <span>Term. No.: 0004</span>
+                              </div>
+                            </div>
+
+                            <div className="border-t border-dashed border-gray-400 my-1" />
+
+                            {/* Items list */}
+                            {state.lineItems.length > 0 ? (
+                              state.lineItems.map((item, idx) => (
+                                <div key={item.id} className="leading-tight mb-1">
+                                  <div className="flex justify-between">
+                                    <span>{idx + 1}&nbsp; &nbsp;{item.sku} @ {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    <span>{item.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.total > 0 ? "V" : ""}</span>
+                                  </div>
+                                  <div className="pl-6 text-[9px] text-gray-800">{item.description}</div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="leading-tight mb-1">
+                                <div className="flex justify-between">
+                                  <span>1&nbsp; &nbsp;505 @ 2,990.00</span>
+                                  <span>2,990.00 V</span>
+                                </div>
+                                <div className="pl-6 text-[9px] text-gray-800">PHO PRKR RBALL POINT</div>
+                              </div>
+                            )}
+
+                            <div className="border-t border-dashed border-gray-400 my-1" />
+
+                            <div className="space-y-0.5">
+                              <div className="flex justify-between font-bold">
+                                <span>No. of Items</span>
+                                <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}</span>
+                              </div>
+                              <div className="flex justify-between font-bold">
+                                <span>Amount Due</span>
+                                <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              {selectedTenderMethod === "CASH" && isLnqrTenderProcessed && (
+                                <>
+                                  <div className="flex justify-between font-bold text-red-600">
+                                    <span>Change -&gt;</span>
+                                    <span>{changeVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between font-bold">
+                                    <span>Cash</span>
+                                    <span>{tenderVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                </>
+                              )}
+                              {selectedTenderMethod === "BANK_CARD" && bankCardStep === "FINAL_TEAROFF" && (
+                                <div className="pt-1 text-[10px] font-mono leading-tight">
+                                  <div className="flex justify-between font-bold">
+                                    <span>{bankCardTerminal === "-SELECT-" ? "BDO" : bankCardTerminal.replace(" POS", "")}</span>
+                                    <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="text-[9px] font-mono space-y-0.5 pt-0.5">
+                                    <div>Card Number &nbsp; &nbsp; &nbsp; &nbsp;:XXXXXXXXXXXX{bankCardSwipeNum ? bankCardSwipeNum.slice(-4) : "0000"}</div>
+                                    <div>Card Holder &nbsp; &nbsp; &nbsp; &nbsp;:{bankCardHolder || "X"}</div>
+                                    <div>Expiry Date &nbsp; &nbsp; &nbsp; &nbsp;:XXXX-XX-XX</div>
+                                    <div>Authorization Code :{bankCardAuthCode || "000000"}</div>
+                                    <div>Sales Slip # &nbsp; &nbsp; &nbsp; :{bankCardSlipNo || "000000"}</div>
+                                    <div className="flex justify-between font-bold font-mono pt-0.5">
+                                      <span>Credit Amt. &nbsp; &nbsp; &nbsp; &nbsp;:</span>
+                                      <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="border-t border-dashed border-gray-400 my-1.5" />
+
+                            <div className="text-center space-y-1">
+                              <div className="tracking-widest">******************************************</div>
+                              <div className="font-bold">Join Laking National for free!</div>
+                              <div>Visit : <br /><span className="underline">lakingnational.com</span></div>
+                              <div className="text-[9px]">for more details or download the app in your phone&apos;s app store.</div>
+                              <div className="tracking-widest">******************************************</div>
+                            </div>
+
+                            {/* Tax Info */}
+                            <div className="pt-2 space-y-0.5">
+                              <div className="text-center font-bold pb-1">Tax Info</div>
+                              <div className="flex justify-between">
+                                <span>Non-Vatable</span>
+                                <span>0.00</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Vatable</span>
+                                <span>{vatable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>VAT Zero-Rated Sale</span>
+                                <span>0.00</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>VAT Exempt Sale</span>
+                                <span>0.00</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>VAT(12%)</span>
+                                <span>{vatAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                              <div className="flex justify-between font-bold border-t border-gray-300 pt-0.5">
+                                <span>Total Sales</span>
+                                <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </div>
+                            </div>
+
+                            {/* Buyer Info */}
+                            <div className="pt-3 space-y-1">
+                              <div>BUYER&apos;S NAME : __________________________</div>
+                              <div>ADDRESS &nbsp; &nbsp; &nbsp;: __________________________</div>
+                              <div>TIN &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: __________________________</div>
+                            </div>
+
+                            {/* Footer Accreditation & Return Policy */}
+                            <div className="pt-3 text-[9px] text-center leading-tight space-y-1 text-gray-700">
+                              <div>ABACUS BOOK &amp; CARD CORPORATION</div>
+                              <div>QUAD ALPHA CENTRUM 125 PIONEER ST.</div>
+                              <div>HIGHWAY HILLS 1550 MANDALUYONG CITY</div>
+                              <div>VAT Registered TIN : 000-299-299-00000</div>
+                              <div>ACCREDTN: </div>
+                              <div>DATE ISSUED: 06/28/2005</div>
+                              <div>Permit No.:0514-116-188261-054</div>
+                              <div className="pt-2 text-[8px] leading-tight text-left">
+                                fully marked down due to various reasons, including any damage that may not be physically apparent.
+                                These items are sold on an AS IS basis. Thus, items sold are considered as final sale.
+                                Regular items may be returned or exchanged within 7 days from the date of purchase.
+                                Any regular item returned must be in the same condition at the time of purchase and in the original packaging.
+                                Please present a copy of the receipt upon return or exchange.
+                              </div>
+                              <div className="pt-2 font-bold text-[10px]">
+                                SI No.: {state.transactionNumber}
+                              </div>
+                            </div>
                           </div>
-                        )}
-                        <div className="border-t border-dashed border-gray-400 my-1" />
-                        <div className="flex justify-between font-bold">
-                          <span>No. of Items</span>
-                          <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold">
-                          <span>Amount Due</span>
-                          <span>{formatCurrency(totals.totalAmount || 2990)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold">
-                          <span>Tendered Cash</span>
-                          <span>{isLnqrTenderProcessed ? formatCurrency(parseFloat(lnqrCashTenderInput) || 3000) : "0.00"}</span>
-                        </div>
-                        <div className="flex justify-between font-bold text-red-600">
-                          <span>Change Due</span>
-                          <span>{isLnqrTenderProcessed ? formatCurrency(Math.max(0, (parseFloat(lnqrCashTenderInput) || 3000) - (totals.totalAmount || 2990))) : "0.00"}</span>
-                        </div>
-                        {loyaltyType === "LNQR" && (
-                          <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
-                            ***********************************<br />
-                            Join Laking National for free!<br />
-                            Visit : lakingnational.com<br />
-                            LNQR No. : {customerQrInput}<br />
-                            Earned Sulit Coins : {((totals.totalAmount || 2990) * 0.01).toFixed(2)}<br />
-                            ***********************************
-                          </div>
-                        )}
-                        {loyaltyType === "LNC" && (
-                          <div className="border-t border-dashed border-gray-400 my-1 pt-1 text-[10px] text-gray-600">
-                            ***********************************<br />
-                            LAKING NATIONAL CARD<br />
-                            Card No. : {customerLncInput}<br />
-                            Earned Sulit Coins : {((totals.totalAmount || 2990) * 0.01).toFixed(2)}<br />
-                            ***********************************
-                          </div>
-                        )}
-                      </div>
+                        );
+                      })()}
                     </div>
 
-                    {/* Center Panel: Green Box & Cash Payment Details */}
-                    <div className="col-span-5 flex flex-col border-r-2 border-gray-400">
-                      {/* Top Green Box: Unit, Sales, Tendered / Blinking Change */}
-                      <div className="bg-[#16A34A] p-4 text-white space-y-2 border-b-2 border-gray-400">
-                        {/* Unit */}
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-sm">Unit</span>
-                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
-                            {totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}
-                          </span>
-                        </div>
+                    {/* Center Panel: Green Box & Cash Payment Details OR Final Tear-Off View */}
+                    <div className="col-span-5 flex flex-col border-r-2 border-gray-400 bg-[#BDC3C7] min-h-0 overflow-hidden">
+                      {isFinalTenderStep ? (
+                        <>
+                          {/* 4-Row Green Box matching media_1792734842818_4f88c6fe.jpg */}
+                          <div className="bg-[#22A838] p-3 text-white space-y-2 border-b-2 border-green-700 select-none flex-shrink-0">
+                            {/* Unit */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Unit</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}
+                              </span>
+                            </div>
 
-                        {/* Sales */}
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-sm">Sales</span>
-                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
-                            {(totals.totalAmount || 2990).toFixed(2)}
-                          </span>
-                        </div>
+                            {/* Sales */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Sales</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {(totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
 
-                        {/* Tendered or Blinking Red Change */}
-                        <div className="flex items-center justify-between">
-                          {isLnqrTenderProcessed ? (
-                            <span className="font-black text-sm text-red-600 bg-[#16A34A] px-1.5 py-0.5 tracking-wide animate-pulse">
-                              Change
-                            </span>
-                          ) : (
-                            <span className="font-bold text-sm">Tendered</span>
-                          )}
-                          <span className="bg-white text-gray-900 font-mono font-bold text-lg px-4 py-0.5 border border-gray-400 min-w-[100px] text-right">
-                            {isLnqrTenderProcessed
-                              ? Math.max(0, (parseFloat(lnqrCashTenderInput) || 3000) - (totals.totalAmount || 2990)).toFixed(2)
-                              : "0.00"}
-                          </span>
-                        </div>
-                      </div>
+                            {/* Tendered */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Tendered</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {selectedTenderMethod === "BANK_CARD"
+                                  ? (totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                  : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
 
-                      {/* Cash Payment Details Header */}
-                      <div className="bg-[#67B8DE] text-gray-900 font-bold px-3 py-1.5 text-sm border-b border-gray-400 text-center tracking-wide">
-                        {selectedTenderMethod === "CASH"
-                          ? "Cash Payment Details"
-                          : selectedTenderMethod === "BANK_CARD"
-                          ? "Bank Card Payment Details"
-                          : selectedTenderMethod === "CHECK"
-                          ? "Check Payment Details"
-                          : selectedTenderMethod === "GIFT_CERT"
-                          ? "Gift Certificate Details"
-                          : selectedTenderMethod === "COUPON"
-                          ? "Coupon Details"
-                          : selectedTenderMethod === "EPURSE"
-                          ? "E-Purse Payment Details"
-                          : "Credit Memo Details"}
-                      </div>
+                            {/* Change */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Change</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {selectedTenderMethod === "BANK_CARD"
+                                  ? "0.00"
+                                  : Math.max(0, (parseFloat(lnqrCashTenderInput) || 0) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
 
-                      {/* Cash Payment Details Body */}
-                      <div className="flex-1 bg-[#ECE9D8] p-4 flex flex-col items-center justify-center overflow-y-auto">
-                        {selectedTenderMethod === "CASH" ? (
-                          !isLnqrTenderProcessed ? (
-                            <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-3 flex flex-col items-center">
-                              <label className="text-xs font-bold text-gray-800 text-center font-sans">
-                                Enter Amount:
-                              </label>
+                          {/* Sky-Blue Stripe Divider */}
+                          <div className="h-5 bg-[#67B8DE] border-b border-gray-400 flex-shrink-0" />
+
+                          {/* Message Body */}
+                          <div className="flex-1 bg-[#BDC3C7] p-4 flex flex-col items-center justify-center space-y-3 min-h-0 select-none">
+                            {selectedTenderMethod === "BANK_CARD" ? (
+                              <div className="text-gray-900 font-bold text-base text-center leading-snug">
+                                <div>Please Tear-Off the OR</div>
+                                <div>Thank You!!</div>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="text-gray-900 font-bold text-sm text-center leading-snug">
+                                  <div>Please Tear-Off the OR and</div>
+                                  <div>Close the Cash Register.</div>
+                                  <div>Thank You!!</div>
+                                </div>
+
+                                {/* Cash Drawer Status Indicator */}
+                                {(() => {
+                                  const tenderVal = parseFloat(lnqrCashTenderInput) || 0;
+                                  const changeDue = tenderVal - totals.totalAmount;
+                                  const hasChange = changeDue > 0;
+                                  return hasChange ? (
+                                    <div className="inline-flex items-center space-x-1.5 bg-amber-100 border-2 border-amber-500 text-amber-900 font-extrabold text-xs px-3 py-1 rounded shadow-sm">
+                                      <span className="text-sm">🔔</span>
+                                      <span>[ CASH DRAWER: OPEN ] Change: ₱{changeDue.toFixed(2)}</span>
+                                    </div>
+                                  ) : (
+                                    <div className="inline-flex items-center space-x-1.5 bg-gray-200 border border-gray-500 text-gray-700 font-bold text-xs px-3 py-1 rounded">
+                                      <span className="text-sm">🔒</span>
+                                      <span>[ CASH DRAWER: CLOSED ] (Exact Amount)</span>
+                                    </div>
+                                  );
+                                })()}
+                              </>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          {/* Top Green Box: Unit, Sales, Tender / Tendered */}
+                          <div className="bg-[#22A838] p-3 text-white space-y-2 border-b-2 border-green-700 select-none flex-shrink-0">
+                            {/* Unit */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Unit</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}
+                              </span>
+                            </div>
+
+                            {/* Sales */}
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-base tracking-wide">Sales</span>
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {(totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+
+                            {/* Tender / Tendered */}
+                            <div className="flex items-center justify-between">
+                              {selectedTenderMethod === "CASH" && isLnqrTenderProcessed ? (
+                                <span className="text-red-600 font-black text-base tracking-wide animate-pulse">
+                                  Change
+                                </span>
+                              ) : selectedTenderMethod === "BANK_CARD" ? (
+                                <span className="font-bold text-base tracking-wide">
+                                  Tendered
+                                </span>
+                              ) : (
+                                <span className="font-bold text-base tracking-wide">
+                                  Tender
+                                </span>
+                              )}
+                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                {selectedTenderMethod === "BANK_CARD"
+                                  ? "0.00"
+                                  : isLnqrTenderProcessed
+                                  ? Math.max(0, (parseFloat(lnqrCashTenderInput) || 0) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                  : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Cash / Card Payment Details Header */}
+                          <div className="bg-[#67B8DE] text-gray-900 font-bold px-3 py-1 text-sm border-b border-gray-400 text-center tracking-wide flex-shrink-0">
+                            {selectedTenderMethod === "CASH"
+                              ? "Cash Payment Details"
+                              : selectedTenderMethod === "BANK_CARD"
+                              ? "Card Payment Details"
+                              : selectedTenderMethod === "CHECK"
+                              ? "Check Payment Details"
+                              : selectedTenderMethod === "GIFT_CERT"
+                              ? "Gift Certificate Details"
+                              : selectedTenderMethod === "COUPON"
+                              ? "Coupon Details"
+                              : selectedTenderMethod === "EPURSE"
+                              ? "E-Purse Payment Details"
+                              : "Credit Memo Details"}
+                          </div>
+
+                          {/* Details / Input Body */}
+                          <div className="flex-1 bg-[#D4D0C8] p-4 flex flex-col items-center justify-center overflow-y-auto min-h-0">
+                            {selectedTenderMethod === "CASH" ? (
+                              !isLnqrTenderProcessed ? (
+                                <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-2 flex flex-col items-center font-sans">
+                                  <label className="text-xs font-bold text-gray-900 text-center font-sans">
+                                    Enter Amount:
+                                  </label>
+                                  <input
+                                    ref={cashTenderInputRef}
+                                    type="number"
+                                    step="0.01"
+                                    value={lnqrCashTenderInput}
+                                    onChange={(e) => setLnqrCashTenderInput(e.target.value)}
+                                    placeholder=""
+                                    className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
+                                    autoFocus
+                                  />
+                                  <button
+                                    type="submit"
+                                    className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                                  >
+                                    Process Payment (Enter)
+                                  </button>
+                                </form>
+                              ) : (
+                                <div className="text-center space-y-2 font-sans select-none flex flex-col items-center">
+                                  <div className="text-red-600 font-bold text-sm tracking-tight leading-tight animate-pulse">
+                                    Dont press any key..<br/>
+                                    Please wait...
+                                  </div>
+                                  <div className="text-xs font-bold text-gray-900 text-center pt-1">
+                                    Enter Amount:
+                                  </div>
+                                  <div className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner">
+                                    {lnqrCashTenderInput}
+                                  </div>
+                                </div>
+                              )
+                            ) : selectedTenderMethod === "BANK_CARD" ? (
+                              bankCardStep === "SELECT_TYPE" ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (selectedBankCardType === "-SELECT-") {
+                                      setSelectedBankCardType("CREDIT CARD");
+                                    }
+                                    setBankCardStep("SWIPE_CARD");
+                                  }}
+                                  className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
+                                >
+                                  <div className="text-gray-900 font-bold text-sm tracking-wide">
+                                    Please Select Card Type
+                                  </div>
+                                  <div className="w-64">
+                                    <select
+                                      value={selectedBankCardType}
+                                      onChange={(e) => setSelectedBankCardType(e.target.value)}
+                                      className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-sans text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                      autoFocus
+                                    >
+                                      {CARD_TYPES.map((type) => (
+                                        <option key={type} value={type}>
+                                          {type}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </form>
+                              ) : bankCardStep === "SWIPE_CARD" ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    setBankCardStep("DETAILS");
+                                  }}
+                                  className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
+                                >
+                                  <div className="text-gray-900 font-bold text-sm tracking-wide">
+                                    Please Swipe Credit Card
+                                  </div>
+                                  <div className="w-80">
+                                    <input
+                                      type="text"
+                                      value={bankCardSwipeNum}
+                                      onChange={(e) => setBankCardSwipeNum(e.target.value)}
+                                      placeholder=""
+                                      autoFocus
+                                      className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                  </div>
+                                </form>
+                              ) : (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleConfirmBankCardPayment();
+                                  }}
+                                  className="w-full max-w-sm space-y-1.5 text-xs font-sans text-gray-900 px-2"
+                                >
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Card Number:</span>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={
+                                        bankCardSwipeNum
+                                          ? "********* " + bankCardSwipeNum.slice(-4)
+                                          : "********* 0000"
+                                      }
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-gray-800"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Card Holder:</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardHolder}
+                                      onChange={(e) => setBankCardHolder(e.target.value)}
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold uppercase"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Card Terminal/Hypercom:</span>
+                                    <select
+                                      value={bankCardTerminal}
+                                      onChange={(e) => setBankCardTerminal(e.target.value)}
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    >
+                                      {TERMINAL_OPTIONS.map((opt) => (
+                                        <option key={opt} value={opt}>
+                                          {opt}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Valid Until:</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardValidUntil}
+                                      onChange={(e) => setBankCardValidUntil(e.target.value)}
+                                      placeholder="(YYYY-mm-dd)"
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Credit Amount:</span>
+                                    <input
+                                      type="text"
+                                      readOnly
+                                      value={(totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Authorization Code:</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardAuthCode}
+                                      onChange={(e) => setBankCardAuthCode(e.target.value)}
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-5 items-center gap-1">
+                                    <span className="col-span-2 font-bold text-gray-800">Sales Slip No.:</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardSlipNo}
+                                      onChange={(e) => setBankCardSlipNo(e.target.value)}
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+                                </form>
+                              )
+                        ) : selectedTenderMethod === "GIFT_CERT" ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              handleConfirmElectronicTender("Gift Certificate", totals.totalAmount || 500);
+                            }}
+                            className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
+                          >
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">GC Type:</span>
+                              <select
+                                value={giftCertType}
+                                onChange={(e) => setGiftCertType(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                              >
+                                <option>-SELECT-</option>
+                                <option>NBS Gift Certificate</option>
+                                <option>Sodexo Premium Pass</option>
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">GC Number:</span>
                               <input
-                                type="number"
-                                step="0.01"
-                                value={lnqrCashTenderInput}
-                                onChange={(e) => setLnqrCashTenderInput(e.target.value)}
-                                placeholder="3000"
-                                className="w-48 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                autoFocus
+                                type="text"
+                                value={giftCertNumber}
+                                onChange={(e) => setGiftCertNumber(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                               />
+                            </div>
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Amount:</span>
+                              <input
+                                type="text"
+                                defaultValue={(totals.totalAmount || 500).toFixed(2)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                              />
+                            </div>
+                            <div className="flex justify-center pt-2">
                               <button
                                 type="submit"
-                                className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+                                className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
                               >
                                 Process Payment (Enter)
                               </button>
-                            </form>
-                          ) : (
-                            <div className="text-center space-y-4">
-                              {loyaltyType === "LNQR" ? (
-                                <>
-                                  <div className="text-red-600 font-black text-base tracking-tight animate-pulse font-sans">
-                                    Dont press any key.. Please wait...
-                                  </div>
-                                  <div className="text-gray-700 font-bold text-xs font-sans">
-                                    Please wait connecting LNQR Server
-                                  </div>
-                                </>
-                              ) : (
-                                <>
-                                  <div className="text-green-800 font-black text-base tracking-tight font-sans">
-                                    Payment Tendered Successfully!
-                                  </div>
-                                  <div className="text-gray-700 font-bold text-xs font-sans">
-                                    Press [ Ok ] below to finalize and generate Official Receipt.
-                                  </div>
-                                </>
-                              )}
                             </div>
-                          )
-                        ) : selectedTenderMethod === "BANK_CARD" ? (
-                          !isLnqrTenderProcessed ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const amt = parseFloat(gcashAmount) || totals.totalAmount || 2990;
-                                handleConfirmElectronicTender(cardSubtype, amt);
-                              }}
-                              className="w-full max-w-sm space-y-2 font-sans"
-                            >
-                              {/* Subtype Selector */}
-                              <div className="grid grid-cols-4 gap-1 pb-1">
-                                {[
-                                  { id: "CREDIT_CARD", label: "Credit Card" },
-                                  { id: "GCASH", label: "GCash" },
-                                  { id: "NBS_GIFTCARD", label: "NBS Giftcard" },
-                                  { id: "SULIT_COINS", label: "Sulit Coins" },
-                                ].map((tab) => (
-                                  <button
-                                    key={tab.id}
-                                    type="button"
-                                    onClick={() => setCardSubtype(tab.id as any)}
-                                    className={`py-1 text-[10px] font-bold border ${
-                                      cardSubtype === tab.id
-                                        ? "bg-[#2E7D32] text-white border-green-800 shadow"
-                                        : "bg-[#D4D0C8] text-gray-800 border-gray-400 hover:bg-[#E2E0DC]"
-                                    }`}
-                                  >
-                                    {tab.label}
-                                  </button>
-                                ))}
-                              </div>
-
-                              {cardSubtype === "CREDIT_CARD" && (
-                                <div className="space-y-1.5 text-xs text-gray-800">
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Card Number:</span>
-                                    <input
-                                      type="text"
-                                      value={creditCardNum}
-                                      onChange={(e) => setCreditCardNum(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Cardholder:</span>
-                                    <input
-                                      type="text"
-                                      value={creditCardHolder}
-                                      onChange={(e) => setCreditCardHolder(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold uppercase"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Terminal:</span>
-                                    <select
-                                      value={creditCardTerminal}
-                                      onChange={(e) => setCreditCardTerminal(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
-                                    >
-                                      <option>-SELECT-</option>
-                                      <option>TERMINAL 1</option>
-                                      <option>TERMINAL 2</option>
-                                      <option>BDO POS</option>
-                                      <option>MAYA POS</option>
-                                    </select>
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Auth Code:</span>
-                                    <input
-                                      type="text"
-                                      value={creditCardAuth}
-                                      onChange={(e) => setCreditCardAuth(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Amount:</span>
-                                    <input
-                                      type="text"
-                                      value={gcashAmount}
-                                      onChange={(e) => setGcashAmount(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              {cardSubtype === "GCASH" && (
-                                <div className="space-y-1.5 text-xs text-gray-800">
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">GCash Ref No:</span>
-                                    <input
-                                      type="text"
-                                      value={gcashRef}
-                                      onChange={(e) => setGcashRef(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Amount:</span>
-                                    <input
-                                      type="text"
-                                      value={gcashAmount}
-                                      onChange={(e) => setGcashAmount(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              {cardSubtype === "NBS_GIFTCARD" && (
-                                <div className="space-y-1.5 text-xs text-gray-800">
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Gift Card No:</span>
-                                    <input
-                                      type="text"
-                                      value={giftCardCode}
-                                      onChange={(e) => setGiftCardCode(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Amount:</span>
-                                    <input
-                                      type="text"
-                                      value={giftCardAmount}
-                                      onChange={(e) => setGiftCardAmount(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              {cardSubtype === "SULIT_COINS" && (
-                                <div className="space-y-1.5 text-xs text-gray-800">
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">LNQR Scan:</span>
-                                    <input
-                                      type="text"
-                                      value={sulitCoinsQr}
-                                      onChange={(e) => setSulitCoinsQr(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-3 items-center">
-                                    <span className="font-bold">Sulit Coins:</span>
-                                    <input
-                                      type="text"
-                                      value={sulitCoinsAmount}
-                                      onChange={(e) => setSulitCoinsAmount(e.target.value)}
-                                      className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-
-                              <div className="flex justify-center pt-2">
-                                <button
-                                  type="submit"
-                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
-                                >
-                                  Process Payment (Enter)
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="text-center space-y-4">
-                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
-                                Card Payment Tendered Successfully!
-                              </div>
-                              <div className="text-gray-700 font-bold text-xs font-sans">
-                                Press [ Ok ] below to finalize and generate Official Receipt.
-                              </div>
-                            </div>
-                          )
-                        ) : selectedTenderMethod === "GIFT_CERT" ? (
-                          !isLnqrTenderProcessed ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                handleConfirmElectronicTender("Gift Certificate", totals.totalAmount || 500);
-                              }}
-                              className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
-                            >
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">GC Type:</span>
-                                <select
-                                  value={giftCertType}
-                                  onChange={(e) => setGiftCertType(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
-                                >
-                                  <option>-SELECT-</option>
-                                  <option>NBS Gift Certificate</option>
-                                  <option>Sodexo Premium Pass</option>
-                                </select>
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">GC Number:</span>
-                                <input
-                                  type="text"
-                                  value={giftCertNumber}
-                                  onChange={(e) => setGiftCertNumber(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                />
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Amount:</span>
-                                <input
-                                  type="text"
-                                  defaultValue={(totals.totalAmount || 500).toFixed(2)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                />
-                              </div>
-                              <div className="flex justify-center pt-2">
-                                <button
-                                  type="submit"
-                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
-                                >
-                                  Process Payment (Enter)
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="text-center space-y-4">
-                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
-                                Gift Cert Tendered Successfully!
-                              </div>
-                              <div className="text-gray-700 font-bold text-xs font-sans">
-                                Press [ Ok ] below to finalize and generate Official Receipt.
-                              </div>
-                            </div>
-                          )
+                          </form>
                         ) : selectedTenderMethod === "COUPON" ? (
-                          !isLnqrTenderProcessed ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
-                              }}
-                              className="w-full max-w-xs space-y-1.5 text-xs font-sans text-gray-800"
-                            >
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Series:</span>
-                                <select
-                                  value={couponSeries}
-                                  onChange={(e) => setCouponSeries(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
-                                >
-                                  <option>-SELECT-</option>
-                                  <option>Series A</option>
-                                  <option>Series B</option>
-                                </select>
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Type:</span>
-                                <select
-                                  value={couponType}
-                                  onChange={(e) => setCouponType(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
-                                >
-                                  <option>--PLEASE SELECT--</option>
-                                  <option>Book Promo 50</option>
-                                  <option>School Supplies 100</option>
-                                </select>
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Coupon No:</span>
-                                <input
-                                  type="text"
-                                  value={couponNumber}
-                                  onChange={(e) => setCouponNumber(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                />
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Denom:</span>
-                                <input
-                                  type="text"
-                                  value={couponDenom}
-                                  onChange={(e) => setCouponDenom(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                />
-                              </div>
-                              <div className="flex justify-center pt-2">
-                                <button
-                                  type="submit"
-                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
-                                >
-                                  Process Payment (Enter)
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="text-center space-y-4">
-                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
-                                Coupon Tendered Successfully!
-                              </div>
-                              <div className="text-gray-700 font-bold text-xs font-sans">
-                                Press [ Ok ] below to finalize and generate Official Receipt.
-                              </div>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
+                            }}
+                            className="w-full max-w-xs space-y-1.5 text-xs font-sans text-gray-800"
+                          >
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Series:</span>
+                              <select
+                                value={couponSeries}
+                                onChange={(e) => setCouponSeries(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                              >
+                                <option>-SELECT-</option>
+                                <option>Series A</option>
+                                <option>Series B</option>
+                              </select>
                             </div>
-                          )
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Type:</span>
+                              <select
+                                value={couponType}
+                                onChange={(e) => setCouponType(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                              >
+                                <option>--PLEASE SELECT--</option>
+                                <option>Book Promo 50</option>
+                                <option>School Supplies 100</option>
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Coupon No:</span>
+                              <input
+                                type="text"
+                                value={couponNumber}
+                                onChange={(e) => setCouponNumber(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                              />
+                            </div>
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Denom:</span>
+                              <input
+                                type="text"
+                                value={couponDenom}
+                                onChange={(e) => setCouponDenom(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                              />
+                            </div>
+                            <div className="flex justify-center pt-2">
+                              <button
+                                type="submit"
+                                className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                              >
+                                Process Payment (Enter)
+                              </button>
+                            </div>
+                          </form>
                         ) : selectedTenderMethod === "CREDIT_MEMO" ? (
-                          !isLnqrTenderProcessed ? (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                handleConfirmElectronicTender("Credit Memo", totals.totalAmount || 2990);
-                              }}
-                              className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
-                            >
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Credit Memo:</span>
-                                <input
-                                  type="text"
-                                  value={creditMemoNumber}
-                                  onChange={(e) => setCreditMemoNumber(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                                />
-                              </div>
-                              <div className="grid grid-cols-3 items-center">
-                                <span className="font-bold">Amount:</span>
-                                <input
-                                  type="text"
-                                  value={creditMemoAmount}
-                                  onChange={(e) => setCreditMemoAmount(e.target.value)}
-                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
-                                />
-                              </div>
-                              <div className="flex justify-center pt-2">
-                                <button
-                                  type="submit"
-                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
-                                >
-                                  Process Payment (Enter)
-                                </button>
-                              </div>
-                            </form>
-                          ) : (
-                            <div className="text-center space-y-4">
-                              <div className="text-green-800 font-black text-base tracking-tight font-sans">
-                                Credit Memo Tendered Successfully!
-                              </div>
-                              <div className="text-gray-700 font-bold text-xs font-sans">
-                                Press [ Ok ] below to finalize and generate Official Receipt.
-                              </div>
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              handleConfirmElectronicTender("Credit Memo", totals.totalAmount || 2990);
+                            }}
+                            className="w-full max-w-xs space-y-2 text-xs font-sans text-gray-800"
+                          >
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Credit Memo:</span>
+                              <input
+                                type="text"
+                                value={creditMemoNumber}
+                                onChange={(e) => setCreditMemoNumber(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                              />
                             </div>
-                          )
+                            <div className="grid grid-cols-3 items-center">
+                              <span className="font-bold">Amount:</span>
+                              <input
+                                type="text"
+                                value={creditMemoAmount}
+                                onChange={(e) => setCreditMemoAmount(e.target.value)}
+                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
+                              />
+                            </div>
+                            <div className="flex justify-center pt-2">
+                              <button
+                                type="submit"
+                                className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                              >
+                                Process Payment (Enter)
+                              </button>
+                            </div>
+                          </form>
                         ) : (
                           <div className="text-center space-y-3">
                             <div className="text-sm font-bold text-gray-800">
@@ -2260,153 +2641,223 @@ function SimulatorContent() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </>
+                  )}
+                </div>
 
-                    {/* Far Right: Function Keys Column (Interactive) */}
-                    <div className="col-span-2 bg-[#C2CAD0] flex flex-col p-1 space-y-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          dispatch({ type: "CLOSE_PAYMENT" });
-                          setIsLnqrCashPaymentOpen(false);
-                          setIsLnqrTenderProcessed(false);
-                        }}
-                        className="bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-center py-2 text-[11px] font-bold text-gray-700 cursor-pointer"
-                      >
-                        Help<br/><span className="text-[10px] text-gray-500">F1</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("CASH");
-                          validateScenarioStep("PAY_CASH");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "CASH"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Cash<br/><span className="text-[10px] text-yellow-700">F2</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("BANK_CARD");
-                          setElectronicPaymentType("Credit Card");
-                          validateScenarioStep("PAY_CARD");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "BANK_CARD"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Bank Card<br/><span className="text-[10px] text-gray-500">F3</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTenderMethod("CHECK")}
-                        className={`${
-                          selectedTenderMethod === "CHECK"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Check<br/><span className="text-[10px] text-gray-500">F4</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("GIFT_CERT");
-                          setElectronicPaymentType("Gift Certificate Series");
-                          validateScenarioStep("PAY_GC");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "GIFT_CERT"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Gift Cert.<br/><span className="text-[10px] text-gray-500">F5</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("COUPON");
-                          setElectronicPaymentType("Promo Coupon");
-                          validateScenarioStep("PAY_COUPON");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "COUPON"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Coupon<br/><span className="text-[10px] text-gray-500">F6</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("EPURSE");
-                          setElectronicPaymentType("GCash / QR PH");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "EPURSE"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        E-Purse<br/><span className="text-[10px] text-gray-500">F7</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTenderMethod("CREDIT_MEMO");
-                          setElectronicPaymentType("Debit Card / BancNet");
-                          validateScenarioStep("PAY_CREDIT_MEMO");
-                        }}
-                        className={`${
-                          selectedTenderMethod === "CREDIT_MEMO"
-                            ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black shadow"
-                            : "bg-[#D2D7DF] hover:bg-[#E2E6EC] border border-gray-400 text-gray-700 font-bold"
-                        } text-center py-2 text-[11px] cursor-pointer`}
-                      >
-                        Credit Memo<br/><span className="text-[10px] text-gray-500">F8</span>
-                      </button>
+                    {/* Far Right: Function Keys Column (Repeated structure matching Active Register) */}
+                    <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1 min-h-0 overflow-hidden select-none">
+                      {[
+                        {
+                          id: "HELP",
+                          label: "Help",
+                          shortcut: "F1",
+                          method: null,
+                          variant: "gray",
+                          onClick: () => {
+                            dispatch({ type: "CLOSE_PAYMENT" });
+                            setIsLnqrCashPaymentOpen(false);
+                            setIsLnqrTenderProcessed(false);
+                            setSelectedTenderMethod("CASH");
+                            setBankCardStep("SELECT_TYPE");
+                          },
+                        },
+                        {
+                          id: "CASH",
+                          label: "Cash",
+                          shortcut: "F2",
+                          method: "CASH",
+                          variant: "yellow",
+                          onClick: () => {
+                            setSelectedTenderMethod("CASH");
+                            setBankCardStep("SELECT_TYPE");
+                            validateScenarioStep("PAY_CASH");
+                          },
+                        },
+                        {
+                          id: "BANK_CARD",
+                          label: "Bank Card",
+                          shortcut: "F3",
+                          method: "BANK_CARD",
+                          variant: "gray",
+                          onClick: () => {
+                            setSelectedTenderMethod("BANK_CARD");
+                            setBankCardStep("SELECT_TYPE");
+                            validateScenarioStep("PAY_CARD");
+                          },
+                        },
+                        {
+                          id: "CHECK",
+                          label: "Check",
+                          shortcut: "F4",
+                          method: "CHECK",
+                          variant: "red",
+                          onClick: () => setSelectedTenderMethod("CHECK"),
+                        },
+                        {
+                          id: "GIFT_CERT",
+                          label: "Gift Cert.",
+                          shortcut: "F5",
+                          method: "GIFT_CERT",
+                          variant: "gray",
+                          onClick: () => {
+                            setSelectedTenderMethod("GIFT_CERT");
+                            setElectronicPaymentType("Gift Certificate Series");
+                            validateScenarioStep("PAY_GC");
+                          },
+                        },
+                        {
+                          id: "COUPON",
+                          label: "Coupon",
+                          shortcut: "F6",
+                          method: "COUPON",
+                          variant: "gray",
+                          onClick: () => {
+                            setSelectedTenderMethod("COUPON");
+                            setElectronicPaymentType("Promo Coupon");
+                            validateScenarioStep("PAY_COUPON");
+                          },
+                        },
+                        {
+                          id: "EPURSE",
+                          label: "E-Purse",
+                          shortcut: "F7",
+                          method: "EPURSE",
+                          variant: "red",
+                          onClick: () => {
+                            setSelectedTenderMethod("EPURSE");
+                            setElectronicPaymentType("GCash / QR PH");
+                          },
+                        },
+                        {
+                          id: "CREDIT_MEMO",
+                          label: "Credit Memo",
+                          shortcut: "F8",
+                          method: "CREDIT_MEMO",
+                          variant: "gray",
+                          onClick: () => {
+                            setSelectedTenderMethod("CREDIT_MEMO");
+                            setElectronicPaymentType("Debit Card / BancNet");
+                            validateScenarioStep("PAY_CREDIT_MEMO");
+                          },
+                        },
+                      ].map((item) => {
+                        const isAllDisabled = isLnqrTenderProcessed || isFinalTenderStep;
+                        const isBankCardMode = selectedTenderMethod === "BANK_CARD" && !isFinalTenderStep;
+                        const isCurrentSelected = selectedTenderMethod === item.method;
+                        const isBankCardItem = item.id === "BANK_CARD";
+
+                        const isDisabled = isAllDisabled || (isBankCardMode && !isBankCardItem);
+
+                        let btnClass = "";
+                        let shortcutClass = "";
+
+                        if (isAllDisabled) {
+                          btnClass = "bg-[#E4002B] text-white border-red-700 font-bold cursor-not-allowed opacity-100";
+                          shortcutClass = "text-yellow-300";
+                        } else if (isBankCardMode) {
+                          if (isBankCardItem) {
+                            btnClass = "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black cursor-pointer";
+                            shortcutClass = "text-yellow-700";
+                          } else {
+                            btnClass = "bg-[#E4002B] text-white border-red-700 font-bold cursor-not-allowed opacity-100";
+                            shortcutClass = "text-yellow-300";
+                          }
+                        } else if (isCurrentSelected) {
+                          btnClass = "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black cursor-pointer";
+                          shortcutClass = "text-yellow-700";
+                        } else if (item.variant === "red") {
+                          btnClass = "bg-[#E4002B] hover:bg-[#C10024] text-white border-red-700 font-bold cursor-pointer";
+                          shortcutClass = "text-yellow-300";
+                        } else {
+                          btnClass = "bg-[#D2D7DF] hover:bg-[#E2E6EC] text-gray-900 border-gray-400 font-bold cursor-pointer";
+                          shortcutClass = "text-[#1D4ED8]";
+                        }
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            disabled={isDisabled}
+                            onClick={item.onClick}
+                            className={
+                              "w-full flex-1 p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
+                              btnClass
+                            }
+                          >
+                            <span className="text-[11px] font-bold leading-tight uppercase">
+                              {item.label}
+                            </span>
+                            <span
+                              className={
+                                "text-[10px] font-extrabold " + shortcutClass
+                              }
+                            >
+                              {item.shortcut}
+                            </span>
+                          </button>
+                        );
+                      })}
+
+                      <div className="text-center font-mono text-[9px] text-gray-700 pt-1 border-t border-gray-400">
+                        Page: 0/0
+                      </div>
                     </div>
                   </div>
 
                   {/* Bottom Footer Bar */}
-                  <div className="grid grid-cols-12 border-t-2 border-gray-400 h-8 font-sans select-none items-stretch">
-                    {/* Left 5 cols */}
-                    <div className="col-span-5 bg-[#9AA5B1] border-r-2 border-gray-400" />
+                  <div className="grid grid-cols-12 border-t-2 border-gray-400 h-9 font-sans select-none items-stretch flex-shrink-0">
+                    {/* Left 5 cols (Electronic Journal bottom) */}
+                    <div className="col-span-5 bg-[#BDC3C7] border-r-2 border-gray-400" />
 
-                    {/* Center 5 cols */}
-                    <div className="col-span-5 bg-[#16A34A] border-r-2 border-gray-400 flex items-center justify-center px-2">
+                    {/* Center 5 cols (Green with Ok and Cancel buttons) */}
+                    <div className="col-span-5 bg-[#22A838] border-r-2 border-gray-400 flex items-center justify-center px-2 space-x-3">
                       <button
+                        ref={paymentOkBtnRef}
                         type="button"
                         onClick={handlePaymentOkClick}
-                        className="min-w-[95px] h-[22px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#B05090] border-b-[#B05090] outline outline-1 outline-[#D870B0] flex items-center justify-center font-bold text-xs text-[#0000CD] shadow-sm cursor-pointer"
+                        className={`min-w-[90px] h-[24px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] flex items-center justify-center font-bold text-xs text-[#000080] shadow-sm cursor-pointer ${
+                          isFinalTenderStep ? "outline-dotted outline-2 outline-black ring-1 ring-black" : ""
+                        }`}
                       >
                         Ok
                       </button>
+                      {selectedTenderMethod === "BANK_CARD" && bankCardStep !== "FINAL_TEAROFF" && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedTenderMethod("CASH");
+                            setBankCardStep("SELECT_TYPE");
+                          }}
+                          className="min-w-[90px] h-[24px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] flex items-center justify-center font-bold text-xs text-[#000080] shadow-sm cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
                     </div>
 
-                    {/* Right 2 cols */}
-                    <div className="col-span-2 bg-[#16A34A] flex items-center justify-center px-1 text-gray-900 font-bold font-mono text-[11px] tracking-tight">
-                      {fmtTime(now)}
+                    {/* Right 2 cols (Green with Clock) */}
+                    <div className="col-span-2 bg-[#22A838] flex items-center justify-center px-1 text-black font-bold font-sans text-xs tracking-tight">
+                      {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
                     </div>
                   </div>
                 </div>
               ) : (
                 <>
-            {/* MAIN WORKING AREA */}
-            <div className="flex-1 grid grid-cols-12 min-h-[500px] bg-white">
+                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state.terminalId || "0004"}</span>
+                  </div>
+
+                  {/* MAIN WORKING AREA */}
+                  <div className="flex-1 grid grid-cols-12 min-h-0 overflow-hidden bg-white">
             
-            <div className="col-span-10 flex flex-col border-r-2 border-gray-400">
+            <div className="col-span-10 flex flex-col border-r-2 border-gray-400 min-h-0 overflow-hidden">
               
-              <div className="grid grid-cols-12 border-b-2 border-gray-400">
+              <div className="grid grid-cols-12 border-b-2 border-gray-400 flex-shrink-0">
                 
                 <div className="col-span-6 border-r-2 border-gray-400 flex flex-col justify-between">
 
@@ -2495,7 +2946,7 @@ function SimulatorContent() {
               </div>
 
               {/* TABLE COLUMN HEADERS */}
-              <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-1 text-[11px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
+              <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-1 text-[11px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight flex-shrink-0">
                 <span className="col-span-1 text-left">LN</span>
                 <span className="col-span-3 text-left">UPC</span>
                 <span className="col-span-4 text-left">Description</span>
@@ -2506,7 +2957,7 @@ function SimulatorContent() {
               </div>
 
               {/* LINE ITEM SCREEN PAGE */}
-              <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-[300px]">
+              <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-0">
                 {state.lineItems.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 italic text-xs py-16">
                     Line item screen page (Scan or Enter UPC above)
@@ -2541,9 +2992,12 @@ function SimulatorContent() {
             </div>
 
             {/* RIGHT 2 COLS: VERTICAL FUNCTION KEYS PANEL */}
-            <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1">
+            <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1 min-h-0 overflow-hidden">
               {rightKeys.map((kDef) => {
-                const isRed = kDef.variant === "red";
+                const isF4Payment = kDef.key === "F4" && state.currentPage === "MAIN";
+                const isRed = isF4Payment
+                  ? state.lineItems.length === 0
+                  : kDef.variant === "red";
                 const isVoidSkuHighlight = isVoidSkuMode && kDef.key === "F7";
                 return (
                   <button
@@ -2583,7 +3037,7 @@ function SimulatorContent() {
           </div>
 
           {/* 3. BOTTOM FOOTER STATUS BAR */}
-          <div className="bg-[#B0B8C0] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch">
+          <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch flex-shrink-0 h-9">
             
             {/* Total Qty */}
             <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between">
@@ -2685,64 +3139,7 @@ function SimulatorContent() {
         </>
       )}
 
-      {/* CHOOSE OPTION MODAL */}
-      {isLoyaltyOptionOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsLoyaltyOptionOpen(false)}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-            <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
-              {/* Green Header */}
-              <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
-                Choose Option
-              </div>
 
-              {/* Gray Content Body */}
-              <div className="p-6 bg-[#B0B8C0] space-y-3">
-                <button
-                  type="button"
-                  onClick={() => handleSelectLoyalty(1)}
-                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
-                    selectedLoyaltyOption === 1
-                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
-                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
-                  }`}
-                >
-                  1. None
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLoyalty(2)}
-                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
-                    selectedLoyaltyOption === 2
-                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
-                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
-                  }`}
-                >
-                  2. Laking National Card
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSelectLoyalty(3)}
-                  className={`w-full text-left px-4 py-2.5 font-bold text-sm border shadow-sm transition-all cursor-pointer ${
-                    selectedLoyaltyOption === 3
-                      ? "bg-white text-gray-900 border-2 border-red-500 ring-2 ring-red-400 font-extrabold"
-                      : "bg-white/80 hover:bg-white text-gray-900 border-gray-400"
-                  }`}
-                >
-                  3. LNQR / LNQR PLUS
-                </button>
-
-                <div className="text-center text-xs font-mono text-gray-700 pt-2">
-                  Press key <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">1</kbd>, <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">2</kbd>, or <kbd className="bg-white px-1.5 py-0.5 border border-gray-400 font-bold">3</kbd> on your keyboard
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       {/* LNQR HAS BEEN UPDATED MODAL */}
       {isLnqrUpdatedModalOpen && (
@@ -2955,6 +3352,12 @@ function SimulatorContent() {
             dispatch({ type: "SELECT_PAYMENT_METHOD", method: data.tenderType });
             setIsElectronicPaymentOpen(false);
             dispatch({ type: "CLOSE_PAYMENT" });
+            dispatch({ type: "RESET_TRANSACTION" });
+            setIsLnqrCashPaymentOpen(false);
+            setIsLnqrTenderProcessed(false);
+            setHasBonusBuyBeenPrompted(false);
+            setLoyaltyType("NONE");
+            setSelectedTenderMethod("CASH");
             validateScenarioStep("CONFIRM_TENDER", data.amount);
           }}
           onCancel={() => setIsElectronicPaymentOpen(false)}
@@ -3032,22 +3435,7 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F2 BEST BUY / BONUS BUY PROMO MODAL (4th Page F2) */}
-      {isBestBuyOpen && (
-        <BestBuyModal
-          onConfirm={(promo) => {
-            dispatch({
-              type: "APPLY_BEST_BUY",
-              promoName: promo.promoName,
-              promoSku: promo.promoSku,
-              promoPrice: promo.promoPrice,
-            });
-            setIsBestBuyOpen(false);
-            validateScenarioStep("CONFIRM_BEST_BUY", promo.promoSku);
-          }}
-          onCancel={() => setIsBestBuyOpen(false)}
-        />
-      )}
+
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
       {isExamCompleted && activeScenario && (
