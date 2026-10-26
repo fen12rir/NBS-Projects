@@ -95,7 +95,6 @@ export function ElectronicPaymentModal({
           onSubmit={handleSubmit}
           className="w-[460px] bg-[#D4D0C8] border-4 border-[#2563EB] shadow-2xl font-sans pointer-events-auto"
         >
-          {/* Authentic Blue Title Bar matching frame_3_36s.jpg */}
           <div className="bg-[#2563EB] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
             Card Payment Details
           </div>

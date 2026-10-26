@@ -16,7 +16,7 @@ import { SuspendModal, RecallModal } from "@/components/simulator/suspend-recall
 import { ReprintModal } from "@/components/simulator/reprint-modal";
 import { SdvModal } from "@/components/simulator/sdv-modal";
 import { ReadingsModal } from "@/components/simulator/readings-modal";
-import { TransactionCommentModal } from "@/components/simulator/transaction-comment-modal";
+import { TransactionCommentScreen } from "@/components/simulator/transaction-comment-screen";
 import { ReturnRefundModal } from "@/components/simulator/return-refund-modal";
 import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/electronic-payment-modal";
 import { PostVoidModal } from "@/components/simulator/post-void-modal";
@@ -1527,7 +1527,7 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER (Adjusted base size so footer is never cutoff across any screen) */}
+      {/* EXACT POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center overflow-y-auto min-h-0">
         <div className="w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
           
@@ -1880,7 +1880,7 @@ function SimulatorContent() {
                   }}
                 />
               ) : isLnqrScanScreenOpen ? (
-                /* LNQR SCAN SCREEN (Matches screenshot: Top header, yellow title bar, scan input, green bottom bar) */
+                /* LNQR SCAN SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
                   {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
@@ -2003,8 +2003,31 @@ function SimulatorContent() {
                     </button>
                   </div>
                 </div>
+              ) : isTrxCommentOpen ? (
+                <TransactionCommentScreen
+                  initialComments={state.transactionComments || undefined}
+                  trxNumber={state.transactionNumber}
+                  clerkName={state.cashierName}
+                  branchCode={state.branchCode}
+                  terminalId={state.terminalId}
+                  dateStr={fmtDate(now)}
+                  onSave={(comments) => {
+                    dispatch({
+                      type: "SET_TRANSACTION_COMMENTS",
+                      comments: {
+                        customerName: comments.customerName || "",
+                        address: comments.address || "",
+                        tin: comments.tin || "",
+                        remarks: comments.remarks || "",
+                      },
+                    });
+                    setIsTrxCommentOpen(false);
+                    validateScenarioStep("SAVE_TRX_COMMENT");
+                  }}
+                  onCancel={() => setIsTrxCommentOpen(false)}
+                />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
-                /* AUTHENTIC FULL PAYMENT SCREEN (Matches user screenshot) */
+                /* AUTHENTIC FULL PAYMENT SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
                   {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
@@ -2158,6 +2181,15 @@ function SimulatorContent() {
                               <div className="text-[9px]">for more details or download the app in your phone&apos;s app store.</div>
                               <div className="tracking-widest">******************************************</div>
                             </div>
+
+                            {/* Transaction Comments  */}
+                            {state.transactionComments && (
+                              <div className="border-t border-b border-dashed border-gray-400 my-1.5 py-1 text-left font-mono text-[10px] space-y-0.5">
+                                <div className="font-bold">{state.transactionComments.customerName.toUpperCase()}</div>
+                                <div>{state.transactionComments.tin}</div>
+                                <div>{state.transactionComments.address.toUpperCase()}</div>
+                              </div>
+                            )}
 
                             {/* Tax Info */}
                             <div className="pt-2 space-y-0.5">
@@ -2750,7 +2782,7 @@ function SimulatorContent() {
                   )}
                 </div>
 
-                    {/* Far Right: Function Keys Column (Repeated structure matching Active Register) */}
+                    {/* Far Right: Function Keys Column */}
                     <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1 min-h-0 overflow-hidden select-none">
                       {[
                         {
@@ -3402,26 +3434,6 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F3 TRANSACTION COMMENT (TIN / CORPORATE BILLING) MODAL */}
-      {isTrxCommentOpen && (
-        <TransactionCommentModal
-          initialComments={state.transactionComments || undefined}
-          onSave={(comments) => {
-            dispatch({
-              type: "SET_TRANSACTION_COMMENTS",
-              comments: {
-                customerName: comments.customerName || "",
-                address: comments.address || "",
-                tin: comments.tin || "",
-                remarks: comments.remarks || "",
-              },
-            });
-            setIsTrxCommentOpen(false);
-            validateScenarioStep("SAVE_TRX_COMMENT");
-          }}
-          onCancel={() => setIsTrxCommentOpen(false)}
-        />
-      )}
 
       {/* F8 RETURN / F10 REFUND MODAL */}
       {returnRefundMode !== null && (
@@ -3473,7 +3485,7 @@ function SimulatorContent() {
       )}
 
 
-      {/* F2 POST VOID MODAL (3rd Page F2) */}
+      {/* F2 POST VOID MODAL */}
       {isPostVoidOpen && (
         <PostVoidModal
           currentOrNumber={state.transactionNumber}
@@ -3487,7 +3499,7 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F3 PRICE CHANGE MODAL (2nd Page F3) */}
+      {/* F3 PRICE CHANGE MODAL */}
       {isPriceChangeOpen && (
         <PriceChangeModal
           items={state.lineItems}
