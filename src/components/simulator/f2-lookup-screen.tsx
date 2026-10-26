@@ -158,6 +158,11 @@ export function F2LookupScreen({
     onSelectItem(item.sku);
   };
 
+  const handleContinue = () => {
+    const chosen = currentPageProducts[selectedIndex];
+    if (chosen) onSelectItem(chosen.sku);
+  };
+
   const todayStr = (() => {
     const d = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
