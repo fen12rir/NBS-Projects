@@ -38,7 +38,7 @@ export const RIGHT_FUNCTION_KEYS: Record<POSPage, RightFunctionKeyDef[]> = {
     { key: "F10", label: "SDV", actionId: "SDV_CHECK", variant: "silver" },
   ],
   FOURTH: [
-    { key: "F2", label: "Best Buy", actionId: "BEST_BUY", variant: "silver" },
+    { key: "F2", label: "Bonus Buy", actionId: "BONUS_BUY", variant: "silver" },
     { key: "F3", label: "Trx Comment", actionId: "TRX_COMMENT", variant: "silver" },
     { key: "F4", label: "Non Sales", actionId: "NON_SALES", variant: "silver" },
     { key: "F5", label: "Next Option", actionId: "NAV_MAIN", variant: "silver" },

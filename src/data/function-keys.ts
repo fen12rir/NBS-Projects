@@ -60,7 +60,7 @@ export const POS_FUNCTION_KEYS: Record<POSPage, FunctionKeyDef[]> = {
   ],
   FOURTH: [
     { key: "F1", label: "HELP", subtext: "Disabled", actionId: "HELP", disabled: true, deckPageRef: "Slide 84" },
-    { key: "F2", label: "BEST BUY", subtext: "Bonus Buy Items", actionId: "BEST_BUY", deckPageRef: "Slide 84" },
+    { key: "F2", label: "BONUS BUY", subtext: "Bonus Buy Items", actionId: "BONUS_BUY", deckPageRef: "Slide 84" },
     { key: "F3", label: "TRX COMMENT", subtext: "Cust Name / TIN", actionId: "TRX_COMMENT", deckPageRef: "Slides 83, 86-88" },
     { key: "F4", label: "NON SALES", subtext: "Downpayment/GC", actionId: "NON_SALES", deckPageRef: "Slide 83" },
     { key: "F5", label: "CUSTOMER", subtext: "Disabled", actionId: "CUSTOMER", disabled: true, deckPageRef: "Slide 83" },

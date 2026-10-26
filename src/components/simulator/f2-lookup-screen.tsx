@@ -4,6 +4,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { SyntheticProduct, SYNTHETIC_PRODUCTS } from "@/data/products";
 
 interface F2LookupScreenProps {
+  trxNumber?: string;
+  clerkName?: string;
+  branchCode?: string;
+  terminalId?: string;
   onCancel: () => void;
   onSelectItem: (sku: string) => void;
   onSearchModeChange?: (mode: string) => void;
@@ -13,6 +17,10 @@ interface F2LookupScreenProps {
 type LookupMode = "SKU" | "DESCRIPTION" | "AUTHOR";
 
 export function F2LookupScreen({
+  trxNumber = "1023202629990004001558",
+  clerkName = "Jan Angela",
+  branchCode = "2999",
+  terminalId = "0004",
   onCancel,
   onSelectItem,
   onSearchModeChange,
@@ -150,13 +158,23 @@ export function F2LookupScreen({
     onSelectItem(item.sku);
   };
 
-  const handleContinue = () => {
-    const chosen = currentPageProducts[selectedIndex];
-    if (chosen) onSelectItem(chosen.sku);
-  };
+  const todayStr = (() => {
+    const d = new Date();
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${d.getFullYear()}-${months[d.getMonth()]}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
 
   return (
-    <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px]">
+    <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-0 overflow-hidden select-none">
+      {/* 0. TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+      <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+        <span><span className="font-bold">Trx.:</span> {trxNumber}</span>
+        <span><span className="font-bold">Clerk:</span> {clerkName}</span>
+        <span><span className="font-bold">Str No.:</span> {branchCode}</span>
+        <span><span className="font-bold">Reg No.:</span> {terminalId}</span>
+        <span className="font-bold">{todayStr}</span>
+      </div>
+
       {/* 1. YELLOW BANNER - Row 1: Title */}
       <div className="bg-[#FFF275] py-1 text-center font-bold text-xs sm:text-sm text-gray-900 uppercase font-sans tracking-wide">
         {mode === "SKU" && "LOOKUP BY SKU / BARCODE"}

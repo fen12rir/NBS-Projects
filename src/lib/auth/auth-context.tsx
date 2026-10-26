@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthUser, DEMO_USER } from "./demo-user";
@@ -29,8 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user previously logged in or active in demo mode
-    const storedDemo = localStorage.getItem("nbs_demo_active");
-    if (storedDemo === "true") {
+    const hasDemoParam = typeof window !== "undefined" && window.location.search.includes("demo=true");
+    const storedDemo = typeof window !== "undefined" ? localStorage.getItem("nbs_demo_active") : null;
+    if (storedDemo === "true" || hasDemoParam) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nbs_demo_active", "true");
+      }
       setUser(DEMO_USER);
       setIsDemoMode(true);
       setIsLoading(false);
