@@ -16,7 +16,7 @@ import { SuspendModal, RecallModal } from "@/components/simulator/suspend-recall
 import { ReprintModal } from "@/components/simulator/reprint-modal";
 import { SdvModal } from "@/components/simulator/sdv-modal";
 import { ReadingsModal } from "@/components/simulator/readings-modal";
-import { TransactionCommentModal } from "@/components/simulator/transaction-comment-modal";
+import { TransactionCommentScreen } from "@/components/simulator/transaction-comment-screen";
 import { ReturnRefundModal } from "@/components/simulator/return-refund-modal";
 import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/electronic-payment-modal";
 import { PostVoidModal } from "@/components/simulator/post-void-modal";
@@ -61,6 +61,7 @@ const CARD_TYPES = [
   "BPI QRPH",
   "Globe Rewards",
   "GCASH",
+  "MAYA",
   "LNQR E-GC",
   "LNQR Sulit Coins",
 ];
@@ -85,6 +86,20 @@ const TERMINAL_OPTIONS = [
   "TERMINAL 1",
   "TERMINAL 2",
 ];
+
+const isEwalletCardType = (type: string) => {
+  const t = (type || "").toUpperCase();
+  return (
+    t === "GCASH" ||
+    t === "MAYA" ||
+    t === "BPI QRPH" ||
+    t === "ATOME" ||
+    t === "BILLEASE" ||
+    t === "GLOBE REWARDS" ||
+    t === "LNQR E-GC" ||
+    t === "LNQR SULIT COINS"
+  );
+};
 
 function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
   if (!scenario) return "ACTIVE_REGISTER";
@@ -174,8 +189,8 @@ function SimulatorContent() {
   const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
   const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
 
-  // Authentic Bank Card In-Screen 4-Step Flow
-  const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
+  // Authentic Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya)
+  const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "EWALLET_DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
   const [selectedBankCardType, setSelectedBankCardType] = useState("-SELECT-");
   const [bankCardSwipeNum, setBankCardSwipeNum] = useState("");
   const [bankCardHolder, setBankCardHolder] = useState("X");
@@ -183,6 +198,8 @@ function SimulatorContent() {
   const [bankCardValidUntil, setBankCardValidUntil] = useState("2028-12-31");
   const [bankCardAuthCode, setBankCardAuthCode] = useState("");
   const [bankCardSlipNo, setBankCardSlipNo] = useState("");
+  const [bankCardRefNo, setBankCardRefNo] = useState("");
+  const [bankCardAmountInput, setBankCardAmountInput] = useState("");
   const [receiptAuthCode, setReceiptAuthCode] = useState("");
   const [receiptInvoiceNumber, setReceiptInvoiceNumber] = useState("");
   const [receiptGeneratedAt, setReceiptGeneratedAt] = useState<Date | null>(null);
@@ -484,14 +501,24 @@ function SimulatorContent() {
   const handlePaymentOkClick = () => {
     if (selectedTenderMethod === "BANK_CARD") {
       if (bankCardStep === "SELECT_TYPE") {
-        handleConfirmBankCardType();
+        let cardType = selectedBankCardType;
+        if (cardType === "-SELECT-") {
+          cardType = "CREDIT CARD";
+          setSelectedBankCardType("CREDIT CARD");
+        }
+        if (isEwalletCardType(cardType)) {
+          setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
+          setBankCardStep("EWALLET_DETAILS");
+        } else {
+          setBankCardStep("SWIPE_CARD");
+        }
         return;
       }
       if (bankCardStep === "SWIPE_CARD") {
         setBankCardStep("DETAILS");
         return;
       }
-      if (bankCardStep === "DETAILS") {
+      if (bankCardStep === "DETAILS" || bankCardStep === "EWALLET_DETAILS") {
         handleConfirmBankCardPayment();
         return;
       }
@@ -523,6 +550,8 @@ function SimulatorContent() {
         setReceiptAuthCode("");
         setReceiptInvoiceNumber("");
         setCardReceiptGeneratedAt(null);
+        setBankCardRefNo("");
+        setBankCardAmountInput("");
         validateScenarioStep("CONFIRM_LNQR_UPDATED");
         return;
       }
@@ -857,6 +886,10 @@ function SimulatorContent() {
         if (e.key === "Escape") {
           e.preventDefault();
           if (selectedTenderMethod === "BANK_CARD") {
+            if (bankCardStep !== "SELECT_TYPE" && bankCardStep !== "FINAL_TEAROFF") {
+              setBankCardStep("SELECT_TYPE");
+              return;
+            }
             setSelectedTenderMethod("CASH");
             setBankCardStep("SELECT_TYPE");
             return;
@@ -1604,7 +1637,7 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER (Adjusted base size so footer is never cutoff across any screen) */}
+      {/* EXACT POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 grid grid-cols-1 2xl:grid-cols-[minmax(0,1080px)_240px] items-center justify-center gap-4 overflow-y-auto min-h-0">
       <div className="relative w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
           {showItemNotFound && (
@@ -1965,7 +1998,7 @@ function SimulatorContent() {
                   }}
                 />
               ) : isLnqrScanScreenOpen ? (
-                /* LNQR SCAN SCREEN (Matches screenshot: Top header, yellow title bar, scan input, green bottom bar) */
+                /* LNQR SCAN SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
                   {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
@@ -2088,8 +2121,31 @@ function SimulatorContent() {
                     </button>
                   </div>
                 </div>
+              ) : isTrxCommentOpen ? (
+                <TransactionCommentScreen
+                  initialComments={state.transactionComments || undefined}
+                  trxNumber={state.transactionNumber}
+                  clerkName={state.cashierName}
+                  branchCode={state.branchCode}
+                  terminalId={state.terminalId}
+                  dateStr={fmtDate(now)}
+                  onSave={(comments) => {
+                    dispatch({
+                      type: "SET_TRANSACTION_COMMENTS",
+                      comments: {
+                        customerName: comments.customerName || "",
+                        address: comments.address || "",
+                        tin: comments.tin || "",
+                        remarks: comments.remarks || "",
+                      },
+                    });
+                    setIsTrxCommentOpen(false);
+                    validateScenarioStep("SAVE_TRX_COMMENT");
+                  }}
+                  onCancel={() => setIsTrxCommentOpen(false)}
+                />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
-                /* AUTHENTIC FULL PAYMENT SCREEN (Matches user screenshot) */
+                /* AUTHENTIC FULL PAYMENT SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
                   {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
@@ -2201,24 +2257,46 @@ function SimulatorContent() {
                                   </div>
                                 </>
                               )}
+                              {selectedTenderMethod === "BANK_CARD" && (
+                                <div className="flex justify-between font-bold text-gray-800">
+                                  <span>Change -&gt;</span>
+                                  <span>0.00</span>
+                                </div>
+                              )}
                               {selectedTenderMethod === "BANK_CARD" && bankCardStep === "FINAL_TEAROFF" && (
-                                <div className="pt-1 text-[10px] font-mono leading-tight">
-                                  <div className="flex justify-between font-bold">
-                                    <span>{bankCardTerminal === "-SELECT-" ? "BDO" : bankCardTerminal.replace(" POS", "")}</span>
-                                    <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                  </div>
-                                  <div className="text-[9px] font-mono space-y-0.5 pt-0.5">
-                                    <div>Card Number &nbsp; &nbsp; &nbsp; &nbsp;:XXXXXXXXXXXX{bankCardSwipeNum ? bankCardSwipeNum.slice(-4) : "0000"}</div>
-                                    <div>Card Holder &nbsp; &nbsp; &nbsp; &nbsp;:{bankCardHolder || "X"}</div>
-                                    <div>Expiry Date &nbsp; &nbsp; &nbsp; &nbsp;:XXXX-XX-XX</div>
-                                    <div>Authorization Code :{bankCardAuthCode || "000000"}</div>
-                                    <div>Sales Slip # &nbsp; &nbsp; &nbsp; :{bankCardSlipNo || "000000"}</div>
-                                    <div className="flex justify-between font-bold font-mono pt-0.5">
-                                      <span>Credit Amt. &nbsp; &nbsp; &nbsp; &nbsp;:</span>
+                                isEwalletCardType(selectedBankCardType) ? (
+                                  <div className="pt-1 text-[10px] font-mono leading-tight">
+                                    <div className="flex justify-between font-bold">
+                                      <span>{selectedBankCardType}</span>
                                       <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
+                                    <div className="text-[9px] font-mono space-y-0.5 pt-0.5">
+                                      <div>Ref No &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; :{bankCardRefNo || "100293847561"}</div>
+                                      <div className="flex justify-between font-bold font-mono pt-0.5">
+                                        <span>Credit Amt. &nbsp; &nbsp; &nbsp; &nbsp;:</span>
+                                        <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      </div>
+                                    </div>
                                   </div>
-                                </div>
+                                ) : (
+                                  <div className="pt-1 text-[10px] font-mono leading-tight">
+                                    <div className="flex justify-between font-bold">
+                                      <span>{bankCardTerminal === "-SELECT-" ? "BDO" : bankCardTerminal.replace(" POS", "")}</span>
+                                      <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="text-[9px] font-mono space-y-0.5 pt-0.5">
+                                      <div>Card Number &nbsp; &nbsp; &nbsp; &nbsp;:XXXXXXXXXXXX{bankCardSwipeNum ? bankCardSwipeNum.slice(-4) : "0000"}</div>
+                                      <div>Card Holder &nbsp; &nbsp; &nbsp; &nbsp;:{bankCardHolder || "X"}</div>
+                                      <div>Expiry Date &nbsp; &nbsp; &nbsp; &nbsp;:XXXX-XX-XX</div>
+                                      <div>Authorization Code :{bankCardAuthCode || "000000"}</div>
+                                      <div>Sales Slip # &nbsp; &nbsp; &nbsp; :{bankCardSlipNo || "000000"}</div>
+                                      <div className="flex justify-between font-bold font-mono pt-0.5">
+                                        <span>Credit Amt. &nbsp; &nbsp; &nbsp; &nbsp;:</span>
+                                        <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )
                               )}
                             </div>
 
@@ -2231,6 +2309,15 @@ function SimulatorContent() {
                               <div className="text-[9px]">for more details or download the app in your phone&apos;s app store.</div>
                               <div className="tracking-widest">******************************************</div>
                             </div>
+
+                            {/* Transaction Comments  */}
+                            {state.transactionComments && (
+                              <div className="border-t border-b border-dashed border-gray-400 my-1.5 py-1 text-left font-mono text-[10px] space-y-0.5">
+                                <div className="font-bold">{state.transactionComments.customerName.toUpperCase()}</div>
+                                <div>{state.transactionComments.tin}</div>
+                                <div>{state.transactionComments.address.toUpperCase()}</div>
+                              </div>
+                            )}
 
                             {/* Tax Info */}
                             <div className="pt-2 space-y-0.5">
@@ -2263,9 +2350,20 @@ function SimulatorContent() {
 
                             {/* Buyer Info */}
                             <div className="pt-3 space-y-1">
-                              <div>BUYER&apos;S NAME : __________________________</div>
-                              <div>ADDRESS &nbsp; &nbsp; &nbsp;: __________________________</div>
-                              <div>TIN &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: __________________________</div>
+                              <div>
+                                BUYER&apos;S NAME : {state.transactionComments?.customerName ? state.transactionComments.customerName.toUpperCase() : "__________________________"}
+                              </div>
+                              <div>
+                                ADDRESS &nbsp; &nbsp; &nbsp;: {state.transactionComments?.address ? state.transactionComments.address.toUpperCase() : "__________________________"}
+                              </div>
+                              <div>
+                                TIN &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;: {state.transactionComments?.tin || "__________________________"}
+                              </div>
+                              {state.transactionComments?.remarks && (
+                                <div>
+                                  REMARKS &nbsp; &nbsp; &nbsp;: {state.transactionComments.remarks.toUpperCase()}
+                                </div>
+                              )}
                             </div>
 
                             {/* Footer Accreditation & Return Policy */}
@@ -2425,7 +2523,9 @@ function SimulatorContent() {
                             {selectedTenderMethod === "CASH"
                               ? "Cash Payment Details"
                               : selectedTenderMethod === "BANK_CARD"
-                              ? "Card Payment Details"
+                              ? (isEwalletCardType(selectedBankCardType)
+                                  ? `${selectedBankCardType} Payment Details`
+                                  : "Card Payment Details")
                               : selectedTenderMethod === "CHECK"
                               ? "Check Payment Details"
                               : selectedTenderMethod === "GIFT_CERT"
@@ -2481,7 +2581,17 @@ function SimulatorContent() {
                                 <form
                                   onSubmit={(e) => {
                                     e.preventDefault();
-                                    handleConfirmBankCardType();
+                                    let cardType = selectedBankCardType;
+                                    if (cardType === "-SELECT-") {
+                                      cardType = "CREDIT CARD";
+                                      setSelectedBankCardType("CREDIT CARD");
+                                    }
+                                    if (isEwalletCardType(cardType)) {
+                                      setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
+                                      setBankCardStep("EWALLET_DETAILS");
+                                    } else {
+                                      setBankCardStep("SWIPE_CARD");
+                                    }
                                   }}
                                   className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
                                 >
@@ -2501,6 +2611,39 @@ function SimulatorContent() {
                                         </option>
                                       ))}
                                     </select>
+                                  </div>
+                                </form>
+                              ) : bankCardStep === "EWALLET_DETAILS" ? (
+                                <form
+                                  onSubmit={(e) => {
+                                    e.preventDefault();
+                                    handleConfirmBankCardPayment();
+                                  }}
+                                  className="w-full max-w-sm space-y-3 px-6 font-sans select-none"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <label className="font-bold text-gray-900 text-sm w-36">
+                                      Amount
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={bankCardAmountInput || (totals.totalAmount ? totals.totalAmount.toFixed(2) : "2990.00")}
+                                      onChange={(e) => setBankCardAmountInput(e.target.value)}
+                                      className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <label className="font-bold text-gray-900 text-sm w-36">
+                                      Reference No
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={bankCardRefNo}
+                                      onChange={(e) => setBankCardRefNo(e.target.value)}
+                                      autoFocus
+                                      placeholder=""
+                                      className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                    />
                                   </div>
                                 </form>
                               ) : bankCardStep === "SWIPE_CARD" ? (
@@ -2781,7 +2924,7 @@ function SimulatorContent() {
                   )}
                 </div>
 
-                    {/* Far Right: Function Keys Column (Repeated structure matching Active Register) */}
+                    {/* Far Right: Function Keys Column */}
                     <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1 min-h-0 overflow-hidden select-none">
                       {[
                         {
@@ -2962,8 +3105,11 @@ function SimulatorContent() {
                         <button
                           type="button"
                           onClick={() => {
-                            setSelectedTenderMethod("CASH");
-                            setBankCardStep("SELECT_TYPE");
+                            if (bankCardStep !== "SELECT_TYPE") {
+                              setBankCardStep("SELECT_TYPE");
+                            } else {
+                              setSelectedTenderMethod("CASH");
+                            }
                           }}
                           className="min-w-[90px] h-[24px] px-5 bg-[#C6C9DB] hover:bg-[#D4D6E6] active:bg-[#B4B7CB] border-2 border-t-white border-l-white border-r-[#808080] border-b-[#808080] flex items-center justify-center font-bold text-xs text-[#000080] shadow-sm cursor-pointer"
                         >
@@ -3507,26 +3653,6 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F3 TRANSACTION COMMENT (TIN / CORPORATE BILLING) MODAL */}
-      {isTrxCommentOpen && (
-        <TransactionCommentModal
-          initialComments={state.transactionComments || undefined}
-          onSave={(comments) => {
-            dispatch({
-              type: "SET_TRANSACTION_COMMENTS",
-              comments: {
-                customerName: comments.customerName || "",
-                address: comments.address || "",
-                tin: comments.tin || "",
-                remarks: comments.remarks || "",
-              },
-            });
-            setIsTrxCommentOpen(false);
-            validateScenarioStep("SAVE_TRX_COMMENT");
-          }}
-          onCancel={() => setIsTrxCommentOpen(false)}
-        />
-      )}
 
       {/* F8 RETURN / F10 REFUND MODAL */}
       {returnRefundMode !== null && (
@@ -3578,7 +3704,7 @@ function SimulatorContent() {
       )}
 
 
-      {/* F2 POST VOID MODAL (3rd Page F2) */}
+      {/* F2 POST VOID MODAL */}
       {isPostVoidOpen && (
         <PostVoidModal
           currentOrNumber={state.transactionNumber}
@@ -3592,7 +3718,7 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F3 PRICE CHANGE MODAL (2nd Page F3) */}
+      {/* F3 PRICE CHANGE MODAL */}
       {isPriceChangeOpen && (
         <PriceChangeModal
           items={state.lineItems}

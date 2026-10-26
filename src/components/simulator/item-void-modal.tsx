@@ -46,7 +46,6 @@ export function ItemVoidModal({ onConfirm, onCancel }: ItemVoidModalProps) {
           </div>
 
           <div className="p-6 space-y-5 text-gray-900">
-            {/* Reason selector matching pos-itemvoid-step2-f7.png */}
             <div className="flex items-center justify-between px-2">
               <label className="text-xs font-bold text-gray-800">Select a Reason</label>
               <select

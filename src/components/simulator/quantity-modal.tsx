@@ -55,7 +55,6 @@ export function QuantityModal({
           onSubmit={handleSubmit}
           className="w-[380px] bg-[#ECE9D8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto"
         >
-          {/* Classic Browser Prompt Title Bar matching pos-quantity-step1-f3.png */}
           <div className="bg-[#0A246A] text-white px-2 py-1 font-bold text-xs flex items-center justify-between">
             <span>The page at http://localhost says:</span>
             <button

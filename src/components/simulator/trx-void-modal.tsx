@@ -51,7 +51,7 @@ export function TrxVoidModal({ onConfirm, onCancel }: TrxVoidModalProps) {
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto">
-          {/* Authentic Green Header matching pos-trxvoid-step2-f8.png */}
+          {/* Authentic Green Header */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
             TRANSACTION VOID
           </div>
