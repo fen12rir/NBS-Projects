@@ -128,6 +128,16 @@ export function JournalViewerModal({
                 <span>-{state.appliedDiscount.percent}%</span>
               </div>
             )}
+            {state.transactionComments && (
+              <div className="border-t border-dashed border-gray-400 my-2 pt-1 text-[10px] space-y-0.5">
+                <div>BUYER&apos;S NAME : {state.transactionComments.customerName.toUpperCase()}</div>
+                <div>ADDRESS      : {state.transactionComments.address.toUpperCase()}</div>
+                <div>TIN          : {state.transactionComments.tin}</div>
+                {state.transactionComments.remarks && (
+                  <div>REMARKS      : {state.transactionComments.remarks.toUpperCase()}</div>
+                )}
+              </div>
+            )}
             <div className="border-t border-dashed border-gray-400 my-2" />
             <div className="text-center text-[10px] text-gray-500 font-mono">
               *** END OF JOURNAL RECORD ***
