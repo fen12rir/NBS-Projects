@@ -83,7 +83,7 @@ export function ReprintModal({
         REPRINT
       </div>
 
-      {/* 3. TWO PANELS MATCHING pos-reprint-step3-f2.png */}
+      {/* 3. TWO PANELS */}
       <div className="flex-1 grid grid-cols-12 p-4 gap-4 bg-white overflow-hidden">
         {/* Left Table: OR No. */}
         <div className="col-span-5 flex flex-col border-2 border-gray-400 bg-white">
@@ -141,7 +141,7 @@ export function ReprintModal({
         </div>
       </div>
 
-      {/* 4. BOTTOM TOOLBAR MATCHING pos-reprint-step3-f2.png */}
+      {/* 4. BOTTOM TOOLBAR */}
       <div className="bg-[#388E3C] border-t-2 border-black p-2 flex items-center justify-center space-x-6">
         <button
           type="button"

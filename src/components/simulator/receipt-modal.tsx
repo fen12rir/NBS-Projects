@@ -68,11 +68,11 @@ export function ReceiptModal({ state, isReprint = false, onClose, onReset }: Rec
           {/* Corporate / Customer Billing info if present */}
           {state.transactionComments && (
             <div className="text-[10px] bg-gray-50 border border-gray-300 p-1.5 space-y-0.5">
-              <div className="font-bold text-gray-700">SOLD TO / BILLING:</div>
-              <div>{state.transactionComments.customerName || "Walk-in Customer"}</div>
-              {state.transactionComments.tin && <div>TIN: {state.transactionComments.tin}</div>}
-              {state.transactionComments.address && <div>ADDR: {state.transactionComments.address}</div>}
-              {state.transactionComments.remarks && <div>REF: {state.transactionComments.remarks}</div>}
+              <div className="font-bold text-gray-700">BUYER INFO:</div>
+              <div>BUYER&apos;S NAME : {state.transactionComments.customerName.toUpperCase()}</div>
+              <div>ADDRESS      : {state.transactionComments.address.toUpperCase()}</div>
+              <div>TIN          : {state.transactionComments.tin}</div>
+              {state.transactionComments.remarks && <div>REMARKS      : {state.transactionComments.remarks.toUpperCase()}</div>}
             </div>
           )}
 

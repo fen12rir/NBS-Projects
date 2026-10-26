@@ -29,7 +29,7 @@ export function SdvModal({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px] select-none">
-      {/* 2. AUTHENTIC YELLOW BANNER matching pos-sdv-step2-f10.png */}
+      {/* 2. AUTHENTIC YELLOW BANNER */}
       <div className="bg-[#FFF275] border-b-2 border-gray-500 py-1.5 text-center font-bold text-lg text-gray-900 tracking-wider">
         Sales Data Verification
       </div>

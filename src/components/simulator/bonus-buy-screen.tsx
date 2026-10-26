@@ -263,7 +263,7 @@ export function BonusBuyScreen({
         </div>
       </div>
 
-      {/* 4. TABLE HEADERS (Beveled 3D Header cells matching image) */}
+      {/* 4. TABLE HEADERS */}
       <div className="bg-[#CCD2D8] border-b border-gray-400 grid grid-cols-12 text-xs font-bold text-gray-900 uppercase tracking-tight">
         <div className="col-span-2 px-3 py-1 border-t border-l border-white border-r border-b border-gray-400">
           PROMO CODE

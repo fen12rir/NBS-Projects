@@ -53,7 +53,7 @@ export function SuspendModal({ onConfirm, onCancel }: SuspendModalProps) {
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto">
-          {/* Authentic Green Header matching pos-suspend-f9.png */}
+          {/* Authentic Green Header */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
             SUSPEND
           </div>
@@ -184,7 +184,7 @@ export function RecallModal({
         RECALL
       </div>
 
-      {/* 3. TWO PANELS MATCHING pos-recall-step3-f7.png */}
+      {/* 3. TWO PANELS */}
       <div className="flex-1 grid grid-cols-12 p-4 gap-4 bg-white overflow-hidden">
         {/* Left Table: Transaction No. */}
         <div className="col-span-5 flex flex-col border-2 border-gray-400 bg-white">
@@ -240,7 +240,7 @@ export function RecallModal({
         </div>
       </div>
 
-      {/* 4. BOTTOM TOOLBAR MATCHING pos-recall-step3-f7.png */}
+      {/* 4. BOTTOM TOOLBAR */}
       <div className="bg-[#388E3C] border-t-2 border-black p-2 flex items-center justify-center space-x-6">
         <button
           type="button"
