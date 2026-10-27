@@ -206,6 +206,7 @@ function SimulatorContent() {
   const [bankCardSlipNo, setBankCardSlipNo] = useState("");
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
+  const [sulitCoinsEarnedAmount, setSulitCoinsEarnedAmount] = useState<number | null>(null);
   const [gcashReferenceNumber, setGcashReferenceNumber] = useState("");
   const [receiptAuthCode, setReceiptAuthCode] = useState("");
   const [receiptInvoiceNumber, setReceiptInvoiceNumber] = useState("");
@@ -382,6 +383,7 @@ function SimulatorContent() {
 
   const handleSelectLoyalty = (optionNum: number) => {
     setSelectedLoyaltyOption(optionNum);
+    setSulitCoinsEarnedAmount(null);
     if (state.lineItems.length === 0) {
       dispatch({ type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
     }
@@ -470,6 +472,7 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
       tenderTimerRef.current = null;
     }
+    dispatch({ type: "CLOSE_PAYMENT" });
     setIsLnqrUpdatedModalOpen(false);
     setIsLnqrCashPaymentOpen(false);
     setIsLnqrTenderProcessed(false);
@@ -482,11 +485,32 @@ function SimulatorContent() {
     setSelectedTenderMethod("CASH");
     setBankCardStep("SELECT_TYPE");
     setBankCardSwipeNum("");
+    setSulitCoinsEarnedAmount(null);
     dispatch({ type: "RESET_TRANSACTION" });
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
   const handleConfirmBankCardPayment = () => {
+    if (
+      bankCardStep === "EWALLET_DETAILS" &&
+      selectedBankCardType.toUpperCase() === "LNQR SULIT COINS"
+    ) {
+      const earnedAmount = Number(bankCardAmountInput.trim());
+      if (!bankCardAmountInput.trim() || !Number.isFinite(earnedAmount) || earnedAmount < 0) {
+        alert("Enter a valid Sulit Coins amount.");
+        return;
+      }
+
+      setSulitCoinsEarnedAmount(earnedAmount);
+      setSelectedTenderMethod("CASH");
+      setSelectedBankCardType("-SELECT-");
+      setBankCardStep("SELECT_TYPE");
+      setBankCardAmountInput("");
+      setBankCardRefNo("");
+      setIsFinalTenderStep(false);
+      return;
+    }
+
     dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
     dispatch({ type: "SELECT_PAYMENT_METHOD", method: "BANK_CARD" });
     validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
@@ -567,6 +591,7 @@ function SimulatorContent() {
         setHasBonusBuyBeenPrompted(false);
         setLoyaltyType("NONE");
         setSelectedTenderMethod("CASH");
+        setSulitCoinsEarnedAmount(null);
         setBankCardStep("SELECT_TYPE");
         setBankCardSwipeNum("");
         setBankCardHolder("X");
@@ -597,6 +622,14 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
       tenderTimerRef.current = null;
     }
+    if (sulitCoinsEarnedAmount !== null) {
+      dispatch({ type: "CLOSE_PAYMENT" });
+      setIsLnqrCashPaymentOpen(false);
+      setIsLnqrTenderProcessed(false);
+      setIsFinalTenderStep(false);
+      setIsLnqrUpdatedModalOpen(true);
+      return;
+    }
     dispatch({ type: "CLOSE_PAYMENT" });
     dispatch({ type: "RESET_TRANSACTION" });
     setIsLnqrCashPaymentOpen(false);
@@ -610,6 +643,7 @@ function SimulatorContent() {
     setHasBonusBuyBeenPrompted(false);
     setLoyaltyType("NONE");
     setSelectedTenderMethod("CASH");
+    setSulitCoinsEarnedAmount(null);
     setBankCardStep("SELECT_TYPE");
     setBankCardSwipeNum("");
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
@@ -2335,6 +2369,12 @@ function SimulatorContent() {
                                 <span>Amount Due</span>
                                 <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
+                              {sulitCoinsEarnedAmount !== null && (
+                                <div className="flex justify-between font-bold">
+                                  <span>LNQR Sulit Coins</span>
+                                  <span>{sulitCoinsEarnedAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                </div>
+                              )}
                               {selectedTenderMethod === "CASH" && isLnqrTenderProcessed && (
                                 <>
                                   <div className="flex justify-between font-bold text-red-600">
@@ -2726,12 +2766,24 @@ function SimulatorContent() {
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <label className="font-bold text-gray-900 text-sm w-36">
-                                      Reference No
+                                    {selectedBankCardType === "LNQR Sulit Coins"
+                                              ? "Scan QR Code"
+                                              : "Reference No"}
                                     </label>
                                     <input
                                       type="text"
-                                      value={bankCardRefNo}
-                                      onChange={(e) => setBankCardRefNo(e.target.value)}
+                                      value={
+                                          selectedBankCardType === "LNQR Sulit Coins"
+                                            ? customerQrInput
+                                            : bankCardRefNo
+                                        }
+                                        onChange={(e) => {
+                                          if (selectedBankCardType === "LNQR Sulit Coins") {
+                                            setCustomerQrInput(e.target.value);
+                                          } else {
+                                            setBankCardRefNo(e.target.value);
+                                          }
+                                        }}
                                       autoFocus
                                       placeholder=""
                                       className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
@@ -3680,7 +3732,7 @@ function SimulatorContent() {
                     <div>Name: Cate Marie Gonzalez</div>
                     <div>Card Number : 20221003LN000004</div>
                     <div>New Sulit Coins: 32.63</div>
-                    <div>Sulit Coins Earn: 11.48</div>
+                    <div>Sulit Coins Earn: {sulitCoinsEarnedAmount?.toFixed(2) ?? "0.00"}</div>
                   </div>
                 </div>
 
