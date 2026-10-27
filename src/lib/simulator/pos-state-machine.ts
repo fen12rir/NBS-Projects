@@ -364,8 +364,15 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       };
 
     case "VOID_ITEM": {
+      const targetCode = (action.itemId || "").trim().toUpperCase();
+      const product = SYNTHETIC_PRODUCTS.find(
+        (p) => p.sku.toUpperCase() === targetCode || p.barcode.toUpperCase() === targetCode
+      );
+      const targetSku = product ? product.sku.toUpperCase() : targetCode;
       const matchIndex = state.lineItems.findIndex(
-        (item) => !item.isVoided && item.id === action.itemId
+        (item) =>
+          !item.isVoided &&
+          (item.id === action.itemId || item.sku.toUpperCase() === targetSku)
       );
 
       if (matchIndex < 0) {

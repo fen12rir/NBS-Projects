@@ -22,7 +22,7 @@ export function ItemVoidModal({ onConfirm, onCancel }: ItemVoidModalProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && e.key === "Enter") {
         e.preventDefault();
-        if (reason) onConfirm(reason);
+        onConfirm(reason || VOID_REASONS[0]);
       } else if (e.key === "Escape") {
         e.preventDefault();
         onCancel();
@@ -72,16 +72,13 @@ export function ItemVoidModal({ onConfirm, onCancel }: ItemVoidModalProps) {
 
             {/* Buttons: Ok & Cancel */}
             <div className="flex items-center justify-center space-x-6 pt-1">
-             <button
-                  type="button"
-                  onClick={() => {
-                    if (reason) onConfirm(reason);
-                  }}
-                  disabled={!reason}
-                  className="min-w-[85px] px-5 py-1 text-xs font-bold font-sans bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black cursor-pointer hover:bg-[#E2E0DC] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  Ok
-                </button>
+              <button
+                type="button"
+                onClick={() => onConfirm(reason || VOID_REASONS[0])}
+                className="min-w-[85px] px-5 py-1 text-xs font-bold font-sans bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black cursor-pointer hover:bg-[#E2E0DC]"
+              >
+                Ok
+              </button>
               <button
                 type="button"
                 onClick={onCancel}

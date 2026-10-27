@@ -314,24 +314,6 @@ export const SYNTHETIC_PRODUCTS: SyntheticProduct[] = [
   },
 
   {
-    sku: "2903000514608",
-    barcode: "2903000514608",
-    description: "PHO ELECTRICAL CIRCUITS",
-    category: "Books",
-    author: "",
-    srp: 100.00,
-    isVatable: false,
-  },
-  {
-    sku: "2903002276009",
-    barcode: "2903002276009",
-    description: "PHO OFFICE PROCEDURES",
-    category: "Books",
-    author: "",
-    srp: 25.00,
-    isVatable: false,
-  },
-  {
     sku: "9780061998454",
     barcode: "9780061998454",
     description: "PHO RIGHTEOUS PORKCHOP",

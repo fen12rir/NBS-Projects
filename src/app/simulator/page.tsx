@@ -259,6 +259,14 @@ function SimulatorContent() {
     createInitialPOSState("Jan Angela")
   );
 
+  const isExternalReceiptShowing =
+    (selectedTenderMethod === "BANK_CARD" &&
+      selectedBankCardType === "CREDIT CARD" &&
+      bankCardStep !== "SELECT_TYPE") ||
+    (selectedTenderMethod === "BANK_CARD" &&
+      selectedBankCardType === "GCASH" &&
+      bankCardStep === "EWALLET_DETAILS");
+
   const [showItemNotFound, setShowItemNotFound] = useState(false);
 
   useEffect(() => {
@@ -685,6 +693,39 @@ function SimulatorContent() {
     isBonusBuyOpen,
   ]);
 
+  const executeItemVoid = (targetId?: string) => {
+    const activeItems = state.lineItems.filter((item) => !item.isVoided);
+    const idToVoid =
+      targetId ||
+      selectedVoidItemId ||
+      (activeItems.length > 0 ? activeItems[activeItems.length - 1].id : null);
+
+    if (!idToVoid) {
+      setIsVoidSkuMode(false);
+      setSelectedVoidItemId(null);
+      setPendingVoidReason(null);
+      return;
+    }
+
+    const selectedItem = state.lineItems.find(
+      (item) => item.id === idToVoid && !item.isVoided
+    );
+
+    if (!selectedItem) {
+      setIsVoidSkuMode(false);
+      setSelectedVoidItemId(null);
+      setPendingVoidReason(null);
+      return;
+    }
+
+    dispatch({ type: "VOID_ITEM", itemId: selectedItem.id });
+    setIsVoidSkuMode(false);
+    setSelectedVoidItemId(null);
+    setPendingVoidReason(null);
+    validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
+    validateScenarioStep("CONFIRM_ITEM_VOID", pendingVoidReason || "Customer changed mind");
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -714,17 +755,7 @@ function SimulatorContent() {
 
       if (isVoidSkuMode && e.altKey && e.key === "Enter") {
         e.preventDefault();
-        const selectedItem = state.lineItems.find(
-          (item) => item.id === selectedVoidItemId && !item.isVoided
-        );
-
-        if (!selectedItem || !pendingVoidReason) return;
-
-        dispatch({ type: "VOID_ITEM", itemId: selectedItem.id });
-        setIsVoidSkuMode(false);
-        setSelectedVoidItemId(null);
-        setPendingVoidReason(null);
-        validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
+        executeItemVoid();
         return;
       }
 
@@ -1399,9 +1430,32 @@ function SimulatorContent() {
 
   const handleBarcodeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isVoidSkuMode) return;
     if (!barcodeInput.trim()) return;
     const code = barcodeInput.trim();
+
+    if (isVoidSkuMode) {
+      const prod = SYNTHETIC_PRODUCTS.find(
+        (p) => p.sku.toUpperCase() === code.toUpperCase() || p.barcode === code
+      );
+      const targetSku = prod ? prod.sku.toUpperCase() : code.toUpperCase();
+      const match = state.lineItems.find(
+        (item) =>
+          !item.isVoided &&
+          (item.sku.toUpperCase() === targetSku || item.id === code)
+      );
+      if (match) {
+        executeItemVoid(match.id);
+      } else {
+        dispatch({ type: "VOID_ITEM", itemId: code });
+        setIsVoidSkuMode(false);
+        setSelectedVoidItemId(null);
+        setPendingVoidReason(null);
+        validateScenarioStep("SCAN_VOID_SKU", code);
+      }
+      setBarcodeInput("");
+      return;
+    }
+
     if (isRefundSkuMode) {
       dispatch({ type: "ADD_ITEM_BY_CODE", code });
       setIsRefundSkuMode(false);
@@ -1658,8 +1712,12 @@ function SimulatorContent() {
       />
 
       {/* EXACT POS TERMINAL CONTAINER */}
-      <div className="flex-1 p-2 sm:p-4 grid grid-cols-1 2xl:grid-cols-[minmax(0,1080px)_240px] items-center justify-center gap-4 overflow-y-auto min-h-0">
-      <div className="relative w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0">
+      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0">
+        <div
+          className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
+            isExternalReceiptShowing ? "-translate-x-16 xl:-translate-x-32" : "translate-x-0"
+          }`}
+        >
           {showItemNotFound && (
             <div
               role="alert"
@@ -2211,16 +2269,16 @@ function SimulatorContent() {
 
                             <div className="flex justify-between pt-1">
                               <span>
-                                {receiptGeneratedAt?.toLocaleDateString("en-US", {
+                                {(receiptGeneratedAt || new Date()).toLocaleDateString("en-US", {
                                   month: "2-digit",
                                   day: "2-digit",
                                   year: "numeric",
-                                }) ?? "--/--/----"}
+                                })}
                               </span>
                               <span>
-                                {receiptGeneratedAt?.toLocaleTimeString("en-US", {
+                                {(receiptGeneratedAt || new Date()).toLocaleTimeString("en-US", {
                                   hour12: false,
-                                }) ?? "--:--:--"}
+                                })}
                               </span>
                             </div>
                             <div>
@@ -2235,15 +2293,27 @@ function SimulatorContent() {
 
                             {/* Items list */}
                             {state.lineItems.length > 0 ? (
-                              state.lineItems.map((item, idx) => (
-                                <div key={item.id} className="leading-tight mb-1">
-                                  <div className="flex justify-between">
-                                    <span>{idx + 1}&nbsp; &nbsp;{item.sku} @ {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                    <span>{item.total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.total > 0 ? "V" : ""}</span>
+                              state.lineItems.map((item, idx) => {
+                                const isVoid = item.isVoided || item.quantity < 0;
+                                const displayQty = isVoid ? -Math.abs(item.quantity) : item.quantity;
+                                const displayTotal = isVoid ? -Math.abs(item.total) : item.total;
+                                return (
+                                  <div key={item.id} className="leading-tight mb-1">
+                                    <div className="flex justify-between">
+                                      <span>
+                                        {idx + 1}&nbsp; &nbsp;{item.sku} @ {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      </span>
+                                      <span className={isVoid ? "text-red-700 font-bold" : ""}>
+                                        {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.total > 0 ? "V" : ""}
+                                      </span>
+                                    </div>
+                                    <div className="flex justify-between pl-6 text-[9px] text-gray-800">
+                                      <span>{item.description}</span>
+                                      {isVoid && <span className="text-red-600 font-bold font-mono">({displayQty}) VOID</span>}
+                                    </div>
                                   </div>
-                                  <div className="pl-6 text-[9px] text-gray-800">{item.description}</div>
-                                </div>
-                              ))
+                                );
+                              })
                             ) : (
                               <div className="leading-tight mb-1">
                                 <div className="flex justify-between">
@@ -3167,18 +3237,46 @@ function SimulatorContent() {
 
                   <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
                     <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
-                      {isVoidSkuMode ? "Select Item to Void" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
+                      <div>
+                        {isVoidSkuMode ? "Select Item to Void" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
+                      </div>
+                      {isVoidSkuMode && (
+                        <div className="text-[10px] text-red-700 font-bold mt-0.5">
+                          Press Alt+Enter or Click Below
+                        </div>
+                      )}
                     </div>
                     <form onSubmit={handleBarcodeSubmit}>
                       <input
                         ref={barcodeRef}
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
-                        disabled={isVoidSkuMode}
-                        placeholder=""
-                        className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
+                        placeholder={isVoidSkuMode ? "Select line item or scan barcode, then Alt+Enter" : ""}
+                        className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
                       />
                     </form>
+                    {isVoidSkuMode && (
+                      <div className="mt-1 flex gap-1.5 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => executeItemVoid()}
+                          className="flex-1 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-[10px] py-1 px-1.5 rounded shadow transition-all cursor-pointer"
+                        >
+                          Confirm Void Item &lt;Alt+Enter&gt;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsVoidSkuMode(false);
+                            setSelectedVoidItemId(null);
+                            setPendingVoidReason(null);
+                          }}
+                          className="bg-gray-300 hover:bg-gray-400 active:bg-gray-500 text-gray-800 font-bold text-[10px] py-1 px-1.5 rounded shadow transition-all cursor-pointer"
+                        >
+                          Cancel &lt;ESC&gt;
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   {/* 4 HORIZONTAL FUNCTION BUTTONS  */}
@@ -3262,7 +3360,7 @@ function SimulatorContent() {
               </div>
 
               {/* LINE ITEM SCREEN PAGE */}
-              <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-[300px]">
+              <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-0">
                 {state.lineItems.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 italic text-xs py-16">
                     Line item screen page (Scan or Enter UPC above)
@@ -3403,7 +3501,9 @@ function SimulatorContent() {
          bankCardStep !== "SELECT_TYPE" && (
            <aside
              aria-label="External card terminal receipt preview"
-             className="w-full max-w-[240px] self-center rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl"
+             className={`w-full max-w-[240px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl z-40 transition-all duration-500 ease-in-out animate-in fade-in duration-300 xl:absolute xl:left-[calc(50%+540px+16px)] xl:top-1/2 xl:-translate-y-1/2 ${
+               isExternalReceiptShowing ? "xl:-translate-x-32" : "xl:translate-x-0"
+             } max-xl:fixed max-xl:right-4 max-xl:top-24 max-xl:max-h-[85vh] max-xl:overflow-y-auto`}
            >
              <div className="mb-2 text-center font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
                Card Terminal
@@ -3424,8 +3524,8 @@ function SimulatorContent() {
                <div className="space-y-1">
                  <div className="text-center text-[12px] font-bold tracking-widest"> INVOICE: {receiptInvoiceNumber} </div>
                  <div className="flex justify-between gap-2">
-                   <span>{new Date().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
-                   <span>{cardReceiptGeneratedAt?.toLocaleTimeString("en-US", { hour12: false }) ?? "--:--:--"}</span>
+                   <span>{(cardReceiptGeneratedAt || new Date()).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
+                   <span>{(cardReceiptGeneratedAt || new Date()).toLocaleTimeString("en-US", { hour12: false })}</span>
                  </div>
                </div>
 
@@ -3462,7 +3562,9 @@ function SimulatorContent() {
           bankCardStep === "EWALLET_DETAILS" && (
             <aside
               aria-label="GCash payment terminal"
-              className="w-full max-w-[240px] self-center border-2 border-gray-600 bg-gray-900 p-4 shadow-xl"
+              className={`w-full max-w-[240px] border-2 border-gray-600 bg-gray-900 p-4 shadow-xl z-40 transition-all duration-500 ease-in-out animate-in fade-in duration-300 xl:absolute xl:left-[calc(50%+540px+16px)] xl:top-1/2 xl:-translate-y-1/2 ${
+                isExternalReceiptShowing ? "xl:-translate-x-32" : "xl:translate-x-0"
+              } max-xl:fixed max-xl:right-4 max-xl:top-24 max-xl:max-h-[85vh] max-xl:overflow-y-auto`}
             >
               <div className="mb-4 border-b border-gray-600 pb-2 text-center font-bold text-white">
                 GCASH

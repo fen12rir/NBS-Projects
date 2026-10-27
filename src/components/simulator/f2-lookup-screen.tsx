@@ -28,7 +28,9 @@ export function F2LookupScreen({
 }: F2LookupScreenProps) {
   const [mode, setMode] = useState<LookupMode>("SKU");
   const [searchTerm, setSearchTerm] = useState(initialSearch);
-  const [submittedSearch, setSubmittedSearch] = useState<string | null>(null);
+  const [submittedSearch, setSubmittedSearch] = useState<string | null>(
+    initialSearch && initialSearch.trim() ? initialSearch.trim() : null
+  );
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
@@ -44,19 +46,18 @@ export function F2LookupScreen({
   useEffect(() => {
     inputRef.current?.focus();
     setSearchTerm(initialSearch);
+    if (initialSearch && initialSearch.trim()) {
+      setSubmittedSearch(initialSearch.trim());
+    }
     setSelectedIndex(0);
     setPage(1);
   }, [initialSearch]);
 
-  // Filter products based on active mode & search term
-  /*const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
-    if (!searchTerm.trim()) return true;
-    const term = searchTerm.toLowerCase().trim();*/
-
+  // Filter products based on active mode & submitted search term (empty on first visit)
   const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
-  if (submittedSearch === null) return false;
+    if (!submittedSearch || !submittedSearch.trim()) return false;
 
-  const term = submittedSearch.toLowerCase().trim();
+    const term = submittedSearch.toLowerCase().trim();
     if (mode === "SKU") {
       return item.sku.toLowerCase().includes(term) || item.barcode.toLowerCase().includes(term);
     } else if (mode === "DESCRIPTION") {
@@ -125,11 +126,9 @@ export function F2LookupScreen({
 
         if (document.activeElement === inputRef.current) {
           const query = searchTerm.trim();
-          if (query) {
-            setSubmittedSearch(query);
-            setPage(1);
-            setSelectedIndex(0);
-          }
+          setSubmittedSearch(query ? query : null);
+          setPage(1);
+          setSelectedIndex(0);
           return;
         }
 
@@ -276,6 +275,7 @@ export function F2LookupScreen({
           <span className="text-base font-bold text-gray-900 font-sans tracking-tight">Look for:</span>
           <input
             ref={inputRef}
+            autoFocus
             type="text"
             value={searchTerm}
             onChange={(e) => {
@@ -299,9 +299,9 @@ export function F2LookupScreen({
 
       {/* 6. TABLE BODY ROWS */}
      <div className="flex-1 min-h-[300px] overflow-y-auto bg-white divide-y divide-gray-200 font-mono text-xs">
-  {submittedSearch === null ? (
+  {!submittedSearch ? (
     <div className="p-12 text-center text-gray-500 italic">
-      Enter a search and press Enter to see items.
+      Enter a search or scan a barcode and press Enter to see items.
     </div>
   ) : currentPageProducts.length === 0 ? (
     <div className="p-12 text-center text-gray-500 italic">

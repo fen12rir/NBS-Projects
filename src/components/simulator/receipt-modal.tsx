@@ -78,21 +78,30 @@ export function ReceiptModal({ state, isReprint = false, onClose, onReset }: Rec
 
           {/* Item Rows */}
           <div className="space-y-1.5 border-b border-dashed border-gray-400 pb-3">
-            {state.lineItems.map((item) => (
-              <div key={item.id} className="space-y-0.5">
-                <div className="flex justify-between font-bold">
-                  <span className="truncate max-w-[200px]">{item.description}</span>
-                  <span>{formatCurrency(item.total)}</span>
+            {state.lineItems.map((item) => {
+              const isVoid = item.isVoided || item.quantity < 0;
+              const displayQty = isVoid ? -Math.abs(item.quantity) : item.quantity;
+              const displayTotal = isVoid ? -Math.abs(item.total) : item.total;
+              return (
+                <div key={item.id} className="space-y-0.5">
+                  <div className="flex justify-between font-bold">
+                    <span className={`truncate max-w-[200px] ${isVoid ? "line-through text-red-600" : ""}`}>
+                      {item.description}
+                    </span>
+                    <span className={isVoid ? "text-red-600 font-bold" : ""}>
+                      {formatCurrency(displayTotal)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-[10px] text-gray-500">
+                    <span>
+                      {displayQty} x @{formatCurrency(item.unitPrice)}
+                      {state.isZeroRated ? " [VE]" : " [VT]"}
+                    </span>
+                    <span className="font-bold text-red-600">{isVoid ? "VOIDED" : ""}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between text-[10px] text-gray-500">
-                  <span>
-                    {item.quantity} x @{formatCurrency(item.unitPrice)}
-                    {state.isZeroRated ? " [VE]" : " [VT]"}
-                  </span>
-                  <span className="font-bold text-red-600">{item.isVoided ? "VOIDED" : ""}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Totals & Discounts */}
