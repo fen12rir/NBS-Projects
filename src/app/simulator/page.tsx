@@ -1177,6 +1177,13 @@ function SimulatorContent() {
     const currentKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
     const matched = currentKeys.find((k) => k.key === fKey);
     if (matched && !matched.disabled) {
+      if (
+        state.currentPage === "MAIN" &&
+        state.lineItems.length === 0 &&
+        (matched.key === "F4" || matched.key === "F7" || matched.key === "F8" || matched.key === "F9")
+      ) {
+        return;
+      }
       handleAction(matched.actionId);
       return;
     }
@@ -1419,18 +1426,22 @@ function SimulatorContent() {
         validateScenarioStep("PAY_SULIT_COINS");
         break;
       case "ITEM_VOID":
+        if (state.lineItems.length === 0) return;
         dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Item Void" });
         validateScenarioStep("ITEM_VOID");
         break;
       case "TRX_VOID":
+        if (state.lineItems.length === 0) return;
         setIsTrxVoidModalOpen(true);
         validateScenarioStep("TRX_VOID");
         break;
       case "TRX_DISC":
+        if (state.lineItems.length === 0) return;
         setIsTrxDiscOpen(true);
         validateScenarioStep("TRX_DISC");
         break;
       case "SUSPEND":
+        if (state.lineItems.length === 0) return;
         setIsSuspendModalOpen(true);
         validateScenarioStep("SUSPEND");
         break;
@@ -2430,17 +2441,14 @@ function SimulatorContent() {
                                 {/* Cash Drawer Status Indicator */}
                                 {(() => {
                                   const tenderVal = parseFloat(lnqrCashTenderInput) || 0;
-                                  const changeDue = tenderVal - totals.totalAmount;
+                                  const changeDue = Math.max(0, tenderVal - totals.totalAmount);
                                   const hasChange = changeDue > 0;
-                                  return hasChange ? (
+                                  return (
                                     <div className="inline-flex items-center space-x-1.5 bg-amber-100 border-2 border-amber-500 text-amber-900 font-extrabold text-xs px-3 py-1 rounded shadow-sm">
                                       <span className="text-sm">🔔</span>
-                                      <span>[ CASH DRAWER: OPEN ] Change: ₱{changeDue.toFixed(2)}</span>
-                                    </div>
-                                  ) : (
-                                    <div className="inline-flex items-center space-x-1.5 bg-gray-200 border border-gray-500 text-gray-700 font-bold text-xs px-3 py-1 rounded">
-                                      <span className="text-sm">🔒</span>
-                                      <span>[ CASH DRAWER: CLOSED ] (Exact Amount)</span>
+                                      <span>
+                                        [ CASH DRAWER: OPEN ] {hasChange ? `Change: ₱${changeDue.toFixed(2)}` : "Change: ₱0.00 (Exact Amount)"}
+                                      </span>
                                     </div>
                                   );
                                 })()}
@@ -3366,15 +3374,19 @@ function SimulatorContent() {
             {/* RIGHT 2 COLS: VERTICAL FUNCTION KEYS PANEL */}
             <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1 min-h-0 overflow-hidden">
               {rightKeys.map((kDef) => {
-                const isF4Payment = kDef.key === "F4" && state.currentPage === "MAIN";
-                const isRed = isF4Payment
+                const isItemAction =
+                  state.currentPage === "MAIN" &&
+                  (kDef.key === "F4" || kDef.key === "F7" || kDef.key === "F8" || kDef.key === "F9");
+                const isActionDisabled = isItemAction && state.lineItems.length === 0;
+                const isRed = isItemAction
                   ? state.lineItems.length === 0
                   : kDef.variant === "red";
                 const isVoidSkuHighlight = isVoidSkuMode && kDef.key === "F7";
+                const isDisabled = kDef.disabled || isActionDisabled;
                 return (
                   <button
                     key={kDef.key}
-                    disabled={kDef.disabled}
+                    disabled={isDisabled}
                     onClick={() => handleAction(kDef.actionId)}
                     className={
                       "w-full flex-1 min-h-[50px] p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
@@ -3383,7 +3395,10 @@ function SimulatorContent() {
                         : isVoidSkuHighlight
                         ? "bg-[#FFF275] border-2 border-yellow-500 text-gray-900 font-black"
                         : isRed
-                        ? "bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-white border-red-700"
+                        ? "bg-[#E4002B] text-white border-red-700 " +
+                          (isActionDisabled
+                            ? "cursor-not-allowed opacity-90"
+                            : "hover:bg-[#C10024] active:bg-[#9B001D]")
                         : "bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] text-gray-900 border-gray-400")
                     }
                   >
