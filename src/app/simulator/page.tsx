@@ -126,6 +126,7 @@ const isEwalletCardType = (type: string) => {
     t === "ATOME" ||
     t === "BILLEASE" ||
     t === "GLOBE REWARDS" ||
+    t === "NBS GIFTCARD" ||
     t === "LNQR E-GC" ||
     t === "LNQR SULIT COINS"
   );
@@ -2605,7 +2606,9 @@ function SimulatorContent() {
                                 >
                                   <div className="flex items-center justify-between">
                                     <label className="font-bold text-gray-900 text-sm w-36">
-                                      Amount
+                                      {selectedBankCardType.toUpperCase() === "NBS GIFTCARD"
+                                        ? "Voucher Amount"
+                                        : "Amount"}
                                     </label>
                                     <input
                                       type="text"
@@ -2616,9 +2619,11 @@ function SimulatorContent() {
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <label className="font-bold text-gray-900 text-sm w-36">
-                                    {selectedBankCardType === "LNQR Sulit Coins"
-                                              ? "Scan QR Code"
-                                              : "Reference No"}
+                                      {selectedBankCardType.toUpperCase() === "NBS GIFTCARD"
+                                        ? "Voucher Code"
+                                        : selectedBankCardType === "LNQR Sulit Coins"
+                                        ? "Scan QR Code"
+                                        : "Reference No"}
                                     </label>
                                     <input
                                       type="text"
