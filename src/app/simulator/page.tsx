@@ -3434,6 +3434,7 @@ function SimulatorContent() {
       <LnqrUpdatedModal
         isOpen={isLnqrUpdatedModalOpen}
         onConfirm={handleConfirmLnqrUpdated}
+        sulitCoinsEarnedAmount={sulitCoinsEarnedAmount}
       />
 
       {/* QUICK CATALOG PICKER */}

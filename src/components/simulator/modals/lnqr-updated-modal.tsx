@@ -3,11 +3,13 @@ import React from "react";
 interface LnqrUpdatedModalProps {
   isOpen: boolean;
   onConfirm: () => void;
+  sulitCoinsEarnedAmount: number | null;
 }
 
 export function LnqrUpdatedModal({
   isOpen,
   onConfirm,
+  sulitCoinsEarnedAmount,
 }: LnqrUpdatedModalProps) {
   if (!isOpen) return null;
 
@@ -58,7 +60,7 @@ export function LnqrUpdatedModal({
                 <div>Name: Cate Marie Gonzalez</div>
                 <div>Card Number : 20221003LN000004</div>
                 <div>New Sulit Coins: 32.63</div>
-                <div>Sulit Coins Earn: 11.48</div>
+                <div>Sulit Coins Earn: {sulitCoinsEarnedAmount?.toFixed(2) ?? "0.00"}</div>
               </div>
             </div>
 
