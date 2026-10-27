@@ -72,6 +72,7 @@ const CARD_TYPES = [
   "Globe Rewards",
   "GCASH",
   "MAYA",
+  "NBS GIFTCARD",
   "LNQR E-GC",
   "LNQR Sulit Coins",
 ];
@@ -257,6 +258,7 @@ function SimulatorContent() {
   const [giftCertType, setGiftCertType] = useState("-SELECT-");
   const [giftCertNumber, setGiftCertNumber] = useState("123456789");
   const [couponSeries, setCouponSeries] = useState("-SELECT-");
+  const [couponEntryMode, setCouponEntryMode] = useState<"SELECT" | "WITH_SERIES" | "WITHOUT_SERIES">("SELECT");
   const [couponType, setCouponType] = useState("--PLEASE SELECT--");
   const [couponNumber, setCouponNumber] = useState("CP-99214");
   const [couponDenom, setCouponDenom] = useState("50.00");
@@ -1075,15 +1077,14 @@ function SimulatorContent() {
           e.preventDefault();
           setSelectedTenderMethod("GIFT_CERT");
           setElectronicPaymentType("Gift Certificate Series");
-          setIsElectronicPaymentOpen(true);
           validateScenarioStep("PAY_GC");
           return;
         }
         if (e.key === "F6") {
           e.preventDefault();
           setSelectedTenderMethod("COUPON");
+          setCouponEntryMode("SELECT");
           setElectronicPaymentType("Promo Coupon");
-          setIsElectronicPaymentOpen(true);
           validateScenarioStep("PAY_COUPON");
           return;
         }
@@ -1403,6 +1404,7 @@ function SimulatorContent() {
         break;
       case "PAY_COUPON":
         setSelectedTenderMethod("COUPON");
+        setCouponEntryMode("SELECT");
         setElectronicPaymentType("Promo Coupon");
         validateScenarioStep("PAY_COUPON");
         break;
@@ -2504,7 +2506,7 @@ function SimulatorContent() {
                               : selectedTenderMethod === "GIFT_CERT"
                               ? "Gift Certificate Details"
                               : selectedTenderMethod === "COUPON"
-                              ? "Coupon Details"
+                              ? (couponEntryMode === "SELECT" ? "Coupon Type" : "Coupon Details")
                               : selectedTenderMethod === "EPURSE"
                               ? "E-Purse Payment Details"
                               : "Credit Memo Details"}
@@ -2796,64 +2798,127 @@ function SimulatorContent() {
                             </div>
                           </form>
                         ) : selectedTenderMethod === "COUPON" ? (
-                          <form
-                            onSubmit={(e) => {
-                              e.preventDefault();
-                              handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
-                            }}
-                            className="w-full max-w-xs space-y-1.5 text-xs font-sans text-gray-800"
-                          >
-                            <div className="grid grid-cols-3 items-center">
-                              <span className="font-bold">Series:</span>
+                          couponEntryMode === "SELECT" ? (
+                            <div className="flex w-full max-w-xs flex-col items-center gap-2 font-sans text-xs text-gray-900">
+                              <label htmlFor="coupon-entry-mode" className="font-bold">
+                                Select Coupon Type
+                              </label>
                               <select
-                                value={couponSeries}
-                                onChange={(e) => setCouponSeries(e.target.value)}
-                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                id="coupon-entry-mode"
+                                value={couponEntryMode}
+                                onChange={(e) => {
+                                  if (e.target.value !== "SELECT") {
+                                    setCouponEntryMode(e.target.value as "WITH_SERIES" | "WITHOUT_SERIES");
+                                  }
+                                }}
+                                className="w-56 bg-white border-2 border-gray-500 px-2 py-1 text-xs font-bold shadow-inner"
                               >
-                                <option>-SELECT-</option>
-                                <option>Series A</option>
-                                <option>Series B</option>
+                                <option value="SELECT">--PLEASE SELECT--</option>
+                                <option value="WITH_SERIES">With Series</option>
+                                <option value="WITHOUT_SERIES">Without Series</option>
                               </select>
                             </div>
-                            <div className="grid grid-cols-3 items-center">
-                              <span className="font-bold">Type:</span>
-                              <select
-                                value={couponType}
-                                onChange={(e) => setCouponType(e.target.value)}
-                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
-                              >
-                                <option>--PLEASE SELECT--</option>
-                                <option>Book Promo 50</option>
-                                <option>School Supplies 100</option>
-                              </select>
-                            </div>
-                            <div className="grid grid-cols-3 items-center">
-                              <span className="font-bold">Coupon No:</span>
-                              <input
-                                type="text"
-                                value={couponNumber}
-                                onChange={(e) => setCouponNumber(e.target.value)}
-                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                              />
-                            </div>
-                            <div className="grid grid-cols-3 items-center">
-                              <span className="font-bold">Denom:</span>
-                              <input
-                                type="text"
-                                value={couponDenom}
-                                onChange={(e) => setCouponDenom(e.target.value)}
-                                className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
-                              />
-                            </div>
-                            <div className="flex justify-center pt-2">
-                              <button
-                                type="submit"
-                                className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
-                              >
-                                Process Payment (Enter)
-                              </button>
-                            </div>
-                          </form>
+                          ) : (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
+                              }}
+                              className="w-full max-w-xs space-y-1.5 text-xs font-sans text-gray-800"
+                            >
+                              {couponEntryMode === "WITH_SERIES" && (
+                                <div className="grid grid-cols-3 items-center">
+                                  <span className="font-bold">Series:</span>
+                                  <select
+                                    value={couponSeries}
+                                    onChange={(e) => setCouponSeries(e.target.value)}
+                                    className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                  >
+                                    <option>-SELECT-</option>
+                                    <option>Series A</option>
+                                    <option>Series B</option>
+                                  </select>
+                                </div>
+                              )}
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Coupon Type:</span>
+                                <select
+                                  value={couponType}
+                                  onChange={(e) => setCouponType(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 text-xs font-bold"
+                                >
+                                  <option>--PLEASE SELECT--</option>
+                                  <option>BEAR_BRAND_PROMO</option>
+                                  <option>EO_VOUCHER</option>
+                                  <option>GIFTAWAY</option>
+                                  <option>KOKO_KRUNCH_PROMO</option>
+                                  <option>NBS</option>
+                                  <option>PNB_PROMO</option>
+                                  <option>SUNSILK</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Coupon No:</span>
+                                <input
+                                  type="text"
+                                  value={couponNumber}
+                                  onChange={(e) => setCouponNumber(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+                              <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Coupon Denomination:</span>
+                                <input
+                                  type="text"
+                                  value={couponDenom}
+                                  onChange={(e) => setCouponDenom(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+
+                               <div className="grid grid-cols-3 items-center">
+                                <span className="font-bold">Avail Amount:</span>
+                                <input
+                                  type="text"
+                                  value={couponDenom}
+                                  onChange={(e) => setCouponDenom(e.target.value)}
+                                  className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                />
+                              </div>
+
+                               <div className="grid grid-cols-3 items-center">
+                                    <span className="col-span-2 font-bold text-gray-800">Redemption Date:</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardValidUntil}
+                                      onChange={(e) => setBankCardValidUntil(e.target.value)}
+                                      placeholder="(YYYY-mm-dd)"
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+
+                              <div className="grid grid-cols-3 items-center">
+                                    <span className="col-span-2 font-bold text-gray-800">Valid Until</span>
+                                    <input
+                                      type="text"
+                                      value={bankCardValidUntil}
+                                      onChange={(e) => setBankCardValidUntil(e.target.value)}
+                                      placeholder="(YYYY-mm-dd)"
+                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
+                                    />
+                                  </div>
+
+
+                              <div className="flex justify-center pt-2">
+                                <button
+                                  type="submit"
+                                  className="px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer"
+                                >
+                                  Process Payment (Enter)
+                                </button>
+                              </div>
+                            </form>
+                          )
                         ) : selectedTenderMethod === "CREDIT_MEMO" ? (
                           <form
                             onSubmit={(e) => {
@@ -2977,6 +3042,7 @@ function SimulatorContent() {
                           variant: "gray",
                           onClick: () => {
                             setSelectedTenderMethod("COUPON");
+                            setCouponEntryMode("SELECT");
                             setElectronicPaymentType("Promo Coupon");
                             validateScenarioStep("PAY_COUPON");
                           },
