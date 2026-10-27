@@ -4,28 +4,38 @@ import React, { useReducer, useState, useEffect, useRef, Suspense } from "react"
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { ReceiptModal } from "@/components/simulator/receipt-modal";
+import { ReceiptModal } from "@/components/simulator/modals/receipt-modal";
 import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
-import { F2LookupScreen } from "@/components/simulator/f2-lookup-screen";
-import { ManagerOverrideModal } from "@/components/simulator/manager-override-modal";
-import { ItemVoidModal } from "@/components/simulator/item-void-modal";
-import { TransactionDiscountModal } from "@/components/simulator/transaction-discount-modal";
-import { TrxVoidModal } from "@/components/simulator/trx-void-modal";
-import { QuantityModal } from "@/components/simulator/quantity-modal";
-import { SuspendModal, RecallModal } from "@/components/simulator/suspend-recall-modal";
-import { ReprintModal } from "@/components/simulator/reprint-modal";
-import { SdvModal } from "@/components/simulator/sdv-modal";
-import { ReadingsModal } from "@/components/simulator/readings-modal";
-import { TransactionCommentScreen } from "@/components/simulator/transaction-comment-screen";
-import { ReturnRefundModal } from "@/components/simulator/return-refund-modal";
-import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/electronic-payment-modal";
-import { PostVoidModal } from "@/components/simulator/post-void-modal";
-import { PriceChangeModal } from "@/components/simulator/price-change-modal";
-import { NonMdseModal } from "@/components/simulator/non-mdse-modal";
-import { JournalViewerModal } from "@/components/simulator/journal-viewer-modal";
-import { NonSalesModal } from "@/components/simulator/non-sales-modal";
-import { BonusBuyScreen } from "@/components/simulator/bonus-buy-screen";
-import { ChooseOptionScreen } from "@/components/simulator/choose-option-screen";
+import { F2LookupScreen } from "@/components/simulator/screens/f2-lookup-screen";
+import { ManagerOverrideModal } from "@/components/simulator/modals/manager-override-modal";
+import { ItemVoidModal } from "@/components/simulator/modals/item-void-modal";
+import { TransactionDiscountModal } from "@/components/simulator/modals/transaction-discount-modal";
+import { TrxVoidModal } from "@/components/simulator/modals/trx-void-modal";
+import { QuantityModal } from "@/components/simulator/modals/quantity-modal";
+import { SuspendModal, RecallModal } from "@/components/simulator/modals/suspend-recall-modal";
+import { ReprintModal } from "@/components/simulator/modals/reprint-modal";
+import { SdvModal } from "@/components/simulator/modals/sdv-modal";
+import { ReadingsModal } from "@/components/simulator/modals/readings-modal";
+import { TransactionCommentScreen } from "@/components/simulator/screens/transaction-comment-screen";
+import { ReturnRefundModal } from "@/components/simulator/modals/return-refund-modal";
+import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/modals/electronic-payment-modal";
+import { PostVoidModal } from "@/components/simulator/modals/post-void-modal";
+import { PriceChangeModal } from "@/components/simulator/modals/price-change-modal";
+import { NonMdseModal } from "@/components/simulator/modals/non-mdse-modal";
+import { JournalViewerModal } from "@/components/simulator/modals/journal-viewer-modal";
+import { NonSalesModal } from "@/components/simulator/modals/non-sales-modal";
+import { BonusBuyScreen } from "@/components/simulator/screens/bonus-buy-screen";
+import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option-screen";
+import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-terminal";
+import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-terminal-preview";
+import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
+import { LogoutModal } from "@/components/simulator/modals/logout-modal";
+import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
+import { ScenarioCompleteModal } from "@/components/simulator/modals/scenario-complete-modal";
+import { StartOfDayVerifyScreen } from "@/components/simulator/screens/start-of-day-verify-screen";
+import { StartOfDayCloseScreen } from "@/components/simulator/screens/start-of-day-close-screen";
+import { PosReloaderScreen } from "@/components/simulator/screens/pos-reloader-screen";
+import { UserLoginScreen } from "@/components/simulator/screens/user-login-screen";
 import { 
   posReducer, 
   createInitialPOSState, 
@@ -83,6 +93,19 @@ function generateGcashReferenceNumber() {
   return Math.floor(Math.random() * 10_000_000_000)
     .toString()
     .padStart(10, "0");
+}
+
+function generateMayaTraceNumber() {
+  return Math.floor(1000 + Math.random() * 90000)
+    .toString()
+    .padStart(8, "0");
+}
+
+function generateMayaReferenceNumber() {
+  const characters = "0123456789ABCDEF";
+  return Array.from({ length: 12 }, () =>
+    characters[Math.floor(Math.random() * characters.length)]
+  ).join("");
 }
 
 const TERMINAL_OPTIONS = [
@@ -207,6 +230,9 @@ function SimulatorContent() {
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
   const [gcashReferenceNumber, setGcashReferenceNumber] = useState("");
+  const [mayaTraceNumber, setMayaTraceNumber] = useState("");
+  const [mayaReferenceNumber, setMayaReferenceNumber] = useState("");
+  const [mayaGeneratedAt, setMayaGeneratedAt] = useState<Date | null>(null);
   const [receiptAuthCode, setReceiptAuthCode] = useState("");
   const [receiptInvoiceNumber, setReceiptInvoiceNumber] = useState("");
   const [receiptGeneratedAt, setReceiptGeneratedAt] = useState<Date | null>(null);
@@ -265,7 +291,10 @@ function SimulatorContent() {
       bankCardStep !== "SELECT_TYPE") ||
     (selectedTenderMethod === "BANK_CARD" &&
       selectedBankCardType === "GCASH" &&
-      bankCardStep === "EWALLET_DETAILS");
+      bankCardStep === "EWALLET_DETAILS") ||
+    (selectedTenderMethod === "BANK_CARD" &&
+      selectedBankCardType === "MAYA" &&
+      (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"));
 
   const [showItemNotFound, setShowItemNotFound] = useState(false);
 
@@ -514,15 +543,27 @@ function SimulatorContent() {
   };
 
   const handleConfirmEwalletType = (cardType: string) => {
-  setSelectedBankCardType(cardType);
-  setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
-  setGcashReferenceNumber(
-    cardType.toUpperCase() === "GCASH"
-      ? generateGcashReferenceNumber()
-      : ""
-  );
-  setBankCardStep("EWALLET_DETAILS");
-};
+    setSelectedBankCardType(cardType);
+    setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
+    setBankCardRefNo("");
+    if (cardType.toUpperCase() === "GCASH") {
+      setGcashReferenceNumber(generateGcashReferenceNumber());
+      setMayaTraceNumber("");
+      setMayaReferenceNumber("");
+      setMayaGeneratedAt(null);
+    } else if (cardType.toUpperCase() === "MAYA") {
+      setMayaTraceNumber(generateMayaTraceNumber());
+      setMayaReferenceNumber(generateMayaReferenceNumber());
+      setMayaGeneratedAt(new Date());
+      setGcashReferenceNumber("");
+    } else {
+      setGcashReferenceNumber("");
+      setMayaTraceNumber("");
+      setMayaReferenceNumber("");
+      setMayaGeneratedAt(null);
+    }
+    setBankCardStep("EWALLET_DETAILS");
+  };
 
   const handlePaymentOkClick = () => {
     if (selectedTenderMethod === "BANK_CARD") {
@@ -579,6 +620,10 @@ function SimulatorContent() {
         setCardReceiptGeneratedAt(null);
         setBankCardRefNo("");
         setBankCardAmountInput("");
+        setGcashReferenceNumber("");
+        setMayaTraceNumber("");
+        setMayaReferenceNumber("");
+        setMayaGeneratedAt(null);
         validateScenarioStep("CONFIRM_LNQR_UPDATED");
         return;
       }
@@ -1729,241 +1774,40 @@ function SimulatorContent() {
 
           {/* SCREEN 1: START OF DAY VERIFY */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
-            <div className="flex-1 h-full min-h-0 bg-white flex flex-col items-center justify-center p-6 select-none relative">
-              <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-5">
-                <div className="space-y-1">
-                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight">
-                    Today is {fmtLongDate(now)}
-                  </div>
-                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight">
-                    {fmtDayName(now)}
-                  </div>
-                  <div className="text-[#E4002B] font-bold text-2xl font-sans tracking-tight font-mono">
-                    {fmtTime(now)}
-                  </div>
-                  <div className="text-[#E4002B] font-bold text-lg pt-2 font-sans">
-                    Is the date and time correct?
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-center space-x-6 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleVerifyDateYes}
-                    className={`min-w-[85px] px-5 py-1.5 text-sm font-bold font-sans transition-all border-2 ${
-                      selectedSodButton === "YES"
-                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                    }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedSodButton("NO");
-                      validateScenarioStep("VERIFY_DATE_NO");
-                    }}
-                    className={`min-w-[85px] px-5 py-1.5 text-sm font-bold font-sans transition-all border-2 ${
-                      selectedSodButton === "NO"
-                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
-
-              </div>
-            </div>
+            <StartOfDayVerifyScreen
+              now={now}
+              selectedButton={selectedSodButton}
+              onVerifyYes={handleVerifyDateYes}
+              onVerifyNo={() => {
+                setSelectedSodButton("NO");
+                validateScenarioStep("VERIFY_DATE_NO");
+              }}
+            />
           )}
 
           {/* SCREEN 2: START OF DAY CLOSE */}
           {terminalMode === "START_OF_DAY_CLOSE" && (
-            <div className="flex-1 h-full min-h-0 bg-white flex flex-col items-center justify-center p-6 select-none relative">
-              <div className="max-w-lg w-full bg-white border border-gray-300 p-8 shadow-sm flex flex-col items-center text-center space-y-6">
-                <div className="space-y-2 text-[#E4002B] font-bold text-xl font-sans">
-                  <p>You can now start using your POS terminal.</p>
-                  <p>Have a nice day.</p>
-                </div>
-
-                <div className="p-4 bg-red-50 border border-red-200 text-[#E4002B] font-bold text-base leading-relaxed max-w-md">
-                  Press <kbd className="bg-white px-2 py-0.5 border border-red-300 text-red-900 font-mono text-sm">Ctrl+Alt+C</kbd> to close this window and<br />
-                  Press <kbd className="bg-white px-2 py-0.5 border border-red-300 text-red-900 font-mono text-sm">(F5)</kbd> to go to login page.
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCloseSodWindow}
-                  className="px-6 py-2.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-sm font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer font-sans"
-                >
-                  Close Window (Ctrl+Alt+C)
-                </button>
-              </div>
-            </div>
+            <StartOfDayCloseScreen onCloseWindow={handleCloseSodWindow} />
           )}
 
           {/* SCREEN 2B: POS RELOADER */}
           {terminalMode === "POS_RELOADER" && (
-            <div className="flex-1 h-full min-h-0 bg-white flex flex-col select-none relative font-sans">
-              {/* Retro Browser Menu Bar */}
-              <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1 flex items-center space-x-4 text-xs text-gray-800 font-sans">
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">File</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Edit</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">View</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">History</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Bookmarks</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Tools</span>
-                <span className="hover:bg-blue-600 hover:text-white px-1 cursor-default">Help</span>
-              </div>
-
-              {/* Retro Browser Navigation / Address Bar */}
-              <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1.5 flex items-center space-x-2 text-xs">
-                {/* Back / Forward / Refresh */}
-                <div className="flex items-center space-x-1 text-gray-500 font-mono text-sm select-none">
-                  <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">{'\u2190'}</span>
-                  <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">{'\u2192'}</span>
-                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u21BA'}</span>
-                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u2715'}</span>
-                  <span className="px-1 border border-gray-300 bg-gray-100">{'\u2302'}</span>
-                </div>
-
-                {/* URL Address Input */}
-                <div className="flex-1 bg-white border border-gray-500 px-2 py-0.5 flex items-center justify-between text-xs font-mono text-gray-900 shadow-inner">
-                  <span>http://localhost/dv3/pos_nbs/</span>
-                  <span className="text-gray-400 text-[10px]">{'\u25BC'}</span>
-                </div>
-
-                {/* Search / Go */}
-                <div className="w-36 bg-white border border-gray-500 px-2 py-0.5 text-xs text-gray-500 font-sans flex items-center justify-between shadow-inner">
-                  <span>Google</span>
-                  <span className="text-gray-400 text-[10px]">{'\u{1F50D}'}</span>
-                </div>
-              </div>
-
-              {/* Browser Bookmarks Bar */}
-              <div className="bg-[#ECE9D8] border-b border-gray-300 px-3 py-0.5 flex items-center space-x-4 text-[11px] text-gray-700">
-                <span className="flex items-center space-x-1">
-                  <span className="text-red-600 font-bold">{'\u25CF'}</span>
-                  <span>Getting Started</span>
-                </span>
-                <span className="flex items-center space-x-1">
-                  <span className="text-orange-500 font-bold">{'\u{1F4F0}'}</span>
-                  <span>Latest Headlines</span>
-                </span>
-              </div>
-
-              {/* POS Reloader Web Page Body */}
-              <div className="flex-1 bg-white p-6 flex flex-col justify-between">
-                <div>
-                  <h2 className="text-base font-serif text-gray-900">
-                    POS Reloader
-                  </h2>
-                </div>
-
-                {/* Trainee Helper Guidance Banner */}
-                <div className="border border-blue-200 bg-blue-50 p-4 max-w-lg mx-auto text-center space-y-3">
-                  <p className="text-xs text-blue-900 font-medium">
-                    The setup window has closed. The POS terminal is now in the browser reloader state.
-                  </p>
-                  <p className="text-sm font-bold text-blue-950">
-                    Press <kbd className="bg-white px-2 py-1 border border-blue-400 text-blue-900 font-mono text-sm">F5</kbd> on your keyboard to reload into the <strong>USER LOGIN</strong> page.
-                  </p>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={handleReloadToLogin}
-                      className="px-5 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer font-sans"
-                    >
-                      Reload Page (F5)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Bottom spacer */}
-                <div className="h-4" />
-              </div>
-            </div>
+            <PosReloaderScreen onReloadToLogin={handleReloadToLogin} />
           )}
 
           {/* SCREEN 3: USER LOGIN */}
           {terminalMode === "USER_LOGIN" && (
-            <div className="flex-1 h-full min-h-0 bg-white flex flex-col select-none relative">
-              <div className="h-6 bg-[#FFF275] border-b border-gray-300" />
-
-              <div className="flex-1 bg-[#ECE9D8] flex flex-col items-center justify-center p-6">
-                <form
-                  onSubmit={handleLoginSubmit}
-                  className="w-[340px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans"
-                >
-                  <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
-                    USER LOGIN
-                  </div>
-
-                  <div className="p-4 space-y-3">
-                    <div className="text-center text-xs font-semibold text-gray-700">
-                      Enter Information
-                    </div>
-
-                    <div>
-                      <input
-                        type="text"
-                        value={loginUsername}
-                        onChange={(e) => setLoginUsername(e.target.value)}
-                        placeholder="UserName"
-                        className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
-                        autoFocus
-                      />
-                      <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
-                        UserName
-                      </div>
-                    </div>
-
-                    <div>
-                      <input
-                        type="password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="Password"
-                        className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
-                      />
-                      <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
-                        Password
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex items-center justify-center space-x-3 pt-2">
-                      <button
-                        type="submit"
-                        className="min-w-[80px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
-                      >
-                        Ok
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setLoginUsername("");
-                          setLoginPassword("");
-                        }}
-                        className="min-w-[80px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                </form>
-
-                <div className="mt-4 text-xs text-gray-700 font-sans space-y-0.5 text-left">
-                  <div>Press [F2] for Lookup</div>
-                  <div>Press [F3] for Masterfile Updates</div>
-                  <div>Press [F5] for Scandos</div>
-                  <div>Press [F10] to Activate E-Gift Card</div>
-                </div>
-              </div>
-
-              <div className="h-6 bg-[#228B22]" />
-            </div>
+            <UserLoginScreen
+              loginUsername={loginUsername}
+              loginPassword={loginPassword}
+              onUsernameChange={setLoginUsername}
+              onPasswordChange={setLoginPassword}
+              onSubmit={handleLoginSubmit}
+              onCancel={() => {
+                setLoginUsername("");
+                setLoginPassword("");
+              }}
+            />
           )}
 
           {/* SCREEN 4: ACTIVE REGISTER */}
@@ -2307,10 +2151,7 @@ function SimulatorContent() {
                                         {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.total > 0 ? "V" : ""}
                                       </span>
                                     </div>
-                                    <div className="flex justify-between pl-6 text-[9px] text-gray-800">
-                                      <span>{item.description}</span>
-                                      {isVoid && <span className="text-red-600 font-bold font-mono">({displayQty}) VOID</span>}
-                                    </div>
+                                    <div className="pl-6 text-[9px] text-gray-800">{item.description}</div>
                                   </div>
                                 );
                               })
@@ -2361,7 +2202,9 @@ function SimulatorContent() {
                                       <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                     <div className="text-[9px] font-mono space-y-0.5 pt-0.5">
-                                      <div>Ref No &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; :{bankCardRefNo || "100293847561"}</div>
+                                      <div>
+                                        Ref No &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; :{bankCardRefNo || (selectedBankCardType === "MAYA" ? mayaTraceNumber : "100293847561")}
+                                      </div>
                                       <div className="flex justify-between font-bold font-mono pt-0.5">
                                         <span>Credit Amt. &nbsp; &nbsp; &nbsp; &nbsp;:</span>
                                         <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -2677,12 +2520,9 @@ function SimulatorContent() {
                                       setSelectedBankCardType("CREDIT CARD");
                                     }
                                     if (isEwalletCardType(cardType)) {
-                                      setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
-                                      setBankCardStep("EWALLET_DETAILS");
-                                    } 
-                                    
-                                    else {
-                                            handleConfirmBankCardType();
+                                      handleConfirmEwalletType(cardType);
+                                    } else {
+                                      handleConfirmBankCardType();
                                     }
                                   }}
                                   className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
@@ -3210,7 +3050,7 @@ function SimulatorContent() {
                       )}
                     </div>
 
-                    {/* Right 2 cols (Green with Clock) */}
+                    {/* Right 2 cols */}
                     <div className="col-span-2 bg-[#22A838] flex items-center justify-center px-1 text-black font-bold font-sans text-xs tracking-tight">
                       {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
                     </div>
@@ -3499,207 +3339,50 @@ function SimulatorContent() {
         {selectedTenderMethod === "BANK_CARD" &&
          selectedBankCardType === "CREDIT CARD" &&
          bankCardStep !== "SELECT_TYPE" && (
-           <aside
-             aria-label="External card terminal receipt preview"
-             className={`w-full max-w-[240px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl z-40 transition-all duration-500 ease-in-out animate-in fade-in duration-300 xl:absolute xl:left-[calc(50%+540px+16px)] xl:top-1/2 xl:-translate-y-1/2 ${
-               isExternalReceiptShowing ? "xl:-translate-x-32" : "xl:translate-x-0"
-             } max-xl:fixed max-xl:right-4 max-xl:top-24 max-xl:max-h-[85vh] max-xl:overflow-y-auto`}
-           >
-             <div className="mb-2 text-center font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
-               Card Terminal
-             </div>
-             <div className="mx-auto min-h-[380px] w-full max-w-[190px] bg-[#fffef8] px-3 py-5 font-mono text-[9px] leading-tight text-gray-900 shadow-md">
-               <header className="mb-4 text-center">
-                 <div className="mb-2 text-3xl font-black tracking-tight">BDO</div>
-                 <div>NATIONAL BOOK STORE</div>
-                 <div>OWNED &amp; OPERATED BY:</div>
-                 <div>ABACUS BOOK &amp; CARD CORPORATION</div>
-                 <div>QUAD ALPHA CENTRUM 125 PIONEER ST.</div>
-                 <div>HIGHWAY HILLS 1550 MANDALUYONG CITY</div>
-                 <div>VAT Registered TIN: 000-299-299-00000</div>
-                 <div>MIN : 140355124</div>
-                 <div>TERMINAL: 00000000</div>
-               </header>
-
-               <div className="space-y-1">
-                 <div className="text-center text-[12px] font-bold tracking-widest"> INVOICE: {receiptInvoiceNumber} </div>
-                 <div className="flex justify-between gap-2">
-                   <span>{(cardReceiptGeneratedAt || new Date()).toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" })}</span>
-                   <span>{(cardReceiptGeneratedAt || new Date()).toLocaleTimeString("en-US", { hour12: false })}</span>
-                 </div>
-               </div>
-
-               <div className="my-3 border-t border-dashed border-gray-500" />
-               <div className="text-center font-bold tracking-widest">CARD SALE</div>
-               <div className="mt-2 space-y-1">
-                 <div>CARD: ************</div>
-                 <div>CARD TYPE: CREDIT</div>
-                 <div className="font-bold text-[12px]">
-                   APPROVAL CODE: {receiptAuthCode}
-                 </div>
-               </div>
-
-               <div className="my-3 border-t border-dashed border-gray-500" />
-               <div className="flex justify-between gap-2 text-[12px] font-bold">
-                 <span>AMOUNT:</span>
-                 <span>PHP {totals.totalAmount.toLocaleString("en-US", {
-                   minimumFractionDigits: 2,
-                   maximumFractionDigits: 2,
-                 })}</span>
-               </div>
-
-               <footer className="mt-5 space-y-1 text-center">
-                 <div>PLEASE KEEP THIS COPY</div>
-                 <div className="mt-3 font-bold">*** CUSTOMER COPY ***</div>
-                 <div className="mt-3 text-[8px]">THANK YOU</div>
-               </footer>
-             </div>
-           </aside>
+           <BdoCardTerminal
+             isExternalReceiptShowing={isExternalReceiptShowing}
+             invoiceNumber={receiptInvoiceNumber}
+             authCode={receiptAuthCode}
+             generatedAt={cardReceiptGeneratedAt}
+             totalAmount={totals.totalAmount}
+           />
          )}
 
-         {selectedTenderMethod === "BANK_CARD" &&
-          selectedBankCardType === "GCASH" &&
-          bankCardStep === "EWALLET_DETAILS" && (
-            <aside
-              aria-label="GCash payment terminal"
-              className={`w-full max-w-[240px] border-2 border-gray-600 bg-gray-900 p-4 shadow-xl z-40 transition-all duration-500 ease-in-out animate-in fade-in duration-300 xl:absolute xl:left-[calc(50%+540px+16px)] xl:top-1/2 xl:-translate-y-1/2 ${
-                isExternalReceiptShowing ? "xl:-translate-x-32" : "xl:translate-x-0"
-              } max-xl:fixed max-xl:right-4 max-xl:top-24 max-xl:max-h-[85vh] max-xl:overflow-y-auto`}
-            >
-              <div className="mb-4 border-b border-gray-600 pb-2 text-center font-bold text-white">
-                GCASH
-              </div>
-              <div className="min-h-[180px] space-y-3 text-center text-sm text-white">
-              <div>GCash reference number</div>
-              <div className="font-mono text-lg font-bold">
-                {gcashReferenceNumber}
-              </div>
-            </div>
-            </aside>
-          )}
+        {selectedTenderMethod === "BANK_CARD" &&
+         selectedBankCardType === "GCASH" &&
+         bankCardStep === "EWALLET_DETAILS" && (
+           <GcashTerminalPreview
+             isExternalReceiptShowing={isExternalReceiptShowing}
+             referenceNumber={gcashReferenceNumber}
+           />
+         )}
+
+        {selectedTenderMethod === "BANK_CARD" &&
+         selectedBankCardType === "MAYA" &&
+         (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF") && (
+           <MayaTerminalReceipt
+             isExternalReceiptShowing={isExternalReceiptShowing}
+             traceNumber={mayaTraceNumber}
+             referenceNumber={mayaReferenceNumber}
+             generatedAt={mayaGeneratedAt}
+             totalAmount={totals.totalAmount}
+           />
+         )}
       </div>
 
       {/* LOGOUT CONFIRMATION MODAL */}
-      {isLogoutModalOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={handleCancelLogout}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-            <div className="w-[360px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
-              {/* Green Title Bar */}
-              <div className="bg-[#228B22] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide">
-                LOGOUT
-              </div>
-
-              {/* Dialog Body */}
-              <div className="p-6 space-y-6">
-                <div className="text-center font-bold text-sm text-gray-900">
-                  Are you sure you want to LOGOUT?
-                </div>
-
-                {/* Action Buttons: Yes & No */}
-                <div className="flex items-center justify-center space-x-6">
-                  <button
-                    type="button"
-                    onClick={handleConfirmLogout}
-                    className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
-                      selectedLogoutButton === "YES"
-                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                    }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelLogout}
-                    className={`min-w-[80px] px-5 py-1.5 text-xs font-bold font-sans transition-all border-2 ${
-                      selectedLogoutButton === "NO"
-                        ? "bg-[#D4D0C8] border-red-600 ring-2 ring-red-500 shadow-inner text-black font-extrabold"
-                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                    }`}
-                  >
-                    No
-                  </button>
-                </div>
-
-                <div className="text-center text-[11px] text-gray-500 font-mono">
-                  Press <kbd className="bg-white px-1 border text-gray-800 font-bold">TAB</kbd> to toggle, <kbd className="bg-white px-1 border text-gray-800 font-bold">ENTER</kbd> to confirm
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-
+      <LogoutModal
+        isOpen={isLogoutModalOpen}
+        selectedButton={selectedLogoutButton}
+        onConfirm={handleConfirmLogout}
+        onCancel={handleCancelLogout}
+      />
 
       {/* LNQR HAS BEEN UPDATED MODAL */}
-      {isLnqrUpdatedModalOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
-            onClick={handleConfirmLnqrUpdated}
-          />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-            <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto">
-              {/* Window Title Bar */}
-              <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
-                <div className="flex items-center space-x-1 truncate">
-                  <span className="text-[10px] leading-none">{'\u2022'}</span>
-                  <span className="text-[11px] truncate tracking-wide text-gray-100">
-                    The page at http://localhost says:
-                  </span>
-                </div>
-                <div className="flex items-center space-x-0.5">
-                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">_</div>
-                  <div className="w-3.5 h-3.5 bg-[#4A6475] border border-[#7A93A4] flex items-center justify-center text-[9px] text-gray-200">
-                    <div className="w-2 h-2 border border-gray-200" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleConfirmLnqrUpdated}
-                    className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
-                  >
-                    {'\u2715'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Window Content */}
-              <div className="p-4 space-y-4">
-                <div className="flex items-start space-x-3">
-                  {/* Yellow Warning Triangle Icon */}
-                  <div className="text-amber-500 font-extrabold text-2xl leading-none flex-shrink-0">
-                    ⚠️
-                  </div>
-                  <div className="text-xs font-sans text-gray-900 space-y-1 font-semibold leading-relaxed">
-                    <div className="font-bold text-sm text-gray-900 mb-1">LNQR has been updated!</div>
-                    <div>Name: Cate Marie Gonzalez</div>
-                    <div>Card Number : 20221003LN000004</div>
-                    <div>New Sulit Coins: 32.63</div>
-                    <div>Sulit Coins Earn: 11.48</div>
-                  </div>
-                </div>
-
-                {/* OK Button */}
-                <div className="flex justify-end pt-2">
-                  <button
-                    type="button"
-                    onClick={handleConfirmLnqrUpdated}
-                    className="min-w-[70px] px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
-                    autoFocus
-                  >
-                    OK
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <LnqrUpdatedModal
+        isOpen={isLnqrUpdatedModalOpen}
+        onConfirm={handleConfirmLnqrUpdated}
+      />
 
       {/* QUICK CATALOG PICKER */}
       <div className="max-w-[1080px] w-full mx-auto px-4 pb-4">
@@ -3920,99 +3603,15 @@ function SimulatorContent() {
 
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
-      {isExamCompleted && activeScenario && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity" />
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-200 pointer-events-none">
-            <div className="bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl max-w-md w-full overflow-hidden font-sans pointer-events-auto">
-              {/* Retro Green Header */}
-              <div className="bg-[#228B22] text-white px-4 py-2 font-bold text-sm flex items-center justify-between uppercase tracking-wide">
-                <div className="flex items-center space-x-2">
-                  <Trophy className="w-4 h-4 text-yellow-300" />
-                  <span>PRACTICE COMPLETED!</span>
-                </div>
-              </div>
-
-              {/* Content Body */}
-              <div className="p-6 space-y-5 text-gray-900">
-                {/* Badge & Title */}
-                <div className="text-center space-y-2">
-                  <div className="w-14 h-14 bg-emerald-100 border-2 border-emerald-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                    <CheckCircle className="w-8 h-8 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-black text-gray-900 tracking-tight">
-                      Congratulations!
-                    </h3>
-                    <p className="text-xs text-gray-600 mt-0.5 font-medium">
-                      You successfully finished all steps for:
-                    </p>
-                    <div className="text-xs font-bold text-[#E4002B] mt-1 bg-white border border-gray-400 py-1 px-2 shadow-inner font-mono">
-                      {activeScenario.title}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Performance Stats */}
-                <div className="bg-white border-2 border-gray-400 p-3 grid grid-cols-3 gap-2 text-center text-xs font-mono shadow-inner">
-                  <div className="border-r border-gray-300 pr-1">
-                    <div className="text-gray-500 text-[10px] uppercase font-bold">Steps</div>
-                    <div className="font-extrabold text-sm text-gray-900">
-                      {activeScenario.steps.length}/{activeScenario.steps.length}
-                    </div>
-                  </div>
-                  <div className="border-r border-gray-300 pr-1">
-                    <div className="text-gray-500 text-[10px] uppercase font-bold">Mistakes</div>
-                    <div className={"font-extrabold text-sm " + (mistakes.length === 0 ? "text-emerald-600" : "text-amber-600")}>
-                      {mistakes.length}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-[10px] uppercase font-bold">Score</div>
-                    <div className="font-extrabold text-sm text-emerald-600">
-                      {Math.max(0, 100 - mistakes.length * 10)}%
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-2">
-                  <button
-                    type="button"
-                    onClick={handleResetExam}
-                    className="flex-1 px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Practice Again</span>
-                  </button>
-
-                  {(() => {
-                    const finalScore = Math.max(0, 100 - mistakes.length * 10);
-                    const modalReturnUrl = isLessonSpecific
-                      ? `${returnLessonUrl}?fromPractice=true&score=${finalScore}`
-                      : returnLessonUrl;
-
-                    return (
-                      <Link
-                        href={modalReturnUrl}
-                        className="flex-1"
-                      >
-                        <button
-                          type="button"
-                          className="w-full px-4 py-2 bg-[#E4002B] hover:bg-[#C10024] active:bg-[#9B001D] text-xs font-bold text-white border-2 border-red-800 shadow flex items-center justify-center space-x-1.5 cursor-pointer font-sans"
-                        >
-                          <span>{returnButtonLabel}</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </Link>
-                    );
-                  })()}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ScenarioCompleteModal
+        isOpen={isExamCompleted}
+        scenario={activeScenario}
+        mistakesCount={mistakes.length}
+        isLessonSpecific={isLessonSpecific}
+        returnLessonUrl={returnLessonUrl}
+        returnButtonLabel={returnButtonLabel}
+        onResetExam={handleResetExam}
+      />
     </div>
   );
 }
