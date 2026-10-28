@@ -217,6 +217,7 @@ function SimulatorContent() {
   const [isSuspendModalOpen, setIsSuspendModalOpen] = useState(false);
   const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
   const [isRefundSkuMode, setIsRefundSkuMode] = useState(false);
+  const [pendingReturn, setPendingReturn] = useState<{ reason: string; siNumber: string } | null>(null);
   const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
   const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
 
@@ -1550,8 +1551,21 @@ function SimulatorContent() {
     }
 
     if (isRefundSkuMode) {
-      dispatch({ type: "ADD_ITEM_BY_CODE", code });
+      if (!pendingReturn) {
+        console.error("Refund UPC entry requires pending return details.");
+        setIsRefundSkuMode(false);
+        setBarcodeInput("");
+        return;
+      }
+
+      dispatch({
+        type: "PROCESS_RETURN_ITEM",
+        sku: code,
+        reason: pendingReturn.reason,
+        siNumber: pendingReturn.siNumber,
+      });
       setIsRefundSkuMode(false);
+      setPendingReturn(null);
       validateScenarioStep("SCAN_REFUND_SKU", code);
       validateScenarioStep("ADD_ITEM", code);
       setBarcodeInput("");
@@ -1818,6 +1832,30 @@ function SimulatorContent() {
             >
               Item not found
             </div>
+          )}
+
+          {/* F8 RETURN / F10 REFUND MODAL */}
+          {returnRefundMode !== null && (
+            <ReturnRefundModal
+              mode={returnRefundMode}
+              onConfirmReturn={(data) => {
+                setPendingReturn({ reason: data.reason, siNumber: data.orNumber });
+                setBarcodeInput("");
+                setIsRefundSkuMode(true);
+                setReturnRefundMode(null);
+                validateScenarioStep("CONFIRM_RETURN", data.orNumber);
+              }}
+              onConfirmRefund={(data) => {
+                dispatch({
+                  type: "PROCESS_REFUND",
+                  orNumber: data.orNumber,
+                  reason: data.reason,
+                });
+                setReturnRefundMode(null);
+                validateScenarioStep("CONFIRM_REFUND", data.amount);
+              }}
+              onCancel={() => setReturnRefundMode(null)}
+            />
           )}
 
           {/* SCREEN 1: START OF DAY VERIFY */}
@@ -2319,7 +2357,7 @@ function SimulatorContent() {
                               </div>
                               <div className="flex justify-between">
                                 <span>VAT Zero-Rated Sale</span>
-                                <span>0.00</span>
+                                <span>{(state.isZeroRated ? totalSales : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span>VAT Exempt Sale</span>
@@ -3222,7 +3260,13 @@ function SimulatorContent() {
                         ref={barcodeRef}
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
-                        placeholder={isVoidSkuMode ? "Select line item or scan barcode, then Alt+Enter" : ""}
+                        placeholder={
+                          isVoidSkuMode
+                            ? "Select line item or scan barcode, then Alt+Enter"
+                            : isRefundSkuMode
+                            ? ""
+                            : ""
+                        }
                         className="w-full bg-white border border-gray-500 px-2 py-1 text-sm font-mono font-bold text-gray-900 text-center focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"
                       />
                     </form>
@@ -3334,7 +3378,7 @@ function SimulatorContent() {
               <div className="flex-1 bg-white overflow-y-auto p-1 font-mono text-xs divide-y divide-gray-100 min-h-0">
                 {state.lineItems.length === 0 ? (
                   <div className="h-full flex items-center justify-center text-gray-400 italic text-xs py-16">
-                    Line item screen page (Scan or Enter UPC above)
+                    Line item screen page ({isRefundSkuMode ? "Enter Refund UPC above" : "Scan or Enter UPC above"})
                   </div>
                 ) : (
                   state.lineItems.map((item, idx) => {
@@ -3617,35 +3661,6 @@ function SimulatorContent() {
           onReset={() => setIsReprintReceiptOpen(false)}
         />
       )}
-
-
-      {/* F8 RETURN / F10 REFUND MODAL */}
-      {returnRefundMode !== null && (
-        <ReturnRefundModal
-          mode={returnRefundMode}
-          onConfirmReturn={(data) => {
-            dispatch({
-              type: "PROCESS_RETURN_ITEM",
-              sku: data.sku,
-              reason: data.reason,
-              siNumber: data.orNumber,
-            });
-            setReturnRefundMode(null);
-            validateScenarioStep("CONFIRM_RETURN", data.sku);
-          }}
-          onConfirmRefund={(data) => {
-            dispatch({
-              type: "PROCESS_REFUND",
-              orNumber: data.orNumber,
-              reason: data.reason,
-            });
-            setReturnRefundMode(null);
-            validateScenarioStep("CONFIRM_REFUND", data.amount);
-          }}
-          onCancel={() => setReturnRefundMode(null)}
-        />
-      )}
-
       {/* MODULE 8 ELECTRONIC / CARD PAYMENT MODAL */}
       {isElectronicPaymentOpen && (
         <ElectronicPaymentModal
