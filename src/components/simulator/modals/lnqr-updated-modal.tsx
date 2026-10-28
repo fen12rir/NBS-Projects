@@ -3,15 +3,27 @@ import React from "react";
 interface LnqrUpdatedModalProps {
   isOpen: boolean;
   onConfirm: () => void;
-  sulitCoinsEarnedAmount: number | null;
+  sulitCoinsEarnedAmount?: number | null;
+  customerName?: string;
+  cardNumber?: string;
+  previousBalance?: number;
+  currentBalance?: number;
 }
 
 export function LnqrUpdatedModal({
   isOpen,
   onConfirm,
-  sulitCoinsEarnedAmount,
+  sulitCoinsEarnedAmount = 29.70,
+  customerName = "Jan Angela Catindig",
+  cardNumber = "20260511LN000006",
+  previousBalance = 0.90,
+  currentBalance = 30.60,
 }: LnqrUpdatedModalProps) {
   if (!isOpen) return null;
+
+  const earnedCoins = sulitCoinsEarnedAmount ?? 29.70;
+  const prevBal = previousBalance ?? 0.90;
+  const currBal = currentBalance ?? (prevBal + earnedCoins);
 
   return (
     <>
@@ -57,10 +69,11 @@ export function LnqrUpdatedModal({
                 <div className="font-bold text-sm text-gray-900 mb-1">
                   LNQR has been updated!
                 </div>
-                <div>Name: Cate Marie Gonzalez</div>
-                <div>Card Number : 20221003LN000004</div>
-                <div>New Sulit Coins: 32.63</div>
-                <div>Sulit Coins Earn: {sulitCoinsEarnedAmount?.toFixed(2) ?? "0.00"}</div>
+                <div>Name: {customerName}</div>
+                <div>Card Number : {cardNumber}</div>
+                <div>Previous Balance: {prevBal.toFixed(2)}</div>
+                <div>Earned Sulit Coins: {earnedCoins.toFixed(2)}</div>
+                <div>Current Balance: {currBal.toFixed(2)}</div>
               </div>
             </div>
 

@@ -232,6 +232,10 @@ function SimulatorContent() {
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
   const [sulitCoinsEarnedAmount, setSulitCoinsEarnedAmount] = useState<number | null>(null);
+  const [sulitCoinsRedeemedAmount, setSulitCoinsRedeemedAmount] = useState<number | null>(null);
+  const [sulitCoinsRefNo, setSulitCoinsRefNo] = useState("");
+  const [isConnectingLnqrServer, setIsConnectingLnqrServer] = useState(false);
+  const [isSulitLoading, setIsSulitLoading] = useState(false);
   const [gcashReferenceNumber, setGcashReferenceNumber] = useState("");
   const [mayaTraceNumber, setMayaTraceNumber] = useState("");
   const [mayaReferenceNumber, setMayaReferenceNumber] = useState("");
@@ -493,6 +497,14 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
     }
 
+    if (sulitCoinsRedeemedAmount !== null || loyaltyType === "LNQR") {
+      setIsConnectingLnqrServer(true);
+      tenderTimerRef.current = setTimeout(() => {
+        setIsLnqrUpdatedModalOpen(true);
+      }, 1000);
+      return;
+    }
+
     // Show "Dont press any key.. Please wait..." then transition to final tear-off / close register screen
     tenderTimerRef.current = setTimeout(() => {
       setIsFinalTenderStep(true);
@@ -504,21 +516,9 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
       tenderTimerRef.current = null;
     }
-    dispatch({ type: "CLOSE_PAYMENT" });
     setIsLnqrUpdatedModalOpen(false);
-    setIsLnqrCashPaymentOpen(false);
-    setIsLnqrTenderProcessed(false);
-    setIsFinalTenderStep(false);
-    setIsLnqrScanScreenOpen(false);
-    setIsLncCardScreenOpen(false);
-    setIsLoyaltyOptionOpen(false);
-    setHasBonusBuyBeenPrompted(false);
-    setLoyaltyType("NONE");
-    setSelectedTenderMethod("CASH");
-    setBankCardStep("SELECT_TYPE");
-    setBankCardSwipeNum("");
-    setSulitCoinsEarnedAmount(null);
-    dispatch({ type: "RESET_TRANSACTION" });
+    setIsConnectingLnqrServer(false);
+    setIsFinalTenderStep(true);
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
@@ -527,19 +527,28 @@ function SimulatorContent() {
       bankCardStep === "EWALLET_DETAILS" &&
       selectedBankCardType.toUpperCase() === "LNQR SULIT COINS"
     ) {
-      const earnedAmount = Number(bankCardAmountInput.trim());
-      if (!bankCardAmountInput.trim() || !Number.isFinite(earnedAmount) || earnedAmount < 0) {
+      const redeemedCoins = Number(bankCardAmountInput.trim());
+      if (!bankCardAmountInput.trim() || !Number.isFinite(redeemedCoins) || redeemedCoins < 0) {
         alert("Enter a valid Sulit Coins amount.");
         return;
       }
 
-      setSulitCoinsEarnedAmount(earnedAmount);
-      setSelectedTenderMethod("CASH");
-      setSelectedBankCardType("-SELECT-");
-      setBankCardStep("SELECT_TYPE");
-      setBankCardAmountInput("");
-      setBankCardRefNo("");
-      setIsFinalTenderStep(false);
+      const refNo = customerQrInput.trim() || bankCardRefNo.trim() || "20260511LN000006";
+      setSulitCoinsRedeemedAmount(redeemedCoins);
+      setSulitCoinsRefNo(refNo);
+      setSulitCoinsEarnedAmount(29.70);
+      setIsSulitLoading(true);
+
+      setTimeout(() => {
+        setIsSulitLoading(false);
+        setSelectedTenderMethod("CASH");
+        setSelectedBankCardType("-SELECT-");
+        setBankCardStep("SELECT_TYPE");
+        setIsLnqrCashPaymentOpen(true);
+        setIsLnqrTenderProcessed(false);
+        setIsFinalTenderStep(false);
+        setLnqrCashTenderInput("3000.00");
+      }, 800);
       return;
     }
 
@@ -583,12 +592,22 @@ function SimulatorContent() {
       setMayaReferenceNumber(generateMayaReferenceNumber());
       setMayaGeneratedAt(new Date());
       setGcashReferenceNumber("");
+    } else if (cardType.toUpperCase() === "LNQR SULIT COINS") {
+      setCustomerQrInput("20260511LN000006");
+      setBankCardAmountInput("29.00");
+      setGcashReferenceNumber("");
+      setMayaTraceNumber("");
+      setMayaReferenceNumber("");
+      setMayaGeneratedAt(null);
     } else {
       setGcashReferenceNumber("");
       setMayaTraceNumber("");
       setMayaReferenceNumber("");
       setMayaGeneratedAt(null);
     }
+    setSulitCoinsRedeemedAmount(null);
+    setSulitCoinsRefNo("");
+    setIsConnectingLnqrServer(false);
     setBankCardStep("EWALLET_DETAILS");
   };
 
@@ -636,6 +655,9 @@ function SimulatorContent() {
         setLoyaltyType("NONE");
         setSelectedTenderMethod("CASH");
         setSulitCoinsEarnedAmount(null);
+        setSulitCoinsRedeemedAmount(null);
+        setSulitCoinsRefNo("");
+        setIsConnectingLnqrServer(false);
         setBankCardStep("SELECT_TYPE");
         setBankCardSwipeNum("");
         setBankCardHolder("X");
@@ -670,14 +692,7 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
       tenderTimerRef.current = null;
     }
-    if (sulitCoinsEarnedAmount !== null) {
-      dispatch({ type: "CLOSE_PAYMENT" });
-      setIsLnqrCashPaymentOpen(false);
-      setIsLnqrTenderProcessed(false);
-      setIsFinalTenderStep(false);
-      setIsLnqrUpdatedModalOpen(true);
-      return;
-    }
+
     dispatch({ type: "CLOSE_PAYMENT" });
     dispatch({ type: "RESET_TRANSACTION" });
     setIsLnqrCashPaymentOpen(false);
@@ -692,6 +707,10 @@ function SimulatorContent() {
     setLoyaltyType("NONE");
     setSelectedTenderMethod("CASH");
     setSulitCoinsEarnedAmount(null);
+    setSulitCoinsRedeemedAmount(null);
+    setSulitCoinsRefNo("");
+    setIsConnectingLnqrServer(false);
+    setIsSulitLoading(false);
     setBankCardStep("SELECT_TYPE");
     setBankCardSwipeNum("");
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
@@ -2142,8 +2161,9 @@ function SimulatorContent() {
                         const totalSales = totals.totalAmount;
                         const vatable = state.isZeroRated ? 0 : totalSales / 1.12;
                         const vatAmount = state.isZeroRated ? 0 : totalSales - vatable;
-                        const tenderVal = isLnqrTenderProcessed && parseFloat(lnqrCashTenderInput) ? parseFloat(lnqrCashTenderInput) : 0;
-                        const changeVal = Math.max(0, tenderVal - totalSales);
+                        const tenderVal = parseFloat(lnqrCashTenderInput) ? parseFloat(lnqrCashTenderInput) : (isLnqrTenderProcessed ? 3000 : 0);
+                        const totalTenderVal = tenderVal + (sulitCoinsRedeemedAmount || 0);
+                        const changeVal = Math.max(0, totalTenderVal - totalSales);
 
                         return (
                           <div className="bg-white border border-gray-400 p-2 text-gray-900 leading-tight space-y-1 shadow-inner flex-1 overflow-y-auto font-mono text-[10px] min-h-0">
@@ -2204,13 +2224,22 @@ function SimulatorContent() {
                                 );
                               })
                             ) : (
-                              <div className="leading-tight mb-1">
-                                <div className="flex justify-between">
-                                  <span>1&nbsp; &nbsp;505 @ 2,990.00</span>
-                                  <span>2,990.00 V</span>
+                              <>
+                                <div className="leading-tight mb-1">
+                                  <div className="flex justify-between">
+                                    <span>1&nbsp; &nbsp;505 @ 2,990.00</span>
+                                    <span>2,990.00 V</span>
+                                  </div>
+                                  <div className="pl-6 text-[9px] text-gray-800">PHO PRKR RBALL POINT</div>
                                 </div>
-                                <div className="pl-6 text-[9px] text-gray-800">PHO PRKR RBALL POINT</div>
-                              </div>
+                                <div className="leading-tight mb-1">
+                                  <div className="flex justify-between">
+                                    <span>1&nbsp; &nbsp;34 @ 9.00</span>
+                                    <span>9.00 V</span>
+                                  </div>
+                                  <div className="pl-6 text-[9px] text-gray-800">PHO PICKS XPM-3G POI</div>
+                                </div>
+                              </>
                             )}
 
                             <div className="border-t border-dashed border-gray-400 my-1" />
@@ -2218,19 +2247,13 @@ function SimulatorContent() {
                             <div className="space-y-0.5">
                               <div className="flex justify-between font-bold">
                                 <span>No. of Items</span>
-                                <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 1)}</span>
+                                <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 2)}</span>
                               </div>
                               <div className="flex justify-between font-bold">
                                 <span>Amount Due</span>
                                 <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
-                              {sulitCoinsEarnedAmount !== null && (
-                                <div className="flex justify-between font-bold">
-                                  <span>LNQR Sulit Coins</span>
-                                  <span>{sulitCoinsEarnedAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                </div>
-                              )}
-                              {selectedTenderMethod === "CASH" && isLnqrTenderProcessed && (
+                              {sulitCoinsRedeemedAmount !== null ? (
                                 <>
                                   <div className="flex justify-between font-bold text-red-600">
                                     <span>Change -&gt;</span>
@@ -2240,7 +2263,41 @@ function SimulatorContent() {
                                     <span>Cash</span>
                                     <span>{tenderVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                   </div>
+                                  <div className="pt-0.5 font-mono text-[9px] leading-tight space-y-0.5">
+                                    <div className="flex justify-between font-bold text-[10px]">
+                                      <span>LNQR Sulit Coins</span>
+                                      <span>{sulitCoinsRedeemedAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Reference No.</span>
+                                      <span>:{sulitCoinsRefNo || customerQrInput || "20260511LN000006"}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>Amount</span>
+                                      <span>:{sulitCoinsRedeemedAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="text-center tracking-tighter pt-1 font-bold text-[9px]">
+                                      ************** LNQR Information **************
+                                    </div>
+                                    <div className="flex justify-between">
+                                      <span>LNQR No.</span>
+                                      <span>:{sulitCoinsRefNo || customerQrInput || "20260511LN000006"}</span>
+                                    </div>
+                                  </div>
                                 </>
+                              ) : (
+                                selectedTenderMethod === "CASH" && isLnqrTenderProcessed && (
+                                  <>
+                                    <div className="flex justify-between font-bold text-red-600">
+                                      <span>Change -&gt;</span>
+                                      <span>{changeVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                    <div className="flex justify-between font-bold">
+                                      <span>Cash</span>
+                                      <span>{tenderVal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                  </>
+                                )
                               )}
                               {selectedTenderMethod === "BANK_CARD" && (
                                 <div className="flex justify-between font-bold text-gray-800">
@@ -2380,7 +2437,7 @@ function SimulatorContent() {
 
                     {/* Center Panel: Green Box & Cash Payment Details OR Final Tear-Off View */}
                     <div className="col-span-5 flex flex-col border-r-2 border-gray-400 bg-[#BDC3C7] min-h-0 overflow-hidden">
-                      {isFinalTenderStep ? (
+                      {isFinalTenderStep || isConnectingLnqrServer || (isLnqrUpdatedModalOpen && sulitCoinsRedeemedAmount !== null) ? (
                         <>
                           {/* 4-Row Green Box matching media_1792734842818_4f88c6fe.jpg */}
                           <div className="bg-[#22A838] p-3 text-white space-y-2 border-b-2 border-green-700 select-none flex-shrink-0">
@@ -2404,9 +2461,10 @@ function SimulatorContent() {
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-base tracking-wide">Tendered</span>
                               <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
-                                {selectedTenderMethod === "BANK_CARD"
-                                  ? (totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                  : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {(selectedTenderMethod === "BANK_CARD"
+                                  ? (totals.totalAmount || 0)
+                                  : (parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + (sulitCoinsRedeemedAmount || 0)
+                                ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
 
@@ -2414,9 +2472,10 @@ function SimulatorContent() {
                             <div className="flex items-center justify-between">
                               <span className="font-bold text-base tracking-wide">Change</span>
                               <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
-                                {selectedTenderMethod === "BANK_CARD"
-                                  ? "0.00"
-                                  : Math.max(0, (parseFloat(lnqrCashTenderInput) || 0) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                {(selectedTenderMethod === "BANK_CARD"
+                                  ? 0
+                                  : Math.max(0, ((parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount)
+                                ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
                           </div>
@@ -2426,7 +2485,11 @@ function SimulatorContent() {
 
                           {/* Message Body */}
                           <div className="flex-1 bg-[#BDC3C7] p-4 flex flex-col items-center justify-center space-y-3 min-h-0 select-none">
-                            {selectedTenderMethod === "BANK_CARD" ? (
+                            {isConnectingLnqrServer || (isLnqrUpdatedModalOpen && sulitCoinsRedeemedAmount !== null) ? (
+                              <div className="text-gray-900 font-bold text-sm tracking-wide text-center">
+                                Please wait connecting LNQR Server......
+                              </div>
+                            ) : selectedTenderMethod === "BANK_CARD" ? (
                               <div className="text-gray-900 font-bold text-base text-center leading-snug">
                                 <div>Please Tear-Off the OR</div>
                                 <div>Thank You!!</div>
@@ -2441,8 +2504,9 @@ function SimulatorContent() {
 
                                 {/* Cash Drawer Status Indicator */}
                                 {(() => {
-                                  const tenderVal = parseFloat(lnqrCashTenderInput) || 0;
-                                  const changeDue = Math.max(0, tenderVal - totals.totalAmount);
+                                  const tenderVal = parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0);
+                                  const totalTender = tenderVal + (sulitCoinsRedeemedAmount || 0);
+                                  const changeDue = Math.max(0, totalTender - totals.totalAmount);
                                   const hasChange = changeDue > 0;
                                   return (
                                     <div className="inline-flex items-center space-x-1.5 bg-amber-100 border-2 border-amber-500 text-amber-900 font-extrabold text-xs px-3 py-1 rounded shadow-sm">
@@ -2496,7 +2560,7 @@ function SimulatorContent() {
                                 {selectedTenderMethod === "BANK_CARD"
                                   ? "0.00"
                                   : isLnqrTenderProcessed
-                                  ? Math.max(0, (parseFloat(lnqrCashTenderInput) || 0) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                  ? Math.max(0, ((parseFloat(lnqrCashTenderInput) || 0) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                                   : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -2523,7 +2587,13 @@ function SimulatorContent() {
 
                           {/* Details / Input Body */}
                           <div className="flex-1 bg-[#D4D0C8] p-4 flex flex-col items-center justify-center overflow-y-auto min-h-0">
-                            {selectedTenderMethod === "CASH" ? (
+                            {isSulitLoading ? (
+                              <div className="text-center space-y-2 font-sans select-none flex flex-col items-center">
+                                <div className="text-gray-900 font-bold text-sm tracking-wide">
+                                  Please wait...
+                                </div>
+                              </div>
+                            ) : selectedTenderMethod === "CASH" ? (
                               !isLnqrTenderProcessed ? (
                                 <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-2 flex flex-col items-center font-sans">
                                   <label className="text-xs font-bold text-gray-900 text-center font-sans">
@@ -3520,7 +3590,11 @@ function SimulatorContent() {
       <LnqrUpdatedModal
         isOpen={isLnqrUpdatedModalOpen}
         onConfirm={handleConfirmLnqrUpdated}
-        sulitCoinsEarnedAmount={sulitCoinsEarnedAmount}
+        sulitCoinsEarnedAmount={sulitCoinsEarnedAmount ?? 29.70}
+        customerName="Jan Angela Catindig"
+        cardNumber={sulitCoinsRefNo || customerQrInput || "20260511LN000006"}
+        previousBalance={0.90}
+        currentBalance={30.60}
       />
 
       {/* QUICK CATALOG PICKER */}
