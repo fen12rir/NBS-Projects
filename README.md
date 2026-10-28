@@ -17,16 +17,22 @@ An official employee learning management web application combining structured PO
   5. Second-Page Functions & Discounts (Senior/PWD `F6`, Recall `F7`, Reprint `F2`)
   6. Third-Page Functions & Readings (Cashier `Y` Reading `F8`, Terminal `Z` Reading `F9`, `SDV` `F10`)
   7. Fourth-Page Functions & Exceptions (`TRX Comment` `F3`, Zero-Rated `F7`, Return `F8`, Refund `F10`)
-  8. Payment Screen & Tender Methods (Cash `F2`, Bank Card/GCash `F3`, Gift Cert `F5`, Coupon `F6`)
+  8. Payment Screen & Tender Methods (Cash `F2`, Bank Card/GCash/Maya `F3`, Gift Cert `F5`, Coupon `F6`, LNQR Sulit Coins)
   9. Knowledge Check & Certification Readiness
 - **Interactive POS Terminal Simulator:**
   - Full 5-screen navigation: Main, 2nd, 3rd, 4th, and Payment screens.
   - Page-specific function key grids (50+ function assignments from the training deck).
   - Physical keyboard shortcuts (press F1-F12 directly on desktop) or touch on-screen controls on mobile/tablets.
   - F3 Quantity multiplier flow (set quantity before scan).
-  - F2 Item Inquiry / Lookup with promotional price display.
-  - Training-only Manager Override simulation for voids, discounts, and reprints.
-  - Realistic official receipt generation with training watermarks.
+  - F2 Item Inquiry / Lookup with search and promotional price display.
+  - Contextual button guards (Payment, Item Void `F7`, Trx Void `F8`, and Suspend `F9` automatically disable and gray out when no items are scanned).
+  - Cash drawer simulation (drawers pop open on cash transactions and exact amount tenders).
+  - Comprehensive Payment & Loyalty Flows:
+    - Cash tender with automatic dynamic change calculation.
+    - LNQR Sulit Coins redemption, split payment tender, and earned Sulit Coins notification.
+    - Terminal receipt generation for BDO / Credit Cards, GCash, and Maya.
+    - Dedicated TRX Comment screen, Zero-Rated VAT processing, Returns, and Refunds.
+  - Realistic official receipts with training watermarks and detailed breakdown of tenders and reference numbers.
 - **Automated Practical Assessment:**
   - Evaluates trainee action sequences in real time against scenario SOPs.
   - Detailed mistake logging, hint count, timer, and passing threshold score computation.
@@ -36,21 +42,24 @@ An official employee learning management web application combining structured PO
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript (Strict)
-- **Styling:** Tailwind CSS with NBS Design Tokens
-- **Icons:** Lucide React
+- **Framework:** Next.js `14.2.35` (App Router)
+- **Runtime:** Node.js `v18.17+`, `v20+`, or `v22+` (Tested on `v22.19.0`)
+- **Language:** TypeScript `5.7.3` (Strict mode, ES2017 target)
+- **Styling:** Tailwind CSS `3.4.17` with PostCSS & NBS Design Tokens
+- **Icons:** Lucide React (`0.475.0`)
 - **Authentication:** Supabase Auth (Google OAuth) + Local Demo Mode fallback
 - **State Machine:** Pure deterministic POS state machine & reducer
-- **Testing:** Vitest (100% passing unit & scenario test suites)
+- **Validation:** Zod (`3.24.2`)
+- **Testing:** Vitest (`3.0.6`) with `@vitejs/plugin-react`
+- **Linting:** ESLint with `eslint-config-next` (`next/core-web-vitals`)
 
 ---
 
 ## Getting Started Locally
 
 ### 1. Prerequisites
-- Node.js `v18+` or `v20+` or `v22+`
-- npm `v9+` or `v10+`
+- **Node.js:** `v18.17.0+` (Node `v20.x` or `v22.x` recommended, tested on `v22.19.0`)
+- **npm:** `v9+` or `v10+`
 
 ### 2. Installation
 ```bash
@@ -64,21 +73,17 @@ cp .env.example .env.local
 ```
 *Note: If no Supabase credentials are provided, the system boots into **Local Demo Mode** automatically.*
 
-### 4. Running the Development Server
-```bash
-npm run dev
-```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 4. Available Scripts
 
-### 5. Running Automated Unit Tests
-```bash
-npm test
-```
-
-### 6. Production Build Check
-```bash
-npm run build
-```
+| Command | Description | Default Port / URL |
+| :--- | :--- | :--- |
+| `npm run dev` | Starts local Next.js development server | `http://localhost:3000` |
+| `npm run dev:turbo` | Starts development server with Turbopack | `http://localhost:3000` |
+| `npm run build` | Compiles production build and optimizes routes | — |
+| `npm run start` | Serves compiled production build | `http://localhost:3000` |
+| `npm run lint` | Runs Next.js ESLint validation | — |
+| `npm test` | Runs automated unit and scenario test suites | — |
+| `npm run test:watch` | Runs Vitest in interactive watch mode | — |
 
 ---
 

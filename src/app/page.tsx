@@ -98,7 +98,7 @@ export default function HomePage() {
       <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between text-xs sm:text-sm text-amber-900">
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-5 h-5 text-amber-700 flex-shrink-0" />
+            
             <span className="font-medium">
               <strong>Training Sandbox:</strong> {APP_CONFIG.safetyDisclaimer}
             </span>

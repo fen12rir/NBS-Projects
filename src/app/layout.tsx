@@ -1,3 +1,4 @@
+import React, { type ReactNode } from "react";
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/lib/auth/auth-context";
@@ -10,11 +11,11 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode;
+  children: ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="min-h-screen flex flex-col font-sans bg-gray-50 text-gray-900">
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col font-sans bg-gray-50 text-gray-900" suppressHydrationWarning>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

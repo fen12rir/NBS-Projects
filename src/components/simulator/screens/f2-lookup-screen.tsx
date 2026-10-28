@@ -305,7 +305,7 @@ export function F2LookupScreen({
     </div>
   ) : currentPageProducts.length === 0 ? (
     <div className="p-12 text-center text-gray-500 italic">
-      No items matching "{submittedSearch}" found.
+      No items matching &quot;{submittedSearch}&quot; found.
     </div>
   ) : (
         

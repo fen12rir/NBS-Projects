@@ -28,18 +28,6 @@
 *.tsbuildinfo
 next-env.d.ts
 
-# Progress Deliverables & Automation Scripts
-docs/
-take_screenshots.js
-generate_deliverable_pdf.js
-.chrome-temp-profile/
 
-# Training Decks & PDFs
-*.pdf
-
-# Internal Reference Docs & Secondary Markdown 
-POS_Cashiers_Newbie_Training_Reference.md
-POS_LMS_Implementation_Spec.md
-public/assets/README.md
 
 
