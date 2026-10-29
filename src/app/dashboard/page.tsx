@@ -77,11 +77,11 @@ export default function DashboardPage() {
   let certificationStatus: CertificationStatusType = "Pending";
   let certificationDetail = "";
 
-  const isCertified = allModulesCompleted && !!bestAttempt;
+  const isCertified = allModulesCompleted;
 
   if (isCertified) {
     certificationStatus = "Certified";
-    certificationDetail = "Congratulations for Passing the exam!";
+    certificationDetail = "All training modules completed • Certificate available";
   } else if (completedLessonCount > 0 || hasAttempts) {
     certificationStatus = "In Progress";
     if (!allModulesCompleted) {
@@ -93,7 +93,7 @@ export default function DashboardPage() {
     }
   } else {
     certificationStatus = "Pending";
-    certificationDetail = "Complete all modules and practical assessment to unlock";
+    certificationDetail = "Complete all training modules to unlock your certificate";
   }
 
   return (
@@ -174,13 +174,19 @@ export default function DashboardPage() {
               <div>
                 <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Certification</div>
                 <div className="text-2xl font-black text-gray-900 mt-1">
-                  {certificationStatus === "Certified" ? (
-                    <span className="text-emerald-600">Certified</span>
-                  ) : certificationStatus === "In Progress" ? (
-                    <span className="text-red-600">In Progress</span>
-                  ) : (
-                    <span className="text-gray-400">Pending</span>
-                  )}
+                  {isCertified ? (
+                        <Link
+                          href="/certificate"
+                          className="text-emerald-600 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                          aria-label="View your certificate"
+                        >
+                          Certified
+                        </Link>
+                      ) : certificationStatus === "In Progress" ? (
+                        <span className="text-red-600">In Progress</span>
+                      ) : (
+                        <span className="text-gray-400">Pending</span>
+                      )}
                 </div>
               </div>
               <div className="w-10 h-10 bg-red-50 text-[#E4002B] flex items-center justify-center">
@@ -188,9 +194,9 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="mt-3 text-xs">
-              {certificationStatus === "Certified" ? (
+              {isCertified ? (
                 <span className="text-emerald-600 font-bold">
-                  Congratulations for Passing the exam!
+                  All training modules completed • Certificate available
                 </span>
               ) : (
                 <span className="text-gray-500">{certificationDetail}</span>
