@@ -1,3 +1,5 @@
+import { TRAINING_MODULES } from "@/data/modules";
+
 export interface AttemptRecord {
   id: string;
   scenarioId: string;
@@ -23,6 +25,7 @@ export interface UserProgress {
   scenarioAttempts: AttemptRecord[];
   lastActiveLessonId?: string;
   lastActiveModuleId?: string;
+  certificationCompletedAt?: string;
 }
 
 const STORAGE_KEY = "nbs_pos_training_progress_v1";
@@ -93,7 +96,12 @@ export function getLocalProgress(): UserProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
-    return JSON.parse(raw);
+    const stored = JSON.parse(raw) as UserProgress;
+    const updated = addCertificationCompletionDate(stored);
+    if (updated !== stored) {
+      saveLocalProgress(updated);
+    }
+    return updated;
   } catch (err) {
     console.error("Failed to read progress from storage", err);
     return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
@@ -114,12 +122,12 @@ export function saveLocalProgress(progress: UserProgress, newAttempt?: AttemptRe
 export function markLessonAsCompleted(lessonId: string, moduleId: string): UserProgress {
   const current = getLocalProgress();
   const completedLessons = Array.from(new Set([...current.completedLessons, lessonId]));
-  const updated: UserProgress = {
+  const updated: UserProgress = addCertificationCompletionDate({
     ...current,
     completedLessons,
     lastActiveLessonId: lessonId,
     lastActiveModuleId: moduleId,
-  };
+  });
   saveLocalProgress(updated);
   return updated;
 }
