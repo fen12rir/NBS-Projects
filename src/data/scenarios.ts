@@ -659,9 +659,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: In the Transaction Discount dialog, select a discount (e.g. Senior Citizen 20% or press 1) and confirm to apply.",
+        instruction: "Step 4: In the Transaction Discount dialog, select Senior Citizen Discount (ZSEN, 20%) and confirm to apply.",
         expectedAction: "APPLY_DISCOUNT",
-        hint: "Select option 1 (Senior Citizen 20%) or press 1, then confirm to apply the discount.",
+        hint: "Select Senior Citizen Discount (ZSEN, 20%), then confirm to apply the discount.",
         errorFeedback: "Select a discount category and apply it."
       }
     ]
@@ -764,9 +764,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: In the Transaction Discount dialog, select a discount code (e.g. Senior Citizen 20% or press 1) and confirm.",
+        instruction: "Step 7: In the Transaction Discount dialog, select Senior Citizen Discount (ZSEN, 20%) and confirm.",
         expectedAction: "APPLY_DISCOUNT",
-        hint: "Select option 1 and apply the discount.",
+        hint: "Select Senior Citizen Discount (ZSEN, 20%) and apply the discount.",
         errorFeedback: "Select and apply the discount."
       },
       {

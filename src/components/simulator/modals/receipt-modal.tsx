@@ -15,7 +15,7 @@ interface ReceiptModalProps {
 export function ReceiptModal({ state, isReprint = false, onClose, onReset }: ReceiptModalProps) {
   const discountPercent = state.appliedDiscount?.percent || 0;
   const totals = calculateTotals(state.lineItems, discountPercent, state.isZeroRated);
-  const discountAmount = (totals.subtotal * discountPercent) / 100;
+  const discountAmount = totals.discountAmount;
   const netTotal = totals.totalAmount;
 
   return (

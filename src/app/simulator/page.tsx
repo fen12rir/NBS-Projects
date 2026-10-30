@@ -9,7 +9,7 @@ import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
 import { F2LookupScreen } from "@/components/simulator/screens/f2-lookup-screen";
 import { ManagerOverrideModal } from "@/components/simulator/modals/manager-override-modal";
 import { ItemVoidModal } from "@/components/simulator/modals/item-void-modal";
-import { TransactionDiscountModal } from "@/components/simulator/modals/transaction-discount-modal";
+import { TransactionDiscountScreen } from "@/components/simulator/screens/transaction-discount-screen";
 import { TrxVoidModal } from "@/components/simulator/modals/trx-void-modal";
 import { QuantityModal } from "@/components/simulator/modals/quantity-modal";
 import { SuspendModal, RecallModal } from "@/components/simulator/modals/suspend-recall-modal";
@@ -1457,7 +1457,6 @@ function SimulatorContent() {
         validateScenarioStep("TRX_VOID");
         break;
       case "TRX_DISC":
-        if (state.lineItems.length === 0) return;
         setIsTrxDiscOpen(true);
         validateScenarioStep("TRX_DISC");
         break;
@@ -1941,13 +1940,22 @@ function SimulatorContent() {
                   initialSearch={state.lookupSearchTerm}
                 />
               ) : isTrxDiscOpen ? (
-                <TransactionDiscountModal
-                  onApply={(discount) => {
-                    dispatch({ type: "APPLY_DISCOUNT", discount });
-                    setIsTrxDiscOpen(false);
-                    validateScenarioStep("APPLY_DISCOUNT", discount.name);
-                  }}
+                <TransactionDiscountScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
                   onCancel={() => setIsTrxDiscOpen(false)}
+                  onSubmit={(discount) => {
+                    dispatch({
+                      type: "APPLY_DISCOUNT",
+                      discount: {
+                        name: discount.description,
+                        percent: discount.percent,
+                      },
+                    });
+                    setIsTrxDiscOpen(false);
+                    validateScenarioStep("APPLY_DISCOUNT", discount.code);
+                  }}
                 />
               ) : isRecallOpen ? (
                 <RecallModal

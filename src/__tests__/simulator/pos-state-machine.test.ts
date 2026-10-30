@@ -39,6 +39,30 @@ describe("POS State Machine", () => {
     expect(totals.totalAmount).toBeGreaterThan(0);
   });
 
+  it("applies a transaction discount to totals and payment", () => {
+    let state = createInitialPOSState();
+    state = posReducer(state, { type: "ADD_ITEM_BY_CODE", code: "NBS-BK-001" });
+    const subtotal = calculateTotals(state.lineItems).totalAmount;
+
+    state = posReducer(state, {
+      type: "APPLY_DISCOUNT",
+      discount: { name: "Senior Citizen Discount", percent: 20 },
+    });
+
+    const discountedTotals = calculateTotals(
+      state.lineItems,
+      state.appliedDiscount?.percent
+    );
+    expect(state.appliedDiscount?.name).toBe("Senior Citizen Discount");
+    expect(discountedTotals.discountAmount).toBeCloseTo(subtotal * 0.2);
+    expect(discountedTotals.totalAmount).toBeCloseTo(subtotal * 0.8);
+
+    state = posReducer(state, { type: "OPEN_PAYMENT" });
+    state = posReducer(state, { type: "TENDER_PAYMENT", amount: discountedTotals.totalAmount });
+    expect(state.isTransactionCompleted).toBe(true);
+    expect(state.changeDue).toBeCloseTo(0);
+  });
+
   it("respects F3 quantity multiplier when adding items", () => {
     let state = createInitialPOSState();
     state = posReducer(state, { type: "SET_QUANTITY_START" });
