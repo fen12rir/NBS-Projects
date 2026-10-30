@@ -17,12 +17,12 @@ import { ReprintModal } from "@/components/simulator/modals/reprint-modal";
 import { SdvModal } from "@/components/simulator/modals/sdv-modal";
 import { ReadingsModal } from "@/components/simulator/modals/readings-modal";
 import { TransactionCommentScreen } from "@/components/simulator/screens/transaction-comment-screen";
+import { TransactionJournalScreen } from "@/components/simulator/screens/transaction-journal-screen";
 import { ReturnRefundModal } from "@/components/simulator/modals/return-refund-modal";
 import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/modals/electronic-payment-modal";
 import { PostVoidModal } from "@/components/simulator/modals/post-void-modal";
 import { PriceChangeModal } from "@/components/simulator/modals/price-change-modal";
 import { NonMdseModal } from "@/components/simulator/modals/non-mdse-modal";
-import { JournalViewerModal } from "@/components/simulator/modals/journal-viewer-modal";
 import { NonSalesModal } from "@/components/simulator/modals/non-sales-modal";
 import { BonusBuyScreen } from "@/components/simulator/screens/bonus-buy-screen";
 import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option-screen";
@@ -1939,6 +1939,12 @@ function SimulatorContent() {
                   }}
                   initialSearch={state.lookupSearchTerm}
                 />
+              ) : journalModalMode !== null ? (
+                <TransactionJournalScreen
+                  mode={journalModalMode}
+                  state={state}
+                  onClose={() => setJournalModalMode(null)}
+                />
               ) : isTrxDiscOpen ? (
                 <TransactionDiscountScreen
                   clerkName={state.cashierName}
@@ -3813,15 +3819,6 @@ function SimulatorContent() {
             validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
           }}
           onCancel={() => setIsNonMdseOpen(false)}
-        />
-      )}
-
-      {/* F4 / F6 ELECTRONIC JOURNAL VIEWER MODAL (3rd Page F4/F6) */}
-      {journalModalMode !== null && (
-        <JournalViewerModal
-          mode={journalModalMode}
-          state={state}
-          onClose={() => setJournalModalMode(null)}
         />
       )}
 
