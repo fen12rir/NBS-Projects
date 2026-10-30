@@ -36,7 +36,7 @@ An official employee learning management web application combining structured PO
 - **Automated Practical Assessment:**
   - Evaluates trainee action sequences in real time against scenario SOPs.
   - Detailed mistake logging, hint count, timer, and passing threshold score computation.
-  - Persistent progress saving via local storage and Supabase.
+  - Persistent progress saving via local storage and on-premise MariaDB.
 
 ---
 
@@ -47,7 +47,8 @@ An official employee learning management web application combining structured PO
 - **Language:** TypeScript `5.7.3` (Strict mode, ES2017 target)
 - **Styling:** Tailwind CSS `3.4.17` with PostCSS & NBS Design Tokens
 - **Icons:** Lucide React (`0.475.0`)
-- **Authentication:** Supabase Auth (Google OAuth) + Local Demo Mode fallback
+- **Database:** MariaDB / MySQL (`mysql2` connection pool) with local storage fallback
+- **Authentication:** Local Cashier Session & Trainee Profiles
 - **State Machine:** Pure deterministic POS state machine & reducer
 - **Validation:** Zod (`3.24.2`)
 - **Testing:** Vitest (`3.0.6`) with `@vitejs/plugin-react`

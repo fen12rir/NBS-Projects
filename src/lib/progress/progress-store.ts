@@ -48,6 +48,47 @@ function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   };
 }
 
+async function syncToMariaDb(progress: UserProgress, newAttempt?: AttemptRecord): Promise<void> {
+  if (typeof window === "undefined") return;
+  try {
+    const userProfileRaw = localStorage.getItem("nbs_user_profile");
+    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : "demo-cashier-001";
+    await fetch("/api/progress", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        completedLessons: progress.completedLessons,
+        completedModules: progress.completedModules,
+        lastActiveLessonId: progress.lastActiveLessonId,
+        lastActiveModuleId: progress.lastActiveModuleId,
+        certificationCompletedAt: progress.certificationCompletedAt,
+        newAttempt,
+      }),
+    });
+  } catch {
+    // Non-blocking background sync to allow full offline/local resilience
+  }
+}
+
+export async function fetchProgressFromMariaDb(): Promise<UserProgress | null> {
+  if (typeof window === "undefined") return null;
+  try {
+    const userProfileRaw = localStorage.getItem("nbs_user_profile");
+    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : "demo-cashier-001";
+    const res = await fetch(`/api/progress?userId=${encodeURIComponent(userId)}`);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data && Array.isArray(data.completedLessons)) {
+      saveLocalProgress(data);
+      return data as UserProgress;
+    }
+  } catch {
+    // Return null on failure to allow local fallback
+  }
+  return null;
+}
+
 export function getLocalProgress(): UserProgress {
   if (typeof window === "undefined") {
     return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
@@ -55,22 +96,24 @@ export function getLocalProgress(): UserProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
-    const storedProgress = JSON.parse(raw) as UserProgress;
-    const progress = addCertificationCompletionDate(storedProgress);
-    if (progress !== storedProgress) {
-      saveLocalProgress(progress);
+    const stored = JSON.parse(raw) as UserProgress;
+    const updated = addCertificationCompletionDate(stored);
+    if (updated !== stored) {
+      saveLocalProgress(updated);
     }
-    return progress;
+    return updated;
   } catch (err) {
     console.error("Failed to read progress from storage", err);
     return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
   }
 }
 
-export function saveLocalProgress(progress: UserProgress): void {
+export function saveLocalProgress(progress: UserProgress, newAttempt?: AttemptRecord): void {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    // Asynchronously push to MariaDB
+    syncToMariaDb(progress, newAttempt);
   } catch (err) {
     console.error("Failed to save progress to storage", err);
   }
@@ -79,7 +122,7 @@ export function saveLocalProgress(progress: UserProgress): void {
 export function markLessonAsCompleted(lessonId: string, moduleId: string): UserProgress {
   const current = getLocalProgress();
   const completedLessons = Array.from(new Set([...current.completedLessons, lessonId]));
-  const updated = addCertificationCompletionDate({
+  const updated: UserProgress = addCertificationCompletionDate({
     ...current,
     completedLessons,
     lastActiveLessonId: lessonId,
@@ -96,6 +139,6 @@ export function recordScenarioAttempt(attempt: AttemptRecord): UserProgress {
     ...current,
     scenarioAttempts,
   };
-  saveLocalProgress(updated);
+  saveLocalProgress(updated, attempt);
   return updated;
 }
