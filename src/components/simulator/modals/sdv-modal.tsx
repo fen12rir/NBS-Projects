@@ -35,7 +35,7 @@ export function SdvModal({
       </div>
 
       {/* 3. GREY GRADIENT TOTALS BAR */}
-      <div className="bg-gradient-to-b from-[#B8B8B8] to-[#999999] border-b border-gray-400 py-1.5 text-center font-bold text-base text-black font-mono">
+      <div className="bg-[#BCC4CC] border-b border-gray-400 py-1.5 text-center font-bold text-base text-black font-mono">
         Saleshdr = {saleshdr}&nbsp;&nbsp;Salesdtl = {salesdtl}&nbsp;&nbsp;Paydtl = {paydtl}
       </div>
 

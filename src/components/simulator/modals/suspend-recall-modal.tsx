@@ -188,7 +188,7 @@ export function RecallModal({
       <div className="flex-1 grid grid-cols-12 p-4 gap-4 bg-white overflow-hidden">
         {/* Left Table: Transaction No. */}
         <div className="col-span-5 flex flex-col border-2 border-gray-400 bg-white">
-          <div className="bg-gradient-to-b from-[#D4D0C8] to-[#B0B8C0] border-b border-gray-400 py-1 px-3 text-center text-xs font-bold text-gray-900">
+          <div className="bg-[#BCC4CC] border-b border-gray-400 py-1 px-3 text-center text-xs font-bold text-gray-900">
             Transaction No.
           </div>
           <div className="flex-1 overflow-y-auto">

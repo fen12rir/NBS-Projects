@@ -131,4 +131,54 @@ describe("POS State Machine", () => {
     expect(state.managerOverrideOpen).toBe(false);
     expect(state.managerOverrideTarget).toBeNull();
   });
+
+  it("handles Sodexho Non-Merchandise Variance (ZSOI) and Sodexho tender", () => {
+    let state = createInitialPOSState();
+    // Add two merchandise items totalling 93.00
+    state = posReducer(state, { type: "ADD_ITEM_BY_CODE", code: "65" }); // CRNA NOTEBOOK REFILL 43.00
+    state = posReducer(state, { type: "ADD_ITEM_BY_CODE", code: "65" }); // CRNA NOTEBOOK REFILL 43.00
+    state = posReducer(state, { type: "ADD_ITEM_BY_CODE", code: "100" }); // PHO XMAS BELLS 7.00
+    expect(state.lineItems).toHaveLength(3);
+    expect(calculateTotals(state.lineItems).totalAmount).toBe(93);
+
+    // Add Sodexho Variance via Non-Merchandise (ZSOI @ 7.00)
+    state = posReducer(state, {
+      type: "ADD_NON_MDSE_ITEM",
+      description: "Sodexho Variance (ZSOI)",
+      amount: 7,
+      referenceNo: "PP12345678",
+      sku: "ZSOI",
+    });
+
+    expect(state.lineItems).toHaveLength(4);
+    const zsoiItem = state.lineItems[3];
+    expect(zsoiItem.sku).toBe("ZSOI");
+    expect(zsoiItem.description).toBe("SODEXHO VARIANCE");
+    expect(zsoiItem.total).toBe(7);
+
+    // Total Amount Due is now exactly 100.00
+    const totalsWithVariance = calculateTotals(state.lineItems);
+    expect(totalsWithVariance.totalAmount).toBe(100);
+
+    // Tender with Sodexho (100.00)
+    state = posReducer(state, { type: "OPEN_PAYMENT" });
+    state = posReducer(state, { type: "SELECT_PAYMENT_METHOD", method: "SODEXHO" });
+    state = posReducer(state, {
+      type: "TENDER_PAYMENT",
+      amount: 100,
+      sodexhoDetails: {
+        number: "PP12345678",
+        validUntil: "2026-12-31",
+        denom: 100,
+        seriesType: "Without Series",
+        varianceAmount: 7,
+      },
+    });
+
+    expect(state.selectedPaymentMethod).toBe("SODEXHO");
+    expect(state.tenderAmount).toBe(100);
+    expect(state.changeDue).toBe(0);
+    expect(state.sodexhoDetails?.varianceAmount).toBe(7);
+    expect(state.isTransactionCompleted).toBe(true);
+  });
 });
