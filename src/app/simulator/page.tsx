@@ -1143,6 +1143,11 @@ function SimulatorContent() {
           setIsNonMdseOpen(false);
           return;
         }
+        if (isTrxDiscOpen) {
+          e.preventDefault();
+          setIsTrxDiscOpen(false);
+          return;
+        }
         if (journalModalMode !== null) {
           e.preventDefault();
           setJournalModalMode(null);

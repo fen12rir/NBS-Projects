@@ -12,6 +12,7 @@ export function Certificate({ name, completionDate }: CertificateProps) {
       <img
         src="/assets/modules/certificate/Certificate_Template.png"
         alt="Cashier Training Course certificate template"
+        crossOrigin="anonymous"
         className="absolute inset-0 h-full w-full object-contain"
       />
 
