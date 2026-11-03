@@ -198,7 +198,7 @@ function SimulatorContent() {
   const [customerQrInput, setCustomerQrInput] = useState("20221003LN000004");
   const [selectedLnqrButton, setSelectedLnqrButton] = useState<"OK" | "CANCEL" | null>(null);
 
-  // Authentic Payment Screen States
+  // Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
   const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
   const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("");
@@ -207,7 +207,7 @@ function SimulatorContent() {
   const tenderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isLnqrUpdatedModalOpen, setIsLnqrUpdatedModalOpen] = useState(false);
 
-  // Authentic Functional Modals (Modules 4-8)
+  // Functional Modals (Modules 4-8)
   const [isItemVoidModalOpen, setIsItemVoidModalOpen] = useState(false);
   const [isTrxVoidModalOpen, setIsTrxVoidModalOpen] = useState(false);
   const [selectedVoidItemId, setSelectedVoidItemId] = useState<string | null>(null);
@@ -220,7 +220,7 @@ function SimulatorContent() {
   const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
   const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
 
-  // Authentic Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya & Sodexho)
+  // Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya & Sodexho)
   const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "EWALLET_DETAILS" | "SODEXHO_SERIES" | "SODEXHO_DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
   const [sodexhoSeriesType, setSodexhoSeriesType] = useState("-SELECT-");
   const [sodexhoNumber, setSodexhoNumber] = useState("1");
@@ -513,7 +513,6 @@ function SimulatorContent() {
       return;
     }
 
-    // Show "Dont press any key.. Please wait..." then transition to final tear-off / close register screen
     tenderTimerRef.current = setTimeout(() => {
       setIsFinalTenderStep(true);
     }, 7000);
@@ -1099,7 +1098,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4e. Authentic Payment Screen Keybinds
+      // 4e. Payment Screen Keybinds
       if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
         if (isLnqrTenderProcessed || isFinalTenderStep) {
           if (!isFinalTenderStep) {
@@ -1922,7 +1921,7 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER */}
+      {/* POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0">
         <div
           className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
@@ -2150,7 +2149,7 @@ function SimulatorContent() {
               ) : isLnqrScanScreenOpen ? (
                 /* LNQR SCAN SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2210,9 +2209,9 @@ function SimulatorContent() {
                   </div>
                 </div>
               ) : isLncCardScreenOpen ? (
-                /* LAKING NATIONAL CARD SCREEN (Option 2 Intermediate Screen) */
+                /* LAKING NATIONAL CARD SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2295,9 +2294,9 @@ function SimulatorContent() {
                   onCancel={() => setIsTrxCommentOpen(false)}
                 />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
-                /* AUTHENTIC FULL PAYMENT SCREEN */
+                /* FULL PAYMENT SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2630,11 +2629,11 @@ function SimulatorContent() {
                       })()}
                     </div>
 
-                    {/* Center Panel: Green Box & Cash Payment Details OR Final Tear-Off View */}
+                    {/* Center Panel */}
                     <div className="col-span-5 flex flex-col border-r-2 border-gray-400 bg-[#BDC3C7] min-h-0 overflow-hidden">
                       {isFinalTenderStep || isConnectingLnqrServer || (isLnqrUpdatedModalOpen && sulitCoinsRedeemedAmount !== null) ? (
                         <>
-                          {/* 4-Row Green Box matching media_1792734842818_4f88c6fe.jpg */}
+                          {/* 4-Row Green Box */}
                           <div className="bg-[#22A838] p-3 text-white space-y-2 border-b-2 border-green-700 select-none flex-shrink-0">
                             {/* Unit */}
                             <div className="flex items-center justify-between">
@@ -2675,7 +2674,6 @@ function SimulatorContent() {
                             </div>
                           </div>
 
-                          {/* Sky-Blue Stripe Divider */}
                           <div className="h-5 bg-[#67B8DE] border-b border-gray-400 flex-shrink-0" />
 
                           {/* Message Body */}
@@ -3551,10 +3549,10 @@ function SimulatorContent() {
 
                   {/* Bottom Footer Bar */}
                   <div className="grid grid-cols-12 border-t-2 border-gray-400 h-9 font-sans select-none items-stretch flex-shrink-0">
-                    {/* Left 5 cols (Electronic Journal bottom) */}
+                    {/* Left 5 */}
                     <div className="col-span-5 bg-[#BDC3C7] border-r-2 border-gray-400" />
 
-                    {/* Center 5 cols (Green with Ok and Cancel buttons) */}
+                    {/* Center 5 */}
                     <div className="col-span-5 bg-[#22A838] border-r-2 border-gray-400 flex items-center justify-center px-2 space-x-3">
                       <button
                         ref={paymentOkBtnRef}
@@ -3607,7 +3605,7 @@ function SimulatorContent() {
                       </button>
                     </div>
                   )}
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -4034,7 +4032,7 @@ function SimulatorContent() {
 
 
 
-      {/* AUTHENTIC RETRO MANAGER OVERRIDE MODAL */}
+      {/* RETRO MANAGER OVERRIDE MODAL */}
       {state.managerOverrideOpen && (
         <ManagerOverrideModal
           targetAction={state.managerOverrideTarget || "Restricted Operation"}
@@ -4101,7 +4099,7 @@ function SimulatorContent() {
 
       
 
-      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL (4th Page F4) */}
+      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL */}
       {isNonSalesOpen && (
         <NonSalesModal
           onConfirm={(data) => {

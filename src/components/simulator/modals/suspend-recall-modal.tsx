@@ -53,7 +53,7 @@ export function SuspendModal({ onConfirm, onCancel }: SuspendModalProps) {
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto">
-          {/* Authentic Green Header */}
+          {/* Green Header */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
             SUSPEND
           </div>
@@ -179,7 +179,7 @@ export function RecallModal({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px] select-none">
-      {/* 2. AUTHENTIC YELLOW BANNER */}
+      {/* 2. YELLOW BANNER */}
       <div className="bg-[#FFF275] border-b-2 border-gray-500 py-1.5 text-center font-bold text-lg text-gray-900 tracking-wider">
         RECALL
       </div>

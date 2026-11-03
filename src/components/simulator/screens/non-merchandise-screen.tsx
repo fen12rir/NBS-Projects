@@ -131,7 +131,7 @@ export function NonMerchandiseScreen({
 
   return (
     <div className="flex min-h-0 w-full flex-1 select-none flex-col overflow-hidden bg-white font-sans">
-      {/* Top Header Bar: Authentic Light Grey Monospace Bar */}
+      {/* Top Header Bar */}
       <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
         <span><span className="font-bold">Trx.:</span> {trxNumber}</span>
         <span><span className="font-bold">Clerk:</span> {clerkName}</span>
