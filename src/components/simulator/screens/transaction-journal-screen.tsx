@@ -30,6 +30,9 @@ export function TransactionJournalScreen({
       } else if (event.key === "Enter") {
         event.preventDefault();
         printJournal();
+      } else if (event.key === "F1") {
+        event.preventDefault();
+        alert("Press ENTER to print the journal tape, or Alt+B / ESC to return to the POS screen.");
       }
     };
 
@@ -43,7 +46,7 @@ export function TransactionJournalScreen({
 
   return (
     <div className="flex min-h-[500px] w-full flex-1 select-none flex-col bg-white font-sans">
-      <div className="h-6 flex-shrink-0 border-b border-gray-400 bg-[#FFF275] text-center text-xs font-bold uppercase tracking-wide text-gray-900">
+      <div className="flex h-6 flex-shrink-0 items-center justify-center border-b border-gray-400 bg-[#FFF275] text-center text-xs font-bold uppercase tracking-wide text-gray-900">
         {isSalesJournal ? "Sales Journal" : "Transaction Journal"}
       </div>
 
@@ -60,7 +63,8 @@ export function TransactionJournalScreen({
 
           <button
             type="button"
-            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#800000] border-l-[#ff6b6b] border-r-[#800000] border-t-[#ff6b6b] bg-[#E4002B] py-2 text-xs font-extrabold text-white shadow"
+            onClick={() => alert("Press ENTER to print the journal tape, or Alt+B / ESC to return to the POS screen.")}
+            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#800000] border-l-[#ff6b6b] border-r-[#800000] border-t-[#ff6b6b] bg-[#E4002B] py-2 text-xs font-extrabold text-white shadow hover:bg-[#C10024]"
           >
             <span className="text-sm font-black">Help</span>
             <span className="text-[10px]">F1</span>
@@ -105,7 +109,7 @@ export function TransactionJournalScreen({
               {isSalesJournal ? (
                 <span className="font-bold">DAILY SALES RECORD</span>
               ) : (
-              <span className="font-bold">{state.transactionNumber}</span>
+                <span className="font-bold">{state.transactionNumber}</span>
               )}
             </div>
             <div>Clerk: {state.cashierName}</div>
@@ -153,9 +157,9 @@ export function TransactionJournalScreen({
             )}
             {state.transactionComments && (
               <div className="my-2 space-y-0.5 border-t border-dashed border-gray-400 pt-1 text-[10px]">
-                <div>BUYER&apos;S NAME : {state.transactionComments.customerName.toUpperCase()}</div>
-                <div>ADDRESS      : {state.transactionComments.address.toUpperCase()}</div>
-                <div>TIN          : {state.transactionComments.tin}</div>
+                <div>BUYER&apos;S NAME : {state.transactionComments.customerName?.toUpperCase() || "N/A"}</div>
+                <div>ADDRESS      : {state.transactionComments.address?.toUpperCase() || "N/A"}</div>
+                <div>TIN          : {state.transactionComments.tin || "N/A"}</div>
                 {state.transactionComments.remarks && (
                   <div>REMARKS      : {state.transactionComments.remarks.toUpperCase()}</div>
                 )}

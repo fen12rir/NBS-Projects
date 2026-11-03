@@ -8,10 +8,12 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
 import { Certificate } from "@/components/certificates/certificate";
 import { TRAINING_MODULES } from "@/data/modules";
+import { Button } from "@/components/ui/button";
 import {
   getLocalProgress,
   UserProgress,
 } from "@/lib/progress/progress-store";
+import { ArrowLeft, Download, Award, AlertCircle } from "lucide-react";
 
 export default function CertificatePage() {
   const { user, isLoading } = useAuth();
@@ -27,7 +29,9 @@ export default function CertificatePage() {
   if (isLoading || progress === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        Loading certificate...
+        <div className="text-center font-mono text-sm text-gray-500">
+          Loading certificate...
+        </div>
       </div>
     );
   }
@@ -41,21 +45,23 @@ export default function CertificatePage() {
 
   if (!isCertified) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 flex flex-col">
         <DashboardHeader />
-        <main className="mx-auto max-w-3xl p-8 text-center">
+        <main className="flex-1 mx-auto max-w-3xl w-full p-8 text-center flex flex-col items-center justify-center">
+          <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 border border-amber-200">
+            <AlertCircle className="w-8 h-8" />
+          </div>
           <h1 className="text-2xl font-bold text-gray-900">
-            Certificate unavailable
+            Certificate Unavailable
           </h1>
-          <p className="mt-2 text-gray-600">
-            Complete all training lessons to access your certificate.
+          <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
+            You must complete all {totalLessons} training lessons across the curriculum to unlock your official National Book Store Cashier Training Certificate.
           </p>
-          <Link
-            href="/dashboard"
-            className="mt-6 inline-block font-bold text-emerald-700 hover:underline"
-          >
-            Return to Dashboard
-          </Link>
+          <div className="mt-6">
+            <Link href="/dashboard">
+              <Button variant="primary">Return to Dashboard</Button>
+            </Link>
+          </div>
         </main>
       </div>
     );
@@ -113,35 +119,55 @@ export default function CertificatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <DashboardHeader />
-      <main className="mx-auto max-w-6xl space-y-4 p-4 sm:p-8">
-        <Link
-          href="/dashboard"
-          className="inline-block font-bold text-emerald-700 hover:underline"
-        >
-          Back to Dashboard
-        </Link>
+      <main className="flex-1 mx-auto max-w-6xl w-full space-y-6 p-4 sm:p-8">
+        <div>
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center text-xs font-bold text-gray-500 hover:text-gray-900 transition-colors uppercase tracking-wider"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            Back to Dashboard
+          </Link>
+        </div>
 
-        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">Your Certificate</h1>
-          <button
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between bg-white border border-gray-200 p-6 shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-red-50 text-[#E4002B] flex items-center justify-center">
+              <Award className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                Official Completion Certificate
+              </h1>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Awarded for completing all National Book Store POS Cashier Newbie Training modules.
+              </p>
+            </div>
+          </div>
+          <Button
             type="button"
             onClick={downloadCertificate}
             disabled={isDownloading}
-            className="rounded-md bg-emerald-700 px-4 py-2 font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+            variant="primary"
+            className="w-full sm:w-auto"
           >
-            {isDownloading ? "Creating PDF..." : "Download PDF"}
-          </button>
+            <Download className="w-4 h-4 mr-2" />
+            {isDownloading ? "Generating PDF..." : "Download Certificate (PDF)"}
+          </Button>
         </div>
+
         {downloadError && (
-          <p role="alert" className="text-sm text-red-700">
-            {downloadError}
-          </p>
+          <div role="alert" className="p-3 bg-red-50 border border-red-200 text-sm text-red-700 flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span>{downloadError}</span>
+          </div>
         )}
-        <div ref={certificateRef}>
+
+        <div ref={certificateRef} className="border border-gray-300 shadow-md">
           <Certificate
-            name={user?.name || "Maria Santos"}
+            name={user?.name || "Juan Dela Cruz"}
             completionDate={completionDate}
           />
         </div>
