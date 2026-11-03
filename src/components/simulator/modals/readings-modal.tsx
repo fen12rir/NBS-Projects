@@ -8,6 +8,14 @@ interface ReadingsModalProps {
   terminalId?: string;
   branchCode?: string;
   onClose: () => void;
+
+   targetAction?: string;
+  state?: {
+    transactionNumber?: string;
+    cashierName?: string;
+    branchCode?: string;
+    terminalId?: string;
+  };
 }
 
 export function ReadingsModal({
@@ -15,6 +23,8 @@ export function ReadingsModal({
   cashierName = "admin",
   terminalId = "0002",
   branchCode = "2999",
+  targetAction,
+  state,
   onClose,
 }: ReadingsModalProps) {
   const isY = readingType === "Y";
@@ -63,54 +73,58 @@ export function ReadingsModal({
     <>
       {/* 1. REGISTER CLEARING MODAL FOR Z READING (pos-terminalread-step2-f9.png) */}
       {zClearingStep ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans">
-            <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
-              REGISTER CLEARING
-            </div>
-            <div className="p-6 space-y-6 text-gray-900">
-              <div className="text-center font-bold text-xs text-gray-900">
-                Are you sure you want to clear all totals?
-              </div>
+      <><div
+          className="absolute inset-0 z-40 bg-white transition-opacity"
+           />
+          <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+            <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+            <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+            <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+            <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+          </div><div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
 
-              <div className="flex items-center justify-center space-x-4 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setZClearingStep(false)}
-                  className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${
-                    clearingFocus === "YES"
-                      ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
-                      : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                  }`}
-                >
-                  Yes
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${
-                    clearingFocus === "NO"
-                      ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
-                    : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                  }`}
-                >
-                  No
-                </button>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${
-                    clearingFocus === "CANCEL"
-                      ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
-                    : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"
-                  }`}
-                >
-                  Cancel
-                </button>
+            <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans">
+              <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
+                REGISTER CLEARING
+              </div>
+              <div className="p-6 space-y-6 text-gray-900">
+                <div className="text-center font-bold text-xs text-gray-900">
+                  Are you sure you want to clear all totals?
+                </div>
+
+                <div className="flex items-center justify-center space-x-4 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setZClearingStep(false)}
+                    className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${clearingFocus === "YES"
+                        ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"}`}
+                  >
+                    Yes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${clearingFocus === "NO"
+                        ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"}`}
+                  >
+                    No
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${clearingFocus === "CANCEL"
+                        ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
+                        : "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-gray-800 hover:bg-[#E2E0DC]"}`}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </div></>
+        
       ) : (
         /* 2. READINGS VIEW (pos-cashierread-step2-f8.png & pos-terminalread-step3-f9.png) */
         <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px] select-none">
