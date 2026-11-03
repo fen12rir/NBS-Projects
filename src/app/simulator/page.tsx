@@ -1453,7 +1453,8 @@ function SimulatorContent() {
         break;
       case "TRX_VOID":
         if (state.lineItems.length === 0) return;
-        setIsTrxVoidModalOpen(true);
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Trx Void" });
+        
         validateScenarioStep("TRX_VOID");
         break;
       case "TRX_DISC":
@@ -1637,6 +1638,10 @@ function SimulatorContent() {
     } else if (target === "Refund") {
       setReturnRefundMode("REFUND");
     }
+    else if (target === "Trx Void") {
+      setIsTrxVoidModalOpen(true)
+    }
+    
   };
 
   const handleShowHint = () => {
@@ -1875,6 +1880,60 @@ function SimulatorContent() {
               onCancel={() => setReturnRefundMode(null)}
             />
           )}
+
+           {/* AUTHENTIC RETRO MANAGER OVERRIDE MODAL */}
+        {state.managerOverrideOpen && (
+        <ManagerOverrideModal
+          targetAction={state.managerOverrideTarget || "Restricted Operation"}
+          onConfirm={handleConfirmOverride}
+          onCancel={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
+        />
+        )}
+
+         {/* ITEM VOID REASON MODAL */}
+      {isItemVoidModalOpen && (
+        <ItemVoidModal
+          onConfirm={(reason) => {
+            setPendingVoidReason(reason);
+            setSelectedVoidItemId(null);
+            setIsItemVoidModalOpen(false);
+            setIsVoidSkuMode(true);
+            validateScenarioStep("CONFIRM_ITEM_VOID", reason);
+          }}
+          onCancel={() => {
+            setIsItemVoidModalOpen(false);
+            setIsVoidSkuMode(false);
+            setSelectedVoidItemId(null);
+            setPendingVoidReason(null);
+          }}
+        />
+      )}
+
+       {/* TRANSACTION VOID MODAL */}
+      {isTrxVoidModalOpen && (
+        <TrxVoidModal
+          onConfirm={(reason) => {
+            dispatch({ type: "VOID_TRANSACTION" });
+            setIsTrxVoidModalOpen(false);
+            validateScenarioStep("CONFIRM_OVERRIDE");
+            validateScenarioStep("CONFIRM_TRX_VOID", reason);
+          }}
+          onCancel={() => setIsTrxVoidModalOpen(false)}
+        />
+      )}
+
+         {/* SUSPEND TRANSACTION MODAL */}
+      {isSuspendModalOpen && (
+        <SuspendModal
+          onConfirm={() => {
+            dispatch({ type: "SUSPEND_TRANSACTION" });
+            setIsSuspendModalOpen(false);
+            validateScenarioStep("SUSPEND");
+            validateScenarioStep("CONFIRM_SUSPEND");
+          }}
+          onCancel={() => setIsSuspendModalOpen(false)}
+        />
+      )}
 
           {/* SCREEN 1: START OF DAY VERIFY */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
@@ -3681,62 +3740,6 @@ function SimulatorContent() {
             setIsQuantityModalOpen(false);
             dispatch({ type: "SET_QUANTITY_CANCEL" });
           }}
-        />
-      )}
-
-      {/* ITEM VOID REASON MODAL */}
-      {isItemVoidModalOpen && (
-        <ItemVoidModal
-          onConfirm={(reason) => {
-            setPendingVoidReason(reason);
-            setSelectedVoidItemId(null);
-            setIsItemVoidModalOpen(false);
-            setIsVoidSkuMode(true);
-            validateScenarioStep("CONFIRM_ITEM_VOID", reason);
-          }}
-          onCancel={() => {
-            setIsItemVoidModalOpen(false);
-            setIsVoidSkuMode(false);
-            setSelectedVoidItemId(null);
-            setPendingVoidReason(null);
-          }}
-        />
-      )}
-
-      {/* TRANSACTION VOID MODAL */}
-      {isTrxVoidModalOpen && (
-        <TrxVoidModal
-          onConfirm={(reason) => {
-            dispatch({ type: "VOID_TRANSACTION" });
-            setIsTrxVoidModalOpen(false);
-            validateScenarioStep("CONFIRM_OVERRIDE");
-            validateScenarioStep("CONFIRM_TRX_VOID", reason);
-          }}
-          onCancel={() => setIsTrxVoidModalOpen(false)}
-        />
-      )}
-
-      {/* SUSPEND TRANSACTION MODAL */}
-      {isSuspendModalOpen && (
-        <SuspendModal
-          onConfirm={() => {
-            dispatch({ type: "SUSPEND_TRANSACTION" });
-            setIsSuspendModalOpen(false);
-            validateScenarioStep("SUSPEND");
-            validateScenarioStep("CONFIRM_SUSPEND");
-          }}
-          onCancel={() => setIsSuspendModalOpen(false)}
-        />
-      )}
-
-
-
-      {/* AUTHENTIC RETRO MANAGER OVERRIDE MODAL */}
-      {state.managerOverrideOpen && (
-        <ManagerOverrideModal
-          targetAction={state.managerOverrideTarget || "Restricted Operation"}
-          onConfirm={handleConfirmOverride}
-          onCancel={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
         />
       )}
 

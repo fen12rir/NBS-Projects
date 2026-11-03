@@ -5,6 +5,13 @@ import React, { useState, useEffect } from "react";
 interface TrxVoidModalProps {
   onConfirm: (reason: string) => void;
   onCancel: () => void;
+  targetAction?: string;
+  state?: {
+    transactionNumber?: string;
+    cashierName?: string;
+    branchCode?: string;
+    terminalId?: string;
+  };
 }
 
 export const TRX_VOID_REASONS = [
@@ -15,7 +22,7 @@ export const TRX_VOID_REASONS = [
   "Other",
 ];
 
-export function TrxVoidModal({ onConfirm, onCancel }: TrxVoidModalProps) {
+export function TrxVoidModal({ targetAction,state,onConfirm, onCancel }: TrxVoidModalProps) {
   const [step, setStep] = useState<"CONFIRM" | "REASON">("CONFIRM");
   const [reason, setReason] = useState(TRX_VOID_REASONS[0]);
 
@@ -46,9 +53,19 @@ export function TrxVoidModal({ onConfirm, onCancel }: TrxVoidModalProps) {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 z-40 bg-white transition-opacity"
         onClick={onCancel}
       />
+
+
+      <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+       </div>
+      
+
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto">
           {/* Authentic Green Header */}

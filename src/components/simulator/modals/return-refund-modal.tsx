@@ -7,10 +7,21 @@ interface ReturnModalProps {
   onConfirmReturn: (data: { reason: string; orNumber: string }) => void;
   onConfirmRefund: (data: { reason: string; orNumber: string; amount: number }) => void;
   onCancel: () => void;
+
+  targetAction?: string;
+  state?: {
+    transactionNumber?: string;
+    cashierName?: string;
+    branchCode?: string;
+    terminalId?: string;
+  };
+
 }
 
 export function ReturnRefundModal({
   mode,
+  targetAction,
+  state,
   onConfirmReturn,
   onConfirmRefund,
   onCancel,
@@ -99,9 +110,16 @@ export function ReturnRefundModal({
     return (
       <>
         <div
-          className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+          className="absolute inset-0 z-40 bg-white transition-opacity"
           onClick={onCancel}
         />
+         <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+       </div>
+
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
           <section className="w-full max-w-md border-4 border-[#2E7D32] bg-[#D4D0C8] font-sans shadow-2xl pointer-events-auto">
             <header className="border-b border-[#1B5E20] bg-[#2E7D32] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white">
@@ -158,9 +176,15 @@ export function ReturnRefundModal({
     return (
       <>
         <div
-          className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+          className="absolute inset-0 z-40 bg-white -sm transition-opacity"
           onClick={onCancel}
         />
+          <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+       </div>
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
           <section className="w-full max-w-md border-4 border-[#2E7D32] bg-[#D4D0C8] font-sans shadow-2xl pointer-events-auto">
             <header className="border-b border-[#1B5E20] bg-[#2E7D32] px-3 py-2 text-center text-sm font-bold uppercase tracking-wide text-white">
@@ -225,7 +249,10 @@ export function ReturnRefundModal({
 
   if (isRefundConfirmationOpen) {
     return (
+      
       <div className="absolute inset-0 z-50 grid grid-cols-2 gap-3 overflow-hidden bg-[#0879C9] p-3 font-sans sm:gap-4 sm:p-4">
+        
+
         <div className="flex min-w-0 flex-col justify-center gap-4 overflow-y-auto">
           <section className="w-full border-2 border-blue-950 bg-[#EAF5FF] p-3 shadow-2xl sm:p-4">
             <label
@@ -326,9 +353,16 @@ export function ReturnRefundModal({
   return (
     <>
       <div
-        className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 z-40 bg-white transition-opacity"
         onClick={onCancel}
       />
+       <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+       </div>
+
       <div className="absolute inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <form
           onSubmit={handleSubmit}

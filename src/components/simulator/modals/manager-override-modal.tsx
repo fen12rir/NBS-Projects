@@ -4,12 +4,19 @@ import React, { useState, useEffect } from "react";
 
 interface ManagerOverrideModalProps {
   targetAction?: string;
+  state?: {
+    transactionNumber?: string;
+    cashierName?: string;
+    branchCode?: string;
+    terminalId?: string;
+  };
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 export function ManagerOverrideModal({
   targetAction,
+  state,
   onConfirm,
   onCancel,
 }: ManagerOverrideModalProps) {
@@ -45,11 +52,22 @@ export function ManagerOverrideModal({
 
   return (
     <>
+       
+
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 z-40 bg-white transition-opacity"
         onClick={onCancel}
       />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+
+      <div className="relative z-[60] bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
+                    <span><span className="font-bold">Trx.:</span> {state?.transactionNumber || "1023202629990004001558"}</span>
+                    <span><span className="font-bold">Clerk:</span> {state?.cashierName || "Jan Angela"}</span>
+                    <span><span className="font-bold">Str No.:</span> {state?.branchCode || "2999"}</span>
+                    <span><span className="font-bold">Reg No.:</span> {state?.terminalId || "0004"}</span>
+       </div>
+      
+      <div className="absolute inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
+        
         <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto">
           {/* Authentic Green Title Bar */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
@@ -124,6 +142,7 @@ export function ManagerOverrideModal({
           </div>
         </div>
       </div>
+      
     </>
   );
 }
