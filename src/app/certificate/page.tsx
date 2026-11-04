@@ -167,7 +167,7 @@ export default function CertificatePage() {
 
         <div ref={certificateRef} className="border border-gray-300 shadow-md">
           <Certificate
-            name={user?.name || "Juan Dela Cruz"}
+            name={user?.name || "Maria Santos"}
             completionDate={completionDate}
           />
         </div>

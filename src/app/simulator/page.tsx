@@ -4,7 +4,6 @@ import React, { useReducer, useState, useEffect, useRef, Suspense } from "react"
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { ReceiptModal } from "@/components/simulator/modals/receipt-modal";
 import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
 import { F2LookupScreen } from "@/components/simulator/screens/f2-lookup-screen";
 import { ManagerOverrideModal } from "@/components/simulator/modals/manager-override-modal";
@@ -22,7 +21,7 @@ import { ReturnRefundModal } from "@/components/simulator/modals/return-refund-m
 import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/modals/electronic-payment-modal";
 import { PostVoidModal } from "@/components/simulator/modals/post-void-modal";
 import { PriceChangeModal } from "@/components/simulator/modals/price-change-modal";
-import { NonMdseModal } from "@/components/simulator/modals/non-mdse-modal";
+import { NonMerchandiseScreen } from "@/components/simulator/screens/non-merchandise-screen";
 import { NonSalesModal } from "@/components/simulator/modals/non-sales-modal";
 import { BonusBuyScreen } from "@/components/simulator/screens/bonus-buy-screen";
 import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option-screen";
@@ -199,7 +198,7 @@ function SimulatorContent() {
   const [customerQrInput, setCustomerQrInput] = useState("20221003LN000004");
   const [selectedLnqrButton, setSelectedLnqrButton] = useState<"OK" | "CANCEL" | null>(null);
 
-  // Authentic Payment Screen States
+  // Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
   const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
   const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("");
@@ -208,7 +207,7 @@ function SimulatorContent() {
   const tenderTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [isLnqrUpdatedModalOpen, setIsLnqrUpdatedModalOpen] = useState(false);
 
-  // Authentic Functional Modals (Modules 4-8)
+  // Functional Modals (Modules 4-8)
   const [isItemVoidModalOpen, setIsItemVoidModalOpen] = useState(false);
   const [isTrxVoidModalOpen, setIsTrxVoidModalOpen] = useState(false);
   const [selectedVoidItemId, setSelectedVoidItemId] = useState<string | null>(null);
@@ -221,8 +220,16 @@ function SimulatorContent() {
   const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
   const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
 
-  // Authentic Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya)
-  const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "EWALLET_DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
+  // Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya & Sodexho)
+  const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "EWALLET_DETAILS" | "SODEXHO_SERIES" | "SODEXHO_DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
+  const [sodexhoSeriesType, setSodexhoSeriesType] = useState("-SELECT-");
+  const [sodexhoNumber, setSodexhoNumber] = useState("1");
+  const [sodexhoValidUntil, setSodexhoValidUntil] = useState("2026-12-31");
+  const [sodexhoDenom, setSodexhoDenom] = useState("--Select Sodexho Denom--");
+  const [sodexhoAvailAmount, setSodexhoAvailAmount] = useState("");
+  const [pendingSodexhoVariance, setPendingSodexhoVariance] = useState<number | null>(null);
+  const [pendingSodexhoNotice, setPendingSodexhoNotice] = useState<string | null>(null);
+  const [isCompletedReceiptOpen, setIsCompletedReceiptOpen] = useState(false);
   const [selectedBankCardType, setSelectedBankCardType] = useState("-SELECT-");
   const [bankCardSwipeNum, setBankCardSwipeNum] = useState("");
   const [bankCardHolder, setBankCardHolder] = useState("X");
@@ -506,7 +513,6 @@ function SimulatorContent() {
       return;
     }
 
-    // Show "Dont press any key.. Please wait..." then transition to final tear-off / close register screen
     tenderTimerRef.current = setTimeout(() => {
       setIsFinalTenderStep(true);
     }, 7000);
@@ -560,10 +566,99 @@ function SimulatorContent() {
     setIsFinalTenderStep(true);
   };
 
+  const handleConfirmSodexhoPayment = () => {
+    const tenderVal = parseFloat(sodexhoAvailAmount || sodexhoDenom) || 0;
+    if (tenderVal <= 0) {
+      alert("Please select or enter a valid Sodexho denomination.");
+      return;
+    }
+
+    const currentTotal = totals.totalAmount;
+    if (tenderVal > currentTotal + 0.009) {
+      const diff = tenderVal - currentTotal;
+      const changeDifference = diff > 0 ? diff : 0;
+      setPendingSodexhoVariance(changeDifference);
+      alert("Sodexho Amount is greater than total transaction amount. Please perform Variance or use other payments.");
+      dispatch({ type: "CLOSE_PAYMENT" });
+      setSelectedTenderMethod("CASH");
+      setSelectedBankCardType("-SELECT-");
+      setBankCardStep("SELECT_TYPE");
+      return;
+    } else if (tenderVal < currentTotal - 0.009) {
+      alert("Sodexho Amount is less than total transaction amount. Please enter the full amount or split tender.");
+      return;
+    }
+
+    const varianceItem = state.lineItems.find(
+      (it) => !it.isVoided && (it.sku === "ZSOI" || it.description.toUpperCase().includes("SODEXHO"))
+    );
+    const varianceAmt = varianceItem ? varianceItem.total : 0;
+
+    dispatch({
+      type: "TENDER_PAYMENT",
+      amount: currentTotal,
+      sodexhoDetails: {
+        number: sodexhoNumber || "PP12345678",
+        validUntil: sodexhoValidUntil || "2026-12-31",
+        denom: tenderVal,
+        seriesType: sodexhoSeriesType,
+        varianceAmount: varianceAmt,
+      },
+    });
+    dispatch({ type: "SELECT_PAYMENT_METHOD", method: "SODEXHO" });
+    validateScenarioStep("CONFIRM_TENDER", currentTotal);
+    setBankCardStep("FINAL_TEAROFF");
+    setIsFinalTenderStep(true);
+  };
+
+  const handleCloseCompletedReceipt = () => {
+    dispatch({ type: "CLOSE_PAYMENT" });
+    dispatch({ type: "RESET_TRANSACTION" });
+    setSelectedTenderMethod("CASH");
+    setSelectedBankCardType("-SELECT-");
+    setBankCardStep("SELECT_TYPE");
+    setIsLnqrCashPaymentOpen(false);
+    setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
+    setLnqrCashTenderInput("");
+    setIsLnqrScanScreenOpen(false);
+    setIsLncCardScreenOpen(false);
+    setIsLoyaltyOptionOpen(false);
+    setIsLnqrUpdatedModalOpen(false);
+    setHasBonusBuyBeenPrompted(false);
+    setLoyaltyType("NONE");
+    setSulitCoinsEarnedAmount(null);
+    setSulitCoinsRedeemedAmount(null);
+    setSulitCoinsRefNo("");
+    setIsConnectingLnqrServer(false);
+    setBankCardSwipeNum("");
+    setBankCardHolder("X");
+    setBankCardTerminal("BDO POS");
+    setBankCardValidUntil("2028-12-31");
+    setBankCardAuthCode("");
+    setBankCardSlipNo("");
+    setReceiptAuthCode("");
+    setReceiptInvoiceNumber("");
+    setCardReceiptGeneratedAt(null);
+    setBankCardRefNo("");
+    setBankCardAmountInput("");
+    setGcashReferenceNumber("");
+    setMayaTraceNumber("");
+    setMayaReferenceNumber("");
+    setMayaGeneratedAt(null);
+    setPendingSodexhoVariance(null);
+    setPendingSodexhoNotice(null);
+  };
+
   const handleConfirmBankCardType = () => {
     const cardType =
       selectedBankCardType === "-SELECT-" ? "CREDIT CARD" : selectedBankCardType;
     setSelectedBankCardType(cardType);
+
+    if (cardType === "SODEXHO") {
+      setBankCardStep("SODEXHO_SERIES");
+      return;
+    }
 
     if (cardType === "CREDIT CARD") {
       setReceiptInvoiceNumber(generateInvoiceNumber());
@@ -620,13 +715,27 @@ function SimulatorContent() {
           cardType = "CREDIT CARD";
           setSelectedBankCardType("CREDIT CARD");
         }
+        if (cardType.toUpperCase() === "SODEXHO") {
+          setSelectedBankCardType("SODEXHO");
+          setBankCardStep("SODEXHO_SERIES");
+          return;
+        }
         if (isEwalletCardType(cardType)) {
           handleConfirmEwalletType(cardType);
+        } else {
+          handleConfirmBankCardType();
         }
-        
-        else {
-         handleConfirmBankCardType();
-          }
+        return;
+      }
+      if (bankCardStep === "SODEXHO_SERIES") {
+        if (sodexhoSeriesType === "-SELECT-") {
+          setSodexhoSeriesType("Without Series");
+        }
+        setBankCardStep("SODEXHO_DETAILS");
+        return;
+      }
+      if (bankCardStep === "SODEXHO_DETAILS") {
+        handleConfirmSodexhoPayment();
         return;
       }
       if (bankCardStep === "SWIPE_CARD") {
@@ -637,45 +746,12 @@ function SimulatorContent() {
         handleConfirmBankCardPayment();
         return;
       }
-      if (bankCardStep === "FINAL_TEAROFF" || isFinalTenderStep) {
+            if (bankCardStep === "FINAL_TEAROFF" || isFinalTenderStep) {
         if (tenderTimerRef.current) {
           clearTimeout(tenderTimerRef.current);
           tenderTimerRef.current = null;
         }
-        dispatch({ type: "CLOSE_PAYMENT" });
-        dispatch({ type: "RESET_TRANSACTION" });
-        setIsLnqrCashPaymentOpen(false);
-        setIsLnqrTenderProcessed(false);
-        setIsFinalTenderStep(false);
-        setLnqrCashTenderInput("");
-        setIsLnqrScanScreenOpen(false);
-        setIsLncCardScreenOpen(false);
-        setIsLoyaltyOptionOpen(false);
-        setIsLnqrUpdatedModalOpen(false);
-        setHasBonusBuyBeenPrompted(false);
-        setLoyaltyType("NONE");
-        setSelectedTenderMethod("CASH");
-        setSulitCoinsEarnedAmount(null);
-        setSulitCoinsRedeemedAmount(null);
-        setSulitCoinsRefNo("");
-        setIsConnectingLnqrServer(false);
-        setBankCardStep("SELECT_TYPE");
-        setBankCardSwipeNum("");
-        setBankCardHolder("X");
-        setBankCardTerminal("BDO POS");
-        setBankCardValidUntil("2028-12-31");
-        setBankCardAuthCode("");
-        setBankCardSlipNo("");
-        setReceiptAuthCode("");
-        setReceiptInvoiceNumber("");
-        setCardReceiptGeneratedAt(null);
-        setBankCardRefNo("");
-        setBankCardAmountInput("");
-        setGcashReferenceNumber("");
-        setMayaTraceNumber("");
-        setMayaReferenceNumber("");
-        setMayaGeneratedAt(null);
-        validateScenarioStep("CONFIRM_LNQR_UPDATED");
+        handleCloseCompletedReceipt();
         return;
       }
      
@@ -1022,7 +1098,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4e. Authentic Payment Screen Keybinds
+      // 4e. Payment Screen Keybinds
       if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
         if (isLnqrTenderProcessed || isFinalTenderStep) {
           if (!isFinalTenderStep) {
@@ -1128,6 +1204,11 @@ function SimulatorContent() {
 
       // 4f. Modal Escape Key Dismissals
       if (e.key === "Escape") {
+        if (isCompletedReceiptOpen) {
+          e.preventDefault();
+          handleCloseCompletedReceipt();
+          return;
+        }
         if (isPostVoidOpen) {
           e.preventDefault();
           setIsPostVoidOpen(false);
@@ -1141,6 +1222,11 @@ function SimulatorContent() {
         if (isNonMdseOpen) {
           e.preventDefault();
           setIsNonMdseOpen(false);
+          return;
+        }
+        if (isTrxDiscOpen) {
+          e.preventDefault();
+          setIsTrxDiscOpen(false);
           return;
         }
         if (journalModalMode !== null) {
@@ -1179,7 +1265,6 @@ function SimulatorContent() {
       isTrxDiscOpen ||
       isRecallOpen ||
       isReprintOpen ||
-      isReprintReceiptOpen ||
       isSdvOpen ||
       readingsType !== null ||
       isTrxCommentOpen ||
@@ -1841,7 +1926,7 @@ function SimulatorContent() {
         onFillBarcode={handleFillBarcode}
       />
 
-      {/* EXACT POS TERMINAL CONTAINER */}
+      {/* POS TERMINAL CONTAINER */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0">
         <div
           className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
@@ -2004,7 +2089,30 @@ function SimulatorContent() {
                   state={state}
                   onClose={() => setJournalModalMode(null)}
                 />
-              ) : isTrxDiscOpen ? (
+                            ) : isNonMdseOpen ? (
+                <NonMerchandiseScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  initialCategory={pendingSodexhoVariance !== null ? "Sodexho Variance (ZSOI)" : undefined}
+                  initialAmount={pendingSodexhoVariance !== null ? pendingSodexhoVariance.toFixed(2) : undefined}
+                  initialReferenceNo={sodexhoNumber || "PP12345678"}
+                  onCancel={() => setIsNonMdseOpen(false)}
+                  onSubmit={(data) => {
+                    dispatch({
+                      type: "ADD_NON_MDSE_ITEM",
+                      description: data.description,
+                      amount: data.amount,
+                      referenceNo: data.referenceNo,
+                      sku: data.sku,
+                    });
+                    setIsNonMdseOpen(false);
+                    setPendingSodexhoVariance(null);
+                    setPendingSodexhoNotice(null);
+                    validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
+                  }}
+                />
+) : isTrxDiscOpen ? (
                 <TransactionDiscountScreen
                   clerkName={state.cashierName}
                   terminalId={state.terminalId}
@@ -2100,7 +2208,7 @@ function SimulatorContent() {
               ) : isLnqrScanScreenOpen ? (
                 /* LNQR SCAN SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2160,9 +2268,9 @@ function SimulatorContent() {
                   </div>
                 </div>
               ) : isLncCardScreenOpen ? (
-                /* LAKING NATIONAL CARD SCREEN (Option 2 Intermediate Screen) */
+                /* LAKING NATIONAL CARD SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2245,9 +2353,9 @@ function SimulatorContent() {
                   onCancel={() => setIsTrxCommentOpen(false)}
                 />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
-                /* AUTHENTIC FULL PAYMENT SCREEN */
+                /* FULL PAYMENT SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -2308,7 +2416,7 @@ function SimulatorContent() {
                               <div>TrxNo &nbsp; &nbsp; &nbsp;: {state.transactionNumber}</div>
                               <div className="flex justify-between">
                                 <span>Clerk &nbsp; &nbsp; &nbsp;: 241209</span>
-                                <span>Term. No.: 0004</span>
+                                <span>Term. No.: 0003</span>
                               </div>
                             </div>
 
@@ -2327,7 +2435,7 @@ function SimulatorContent() {
                                         {idx + 1}&nbsp; &nbsp;{item.sku} @ {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                       </span>
                                       <span className={isVoid ? "text-red-700 font-bold" : ""}>
-                                        {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.total > 0 ? "V" : ""}
+                                        {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.sku === "ZSOI" || item.description.includes("SODEXHO") ? "NV" : item.total > 0 ? "V" : ""}
                                       </span>
                                     </div>
                                     <div className="pl-6 text-[9px] text-gray-800">{item.description}</div>
@@ -2417,7 +2525,31 @@ function SimulatorContent() {
                                 </div>
                               )}
                               {selectedTenderMethod === "BANK_CARD" && bankCardStep === "FINAL_TEAROFF" && (
-                                isEwalletCardType(selectedBankCardType) ? (
+                                selectedBankCardType === "SODEXHO" ? (
+                                  <div className="pt-1 text-[10px] font-mono leading-tight">
+                                    {(() => {
+                                      const sodexhoVar = state.lineItems.find(
+                                        (it) => !it.isVoided && (it.sku === "ZSOI" || it.description.toUpperCase().includes("SODEXHO"))
+                                      );
+                                      const varAmt = sodexhoVar ? sodexhoVar.total : 0;
+                                      const merchAmt = Math.max(0, totalSales - varAmt);
+                                      return (
+                                        <div className="space-y-0.5 pt-0.5 font-bold">
+                                          <div className="flex justify-between">
+                                            <span>Sodexho</span>
+                                            <span>{merchAmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                          </div>
+                                          {varAmt > 0 && (
+                                            <div className="flex justify-between">
+                                              <span>Sodexho Other Income</span>
+                                              <span>{varAmt.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                ) : isEwalletCardType(selectedBankCardType) ? (
                                   <div className="pt-1 text-[10px] font-mono leading-tight">
                                     <div className="flex justify-between font-bold">
                                       <span>{selectedBankCardType}</span>
@@ -2475,33 +2607,43 @@ function SimulatorContent() {
                             )}
 
                             {/* Tax Info */}
-                            <div className="pt-2 space-y-0.5">
-                              <div className="text-center font-bold pb-1">Tax Info</div>
-                              <div className="flex justify-between">
-                                <span>Non-Vatable</span>
-                                <span>0.00</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>Vatable</span>
-                                <span>{vatable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>VAT Zero-Rated Sale</span>
-                                <span>{(state.isZeroRated ? totalSales : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>VAT Exempt Sale</span>
-                                <span>0.00</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span>VAT(12%)</span>
-                                <span>{vatAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                              </div>
-                              <div className="flex justify-between font-bold border-t border-gray-300 pt-0.5">
-                                <span>Total Sales</span>
-                                <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                              </div>
-                            </div>
+                            {(() => {
+                              const nonVatableItems = state.lineItems
+                                .filter((it) => !it.isVoided && (it.sku === "ZSOI" || it.description.toUpperCase().includes("SODEXHO") || it.description.toUpperCase().includes("NON-MDSE")))
+                                .reduce((acc, it) => acc + it.total, 0);
+                              const actualVatableSales = state.isZeroRated ? 0 : Math.max(0, totalSales - nonVatableItems);
+                              const actualVatable = state.isZeroRated ? 0 : actualVatableSales / 1.12;
+                              const actualVatAmount = state.isZeroRated ? 0 : actualVatableSales - actualVatable;
+                              return (
+                                <div className="pt-2 space-y-0.5">
+                                  <div className="text-center font-bold pb-1">Tax Info</div>
+                                  <div className="flex justify-between">
+                                    <span>Non-Vatable</span>
+                                    <span>{nonVatableItems.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>Vatable</span>
+                                    <span>{actualVatable.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>VAT Zero-Rated Sale</span>
+                                    <span>{(state.isZeroRated ? totalSales : 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>VAT Exempt Sale</span>
+                                    <span>0.00</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span>VAT(12%)</span>
+                                    <span>{actualVatAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between font-bold border-t border-gray-300 pt-0.5">
+                                    <span>Total Sales</span>
+                                    <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {/* Buyer Info */}
                             <div className="pt-3 space-y-1">
@@ -2546,11 +2688,11 @@ function SimulatorContent() {
                       })()}
                     </div>
 
-                    {/* Center Panel: Green Box & Cash Payment Details OR Final Tear-Off View */}
+                    {/* Center Panel */}
                     <div className="col-span-5 flex flex-col border-r-2 border-gray-400 bg-[#BDC3C7] min-h-0 overflow-hidden">
                       {isFinalTenderStep || isConnectingLnqrServer || (isLnqrUpdatedModalOpen && sulitCoinsRedeemedAmount !== null) ? (
                         <>
-                          {/* 4-Row Green Box matching media_1792734842818_4f88c6fe.jpg */}
+                          {/* 4-Row Green Box */}
                           <div className="bg-[#22A838] p-3 text-white space-y-2 border-b-2 border-green-700 select-none flex-shrink-0">
                             {/* Unit */}
                             <div className="flex items-center justify-between">
@@ -2591,7 +2733,6 @@ function SimulatorContent() {
                             </div>
                           </div>
 
-                          {/* Sky-Blue Stripe Divider */}
                           <div className="h-5 bg-[#67B8DE] border-b border-gray-400 flex-shrink-0" />
 
                           {/* Message Body */}
@@ -2653,28 +2794,45 @@ function SimulatorContent() {
                             </div>
 
                             {/* Tender / Tendered */}
-                            <div className="flex items-center justify-between">
-                              {selectedTenderMethod === "CASH" && isLnqrTenderProcessed ? (
-                                <span className="text-red-600 font-black text-base tracking-wide animate-pulse">
-                                  Change
+                            {selectedBankCardType === "SODEXHO" && bankCardStep === "FINAL_TEAROFF" ? (
+                              <>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-base tracking-wide">Tendered</span>
+                                  <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                    {(totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="font-bold text-base tracking-wide">Change</span>
+                                  <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                    0.00
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="flex items-center justify-between">
+                                {selectedTenderMethod === "CASH" && isLnqrTenderProcessed ? (
+                                  <span className="text-red-600 font-black text-base tracking-wide animate-pulse">
+                                    Change
+                                  </span>
+                                ) : selectedTenderMethod === "BANK_CARD" ? (
+                                  <span className="font-bold text-base tracking-wide">
+                                    Tendered
+                                  </span>
+                                ) : (
+                                  <span className="font-bold text-base tracking-wide">
+                                    Tender
+                                  </span>
+                                )}
+                                <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
+                                  {selectedTenderMethod === "BANK_CARD"
+                                    ? "0.00"
+                                    : isLnqrTenderProcessed
+                                    ? Math.max(0, ((parseFloat(lnqrCashTenderInput) || 0) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
-                              ) : selectedTenderMethod === "BANK_CARD" ? (
-                                <span className="font-bold text-base tracking-wide">
-                                  Tendered
-                                </span>
-                              ) : (
-                                <span className="font-bold text-base tracking-wide">
-                                  Tender
-                                </span>
-                              )}
-                              <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
-                                {selectedTenderMethod === "BANK_CARD"
-                                  ? "0.00"
-                                  : isLnqrTenderProcessed
-                                  ? Math.max(0, ((parseFloat(lnqrCashTenderInput) || 0) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                  : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                            </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Cash / Card Payment Details Header */}
@@ -2682,7 +2840,9 @@ function SimulatorContent() {
                             {selectedTenderMethod === "CASH"
                               ? "Cash Payment Details"
                               : selectedTenderMethod === "BANK_CARD"
-                              ? (isEwalletCardType(selectedBankCardType)
+                              ? (selectedBankCardType === "SODEXHO"
+                                  ? "Sodexho Payment Details"
+                                  : isEwalletCardType(selectedBankCardType)
                                   ? `${selectedBankCardType} Payment Details`
                                   : "Card Payment Details")
                               : selectedTenderMethod === "CHECK"
@@ -2743,41 +2903,159 @@ function SimulatorContent() {
                               )
                             ) : selectedTenderMethod === "BANK_CARD" ? (
                               bankCardStep === "SELECT_TYPE" ? (
-                                <form
-                                  onSubmit={(e) => {
-                                    e.preventDefault();
-                                    let cardType = selectedBankCardType;
-                                    if (cardType === "-SELECT-") {
-                                      cardType = "CREDIT CARD";
-                                      setSelectedBankCardType("CREDIT CARD");
-                                    }
-                                    if (isEwalletCardType(cardType)) {
-                                      handleConfirmEwalletType(cardType);
-                                    } else {
-                                      handleConfirmBankCardType();
-                                    }
-                                  }}
-                                  className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
-                                >
-                                  <div className="text-gray-900 font-bold text-sm tracking-wide">
-                                    Please Select Card Type
+                                  <form
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      let cardType = selectedBankCardType;
+                                      if (cardType === "-SELECT-") {
+                                        cardType = "CREDIT CARD";
+                                        setSelectedBankCardType("CREDIT CARD");
+                                      }
+                                      if (cardType.toUpperCase() === "SODEXHO") {
+                                        setSelectedBankCardType("SODEXHO");
+                                        setBankCardStep("SODEXHO_SERIES");
+                                        return;
+                                      }
+                                      if (isEwalletCardType(cardType)) {
+                                        handleConfirmEwalletType(cardType);
+                                      } else {
+                                        handleConfirmBankCardType();
+                                      }
+                                    }}
+                                    className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
+                                  >
+                                    <div className="text-gray-900 font-bold text-sm tracking-wide">
+                                      Please Select Card Type
+                                    </div>
+                                    <div className="w-64">
+                                      <select
+                                        value={selectedBankCardType}
+                                        onChange={(e) => setSelectedBankCardType(e.target.value)}
+                                        className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-sans text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                        autoFocus
+                                      >
+                                        {CARD_TYPES.map((type) => (
+                                          <option key={type} value={type}>
+                                            {type}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </form>
+                                ) : bankCardStep === "SODEXHO_SERIES" ? (
+                                  <div className="w-full flex flex-col items-center justify-center space-y-4 font-sans select-none py-8">
+                                    <div className="text-gray-900 font-bold text-sm tracking-wide">
+                                      Please select Sodexho
+                                    </div>
+                                    <div className="w-64">
+                                      <select
+                                        value={sodexhoSeriesType}
+                                        onChange={(e) => setSodexhoSeriesType(e.target.value)}
+                                        className="w-full bg-white border-2 border-gray-600 px-3 py-1.5 font-sans text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                        autoFocus
+                                      >
+                                        <option value="-SELECT-">-SELECT-</option>
+                                        <option value="Without Series">Without Series</option>
+                                        <option value="With Series">With Series</option>
+                                      </select>
+                                    </div>
                                   </div>
-                                  <div className="w-64">
-                                    <select
-                                      value={selectedBankCardType}
-                                      onChange={(e) => setSelectedBankCardType(e.target.value)}
-                                      className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-sans text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
-                                      autoFocus
-                                    >
-                                      {CARD_TYPES.map((type) => (
-                                        <option key={type} value={type}>
-                                          {type}
-                                        </option>
-                                      ))}
-                                    </select>
+                                ) : bankCardStep === "SODEXHO_DETAILS" ? (
+                                  <form
+                                    onSubmit={(e) => {
+                                      e.preventDefault();
+                                      handleConfirmSodexhoPayment();
+                                    }}
+                                    className="w-full max-w-md space-y-3 py-2 px-4 font-sans select-none"
+                                  >
+                                    {/* Sodexho Number */}
+                                    <div className="flex items-center">
+                                      <label className="w-36 text-xs font-bold text-gray-900">
+                                        Sodexho Number
+                                      </label>
+                                      <div className="flex items-center space-x-2 flex-1">
+                                        <input
+                                          type="text"
+                                          value={sodexhoNumber}
+                                          onChange={(e) => setSodexhoNumber(e.target.value)}
+                                          autoFocus
+                                          className="w-44 bg-white border-2 border-gray-600 px-2 py-0.5 font-mono text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        />
+                                        <span className="text-red-600 font-bold text-xs font-mono">
+                                          ( e.g. PP12345678 )
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Valid Until */}
+                                    <div className="flex items-center">
+                                      <label className="w-36 text-xs font-bold text-gray-900">
+                                        Valid Until
+                                      </label>
+                                      <div className="flex items-center space-x-2 flex-1">
+                                        <input
+                                          type="text"
+                                          value={sodexhoValidUntil}
+                                          onChange={(e) => setSodexhoValidUntil(e.target.value)}
+                                          placeholder="YYYY-mm-dd"
+                                          className="w-36 bg-white border-2 border-gray-600 px-2 py-0.5 font-mono text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        />
+                                        <span className="text-red-600 font-bold text-xs font-mono">
+                                          (YYYY-mm-dd)
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Denomination */}
+                                    <div className="flex items-center">
+                                      <label className="w-36 text-xs font-bold text-gray-900">
+                                        Denomination
+                                      </label>
+                                      <div className="flex items-center space-x-2 flex-1">
+                                        <select
+                                          value={sodexhoDenom}
+                                          onChange={(e) => {
+                                            const val = e.target.value;
+                                            setSodexhoDenom(val);
+                                            if (val && val !== "--Select Sodexho Denom--") {
+                                              setSodexhoAvailAmount(val);
+                                            }
+                                          }}
+                                          className="w-56 bg-white border-2 border-gray-600 px-2 py-0.5 text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                                        >
+                                          <option value="--Select Sodexho Denom--">--Select Sodexho Denom--</option>
+                                          <option value="50.00">50.00</option>
+                                          <option value="100.00">100.00</option>
+                                          <option value="200.00">200.00</option>
+                                          <option value="500.00">500.00</option>
+                                          <option value="1000.00">1000.00</option>
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    {/* Avail Amount */}
+                                    <div className="flex items-center">
+                                      <label className="w-36 text-xs font-bold text-gray-900">
+                                        Avail Amount
+                                      </label>
+                                      <div className="flex items-center space-x-2 flex-1">
+                                        <input
+                                          type="text"
+                                          value={sodexhoAvailAmount}
+                                          onChange={(e) => setSodexhoAvailAmount(e.target.value)}
+                                          className="w-56 bg-white border-2 border-gray-600 px-2 py-0.5 font-mono text-xs font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                        />
+                                      </div>
+                                    </div>
+                                  </form>
+                                ) : bankCardStep === "FINAL_TEAROFF" && selectedBankCardType === "SODEXHO" ? (
+                                  <div className="w-full flex-1 flex flex-col items-center justify-center space-y-3 font-sans select-none py-6">
+                                    <div className="text-gray-900 font-bold text-center space-y-1">
+                                      <div className="text-sm sm:text-base font-bold tracking-wide">Please Tear-Off the OR</div>
+                                      <div className="text-sm sm:text-base font-bold tracking-wide">Thank You!!</div>
+                                    </div>
                                   </div>
-                                </form>
-                              ) : bankCardStep === "EWALLET_DETAILS" ? (
+                                ) : bankCardStep === "EWALLET_DETAILS" ? (
                                 <form
                                   onSubmit={(e) => {
                                     e.preventDefault();
@@ -3330,10 +3608,10 @@ function SimulatorContent() {
 
                   {/* Bottom Footer Bar */}
                   <div className="grid grid-cols-12 border-t-2 border-gray-400 h-9 font-sans select-none items-stretch flex-shrink-0">
-                    {/* Left 5 cols (Electronic Journal bottom) */}
+                    {/* Left 5 */}
                     <div className="col-span-5 bg-[#BDC3C7] border-r-2 border-gray-400" />
 
-                    {/* Center 5 cols (Green with Ok and Cancel buttons) */}
+                    {/* Center 5 */}
                     <div className="col-span-5 bg-[#22A838] border-r-2 border-gray-400 flex items-center justify-center px-2 space-x-3">
                       <button
                         ref={paymentOkBtnRef}
@@ -3349,7 +3627,11 @@ function SimulatorContent() {
                         <button
                           type="button"
                           onClick={() => {
-                            if (bankCardStep !== "SELECT_TYPE") {
+                            if (bankCardStep === "SODEXHO_DETAILS") {
+                              setBankCardStep("SODEXHO_SERIES");
+                            } else if (bankCardStep === "SODEXHO_SERIES") {
+                              setBankCardStep("SELECT_TYPE");
+                            } else if (bankCardStep !== "SELECT_TYPE") {
                               setBankCardStep("SELECT_TYPE");
                             } else {
                               setSelectedTenderMethod("CASH");
@@ -3370,7 +3652,19 @@ function SimulatorContent() {
                 </div>
               ) : (
                 <>
-                  {/* TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+                  {pendingSodexhoNotice && (
+                    <div className="bg-[#FFF275] border-b-2 border-yellow-600 px-4 py-1.5 text-xs font-bold text-gray-900 flex justify-between items-center shadow-md animate-in fade-in flex-shrink-0">
+                      <span>⚠️ {pendingSodexhoNotice}</span>
+                      <button
+                        type="button"
+                        onClick={() => setPendingSodexhoNotice(null)}
+                        className="text-gray-700 hover:text-black font-extrabold ml-2 px-1 text-sm cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                  {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
                     <span><span className="font-bold">Clerk:</span> {state.cashierName || "Jan Angela"}</span>
@@ -3524,41 +3818,48 @@ function SimulatorContent() {
                     Line item screen page ({isRefundSkuMode ? "Enter Refund UPC above" : "Scan or Enter UPC above"})
                   </div>
                 ) : (
-                  state.lineItems.map((item, idx) => {
-                    const isVoidLine = item.isVoided || item.quantity < 0;
-                    const itemType = isVoidLine ? "V" : state.isZeroRated ? "VZ" : "REG";
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => {
-                          if (isVoidSkuMode && !item.isVoided) {
-                            setSelectedVoidItemId(item.id);
-                          }
-                        }}
-                        className={`grid grid-cols-12 py-1 px-1 items-center text-[11px] font-mono ${
-                          selectedVoidItemId === item.id
-                            ? "ring-2 ring-inset ring-blue-600 bg-blue-50"
-                            : isVoidLine
-                              ? "text-red-600 font-bold bg-red-50"
-                              : isVoidSkuMode
-                                ? "text-gray-900 cursor-pointer hover:bg-blue-50"
-                                : "text-gray-900"
-                        }`}
-                      >
-                        <span className="col-span-1 text-left font-bold">{idx + 1}</span>
-                        <span className="col-span-3 text-left truncate">{item.sku}</span>
-                        <span className="col-span-4 text-left font-bold truncate pr-1">{item.description}</span>
-                        <span className="col-span-1 text-center font-bold">
-                          {item.quantity < 0 ? item.quantity : item.isVoided ? `-${item.quantity}` : item.quantity}
-                        </span>
-                        <span className="col-span-1 text-right text-gray-700">{item.unitPrice.toFixed(2)}</span>
-                        <span className="col-span-1 text-right font-bold">
-                          {item.isVoided && item.total > 0 ? `-${item.total.toFixed(2)}` : item.total.toFixed(2)}
-                        </span>
-                        <span className="col-span-1 text-right font-bold text-gray-600">{itemType}</span>
-                      </div>
-                    );
-                  })
+                  [...state.lineItems]
+                    .map((item, originalIdx) => ({ item, originalIdx }))
+                    .reverse()
+                    .map(({ item, originalIdx }, reverseIdx) => {
+                      const isVoidLine = item.isVoided || item.quantity < 0;
+                      const isNonMdse =
+                        item.sku === "ZSOI" ||
+                        item.description.toUpperCase().includes("SODEXHO") ||
+                        item.description.toUpperCase().includes("NON-MDSE");
+                      const itemType = isVoidLine ? "-V" : isNonMdse ? "NV" : state.isZeroRated ? "VZ" : "V";
+                      const isLatestItem = reverseIdx === 0;
+
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => {
+                            if (isVoidSkuMode && !item.isVoided) {
+                              setSelectedVoidItemId(item.id);
+                            }
+                          }}
+                          className={`grid grid-cols-12 py-1 px-1 items-center text-[11px] font-mono font-bold ${
+                            selectedVoidItemId === item.id
+                              ? "ring-2 ring-inset ring-blue-600 bg-blue-50 text-red-600"
+                              : isLatestItem
+                                ? "bg-[#9ACD32] text-red-600"
+                                : "text-red-600"
+                          } ${isVoidSkuMode ? "cursor-pointer hover:opacity-80" : ""}`}
+                        >
+                          <span className="col-span-1 text-left">{originalIdx + 1}</span>
+                          <span className="col-span-3 text-left truncate">{item.sku}</span>
+                          <span className="col-span-4 text-left truncate pr-1">{item.description}</span>
+                          <span className="col-span-1 text-center">
+                            {item.quantity < 0 ? item.quantity : item.isVoided ? `-${item.quantity}` : item.quantity}
+                          </span>
+                          <span className="col-span-1 text-right">{item.unitPrice.toFixed(2)}</span>
+                          <span className="col-span-1 text-right">
+                            {item.isVoided && item.total > 0 ? `-${item.total.toFixed(2)}` : item.total.toFixed(2)}
+                          </span>
+                          <span className="col-span-1 text-right">{itemType}</span>
+                        </div>
+                      );
+                    })
                 )}
               </div>
             </div>
@@ -3743,15 +4044,6 @@ function SimulatorContent() {
         />
       )}
 
-      {/* REPRINT RECEIPT MODAL VIEW */}
-      {isReprintReceiptOpen && (
-        <ReceiptModal
-          state={state}
-          isReprint={true}
-          onClose={() => setIsReprintReceiptOpen(false)}
-          onReset={() => setIsReprintReceiptOpen(false)}
-        />
-      )}
       {/* MODULE 8 ELECTRONIC / CARD PAYMENT MODAL */}
       {isElectronicPaymentOpen && (
         <ElectronicPaymentModal
@@ -3808,24 +4100,9 @@ function SimulatorContent() {
         />
       )}
 
-      {/* F6 NON-MERCHANDISE VARIANCE MODAL (1st Page F6) */}
-      {isNonMdseOpen && (
-        <NonMdseModal
-          onConfirm={(data) => {
-            dispatch({
-              type: "ADD_NON_MDSE_ITEM",
-              description: data.description,
-              amount: data.amount,
-              referenceNo: data.referenceNo,
-            });
-            setIsNonMdseOpen(false);
-            validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
-          }}
-          onCancel={() => setIsNonMdseOpen(false)}
-        />
-      )}
+      
 
-      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL (4th Page F4) */}
+      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL */}
       {isNonSalesOpen && (
         <NonSalesModal
           onConfirm={(data) => {

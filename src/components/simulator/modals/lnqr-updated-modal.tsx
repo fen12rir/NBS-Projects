@@ -34,7 +34,7 @@ export function LnqrUpdatedModal({
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto">
           {/* Window Title Bar */}
-          <div className="bg-gradient-to-r from-[#1C4158] to-[#2E5874] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
+          <div className="bg-[#1C4158] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
             <div className="flex items-center space-x-1 truncate">
               <span className="text-[10px] leading-none">•</span>
               <span className="text-[11px] truncate tracking-wide text-gray-100">

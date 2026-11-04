@@ -78,7 +78,7 @@ export function ReprintModal({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px] select-none">
-      {/* 2. AUTHENTIC YELLOW BANNER */}
+      {/* 2. YELLOW BANNER */}
       <div className="bg-[#FFF275] border-b-2 border-gray-500 py-1.5 text-center font-bold text-lg text-gray-900 tracking-wider">
         REPRINT
       </div>
@@ -87,7 +87,7 @@ export function ReprintModal({
       <div className="flex-1 grid grid-cols-12 p-4 gap-4 bg-white overflow-hidden">
         {/* Left Table: OR No. */}
         <div className="col-span-5 flex flex-col border-2 border-gray-400 bg-white">
-          <div className="bg-gradient-to-b from-[#D4D0C8] to-[#B0B8C0] border-b border-gray-400 py-1 px-3 text-center text-xs font-bold text-gray-900">
+          <div className="bg-[#BCC4CC] border-b border-gray-400 py-1 px-3 text-center text-xs font-bold text-gray-900">
             OR No.
           </div>
           <div className="flex-1 overflow-y-auto">

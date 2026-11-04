@@ -36,6 +36,13 @@ export interface POSTransactionState {
   appliedDiscount: { name: string; percent: number } | null;
   isZeroRated: boolean;
   transactionComments: { customerName: string; address: string; tin: string; remarks?: string } | null;
+  sodexhoDetails?: {
+    number: string;
+    validUntil: string;
+    denom: number;
+    seriesType: string;
+    varianceAmount?: number;
+  };
   suspendedTransactions: { id: string; trxNumber: string; items: POSLineItem[]; timeStr: string; total: number }[];
   lastMessage: {
     type: "info" | "success" | "error" | "warning";
@@ -78,6 +85,7 @@ export function createInitialPOSState(
     appliedDiscount: null,
     isZeroRated: false,
     transactionComments: null,
+    sodexhoDetails: undefined,
     suspendedTransactions: [],
     lastMessage: {
       type: "info",
@@ -116,7 +124,7 @@ export type POSAction =
   | { type: "SEARCH_LOOKUP"; term: string }
   | { type: "OPEN_PAYMENT" }
   | { type: "SELECT_PAYMENT_METHOD"; method: string }
-  | { type: "TENDER_PAYMENT"; amount: number }
+  | { type: "TENDER_PAYMENT"; amount: number; sodexhoDetails?: { number: string; validUntil: string; denom: number; seriesType: string; varianceAmount?: number } }
   | { type: "CLOSE_PAYMENT" }
   | { type: "REQUEST_MANAGER_OVERRIDE"; targetAction: string }
   | { type: "CONFIRM_MANAGER_OVERRIDE" }
@@ -133,7 +141,7 @@ export type POSAction =
   | { type: "PROCESS_RETURN_ITEM"; sku: string; reason: string; siNumber: string }
   | { type: "PROCESS_REFUND"; orNumber: string; reason: string }
   | { type: "CHANGE_ITEM_PRICE"; itemId: string; newPrice: number; reason: string }
-  | { type: "ADD_NON_MDSE_ITEM"; description: string; amount: number; referenceNo: string }
+  | { type: "ADD_NON_MDSE_ITEM"; description: string; amount: number; referenceNo: string; sku?: string }
   | { type: "POST_VOID_TRANSACTION"; orNumber: string; reason: string }
   | { type: "APPLY_BEST_BUY"; promoName: string; promoSku: string; promoPrice: number; quantity?: number }
   | { type: "RESET_TRANSACTION" };
@@ -304,6 +312,7 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         ...state,
         tenderAmount: amount,
         changeDue,
+        sodexhoDetails: action.sodexhoDetails || state.sodexhoDetails,
         isTransactionCompleted: true,
         paymentDialogOpen: false,
         lastMessage: {
@@ -571,10 +580,17 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
     }
 
     case "ADD_NON_MDSE_ITEM": {
+      const isSodexho =
+        action.sku === "ZSOI" ||
+        action.description.toUpperCase().includes("SODEXHO") ||
+        action.description.toUpperCase().includes("SODEXO") ||
+        action.referenceNo === "ZSOI";
+      const sku = isSodexho ? "ZSOI" : action.sku || `VAR-${action.referenceNo || "001"}`;
+      const desc = isSodexho ? "SODEXHO VARIANCE" : `NON-MDSE: ${action.description}`;
       const nonMdseItem: POSLineItem = {
         id: `NMDSE-${Date.now()}`,
-        sku: `VAR-${action.referenceNo || "001"}`,
-        description: `NON-MDSE: ${action.description}`,
+        sku,
+        description: desc,
         quantity: 1,
         unitPrice: action.amount,
         total: action.amount,

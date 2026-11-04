@@ -368,7 +368,7 @@ export function ReturnRefundModal({
           onSubmit={handleSubmit}
           className="w-[440px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans pointer-events-auto"
         >
-          {/* Authentic Green Header */}
+          {/* Green Header */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
             {isReturn ? "ITEM RETURN" : "ITEM REFUND"}
           </div>

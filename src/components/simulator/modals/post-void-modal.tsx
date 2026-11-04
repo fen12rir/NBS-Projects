@@ -60,7 +60,7 @@ export function PostVoidModal({
           </div>
 
           {!isSupervisorOverridden ? (
-            /* STEP 1: MANAGER OVERRIDE AUTHENTICATION (SLIDE 078) */
+            /* STEP 1: MANAGER OVERRIDE AUTHENTICATION */
             <form onSubmit={handleOverrideSubmit} className="p-6 space-y-4 text-gray-900">
               <div className="bg-[#FFF275] border border-yellow-500 p-2 text-xs font-bold text-gray-900 text-center">
                 Supervisor Override Required for Post Void
@@ -107,7 +107,7 @@ export function PostVoidModal({
               </div>
             </form>
           ) : (
-            /* STEP 2: POST VOID DETAILS FORM (SLIDES 079-080) */
+            /* STEP 2: POST VOID DETAILS FORM */
             <form onSubmit={handleFinalSubmit} className="p-6 space-y-4 text-gray-900">
               <div className="space-y-1">
                 <label className="text-xs font-bold text-gray-800 block">

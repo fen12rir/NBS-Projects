@@ -45,20 +45,39 @@ export function TransactionJournalScreen({
     .reduce((total, item) => total + item.total, 0);
 
   return (
-    <div className="flex min-h-[500px] w-full flex-1 select-none flex-col bg-white font-sans">
-      <div className="flex h-6 flex-shrink-0 items-center justify-center border-b border-gray-400 bg-[#FFF275] text-center text-xs font-bold uppercase tracking-wide text-gray-900">
+    <div className="flex min-h-[500px] w-full flex-1 select-none flex-col bg-white font-sans overflow-hidden">
+      {/* 1. TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+      <div className="flex h-7 w-full flex-shrink-0 items-center justify-between border-y border-gray-400 border-t-white bg-[#BCC4CC] px-4 py-1 font-mono text-[11px] text-gray-900">
+        <span>
+          <span className="font-bold">Trx.:</span> {state.transactionNumber}
+        </span>
+        <span>
+          <span className="font-bold">Clerk:</span> {state.cashierName}
+        </span>
+        <span>
+          <span className="font-bold">Str No.:</span> {state.branchCode}
+        </span>
+        <span>
+          <span className="font-bold">Reg No.:</span> {state.terminalId}
+        </span>
+        <span className="font-bold">{state.dateStr || "2026-Feb-16"}</span>
+      </div>
+
+      {/* 2. Yellow Bar across the top */}
+      <div className="flex h-7 flex-shrink-0 items-center justify-center border-b border-gray-400 bg-[#FFF275] text-center text-xs font-bold uppercase tracking-wide text-gray-900">
         {isSalesJournal ? "Sales Journal" : "Transaction Journal"}
       </div>
 
+      {/* 3. Screen Body */}
       <div className="grid flex-1 grid-cols-12 overflow-hidden bg-white">
-        <div className="col-span-5 flex flex-col items-center justify-center space-y-4 border-r-2 border-gray-400 bg-[#67B8DE] p-6">
+        <div className="col-span-5 flex flex-col items-center justify-center space-y-4 border-r-2 border-gray-400 bg-[#BDC3C7] p-6">
           <button
             type="button"
             onClick={printJournal}
-            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#404040] border-l-white border-r-[#404040] border-t-white bg-[#D4D0C8] py-2 text-xs font-extrabold text-blue-900 shadow active:border-b-white active:border-l-[#404040] active:border-r-white active:border-t-[#404040]"
+            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#404040] border-l-white border-r-[#404040] border-t-white bg-[#D4D0C8] py-2 text-xs font-extrabold text-gray-900 shadow hover:bg-[#E2E0DC] active:border-b-white active:border-l-[#404040] active:border-r-white active:border-t-[#404040]"
           >
             <span className="text-sm font-black">Print</span>
-            <span className="text-[10px] text-gray-900">Enter</span>
+            <span className="text-[10px] text-gray-700">Enter</span>
           </button>
 
           <button
@@ -73,15 +92,15 @@ export function TransactionJournalScreen({
           <button
             type="button"
             onClick={onClose}
-            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#404040] border-l-white border-r-[#404040] border-t-white bg-[#D4D0C8] py-2 text-xs font-extrabold text-blue-900 shadow active:border-b-white active:border-l-[#404040] active:border-r-white active:border-t-[#404040]"
+            className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#404040] border-l-white border-r-[#404040] border-t-white bg-[#D4D0C8] py-2 text-xs font-extrabold text-gray-900 shadow hover:bg-[#E2E0DC] active:border-b-white active:border-l-[#404040] active:border-r-white active:border-t-[#404040]"
           >
             <span className="text-sm font-black">Back</span>
-            <span className="text-[10px] text-gray-900">Alt + B</span>
+            <span className="text-[10px] text-gray-700">Alt + B</span>
           </button>
 
           {isPrinted && (
-            <p role="status" className="text-center text-xs font-bold text-green-900">
-              Journal tape sent to POS printer
+            <p role="status" className="text-center text-xs font-bold text-green-800 bg-green-50 border border-green-200 px-3 py-1.5 rounded">
+              ✓ Journal tape sent to POS printer
             </p>
           )}
         </div>

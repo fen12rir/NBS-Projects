@@ -79,7 +79,7 @@ export function TransactionCommentScreen({
 
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
-      {/* 1. TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+      {/* 1. TOP HEADER BAR */}
       <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
         <span>
           <span className="font-bold">Trx.:</span> {trxNumber}
@@ -105,7 +105,7 @@ export function TransactionCommentScreen({
           onSubmit={handleSubmit}
           className="w-[390px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans"
         >
-          {/* Authentic Green Header */}
+          {/* Green Header */}
           <div className="bg-[#2E7D32] text-white px-3 py-1 font-bold text-sm text-center uppercase tracking-wide border-b border-[#1B5E20]">
             TRANSACTION COMMENT
           </div>

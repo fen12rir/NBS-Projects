@@ -29,13 +29,13 @@ export function SdvModal({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-[500px] select-none">
-      {/* 2. AUTHENTIC YELLOW BANNER */}
+      {/* 2. YELLOW BANNER */}
       <div className="bg-[#FFF275] border-b-2 border-gray-500 py-1.5 text-center font-bold text-lg text-gray-900 tracking-wider">
         Sales Data Verification
       </div>
 
       {/* 3. GREY GRADIENT TOTALS BAR */}
-      <div className="bg-gradient-to-b from-[#B8B8B8] to-[#999999] border-b border-gray-400 py-1.5 text-center font-bold text-base text-black font-mono">
+      <div className="bg-[#BCC4CC] border-b border-gray-400 py-1.5 text-center font-bold text-base text-black font-mono">
         Saleshdr = {saleshdr}&nbsp;&nbsp;Salesdtl = {salesdtl}&nbsp;&nbsp;Paydtl = {paydtl}
       </div>
 
