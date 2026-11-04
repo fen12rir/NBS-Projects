@@ -524,25 +524,56 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Now scan 'NBS-BK-001' (Spiral Notebook) into the Barcode field and press ENTER.",
+        instruction: "Step 4: Choose 'Customer Cancel' as the reason for voiding the pen, then confirm.",
+        expectedAction: "CONFIRM_ITEM_VOID",
+        expectedData: "Customer Cancel",
+        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
+        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter.",
+        expectedAction: "SCAN_VOID_SKU",
+        expectedData: "NBS-PEN-002",
+        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item or press Alt+Enter.",
+        errorFeedback: "Select NBS-PEN-002 and confirm the item void."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6: Scan 'NBS-BK-001' (Spiral Notebook) into the Barcode field and press ENTER.",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-BK-001",
         hint: "Type NBS-BK-001 in the barcode box and press Enter.",
         errorFeedback: "Scan or enter 'NBS-BK-001'."
       },
       {
-        stepNumber: 5,
-        instruction: "Step 5: Customer decides to cancel the entire sale. Press F8 (TRX VOID) on the right function column.",
+        stepNumber: 7,
+        instruction: "Step 7: Customer decides to cancel the entire sale. Press F8 (TRX VOID) on the right function column.",
         expectedAction: "TRX_VOID",
         hint: "Click F8 Trx Void on the right keypad or press F8.",
         errorFeedback: "Press F8 (TRX VOID) to cancel the entire transaction."
       },
       {
-        stepNumber: 6,
-        instruction: "Step 6: Authorize the total transaction cancellation by clicking 'Confirm Override' in the supervisor modal.",
+        stepNumber: 8,
+        instruction: "Step 8: Authorize the transaction void by clicking 'Confirm Override' in the manager prompt.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click Confirm Override in the Manager Override modal.",
         errorFeedback: "Click Confirm Override to approve the Transaction Void."
+      },
+      {
+        stepNumber: 9,
+        instruction: "Step 9: Confirm that you want to void the transaction by choosing Yes.",
+        expectedAction: "TRX_VOID_CONFIRM",
+        hint: "Choose Yes on the Transaction Void confirmation screen.",
+        errorFeedback: "Choose Yes to continue with the transaction void."
+      },
+      {
+        stepNumber: 10,
+        instruction: "Step 10: Select 'Changed mind' as the transaction-void reason and confirm.",
+        expectedAction: "CONFIRM_TRX_VOID",
+        expectedData: "Changed mind",
+        hint: "Select Changed mind in the reason list, then confirm with Alt+Enter.",
+        errorFeedback: "Select Changed mind and confirm the transaction void."
       }
     ]
   },
@@ -691,21 +722,35 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: The customer returns! Navigate to the 2nd Screen by pressing F5 (OPTION).",
+        instruction: "Step 3: Confirm that you want to suspend the transaction by choosing Yes.",
+        expectedAction: "CONFIRM_SUSPEND",
+        hint: "Choose Yes in the Suspend confirmation dialog.",
+        errorFeedback: "Confirm the transaction suspension by choosing Yes."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: The customer returns! Navigate to the 2nd Screen by pressing F5 (OPTION).",
         expectedAction: "NAV_SECOND",
         hint: "Click F5 Option on the right keypad or press F5.",
         errorFeedback: "Press F5 (OPTION) to reach the 2nd Screen."
       },
       {
-        stepNumber: 4,
-        instruction: "Step 4: On the 2nd Screen, press F7 (RECALL) to retrieve the suspended transaction.",
+        stepNumber: 5,
+        instruction: "Step 5: On the 2nd Screen, press F7 (RECALL) to retrieve the suspended transaction.",
         expectedAction: "RECALL",
         hint: "Click F7 Recall on the right keypad or press F7.",
         errorFeedback: "Press F7 (RECALL) on the 2nd Screen."
       },
       {
-        stepNumber: 5,
-        instruction: "Step 5: In the Recall buffer dialog, select the suspended transaction and click 'Recall Transaction' (or press Alt+Enter) to restore it.",
+        stepNumber: 6,
+        instruction: "Step 6: Authorize access to the Recall screen by confirming the Manager Override.",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Complete the Manager Override prompt to open the Recall screen.",
+        errorFeedback: "Confirm the Manager Override to continue to Recall."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7: In the Recall buffer dialog, select the suspended transaction and click 'Recall Transaction' (or press Alt+Enter) to restore it.",
         expectedAction: "CONFIRM_RECALL",
         hint: "Click 'Recall Transaction' on the suspended entry to restore the transaction.",
         errorFeedback: "Select and confirm the suspended transaction to recall it."
@@ -888,28 +933,35 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: In the Post Void dialog, select or confirm the invoice to void and click 'Confirm Void'.",
+        instruction: "Step 4: Enter the supervisor PIN and authorize the Post Void.",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Enter the supervisor PIN (9999 or 1234) and authorize to continue.",
+        errorFeedback: "Enter and authorize with the supervisor PIN."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5: In the Post Void dialog, select or confirm the invoice to void and click 'Confirm Void'.",
         expectedAction: "CONFIRM_POST_VOID",
         hint: "Click 'Confirm Void' in the Post Void dialog.",
         errorFeedback: "Confirm the Post Void in the dialog."
       },
       {
-        stepNumber: 5,
-        instruction: "Step 5: Run a Sales Data Verification check first to confirm all tables tally before printing readings. Press F10 (SDV).",
+        stepNumber: 6,
+        instruction: "Step 6: Run a Sales Data Verification check first to confirm all tables tally before printing readings. Press F10 (SDV).",
         expectedAction: "SDV_CHECK",
         hint: "Click F10 SDV on the 3rd Screen function keypad.",
         errorFeedback: "Press F10 (SDV) on the 3rd Screen."
       },
       {
-        stepNumber: 6,
-        instruction: "Step 6: Generate the Cashier shift reconciliation report by pressing F8 (CASHIER RDG).",
+        stepNumber: 7,
+        instruction: "Step 7: Generate the Cashier shift reconciliation report by pressing F8 (CASHIER RDG).",
         expectedAction: "READING_Y",
         hint: "Click F8 Cashier Rdg on the 3rd Screen.",
         errorFeedback: "Press F8 (CASHIER RDG) to run the Y-Reading."
       },
       {
-        stepNumber: 7,
-        instruction: "Step 7: Generate the final End-of-Day Terminal reconciliation by pressing F9 (TERMINAL RDG).",
+        stepNumber: 8,
+        instruction: "Step 8: Generate the final End-of-Day Terminal reconciliation by pressing F9 (TERMINAL RDG).",
         expectedAction: "READING_Z",
         hint: "Click F9 Terminal Rdg on the 3rd Screen.",
         errorFeedback: "Press F9 (TERMINAL RDG) to complete the Z-Reading."
@@ -1061,21 +1113,42 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: Next, initiate a cash Refund exception by pressing F10 (REFUND) on the 4th Screen.",
+        instruction: "Step 7: Enter the manager override to authorize Zero Rated.",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Complete the Manager Override prompt to apply Zero Rated.",
+        errorFeedback: "Authorize Zero Rated in the Manager Override prompt."
+      },
+      {
+        stepNumber: 8,
+        instruction: "Step 8: Initiate a cash Refund exception by pressing F10 (REFUND) on the 4th Screen.",
         expectedAction: "REFUND",
         hint: "Click F10 Refund at the bottom of the 4th Screen keypad.",
         errorFeedback: "Press F10 (REFUND) on the 4th Screen."
       },
       {
-        stepNumber: 8,
-        instruction: "Step 8: In the Refund dialog, verify the original OR number and click 'Confirm Refund'.",
-        expectedAction: "CONFIRM_REFUND",
-        hint: "Click 'Confirm Refund' in the dialog.",
-        errorFeedback: "Confirm the refund in the dialog."
+        stepNumber: 9,
+        instruction: "Step 9: Enter the manager override PIN to authorize the refund.",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Complete the Manager Override prompt for Refund.",
+        errorFeedback: "Authorize the refund in the Manager Override prompt."
       },
       {
-        stepNumber: 9,
-        instruction: "Step 9: Return to the Main Screen by pressing F5 (NEXT OPTION) on the 4th Screen.",
+        stepNumber: 10,
+        instruction: "Step 10: Enter or verify the ORNO and continue to the refund confirmation screen.",
+        expectedAction: "REFUND_ORNO",
+        hint: "Enter the ORNO in the Refund form and press Alt+Enter or click Ok.",
+        errorFeedback: "Enter the ORNO and continue to the refund confirmation screen."
+      },
+      {
+        stepNumber: 11,
+        instruction: "Step 11: Review the refund confirmation screen and receipt, then confirm the refund.",
+        expectedAction: "CONFIRM_REFUND",
+        hint: "Review the displayed receipt and click Yes or press Enter to confirm the refund.",
+        errorFeedback: "Review the refund receipt and confirm the refund."
+      },
+      {
+        stepNumber: 12,
+        instruction: "Step 12: Return to the Main Screen by pressing F5 (NEXT OPTION) on the 4th Screen.",
         expectedAction: "NAV_MAIN",
         hint: "Click F5 Next Option on the 4th Screen to return to the Main Screen.",
         errorFeedback: "Press F5 to return to the Main Screen."
@@ -1136,8 +1209,8 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   },
   {
     id: "scen-les-8-2",
-    title: "Lesson 8-2 Practice: Bank Card / GCash Electronic Tender",
-    description: "Practice scanning an item, opening Payment, choosing option 1 (None), and tendering payment via F3 (Bank Card / GCash).",
+    title: "Lesson 8-2 Practice: Credit Card Electronic Tender",
+    description: "Practice scanning an item, opening Payment, choosing option 1 (None), selecting Credit Card, swiping the card, entering card details, and completing the tender.",
     moduleRef: "mod-8",
     lessonRef: "les-8-2",
     passingScore: 70,
@@ -1167,18 +1240,33 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: The customer is paying via Bank Card / GCash. Press F3 (BANK CARD) on the Payment Screen.",
+        instruction: "Step 4: The customer is paying by credit card. Press F3 (BANK CARD) on the Payment Screen.",
         expectedAction: "PAY_CARD",
         hint: "Click F3 Bank Card on the right function column or press F3.",
-        errorFeedback: "Press F3 (BANK CARD) for card/GCash tender."
+        errorFeedback: "Press F3 (BANK CARD) for the customer's credit card payment."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: Enter the exact electronic tender amount '180' and press ENTER (or click Process Tender) to finalize the receipt.",
+        instruction: "Step 5: Select CREDIT CARD from the card type list and press Ok.",
+        expectedAction: "SELECT_CARD_TYPE",
+        expectedData: "CREDIT CARD",
+        hint: "Select CREDIT CARD from Please Select Card Type, then press Ok.",
+        errorFeedback: "Select CREDIT CARD and confirm the card type."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6: Swipe the credit card by entering its number and pressing Enter.",
+        expectedAction: "SWIPE_CARD",
+        hint: "Enter the card number in the Swipe Card field and submit it.",
+        errorFeedback: "Swipe or enter the credit card number to continue."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7: Enter the invoice and authorization code found on the terminal receipt to complete the card details and confirm the PHP 180.00 payment to finalize the receipt.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 180,
-        hint: "Type 180 and press Enter.",
-        errorFeedback: "Enter 180 to complete the card payment."
+        hint: "Review or enter the card holder, terminal, expiry, authorization code, and invoice details, then press Ok.",
+        errorFeedback: "Complete the card details and confirm the PHP 180.00 payment."
       }
     ]
   },
@@ -1244,11 +1332,26 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Enter tender amount '1080' and press ENTER to complete the transaction and generate the Official Receipt.",
+        instruction: "Step 8: Select CREDIT CARD from the card type list and press Ok.",
+        expectedAction: "SELECT_CARD_TYPE",
+        expectedData: "CREDIT CARD",
+        hint: "Select CREDIT CARD from Please Select Card Type, then press Ok.",
+        errorFeedback: "Select CREDIT CARD and confirm the card type."
+      },
+      {
+        stepNumber: 9,
+        instruction: "Step 9: Swipe the credit card by entering its number and pressing Enter.",
+        expectedAction: "SWIPE_CARD",
+        hint: "Enter the card number in the Swipe Card field and submit it.",
+        errorFeedback: "Swipe or enter the credit card number to continue."
+      },
+      {
+        stepNumber: 10,
+        instruction: "Step 10: Enter the invoice and authorization code found on the terminal receipt to complete the card details and confirm the payment to finalize the receipt.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 1080,
-        hint: "Type 1080 and press Enter.",
-        errorFeedback: "Enter 1080 and press Enter to finalize the payment."
+        hint: "Review or enter the card holder, terminal, expiry, authorization code, and invoice details, then press Ok.",
+        errorFeedback: "Complete the card details and confirm the PHP 180.00 payment."
       }
     ]
   },
@@ -1357,36 +1460,52 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 9,
-        instruction: "Step 9: Authorize the Item Void by clicking 'Confirm Override'.",
+        instruction: "Step 9: The Manager Override prompt appears. Authorize the line void by clicking 'Confirm Override'.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click Confirm Override in the manager dialog.",
-        errorFeedback: "Click Confirm Override to approve."
+        hint: "Click the 'Confirm Override' button in the supervisor modal.",
+        errorFeedback: "Click Confirm Override to approve the Item Void."
       },
       {
         stepNumber: 10,
-        instruction: "Step 10: Proceed to checkout by pressing F4 (PAYMENT).",
+        instruction: "Step 10: Choose 'Customer Cancel' as the reason for voiding the pen, then confirm.",
+        expectedAction: "CONFIRM_ITEM_VOID",
+        expectedData: "Customer Cancel",
+        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
+        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+      },
+      {
+        stepNumber: 11,
+        instruction: "Step 11: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter.",
+        expectedAction: "SCAN_VOID_SKU",
+        expectedData: "NBS-PEN-002",
+        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item or press Alt+Enter.",
+        errorFeedback: "Select NBS-PEN-002 and confirm the item void."
+      },
+      {
+        stepNumber: 12,
+        instruction: "Step 12: Proceed to checkout by pressing F4 (PAYMENT).",
         expectedAction: "GO_PAYMENT",
         hint: "Press F4 or click F4 Payment.",
         errorFeedback: "Press F4 (PAYMENT) to open the payment screen."
       },
       {
-        stepNumber: 11,
-        instruction: "Step 11: In the 'Choose Option' dialog, select option 1 (None) by pressing 1 on your keyboard (or clicking '1. None').",
+        stepNumber: 13,
+        instruction: "Step 13: In the 'Choose Option' dialog, select option 1 (None) by pressing 1 on your keyboard (or clicking '1. None').",
         expectedAction: "CHOOSE_LNQR_OPTION",
         expectedData: 1,
         hint: "Press 1 on your keyboard or click '1. None'.",
         errorFeedback: "Select option 1 (None) to proceed to the Payment Screen."
       },
       {
-        stepNumber: 12,
-        instruction: "Step 12: Select Cash tender by pressing F2 (CASH) or check the cash tender input.",
+        stepNumber: 14,
+        instruction: "Step 14: Select Cash tender by pressing F2 (CASH) or check the cash tender input.",
         expectedAction: "PAY_CASH",
         hint: "Press F2 Cash on the Payment Screen.",
         errorFeedback: "Press F2 (CASH) to select cash payment."
       },
       {
-        stepNumber: 13,
-        instruction: "Step 13: The customer hands you PHP 500.00. Enter '500' and press ENTER (or click Process Payment / Ok) to complete your certification!",
+        stepNumber: 15,
+        instruction: "Step 15: The customer hands you PHP 500.00. Enter '500' and press ENTER (or click Process Payment / Ok) to complete your certification!",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 500,
         hint: "Type 500 and press Enter.",

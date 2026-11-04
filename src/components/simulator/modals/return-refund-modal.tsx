@@ -6,6 +6,7 @@ interface ReturnModalProps {
   mode: "RETURN" | "REFUND";
   onConfirmReturn: (data: { reason: string; orNumber: string }) => void;
   onConfirmRefund: (data: { reason: string; orNumber: string; amount: number }) => void;
+  onRefundOrnoSubmit?: (orNumber: string) => void;
   onCancel: () => void;
 
   targetAction?: string;
@@ -24,6 +25,7 @@ export function ReturnRefundModal({
   state,
   onConfirmReturn,
   onConfirmRefund,
+  onRefundOrnoSubmit,
   onCancel,
 }: ReturnModalProps) {
   const isReturn = mode === "RETURN";
@@ -103,6 +105,7 @@ export function ReturnRefundModal({
       onConfirmReturn({ reason, orNumber });
     } else {
       setIsRefundConfirmationOpen(true);
+      onRefundOrnoSubmit?.(orNumber);
     }
   };
 

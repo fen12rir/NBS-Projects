@@ -654,6 +654,9 @@ function SimulatorContent() {
     const cardType =
       selectedBankCardType === "-SELECT-" ? "CREDIT CARD" : selectedBankCardType;
     setSelectedBankCardType(cardType);
+    if (activeScenario?.id === "scen-les-8-2" || activeScenario?.id === "scen-mod-8") {
+      validateScenarioStep("SELECT_CARD_TYPE", cardType);
+    }
 
     if (cardType === "SODEXHO") {
       setBankCardStep("SODEXHO_SERIES");
@@ -740,6 +743,9 @@ function SimulatorContent() {
       }
       if (bankCardStep === "SWIPE_CARD") {
         setBankCardStep("DETAILS");
+        if (activeScenario?.id === "scen-les-8-2 " || activeScenario?.id === "scen-mod-8") {
+          validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
+        }
         return;
       }
       if (bankCardStep === "DETAILS" || bankCardStep === "EWALLET_DETAILS") {
@@ -901,7 +907,6 @@ function SimulatorContent() {
     setSelectedVoidItemId(null);
     setPendingVoidReason(null);
     validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
-    validateScenarioStep("CONFIRM_ITEM_VOID", pendingVoidReason || "Customer changed mind");
   };
 
   useEffect(() => {
@@ -1391,6 +1396,14 @@ function SimulatorContent() {
       return;
     }
 
+    // Reopening payment after Bonus Buy can be required to reach the loyalty choice.
+    if (
+      currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
+      actionId === "GO_PAYMENT"
+    ) {
+      return;
+    }
+
     let dataMatches = true;
     if (currentStep.expectedData !== undefined && dataVal !== undefined) {
       if (typeof currentStep.expectedData === "number" || !isNaN(Number(currentStep.expectedData))) {
@@ -1398,7 +1411,9 @@ function SimulatorContent() {
           Number(currentStep.expectedData) === Number(dataVal) ||
           (actionId === "CONFIRM_TENDER" && Number(dataVal) > 0);
       } else {
-        dataMatches = String(currentStep.expectedData) === String(dataVal);
+        dataMatches =
+          String(currentStep.expectedData).trim().toUpperCase() ===
+          String(dataVal).trim().toUpperCase();
       }
     }
 
@@ -1421,17 +1436,6 @@ function SimulatorContent() {
 
     // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
     if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
-      return;
-    }
-
-    // In Lesson 3-1, if step expects LOOKUP_SEARCH and trainee exits lookup or selects item:
-    if (currentStep.expectedAction === "LOOKUP_SEARCH" && (actionId === "CLOSE_LOOKUP" || actionId === "ADD_ITEM")) {
-      setActiveHint(null);
-      const nextIndex = currentStepIndex + 2;
-      setCurrentStepIndex(nextIndex);
-      if (nextIndex >= activeScenario.steps.length) {
-        setIsExamCompleted(true);
-      }
       return;
     }
 
@@ -1824,6 +1828,8 @@ function SimulatorContent() {
     setIsExamCompleted(false);
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
+    setIsBonusBuyOpen(false);
+    setHasBonusBuyBeenPrompted(false);
   };
 
   if (isLoading) {
@@ -1962,6 +1968,9 @@ function SimulatorContent() {
                 setReturnRefundMode(null);
                 validateScenarioStep("CONFIRM_REFUND", data.amount);
               }}
+              onRefundOrnoSubmit={(orNumber) =>
+                validateScenarioStep("REFUND_ORNO", orNumber)
+              }
               onCancel={() => setReturnRefundMode(null)}
             />
           )}
@@ -1997,10 +2006,10 @@ function SimulatorContent() {
        {/* TRANSACTION VOID MODAL */}
       {isTrxVoidModalOpen && (
         <TrxVoidModal
+          onProceed={() => validateScenarioStep("TRX_VOID_CONFIRM")}
           onConfirm={(reason) => {
             dispatch({ type: "VOID_TRANSACTION" });
             setIsTrxVoidModalOpen(false);
-            validateScenarioStep("CONFIRM_OVERRIDE");
             validateScenarioStep("CONFIRM_TRX_VOID", reason);
           }}
           onCancel={() => setIsTrxVoidModalOpen(false)}
@@ -2013,7 +2022,6 @@ function SimulatorContent() {
           onConfirm={() => {
             dispatch({ type: "SUSPEND_TRANSACTION" });
             setIsSuspendModalOpen(false);
-            validateScenarioStep("SUSPEND");
             validateScenarioStep("CONFIRM_SUSPEND");
           }}
           onCancel={() => setIsSuspendModalOpen(false)}
@@ -2188,9 +2196,7 @@ function SimulatorContent() {
                     }
                     setIsBonusBuyOpen(false);
                   }}
-                  onCancel={() => {
-                    setIsBonusBuyOpen(false);
-                  }}
+                  onCancel={() => setIsBonusBuyOpen(false)}
                 />
               ) : isLoyaltyOptionOpen ? (
                 <ChooseOptionScreen
@@ -3109,6 +3115,9 @@ function SimulatorContent() {
                                   onSubmit={(e) => {
                                     e.preventDefault();
                                     setBankCardStep("DETAILS");
+                                    if (activeScenario?.id === "scen-les-8-2") {
+                                      validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
+                                    }
                                   }}
                                   className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
                                 >

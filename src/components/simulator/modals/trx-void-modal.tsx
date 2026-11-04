@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 
 interface TrxVoidModalProps {
   onConfirm: (reason: string) => void;
+  onProceed?: () => void;
   onCancel: () => void;
   targetAction?: string;
   state?: {
@@ -22,7 +23,7 @@ export const TRX_VOID_REASONS = [
   "Other",
 ];
 
-export function TrxVoidModal({ targetAction,state,onConfirm, onCancel }: TrxVoidModalProps) {
+export function TrxVoidModal({ targetAction,state,onConfirm, onProceed, onCancel }: TrxVoidModalProps) {
   const [step, setStep] = useState<"CONFIRM" | "REASON">("CONFIRM");
   const [reason, setReason] = useState(TRX_VOID_REASONS[0]);
 
@@ -32,6 +33,7 @@ export function TrxVoidModal({ targetAction,state,onConfirm, onCancel }: TrxVoid
         if (e.key === "y" || e.key === "Y" || e.key === "Enter") {
           e.preventDefault();
           setStep("REASON");
+          onProceed?.();
         } else if (e.key === "n" || e.key === "N" || e.key === "Escape") {
           e.preventDefault();
           onCancel();
@@ -48,7 +50,7 @@ export function TrxVoidModal({ targetAction,state,onConfirm, onCancel }: TrxVoid
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step, reason, onConfirm, onCancel]);
+  }, [step, reason, onConfirm, onProceed, onCancel]);
 
   return (
     <>
@@ -86,7 +88,10 @@ export function TrxVoidModal({ targetAction,state,onConfirm, onCancel }: TrxVoid
               <div className="flex items-center justify-center space-x-6 pt-1">
                 <button
                   type="button"
-                  onClick={() => setStep("REASON")}
+                  onClick={() => {
+                    setStep("REASON");
+                    onProceed?.();
+                  }}
                   className="min-w-[85px] px-5 py-1 text-xs font-bold font-sans bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black cursor-pointer hover:bg-[#E2E0DC]"
                 >
                   Yes
