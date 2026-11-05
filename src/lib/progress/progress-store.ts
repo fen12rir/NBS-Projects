@@ -37,11 +37,19 @@ function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   );
   const allLessonsCompleted =
     totalLessons > 0 && progress.completedLessons.length >= totalLessons;
+  const practicalAssessmentPassed = progress.scenarioAttempts.some(
+    (attempt) =>
+      attempt.scenarioId === "scen-practical-assessment" && attempt.passed
+  );
 
-  if (!allLessonsCompleted || progress.certificationCompletedAt) {
-    return progress;
+  if (!allLessonsCompleted || !practicalAssessmentPassed) {
+    if (!progress.certificationCompletedAt) return progress;
+    const { certificationCompletedAt: _completedAt, ...withoutCompletionDate } =
+      progress;
+    return withoutCompletionDate;
   }
 
+  if (progress.certificationCompletedAt) return progress;
   return {
     ...progress,
     certificationCompletedAt: new Date().toISOString(),
@@ -135,10 +143,10 @@ export function markLessonAsCompleted(lessonId: string, moduleId: string): UserP
 export function recordScenarioAttempt(attempt: AttemptRecord): UserProgress {
   const current = getLocalProgress();
   const scenarioAttempts = [attempt, ...current.scenarioAttempts];
-  const updated: UserProgress = {
+  const updated = addCertificationCompletionDate({
     ...current,
     scenarioAttempts,
-  };
+  });
   saveLocalProgress(updated, attempt);
   return updated;
 }

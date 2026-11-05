@@ -133,7 +133,7 @@ const isEwalletCardType = (type: string) => {
 
 function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
   if (!scenario) return "ACTIVE_REGISTER";
-  if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2") return "START_OF_DAY_VERIFY";
+  if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2" || scenario.id === "scen-practical-assessment") return "START_OF_DAY_VERIFY";
   if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
   return "ACTIVE_REGISTER";
 }
@@ -498,7 +498,6 @@ function SimulatorContent() {
     setIsLnqrTenderProcessed(true);
     setIsFinalTenderStep(false);
     dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
-    validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
     validateScenarioStep("CONFIRM_TENDER", tenderVal);
 
     if (tenderTimerRef.current) {
@@ -654,7 +653,7 @@ function SimulatorContent() {
     const cardType =
       selectedBankCardType === "-SELECT-" ? "CREDIT CARD" : selectedBankCardType;
     setSelectedBankCardType(cardType);
-    if (activeScenario?.id === "scen-les-8-2" || activeScenario?.id === "scen-mod-8") {
+    if (activeScenario?.id === "scen-les-8-2" || activeScenario?.id === "scen-mod-8" || activeScenario?.id === "scen-practical-assessment") {
       validateScenarioStep("SELECT_CARD_TYPE", cardType);
     }
 
@@ -743,7 +742,7 @@ function SimulatorContent() {
       }
       if (bankCardStep === "SWIPE_CARD") {
         setBankCardStep("DETAILS");
-        if (activeScenario?.id === "scen-les-8-2 " || activeScenario?.id === "scen-mod-8") {
+        if (activeScenario?.id === "scen-les-8-2 " || activeScenario?.id === "scen-mod-8" || activeScenario?.id === "scen-practical-assessment") {
           validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
         }
         return;
@@ -796,7 +795,6 @@ function SimulatorContent() {
     setIsSulitLoading(false);
     setBankCardStep("SELECT_TYPE");
     setBankCardSwipeNum("");
-    validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
   useEffect(() => {

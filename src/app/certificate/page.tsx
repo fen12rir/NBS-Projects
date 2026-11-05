@@ -40,8 +40,13 @@ export default function CertificatePage() {
     (total, module) => total + module.lessons.length,
     0
   );
-  const isCertified =
+  const allLessonsCompleted =
     totalLessons > 0 && progress.completedLessons.length >= totalLessons;
+  const practicalAssessmentPassed = progress.scenarioAttempts.some(
+    (attempt) =>
+      attempt.scenarioId === "scen-practical-assessment" && attempt.passed
+  );
+  const isCertified = allLessonsCompleted && practicalAssessmentPassed;
 
   if (!isCertified) {
     return (
@@ -55,7 +60,7 @@ export default function CertificatePage() {
             Certificate Unavailable
           </h1>
           <p className="mt-2 text-sm text-gray-600 max-w-md mx-auto">
-            You must complete all {totalLessons} training lessons across the curriculum to unlock your official National Book Store Cashier Training Certificate.
+            Complete all {totalLessons} training lessons and pass the practical assessment to unlock your official National Book Store Cashier Training Certificate.
           </p>
           <div className="mt-6">
             <Link href="/dashboard">
