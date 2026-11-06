@@ -350,13 +350,38 @@ function SimulatorContent() {
     { step: number; actionAttempted: string; expected: string; feedback: string }[]
   >([]);
   const [scenarioStartTime, setScenarioStartTime] = useState<number>(Date.now());
-  const [isExamCompleted, setIsExamCompleted] = useState(false);
+
+  const [timedOut, setTimedOut] = useState(false);
 
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+
+
+  const remainingSeconds =
+    activeScenario?.timeLimitSeconds == null
+      ? null
+      : Math.max(
+          0,
+          activeScenario.timeLimitSeconds -
+            Math.floor((now.getTime() - scenarioStartTime) / 1000)
+        );
+
+  const [isExamCompleted, setIsExamCompleted] = useState(false);
+
+  useEffect(() => {
+    if (
+      remainingSeconds === 0 &&
+      !isExamCompleted &&
+      !timedOut &&
+      activeScenario?.id === "scen-practical-assessment"
+    ) {
+      setTimedOut(true);
+    }
+  }, [remainingSeconds, isExamCompleted, timedOut, activeScenario]);
 
   const fmtDate = (d: Date) =>
     d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "2-digit" })
@@ -371,25 +396,33 @@ function SimulatorContent() {
     d.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
 
   useEffect(() => {
-    if (isExamCompleted && activeScenario) {
+    if ((isExamCompleted || timedOut) && activeScenario) {
       const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
       const penalty = mistakes.length * 10;
-      const score = Math.max(0, 100 - penalty);
+      const score = timedOut ? 0 : Math.max(0, 100 - penalty);
       recordScenarioAttempt({
         id: "attempt-" + Date.now(),
         scenarioId: activeScenario.id,
         scenarioTitle: activeScenario.title,
         timestamp: new Date().toISOString(),
         score,
-        passed: score >= activeScenario.passingScore,
-        stepsCompleted: activeScenario.steps.length,
+        passed: !timedOut && score >= activeScenario.passingScore,
+        stepsCompleted: currentStepIndex,
         totalSteps: activeScenario.steps.length,
         mistakes,
         hintsUsed,
         timeSpentSeconds: timeSpent,
       });
     }
-  }, [isExamCompleted]);
+  }, [
+    isExamCompleted,
+    timedOut,
+    activeScenario,
+    scenarioStartTime,
+    mistakes,
+    currentStepIndex,
+    hintsUsed,
+  ]);
 
   const handleVerifyDateYes = () => {
     setSelectedSodButton(null);
@@ -1324,7 +1357,7 @@ function SimulatorContent() {
   };
 
   const validateScenarioStep = (actionId: string, dataVal?: string | number) => {
-    if (!activeScenario || isExamCompleted) return;
+    if (!activeScenario || isExamCompleted || timedOut) return;
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return;
 
@@ -1790,6 +1823,8 @@ function SimulatorContent() {
     setHasBonusBuyBeenPrompted(false);
     setScenarioStartTime(Date.now());
     setTerminalMode(getInitialTerminalMode(activeScenario));
+    setScenarioStartTime(Date.now());
+    setTimedOut(false);
   };
 
   const handleResetTerminal = () => {
@@ -1832,6 +1867,8 @@ function SimulatorContent() {
     setSelectedLogoutButton(null);
     setIsBonusBuyOpen(false);
     setHasBonusBuyBeenPrompted(false);
+    setScenarioStartTime(Date.now());
+    setTimedOut(false);
   };
 
   if (isLoading) {
@@ -1932,6 +1969,7 @@ function SimulatorContent() {
         activeHint={activeHint}
         onSelectScenario={handleSelectScenario}
         onFillBarcode={handleFillBarcode}
+        remainingSeconds={remainingSeconds}
       />
 
       {/* POS TERMINAL CONTAINER */}
@@ -4132,8 +4170,10 @@ function SimulatorContent() {
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
       <ScenarioCompleteModal
-        isOpen={isExamCompleted}
+        isOpen={isExamCompleted || timedOut}
+        timedOut={timedOut}
         scenario={activeScenario}
+        stepsCompleted={currentStepIndex}
         mistakesCount={mistakes.length}
         isLessonSpecific={isLessonSpecific}
         returnLessonUrl={returnLessonUrl}

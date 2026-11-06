@@ -17,6 +17,7 @@ export interface TrainingScenario {
   lessonRef?: string; 
   passingScore: number; 
   steps: ScenarioStep[];
+  timeLimitSeconds?: number;
 }
 
 export const TRAINING_SCENARIOS: TrainingScenario[] = [
@@ -1520,6 +1521,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   description: "What the cashier will be tested on.",
   moduleRef: "mod-9", // Use the relevant existing module ID
   passingScore: 80,
+  timeLimitSeconds: 10 * 60,
   steps: [
     {
         stepNumber: 1,
