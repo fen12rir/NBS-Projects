@@ -48,7 +48,7 @@ export default function CertificatePage() {
   );
   const isCertified = allLessonsCompleted && practicalAssessmentPassed;
 
-  if (!isCertified) {
+  if (!isCertified ) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <DashboardHeader />
@@ -79,6 +79,7 @@ export default function CertificatePage() {
     month: "long",
     day: "numeric",
   });
+
 
   const downloadCertificate = async () => {
     if (!certificateRef.current) {
@@ -174,6 +175,7 @@ export default function CertificatePage() {
           <Certificate
             name={user?.name || "Maria Santos"}
             completionDate={completionDate}
+            certificateId={progress.certificateId ?? ""}
           />
         </div>
       </main>

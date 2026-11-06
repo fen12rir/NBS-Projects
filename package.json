@@ -18,6 +18,7 @@
     "lucide-react": "^0.475.0",
     "mysql2": "^3.24.6",
     "next": "^14.2.35",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.6.0",
@@ -36,5 +37,10 @@
     "typescript": "^5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.0.6"
+  },
+  "allowScripts": {
+    "core-js@3.51.0": true,
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true
   }
 }
