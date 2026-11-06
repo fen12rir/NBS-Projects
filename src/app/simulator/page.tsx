@@ -742,7 +742,11 @@ function SimulatorContent() {
       }
       if (bankCardStep === "SWIPE_CARD") {
         setBankCardStep("DETAILS");
-        if (activeScenario?.id === "scen-les-8-2 " || activeScenario?.id === "scen-mod-8" || activeScenario?.id === "scen-practical-assessment") {
+        if (
+          activeScenario?.id === "scen-les-8-2" ||
+          activeScenario?.id === "scen-mod-8" ||
+          activeScenario?.id === "scen-practical-assessment"
+        ) {
           validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
         }
         return;
@@ -3113,7 +3117,11 @@ function SimulatorContent() {
                                   onSubmit={(e) => {
                                     e.preventDefault();
                                     setBankCardStep("DETAILS");
-                                    if (activeScenario?.id === "scen-les-8-2") {
+                                    if (
+                                      activeScenario?.id === "scen-les-8-2" ||
+                                      activeScenario?.id === "scen-mod-8" ||
+                                      activeScenario?.id === "scen-practical-assessment"
+                                    ) {
                                       validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
                                     }
                                   }}

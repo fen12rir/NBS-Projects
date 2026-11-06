@@ -1899,7 +1899,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 
       {
         stepNumber: 49,
-        instruction: "Step 49: A customer hands you a paper with company details on it. Advance from Main to the 2nd Screen. Press F5 (OPTION).",
+        instruction: "Step 49: Your shift is almost over. Advance from Main to the 2nd Screen. Press F5 (OPTION).",
         expectedAction: "NAV_SECOND",
         hint: "Press F5.",
         errorFeedback: "Press F5."
@@ -1911,63 +1911,55 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
         hint: "Press F5.",
         errorFeedback: "Press F5."
       },
-
-      {
-        stepNumber: 51,
-        instruction: "Step 51: Advance to the 4th Screen. Press F5 (NEXT OPTION).",
-        expectedAction: "NAV_FOURTH",
-        hint: "Press F5.",
-        errorFeedback: "Press F5."
-      },
      
       {
-        stepNumber: 52,
-        instruction: "Step 52: Run a Sales Data Verification check first to confirm all tables tally before printing readings. Press F10 (SDV).",
+        stepNumber: 51,
+        instruction: "Step 51: Run a Sales Data Verification check first to confirm all tables tally before printing readings. Press F10 (SDV).",
         expectedAction: "SDV_CHECK",
         hint: "Click F10 SDV on the 3rd Screen function keypad.",
         errorFeedback: "Press F10 (SDV) on the 3rd Screen."
       },
       {
-        stepNumber: 53,
-        instruction: "Step 53: Generate the Cashier shift reconciliation report by pressing F8 (CASHIER RDG).",
+        stepNumber: 52,
+        instruction: "Step 52: Generate the Cashier shift reconciliation report by pressing F8 (CASHIER RDG).",
         expectedAction: "READING_Y",
         hint: "Click F8 Cashier Rdg on the 3rd Screen.",
         errorFeedback: "Press F8 (CASHIER RDG) to run the Y-Reading."
       },
       {
-        stepNumber: 54,
-        instruction: "Step 54: Generate the final End-of-Day Terminal reconciliation by pressing F9 (TERMINAL RDG).",
+        stepNumber: 53,
+        instruction: "Step 53: Generate the final End-of-Day Terminal reconciliation by pressing F9 (TERMINAL RDG).",
         expectedAction: "READING_Z",
         hint: "Click F9 Terminal Rdg on the 3rd Screen.",
         errorFeedback: "Press F9 (TERMINAL RDG) to complete the Z-Reading."
       },
 
       {
-        stepNumber: 55,
-        instruction: "Step 55: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
+        stepNumber: 54,
+        instruction: "Step 54: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
         expectedAction: "NAV_MAIN",
         hint: "Click F5 NEXT OPTION on the right button column to complete the page cycle.",
         errorFeedback: "Press F5 on the 4th Screen to return to the Main Screen."
       },
 
        {
-        stepNumber: 56,
-        instruction: "Step 56: A customer hands you a paper with company details on it. Advance from Main to the 2nd Screen. Press F5 (OPTION).",
+        stepNumber: 55,
+        instruction: "Step 55: Advance from Main to the 2nd Screen. Press F5 (OPTION).",
         expectedAction: "NAV_SECOND",
         hint: "Press F5.",
         errorFeedback: "Press F5."
        },
 
        {
-        stepNumber: 57,
-        instruction: "Step 57: On the 2nd Screen, initiate safe cashier sign-out by clicking F8 (LOGOUT).",
+        stepNumber: 56,
+        instruction: "Step 56: On the 2nd Screen, initiate safe cashier sign-out by clicking F8 (LOGOUT).",
         expectedAction: "TRIGGER_LOGOUT",
         hint: "Click F8 LOGOUT in the right function key column or press F8.",
         errorFeedback: "Click F8 LOGOUT on the 2nd screen."
       },
       {
-        stepNumber: 58,
-        instruction: "Step 58: The LOGOUT prompt appears ('Are you sure you want to LOGOUT?'). Press TAB to [Yes] and press ENTER (or click [Yes]) to safely return to the User Login screen.",
+        stepNumber: 57,
+        instruction: "Step 57: The LOGOUT prompt appears ('Are you sure you want to LOGOUT?'). Press TAB to [Yes] and press ENTER (or click [Yes]) to safely return to the User Login screen.",
         expectedAction: "CONFIRM_LOGOUT_YES",
         hint: "Click [Yes] or press TAB then ENTER to confirm logout and return to the User Login screen.",
         errorFeedback: "Confirm logout by selecting [Yes] on the prompt."
