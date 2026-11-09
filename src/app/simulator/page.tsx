@@ -6,18 +6,19 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
 import { F2LookupScreen } from "@/components/simulator/screens/f2-lookup-screen";
-import { ManagerOverrideModal } from "@/components/simulator/modals/manager-override-modal";
-import { ItemVoidModal } from "@/components/simulator/modals/item-void-modal";
+import { ManagerOverrideScreen } from "@/components/simulator/screens/manager-override-screen";
+import { ItemVoidScreen } from "@/components/simulator/screens/item-void-screen";
 import { TransactionDiscountScreen } from "@/components/simulator/screens/transaction-discount-screen";
-import { TrxVoidModal } from "@/components/simulator/modals/trx-void-modal";
+import { TrxVoidScreen } from "@/components/simulator/screens/trx-void-screen";
 import { QuantityModal } from "@/components/simulator/modals/quantity-modal";
-import { SuspendModal, RecallModal } from "@/components/simulator/modals/suspend-recall-modal";
+import { SuspendScreen } from "@/components/simulator/screens/suspend-screen";
+import { RecallModal } from "@/components/simulator/modals/suspend-recall-modal";
 import { ReprintModal } from "@/components/simulator/modals/reprint-modal";
 import { SdvModal } from "@/components/simulator/modals/sdv-modal";
-import { ReadingsModal } from "@/components/simulator/modals/readings-modal";
+import { ReadingsScreen } from "@/components/simulator/screens/readings-screen";
 import { TransactionCommentScreen } from "@/components/simulator/screens/transaction-comment-screen";
 import { TransactionJournalScreen } from "@/components/simulator/screens/transaction-journal-screen";
-import { ReturnRefundModal } from "@/components/simulator/modals/return-refund-modal";
+import { ReturnRefundScreen } from "@/components/simulator/screens/return-refund-screen";
 import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/modals/electronic-payment-modal";
 import { PostVoidModal } from "@/components/simulator/modals/post-void-modal";
 import { PriceChangeModal } from "@/components/simulator/modals/price-change-modal";
@@ -32,6 +33,7 @@ import { LogoutModal } from "@/components/simulator/modals/logout-modal";
 import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
 import { ScenarioCompleteModal } from "@/components/simulator/modals/scenario-complete-modal";
 import { StartOfDayVerifyScreen } from "@/components/simulator/screens/start-of-day-verify-screen";
+import { StartOfDayIncorrectScreen } from "@/components/simulator/screens/start-of-day-incorrect-screen";
 import { StartOfDayCloseScreen } from "@/components/simulator/screens/start-of-day-close-screen";
 import { PosReloaderScreen } from "@/components/simulator/screens/pos-reloader-screen";
 import { UserLoginScreen } from "@/components/simulator/screens/user-login-screen";
@@ -40,7 +42,7 @@ import {
   createInitialPOSState, 
   calculateTotals, 
 } from "@/lib/simulator/pos-state-machine";
-import { RIGHT_FUNCTION_KEYS, RightFunctionKeyDef } from "@/data/exact-pos-keys";
+import { RIGHT_FUNCTION_KEYS, HORIZONTAL_FUNCTION_KEYS, RightFunctionKeyDef, HorizontalFunctionKeyDef } from "@/data/exact-pos-keys";
 import { SYNTHETIC_PRODUCTS } from "@/data/products";
 import { 
   TRAINING_SCENARIOS, 
@@ -55,7 +57,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles } from "lucide-react";
 
-export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
+export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_INCORRECT" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
 
 const CARD_TYPES = [
   "-SELECT-",
@@ -338,6 +340,7 @@ function SimulatorContent() {
   const [qtyInput, setQtyInput] = useState("");
   const qtyInputRef = useRef<HTMLInputElement>(null);
   const paymentOkBtnRef = useRef<HTMLButtonElement>(null);
+  const posContainerRef = useRef<HTMLDivElement>(null);
   const cashTenderInputRef = useRef<HTMLInputElement>(null);
 
   const [cashTenderInput, setCashTenderInput] = useState("500");
@@ -350,16 +353,14 @@ function SimulatorContent() {
     { step: number; actionAttempted: string; expected: string; feedback: string }[]
   >([]);
   const [scenarioStartTime, setScenarioStartTime] = useState<number>(Date.now());
-
   const [timedOut, setTimedOut] = useState(false);
-
+  const [isExamCompleted, setIsExamCompleted] = useState(false);
+  const hasRecordedAttemptRef = useRef(false);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-
 
   const remainingSeconds =
     activeScenario?.timeLimitSeconds == null
@@ -369,9 +370,6 @@ function SimulatorContent() {
           activeScenario.timeLimitSeconds -
             Math.floor((now.getTime() - scenarioStartTime) / 1000)
         );
-
-  const [isExamCompleted, setIsExamCompleted] = useState(false);
-
   useEffect(() => {
     if (
       remainingSeconds === 0 &&
@@ -396,7 +394,8 @@ function SimulatorContent() {
     d.toLocaleDateString("en-PH", { month: "long", day: "numeric", year: "numeric" });
 
   useEffect(() => {
-    if ((isExamCompleted || timedOut) && activeScenario) {
+    if ((isExamCompleted || timedOut) && activeScenario && !hasRecordedAttemptRef.current) {
+      hasRecordedAttemptRef.current = true;
       const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
       const penalty = mistakes.length * 10;
       const score = timedOut ? 0 : Math.max(0, 100 - penalty);
@@ -428,6 +427,12 @@ function SimulatorContent() {
     setSelectedSodButton(null);
     setTerminalMode("START_OF_DAY_CLOSE");
     validateScenarioStep("VERIFY_DATE_YES");
+  };
+
+  const handleVerifyDateNo = () => {
+    setSelectedSodButton("NO");
+    validateScenarioStep("VERIFY_DATE_NO");
+    setTerminalMode("START_OF_DAY_INCORRECT");
   };
 
   const handleCloseSodWindow = () => {
@@ -946,6 +951,103 @@ function SimulatorContent() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Tab Navigation
+      if (e.key === "Tab" && posContainerRef.current) {
+        // Sub-modes
+        if (
+          terminalMode === "START_OF_DAY_VERIFY" ||
+          isLncCardScreenOpen ||
+          isLnqrScanScreenOpen
+        ) {
+          // Sub-mode handling
+        } else {
+          const focusable = Array.from(
+            posContainerRef.current.querySelectorAll<HTMLElement>(
+              'input:not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]):not([tabindex="-1"]), button:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => el.offsetParent !== null || el.getClientRects().length > 0);
+
+          if (focusable.length > 0) {
+            const isInsidePos = posContainerRef.current.contains(document.activeElement);
+            const firstElement = focusable[0];
+            const lastElement = focusable[focusable.length - 1];
+
+            // Focus Restore
+            if (!isInsidePos) {
+              e.preventDefault();
+              if (e.shiftKey) {
+                lastElement.focus();
+              } else {
+                firstElement.focus();
+              }
+              return;
+            }
+
+            // Payment OK Navigation
+            if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
+              if (paymentOkBtnRef.current) {
+                const active = document.activeElement;
+                if (active === paymentOkBtnRef.current) {
+                  if (e.shiftKey) {
+                    e.preventDefault();
+                    const inputs = focusable.filter(
+                      (el) => el !== paymentOkBtnRef.current && (el.tagName === "INPUT" || el.tagName === "SELECT")
+                    );
+                    if (inputs.length > 0) {
+                      inputs[inputs.length - 1].focus();
+                    } else {
+                      firstElement.focus();
+                    }
+                    return;
+                  } else {
+                    const otherButtons = focusable.filter(
+                      (el) => el !== paymentOkBtnRef.current && el.tagName === "BUTTON"
+                    );
+                    if (otherButtons.length > 0) {
+                      e.preventDefault();
+                      otherButtons[0].focus();
+                      return;
+                    } else {
+                      e.preventDefault();
+                      firstElement.focus();
+                      return;
+                    }
+                  }
+                } else if (active && (active.tagName === "INPUT" || active.tagName === "SELECT")) {
+                  const inputs = focusable.filter(
+                    (el) => el !== paymentOkBtnRef.current && (el.tagName === "INPUT" || el.tagName === "SELECT")
+                  );
+                  const currentIdx = inputs.indexOf(active as HTMLElement);
+                  if (!e.shiftKey && (currentIdx === -1 || currentIdx === inputs.length - 1)) {
+                    e.preventDefault();
+                    paymentOkBtnRef.current.focus();
+                    return;
+                  }
+                }
+              }
+            }
+
+            // Tab Wrap
+            if (e.shiftKey) {
+              if (document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+                return;
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+                return;
+              }
+            }
+          } else {
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+
       if (
         isVoidSkuMode &&
         !e.altKey &&
@@ -1000,8 +1102,18 @@ function SimulatorContent() {
           if (selectedSodButton === "YES") {
             handleVerifyDateYes();
           } else if (selectedSodButton === "NO") {
-            validateScenarioStep("VERIFY_DATE_NO");
+            handleVerifyDateNo();
           }
+          return;
+        }
+      }
+
+      // 1b. If in START_OF_DAY_INCORRECT mode
+      if (terminalMode === "START_OF_DAY_INCORRECT") {
+        if (e.key === "Escape" || e.key === "Enter" || e.key === "Backspace") {
+          e.preventDefault();
+          setSelectedSodButton(null);
+          setTerminalMode("START_OF_DAY_VERIFY");
           return;
         }
       }
@@ -1334,6 +1446,13 @@ function SimulatorContent() {
       return;
     }
 
+    const currentHorizKeys = HORIZONTAL_FUNCTION_KEYS[state.currentPage] || [];
+    const matchedHoriz = currentHorizKeys.find((k) => k.key === fKey);
+    if (matchedHoriz && !matchedHoriz.disabled) {
+      handleAction(matchedHoriz.actionId);
+      return;
+    }
+
     if (fKey === "F1") {
       handleAction("HELP");
       return;
@@ -1533,6 +1652,34 @@ function SimulatorContent() {
         dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
         validateScenarioStep("NAV_MAIN");
         break;
+      case "PAGE_DOWN": {
+        const pageCycle: Record<string, string> = {
+          MAIN: "SECOND",
+          SECOND: "THIRD",
+          THIRD: "FOURTH",
+          FOURTH: "MAIN",
+        };
+        const next = pageCycle[state.currentPage];
+        if (next) {
+          dispatch({ type: "NAVIGATE_PAGE", page: next as any });
+          validateScenarioStep(`NAV_${next}`);
+        }
+        break;
+      }
+      case "PAGE_UP": {
+        const pageCycleRev: Record<string, string> = {
+          MAIN: "FOURTH",
+          FOURTH: "THIRD",
+          THIRD: "SECOND",
+          SECOND: "MAIN",
+        };
+        const prev = pageCycleRev[state.currentPage];
+        if (prev) {
+          dispatch({ type: "NAVIGATE_PAGE", page: prev as any });
+          validateScenarioStep(`NAV_${prev}`);
+        }
+        break;
+      }
       case "PAY_BACK":
         setIsElectronicPaymentOpen(false);
         setIsLnqrCashPaymentOpen(false);
@@ -1605,6 +1752,20 @@ function SimulatorContent() {
       case "SDV_CHECK":
         setIsSdvOpen(true);
         validateScenarioStep("SDV_CHECK");
+        break;
+      case "NO_SALE":
+        validateScenarioStep("NO_SALE");
+        break;
+      case "ON_OFF_DISCOUNT":
+        validateScenarioStep("ON_OFF_DISCOUNT");
+        break;
+      case "ITEM_DISC":
+      case "CASH_COUNT":
+      case "CUSTOMER":
+      case "REPORT_WIZARD":
+      case "STORE_OPENING":
+      case "RESERVED_TRX":
+      case "HELP":
         break;
       case "REPRINT":
         dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Reprint" });
@@ -1914,6 +2075,22 @@ function SimulatorContent() {
   const activeItems = state.lineItems.filter((i) => !i.isVoided);
   const lastItem = activeItems[activeItems.length - 1];
   const rightKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
+  const horizKeys = HORIZONTAL_FUNCTION_KEYS[state.currentPage] || [];
+
+  const getPageIndicator = (page: string) => {
+    switch (page) {
+      case "MAIN":
+        return "Page: 1 / 1";
+      case "SECOND":
+        return "Page: 2 / 4";
+      case "THIRD":
+        return "Page: 3 / 4";
+      case "FOURTH":
+        return "Page: 4 / 4";
+      default:
+        return "Page: 1 / 1";
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
@@ -1945,6 +2122,7 @@ function SimulatorContent() {
               className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
             >
               <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
+              <option value="START_OF_DAY_INCORRECT">1b. Start of Day (Incorrect Date)</option>
               <option value="START_OF_DAY_CLOSE">2. Start of Day (Close Setup)</option>
               <option value="POS_RELOADER">3. POS Reloader Screen</option>
               <option value="USER_LOGIN">4. User Login</option>
@@ -1972,9 +2150,10 @@ function SimulatorContent() {
         remainingSeconds={remainingSeconds}
       />
 
-      {/* POS TERMINAL CONTAINER */}
+      {/* POS Terminal */}
       <div className="flex-1 p-2 sm:p-4 flex items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0">
         <div
+          ref={posContainerRef}
           className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
             isExternalReceiptShowing ? "-translate-x-16 xl:-translate-x-32" : "translate-x-0"
           }`}
@@ -1988,110 +2167,37 @@ function SimulatorContent() {
             </div>
           )}
 
-          {/* F8 RETURN / F10 REFUND MODAL */}
-          {returnRefundMode !== null && (
-            <ReturnRefundModal
-              mode={returnRefundMode}
-              onConfirmReturn={(data) => {
-                setPendingReturn({ reason: data.reason, siNumber: data.orNumber });
-                setBarcodeInput("");
-                setIsRefundSkuMode(true);
-                setReturnRefundMode(null);
-                validateScenarioStep("CONFIRM_RETURN", data.orNumber);
-              }}
-              onConfirmRefund={(data) => {
-                dispatch({
-                  type: "PROCESS_REFUND",
-                  orNumber: data.orNumber,
-                  reason: data.reason,
-                });
-                setReturnRefundMode(null);
-                validateScenarioStep("CONFIRM_REFUND", data.amount);
-              }}
-              onRefundOrnoSubmit={(orNumber) =>
-                validateScenarioStep("REFUND_ORNO", orNumber)
-              }
-              onCancel={() => setReturnRefundMode(null)}
-            />
-          )}
-
-           {/* AUTHENTIC RETRO MANAGER OVERRIDE MODAL */}
-        {state.managerOverrideOpen && (
-        <ManagerOverrideModal
-          targetAction={state.managerOverrideTarget || "Restricted Operation"}
-          onConfirm={handleConfirmOverride}
-          onCancel={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
-        />
-        )}
-
-         {/* ITEM VOID REASON MODAL */}
-      {isItemVoidModalOpen && (
-        <ItemVoidModal
-          onConfirm={(reason) => {
-            setPendingVoidReason(reason);
-            setSelectedVoidItemId(null);
-            setIsItemVoidModalOpen(false);
-            setIsVoidSkuMode(true);
-            validateScenarioStep("CONFIRM_ITEM_VOID", reason);
-          }}
-          onCancel={() => {
-            setIsItemVoidModalOpen(false);
-            setIsVoidSkuMode(false);
-            setSelectedVoidItemId(null);
-            setPendingVoidReason(null);
-          }}
-        />
-      )}
-
-       {/* TRANSACTION VOID MODAL */}
-      {isTrxVoidModalOpen && (
-        <TrxVoidModal
-          onProceed={() => validateScenarioStep("TRX_VOID_CONFIRM")}
-          onConfirm={(reason) => {
-            dispatch({ type: "VOID_TRANSACTION" });
-            setIsTrxVoidModalOpen(false);
-            validateScenarioStep("CONFIRM_TRX_VOID", reason);
-          }}
-          onCancel={() => setIsTrxVoidModalOpen(false)}
-        />
-      )}
-
-         {/* SUSPEND TRANSACTION MODAL */}
-      {isSuspendModalOpen && (
-        <SuspendModal
-          onConfirm={() => {
-            dispatch({ type: "SUSPEND_TRANSACTION" });
-            setIsSuspendModalOpen(false);
-            validateScenarioStep("CONFIRM_SUSPEND");
-          }}
-          onCancel={() => setIsSuspendModalOpen(false)}
-        />
-      )}
-
-          {/* SCREEN 1: START OF DAY VERIFY */}
+          {/* Start of Day Verify */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
             <StartOfDayVerifyScreen
               now={now}
               selectedButton={selectedSodButton}
               onVerifyYes={handleVerifyDateYes}
-              onVerifyNo={() => {
-                setSelectedSodButton("NO");
-                validateScenarioStep("VERIFY_DATE_NO");
+              onVerifyNo={handleVerifyDateNo}
+            />
+          )}
+
+          {/* Start of Day Incorrect */}
+          {terminalMode === "START_OF_DAY_INCORRECT" && (
+            <StartOfDayIncorrectScreen
+              onBackToVerify={() => {
+                setSelectedSodButton(null);
+                setTerminalMode("START_OF_DAY_VERIFY");
               }}
             />
           )}
 
-          {/* SCREEN 2: START OF DAY CLOSE */}
+          {/* Start of Day Close */}
           {terminalMode === "START_OF_DAY_CLOSE" && (
             <StartOfDayCloseScreen onCloseWindow={handleCloseSodWindow} />
           )}
 
-          {/* SCREEN 2B: POS RELOADER */}
+          {/* POS Reloader */}
           {terminalMode === "POS_RELOADER" && (
             <PosReloaderScreen onReloadToLogin={handleReloadToLogin} />
           )}
 
-          {/* SCREEN 3: USER LOGIN */}
+          {/* User Login */}
           {terminalMode === "USER_LOGIN" && (
             <UserLoginScreen
               loginUsername={loginUsername}
@@ -2106,7 +2212,7 @@ function SimulatorContent() {
             />
           )}
 
-          {/* SCREEN 4: ACTIVE REGISTER */}
+          {/* Active Register */}
           {terminalMode === "ACTIVE_REGISTER" && (
             <>
               {state.currentPage === "LOOKUP" ? (
@@ -2131,6 +2237,99 @@ function SimulatorContent() {
                   }}
                   initialSearch={state.lookupSearchTerm}
                 />
+              ) : returnRefundMode !== null ? (
+                <ReturnRefundScreen
+                  mode={returnRefundMode}
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
+                  onConfirmReturn={(data) => {
+                    setPendingReturn({ reason: data.reason, siNumber: data.orNumber });
+                    setBarcodeInput("");
+                    setIsRefundSkuMode(true);
+                    setReturnRefundMode(null);
+                    validateScenarioStep("CONFIRM_RETURN", data.orNumber);
+                  }}
+                  onRefundOrnoSubmit={(orNumber: string) => validateScenarioStep("SUBMIT_REFUND_ORNO", orNumber)}
+                  onConfirmRefund={(data) => {
+                    dispatch({
+                      type: "PROCESS_REFUND",
+                      orNumber: data.orNumber,
+                      reason: data.reason,
+                    });
+                    setReturnRefundMode(null);
+                    validateScenarioStep("CONFIRM_REFUND", data.amount);
+                  }}
+                  onCancel={() => setReturnRefundMode(null)}
+                />
+              ) : state.managerOverrideOpen ? (
+                <ManagerOverrideScreen
+                  targetAction={state.managerOverrideTarget || "Restricted Operation"}
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
+                  onConfirm={handleConfirmOverride}
+                  onCancel={() => dispatch({ type: "CANCEL_MANAGER_OVERRIDE" })}
+                />
+              ) : isItemVoidModalOpen ? (
+                <ItemVoidScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
+                  onConfirm={(reason) => {
+                    setPendingVoidReason(reason);
+                    setSelectedVoidItemId(null);
+                    setIsItemVoidModalOpen(false);
+                    setIsVoidSkuMode(true);
+                    validateScenarioStep("CONFIRM_ITEM_VOID", reason);
+                  }}
+                  onCancel={() => {
+                    setIsItemVoidModalOpen(false);
+                    setIsVoidSkuMode(false);
+                    setSelectedVoidItemId(null);
+                    setPendingVoidReason(null);
+                  }}
+                />
+              ) : isTrxVoidModalOpen ? (
+                <TrxVoidScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
+                  onProceed={() => validateScenarioStep("TRX_VOID_CONFIRM")}
+                  onConfirm={(reason) => {
+                    dispatch({ type: "VOID_TRANSACTION" });
+                    setIsTrxVoidModalOpen(false);
+                    validateScenarioStep("CONFIRM_TRX_VOID", reason);
+                  }}
+                  onCancel={() => setIsTrxVoidModalOpen(false)}
+                />
+              ) : isSuspendModalOpen ? (
+                <SuspendScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
+                  onConfirm={() => {
+                    dispatch({ type: "SUSPEND_TRANSACTION" });
+                    setIsSuspendModalOpen(false);
+                    validateScenarioStep("CONFIRM_SUSPEND");
+                  }}
+                  onCancel={() => setIsSuspendModalOpen(false)}
+                />
               ) : journalModalMode !== null ? (
                 <TransactionJournalScreen
                   mode={journalModalMode}
@@ -2142,6 +2341,8 @@ function SimulatorContent() {
                   clerkName={state.cashierName}
                   terminalId={state.terminalId}
                   branchCode={state.branchCode}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
                   initialCategory={pendingSodexhoVariance !== null ? "Sodexho Variance (ZSOI)" : undefined}
                   initialAmount={pendingSodexhoVariance !== null ? pendingSodexhoVariance.toFixed(2) : undefined}
                   initialReferenceNo={sodexhoNumber || "PP12345678"}
@@ -2210,11 +2411,14 @@ function SimulatorContent() {
                   onClose={() => setIsSdvOpen(false)}
                 />
               ) : readingsType !== null ? (
-                <ReadingsModal
+                <ReadingsScreen
                   readingType={readingsType}
                   cashierName={state.cashierName}
                   terminalId={state.terminalId}
                   branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  totalQty={totals.totalQty}
+                  totalSales={totals.totalAmount}
                   onClose={() => setReadingsType(null)}
                 />
               ) : isBonusBuyOpen ? (
@@ -2252,8 +2456,8 @@ function SimulatorContent() {
                   }}
                 />
               ) : isLnqrScanScreenOpen ? (
-                /* LNQR SCAN SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* LNQR Scan */}
                   {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
@@ -2314,8 +2518,8 @@ function SimulatorContent() {
                   </div>
                 </div>
               ) : isLncCardScreenOpen ? (
-                /* LAKING NATIONAL CARD SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* Laking National Card */}
                   {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
@@ -2399,8 +2603,8 @@ function SimulatorContent() {
                   onCancel={() => setIsTrxCommentOpen(false)}
                 />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
-                /* FULL PAYMENT SCREEN */
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
+                  {/* Payment */}
                   {/* TOP HEADER BAR */}
                   <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
                     <span><span className="font-bold">Trx.:</span> {state.transactionNumber || "1023202629990004001558"}</span>
@@ -2928,6 +3132,7 @@ function SimulatorContent() {
                                   />
                                   <button
                                     type="submit"
+                                    tabIndex={-1}
                                     className="mt-2 px-6 py-1.5 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
                                   >
                                     Process Payment (Enter)
@@ -3486,6 +3691,7 @@ function SimulatorContent() {
                             </div>
                             <button
                               type="button"
+                              tabIndex={-1}
                               onClick={() => handleConfirmElectronicTender(selectedTenderMethod)}
                               className="px-5 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-xs font-bold text-gray-900 shadow cursor-pointer"
                             >
@@ -3632,6 +3838,7 @@ function SimulatorContent() {
                           <button
                             key={item.id}
                             type="button"
+                            tabIndex={-1}
                             disabled={isDisabled}
                             onClick={item.onClick}
                             className={
@@ -3786,46 +3993,90 @@ function SimulatorContent() {
 
                   {/* 4 HORIZONTAL FUNCTION BUTTONS  */}
                   <div className="grid grid-cols-4 bg-[#C2CAD0] border-t-2 border-gray-400 text-center font-sans h-[48px]">
-                    {/* F11 (Up Arrow) */}
-                    <button
-                      type="button"
-                      onClick={() => handleAction("PAGE_UP")}
-                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
-                    >
-                      <div className="w-0 h-0 border-x-[7px] border-x-transparent border-b-[10px] border-b-[#16A34A] mb-0.5"></div>
-                      <span className="text-[10px] font-bold text-gray-900">F11</span>
-                    </button>
+                    {horizKeys.map((kDef, idx) => {
+                      const isLast = idx === horizKeys.length - 1;
+                      const borderClass = isLast ? "" : "border-r border-gray-400 ";
 
-                    {/* F12 (Down Arrow) */}
-                    <button
-                      type="button"
-                      onClick={() => handleAction("PAGE_DOWN")}
-                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
-                    >
-                      <div className="w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-[#16A34A] mb-0.5"></div>
-                      <span className="text-[10px] font-bold text-gray-900">F12</span>
-                    </button>
+                      if (kDef.arrow === "up") {
+                        return (
+                          <button
+                            key={`${state.currentPage}-${kDef.key}-${idx}`}
+                            tabIndex={-1}
+                            type="button"
+                            onClick={() => handleAction(kDef.actionId)}
+                            className={`${borderClass}bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer`}
+                          >
+                            <div className="w-0 h-0 border-x-[7px] border-x-transparent border-b-[10px] border-b-[#16A34A] mb-0.5"></div>
+                            <span className="text-[10px] font-bold text-gray-900">{kDef.key}</span>
+                          </button>
+                        );
+                      }
 
-                    {/* F10 (CSA ON/OFF) */}
-                    <button
-                      type="button"
-                      onClick={() => handleAction("CSA_TOGGLE")}
-                      className="border-r border-gray-400 bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
-                    >
-                      <span className="text-[10px] font-bold text-gray-900 leading-tight">CSA</span>
-                      <span className="text-[9px] font-bold text-gray-900 leading-none">ON/OFF</span>
-                      <span className="text-[10px] font-extrabold text-[#1D4ED8]">F10</span>
-                    </button>
+                      if (kDef.arrow === "down") {
+                        return (
+                          <button
+                            key={`${state.currentPage}-${kDef.key}-${idx}`}
+                            tabIndex={-1}
+                            type="button"
+                            onClick={() => handleAction(kDef.actionId)}
+                            className={`${borderClass}bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer`}
+                          >
+                            <div className="w-0 h-0 border-x-[7px] border-x-transparent border-t-[10px] border-t-[#16A34A] mb-0.5"></div>
+                            <span className="text-[10px] font-bold text-gray-900">{kDef.key}</span>
+                          </button>
+                        );
+                      }
 
-                    {/* F2 (Lookup) */}
-                    <button
-                      type="button"
-                      onClick={() => handleAction("LOOKUP")}
-                      className="bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer"
-                    >
-                      <span className="text-[11px] font-bold text-gray-900 leading-tight">Lookup</span>
-                      <span className="text-[10px] font-extrabold text-[#1D4ED8]">F2</span>
-                    </button>
+                      if (kDef.variant === "red") {
+                        return (
+                          <button
+                            key={`${state.currentPage}-${kDef.key}-${idx}`}
+                            tabIndex={-1}
+                            type="button"
+                            disabled={kDef.disabled}
+                            onClick={() => handleAction(kDef.actionId)}
+                            className={`${borderClass}bg-[#E4002B] text-white flex flex-col items-center justify-center p-1 transition-all select-none ${
+                              kDef.disabled
+                                ? "opacity-90 cursor-not-allowed"
+                                : "hover:bg-[#C10024] active:bg-[#9B001D] cursor-pointer"
+                            }`}
+                          >
+                            <span className="text-[11px] font-bold leading-tight">{kDef.label}</span>
+                            <span className="text-[10px] font-extrabold text-[#000080]">{kDef.key}</span>
+                          </button>
+                        );
+                      }
+
+                      if (kDef.variant === "csa") {
+                        return (
+                          <button
+                            key={`${state.currentPage}-${kDef.key}-${idx}`}
+                            tabIndex={-1}
+                            type="button"
+                            onClick={() => handleAction(kDef.actionId)}
+                            className={`${borderClass}bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer`}
+                          >
+                            <span className="text-[10px] font-bold text-gray-900 leading-tight">CSA</span>
+                            <span className="text-[9px] font-bold text-gray-900 leading-none">ON/OFF</span>
+                            <span className="text-[10px] font-extrabold text-[#1D4ED8]">{kDef.key}</span>
+                          </button>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={`${state.currentPage}-${kDef.key}-${idx}`}
+                          tabIndex={-1}
+                          type="button"
+                          disabled={kDef.disabled}
+                          onClick={() => handleAction(kDef.actionId)}
+                          className={`${borderClass}bg-[#D2D7DF] hover:bg-[#E2E6EC] active:bg-[#B8BFC9] flex flex-col items-center justify-center p-1 transition-all select-none cursor-pointer`}
+                        >
+                          <span className="text-[11px] font-bold text-gray-900 leading-tight">{kDef.label}</span>
+                          <span className="text-[10px] font-extrabold text-[#1D4ED8]">{kDef.key}</span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -3932,6 +4183,7 @@ function SimulatorContent() {
                 return (
                   <button
                     key={kDef.key}
+                    tabIndex={-1}
                     disabled={isDisabled}
                     onClick={() => handleAction(kDef.actionId)}
                     className={
@@ -3964,24 +4216,24 @@ function SimulatorContent() {
               })}
 
               <div className="text-center font-mono text-[9px] text-gray-700 pt-1 border-t border-gray-400">
-                Page: 0/0
+                {getPageIndicator(state.currentPage)}
               </div>
             </div>
           </div>
 
-          {/* 3. BOTTOM FOOTER STATUS BAR */}
-          <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch flex-shrink-0 h-9">
+          {/* Footer Status Bar */}
+          <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch flex-shrink-0 h-10">
             
             {/* Total Qty */}
-            <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between">
+            <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-3 flex items-center justify-between">
               <span className="font-bold text-gray-900">Total Qty</span>
-              <span className="font-mono font-bold text-base bg-white px-3 py-0.5 border border-gray-400 text-gray-900 min-w-[50px] text-center">
+              <span className="font-mono font-bold text-sm bg-white px-3 h-[24px] flex items-center justify-center border border-gray-400 text-gray-900 min-w-[50px] text-center shadow-inner">
                 {totals.totalQty}
               </span>
             </div>
 
             {/* Total Sales */}
-            <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-3 py-1.5 flex items-center justify-between text-white">
+            <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-3 flex items-center justify-between text-white">
               <div className="flex items-center space-x-1">
                 <span className="font-bold">Total Sales:</span>
                 {state.isZeroRated && (
@@ -3995,18 +4247,18 @@ function SimulatorContent() {
                   </span>
                 )}
               </div>
-              <span className="font-mono font-bold text-base bg-white px-3 py-0.5 border border-gray-400 text-gray-900 min-w-[70px] text-right">
+              <span className="font-mono font-bold text-sm bg-white px-3 h-[24px] flex items-center justify-end border border-gray-400 text-gray-900 min-w-[70px] text-right shadow-inner">
                 {totals.totalAmount.toFixed(2)}
               </span>
             </div>
 
             {/* Date Display */}
-            <div className="col-span-2 bg-[#C2CAD0] border-r-2 border-gray-500 px-2 py-1.5 flex items-center justify-center font-bold text-gray-800 text-[11px]">
+            <div className="col-span-2 bg-[#C2CAD0] border-r-2 border-gray-500 px-2 flex items-center justify-center font-bold text-gray-800 text-[11px]">
               {fmtDate(now)}
             </div>
 
             {/* Time Display */}
-            <div className="col-span-2 bg-[#C2CAD0] px-2 py-1.5 flex items-center justify-center font-bold text-gray-800 text-[11px]">
+            <div className="col-span-2 bg-[#C2CAD0] px-2 flex items-center justify-center font-bold text-gray-800 text-[11px]">
               {fmtTime(now)}
             </div>
           </div>

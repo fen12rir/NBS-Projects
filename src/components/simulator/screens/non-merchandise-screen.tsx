@@ -53,6 +53,8 @@ interface NonMerchandiseScreenProps {
   terminalId?: string;
   branchCode?: string;
   trxNumber?: string;
+  totalQty?: number;
+  totalSales?: number;
   initialCategory?: string;
   initialAmount?: string;
   initialReferenceNo?: string;
@@ -65,6 +67,8 @@ export function NonMerchandiseScreen({
   terminalId = "0003",
   branchCode = "2999",
   trxNumber = "0212202629990003000595",
+  totalQty = 0,
+  totalSales = 0,
   initialCategory,
   initialAmount,
   initialReferenceNo,
@@ -128,10 +132,11 @@ export function NonMerchandiseScreen({
   const todayLabel = `${today.getFullYear()}-${months[today.getMonth()]}-${String(
     today.getDate()
   ).padStart(2, "0")}`;
+  const currentTimeLabel = today.toLocaleTimeString("en-US", { hour12: true });
 
   return (
     <div className="flex min-h-0 w-full flex-1 select-none flex-col overflow-hidden bg-white font-sans">
-      {/* Top Header Bar */}
+      {/* Header */}
       <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
         <span><span className="font-bold">Trx.:</span> {trxNumber}</span>
         <span><span className="font-bold">Clerk:</span> {clerkName}</span>
@@ -140,20 +145,20 @@ export function NonMerchandiseScreen({
         <span className="font-bold">{todayLabel}</span>
       </div>
 
-      {/* Yellow Strip Under Header */}
+      {/* Yellow Strip */}
       <div className="bg-[#FFF275] h-7 w-full border-b border-gray-400 flex-shrink-0" />
 
-      {/* Main Working Area: Centered NON-MERCHANDISE Framed Box */}
-      <div className="flex-1 flex items-center justify-center bg-[#D4D0C8] p-6 overflow-hidden">
-        <div className="w-[380px] sm:w-[400px] border-4 border-[#228B22] bg-[#D4D0C8] font-sans">
-          {/* Green Title Header */}
+      {/* Main Area */}
+      <div className="flex-1 flex items-center justify-center bg-white p-6 overflow-hidden">
+        <div className="w-[380px] sm:w-[400px] border-4 border-[#228B22] bg-[#D4D0C8] font-sans shadow-lg">
+          {/* Title */}
           <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wider">
             NON-MERCHANDISE
           </div>
 
-          {/* Form Content */}
+          {/* Form */}
           <div className="p-6 space-y-4 text-gray-900">
-            {/* Select Charge */}
+            {/* Charge Select */}
             <div className="space-y-1 text-center">
               <label className="block text-xs font-bold text-gray-900">
                 Select Charge
@@ -181,7 +186,7 @@ export function NonMerchandiseScreen({
               </div>
             </div>
 
-            {/* Enter Price */}
+            {/* Price Input */}
             <div className="space-y-1 text-center">
               <label className="block text-xs font-bold text-gray-900">
                 Enter Price
@@ -200,7 +205,7 @@ export function NonMerchandiseScreen({
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Buttons */}
             <div className="flex justify-center space-x-4 pt-3">
               <button
                 type="button"
@@ -220,6 +225,9 @@ export function NonMerchandiseScreen({
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="bg-[#228B22] border-t-2 border-gray-500 flex-shrink-0 h-10 w-full" />
     </div>
   );
 }

@@ -27,10 +27,20 @@ export interface UserProgress {
   lastActiveModuleId?: string;
   certificationCompletedAt?: string;
   certificateId?: string;
-
 }
 
 const STORAGE_KEY = "nbs_pos_training_progress_v1";
+
+export function generateCertificateId(): string {
+  const year = new Date().getFullYear();
+  let uniqueCode: string;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+  } else {
+    uniqueCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+  }
+  return `NBS-${year}-${uniqueCode}`;
+}
 
 function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   const totalLessons = TRAINING_MODULES.reduce(
@@ -115,7 +125,10 @@ export function getLocalProgress(): UserProgress {
     if (!raw) return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
     const stored = JSON.parse(raw) as UserProgress;
     const updated = addCertificationCompletionDate(stored);
-    if (updated !== stored) {
+    if (
+      updated.certificationCompletedAt !== stored.certificationCompletedAt ||
+      updated.certificateId !== stored.certificateId
+    ) {
       saveLocalProgress(updated);
     }
     return updated;
