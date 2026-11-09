@@ -1045,28 +1045,28 @@ function SimulatorContent() {
         }
       }
 
+      // Item Selection Navigation
       if (
         isVoidSkuMode &&
         !e.altKey &&
-        (e.key === "ArrowUp" || e.key === "ArrowDown")
+        (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "F11" || e.key === "F12")
       ) {
         e.preventDefault();
         const activeItems = state.lineItems.filter((item) => !item.isVoided);
         if (activeItems.length === 0) return;
 
-        const selectedIndex = activeItems.findIndex(
+        const currentArrayIndex = activeItems.findIndex(
           (item) => item.id === selectedVoidItemId
         );
-        const nextIndex =
-          selectedIndex < 0
-            ? e.key === "ArrowDown"
-              ? 0
-              : activeItems.length - 1
-            : e.key === "ArrowDown"
-              ? Math.min(selectedIndex + 1, activeItems.length - 1)
-              : Math.max(selectedIndex - 1, 0);
+        const currentVisualIdx =
+          currentArrayIndex < 0 ? 0 : activeItems.length - 1 - currentArrayIndex;
 
-        setSelectedVoidItemId(activeItems[nextIndex].id);
+        const isGoingDown = e.key === "ArrowDown" || e.key === "F12";
+        const nextVisualIdx = isGoingDown
+          ? Math.min(activeItems.length - 1, currentVisualIdx + 1)
+          : Math.max(0, currentVisualIdx - 1);
+
+        setSelectedVoidItemId(activeItems[activeItems.length - 1 - nextVisualIdx].id);
         return;
       }
 
@@ -1651,6 +1651,19 @@ function SimulatorContent() {
         validateScenarioStep("NAV_MAIN");
         break;
       case "PAGE_DOWN": {
+        if (isVoidSkuMode) {
+          const activeItems = state.lineItems.filter((item) => !item.isVoided);
+          if (activeItems.length > 0) {
+            const currentArrayIndex = activeItems.findIndex(
+              (item) => item.id === selectedVoidItemId
+            );
+            const currentVisualIdx =
+              currentArrayIndex < 0 ? 0 : activeItems.length - 1 - currentArrayIndex;
+            const nextVisualIdx = Math.min(activeItems.length - 1, currentVisualIdx + 1);
+            setSelectedVoidItemId(activeItems[activeItems.length - 1 - nextVisualIdx].id);
+            return;
+          }
+        }
         const pageCycle: Record<string, string> = {
           MAIN: "SECOND",
           SECOND: "THIRD",
@@ -1665,6 +1678,19 @@ function SimulatorContent() {
         break;
       }
       case "PAGE_UP": {
+        if (isVoidSkuMode) {
+          const activeItems = state.lineItems.filter((item) => !item.isVoided);
+          if (activeItems.length > 0) {
+            const currentArrayIndex = activeItems.findIndex(
+              (item) => item.id === selectedVoidItemId
+            );
+            const currentVisualIdx =
+              currentArrayIndex < 0 ? 0 : activeItems.length - 1 - currentArrayIndex;
+            const nextVisualIdx = Math.max(0, currentVisualIdx - 1);
+            setSelectedVoidItemId(activeItems[activeItems.length - 1 - nextVisualIdx].id);
+            return;
+          }
+        }
         const pageCycleRev: Record<string, string> = {
           MAIN: "FOURTH",
           FOURTH: "THIRD",
@@ -2064,20 +2090,6 @@ function SimulatorContent() {
   const rightKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
   const horizKeys = HORIZONTAL_FUNCTION_KEYS[state.currentPage] || [];
 
-  const getPageIndicator = (page: string) => {
-    switch (page) {
-      case "MAIN":
-        return "Page: 1 / 1";
-      case "SECOND":
-        return "Page: 2 / 4";
-      case "THIRD":
-        return "Page: 3 / 4";
-      case "FOURTH":
-        return "Page: 4 / 4";
-      default:
-        return "Page: 1 / 1";
-    }
-  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
@@ -4198,9 +4210,11 @@ function SimulatorContent() {
                 );
               })}
 
-              <div className="text-center font-mono text-[9px] text-gray-700 pt-1 border-t border-gray-400">
-                {getPageIndicator(state.currentPage)}
-              </div>
+              {state.currentPage === "MAIN" && (
+                <div className="text-center font-mono text-[9px] text-gray-700 pt-1 border-t border-gray-400">
+                  Page: 0 / 0
+                </div>
+              )}
             </div>
           </div>
 
