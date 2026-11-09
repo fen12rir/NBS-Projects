@@ -172,13 +172,3 @@ export function recordScenarioAttempt(attempt: AttemptRecord): UserProgress {
   saveLocalProgress(updated, attempt);
   return updated;
 }
-
-export function generateCertificateId(): string {
-  const year = new Date().getFullYear();
-  const uniqueCode = crypto.randomUUID()
-    .replace(/-/g, "")
-    .substring(0, 8)
-    .toUpperCase();
-
-  return `NBS-${year}-${uniqueCode}`;
-}
