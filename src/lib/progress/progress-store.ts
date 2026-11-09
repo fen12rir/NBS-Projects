@@ -26,9 +26,21 @@ export interface UserProgress {
   lastActiveLessonId?: string;
   lastActiveModuleId?: string;
   certificationCompletedAt?: string;
+  certificateId?: string;
 }
 
 const STORAGE_KEY = "nbs_pos_training_progress_v1";
+
+export function generateCertificateId(): string {
+  const year = new Date().getFullYear();
+  let uniqueCode: string;
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    uniqueCode = crypto.randomUUID().replace(/-/g, "").substring(0, 8).toUpperCase();
+  } else {
+    uniqueCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+  }
+  return `NBS-${year}-${uniqueCode}`;
+}
 
 function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   const totalLessons = TRAINING_MODULES.reduce(
@@ -37,14 +49,29 @@ function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   );
   const allLessonsCompleted =
     totalLessons > 0 && progress.completedLessons.length >= totalLessons;
+  const practicalAssessmentPassed = progress.scenarioAttempts.some(
+    (attempt) =>
+      attempt.scenarioId === "scen-practical-assessment" && attempt.passed
+  );
 
-  if (!allLessonsCompleted || progress.certificationCompletedAt) {
-    return progress;
+  if (!allLessonsCompleted || !practicalAssessmentPassed) {
+    if (!progress.certificationCompletedAt && !progress.certificateId) {
+      return progress;
+    }
+    const {
+      certificationCompletedAt: _completedAt,
+      certificateId: _certificateId,
+      ...withoutCertification
+    } = progress;
+    return withoutCertification;
   }
 
+  if (progress.certificationCompletedAt && progress.certificateId) return progress;
   return {
     ...progress,
-    certificationCompletedAt: new Date().toISOString(),
+    certificationCompletedAt:
+      progress.certificationCompletedAt || new Date().toISOString(),
+    certificateId: progress.certificateId || generateCertificateId(),
   };
 }
 
@@ -98,7 +125,10 @@ export function getLocalProgress(): UserProgress {
     if (!raw) return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
     const stored = JSON.parse(raw) as UserProgress;
     const updated = addCertificationCompletionDate(stored);
-    if (updated !== stored) {
+    if (
+      updated.certificationCompletedAt !== stored.certificationCompletedAt ||
+      updated.certificateId !== stored.certificateId
+    ) {
       saveLocalProgress(updated);
     }
     return updated;
@@ -135,10 +165,10 @@ export function markLessonAsCompleted(lessonId: string, moduleId: string): UserP
 export function recordScenarioAttempt(attempt: AttemptRecord): UserProgress {
   const current = getLocalProgress();
   const scenarioAttempts = [attempt, ...current.scenarioAttempts];
-  const updated: UserProgress = {
+  const updated = addCertificationCompletionDate({
     ...current,
     scenarioAttempts,
-  };
+  });
   saveLocalProgress(updated, attempt);
   return updated;
 }

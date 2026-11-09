@@ -26,6 +26,7 @@ interface GuidedStepBarProps {
   activeHint: string | null;
   onSelectScenario: (scenarioId: string | null) => void;
   onFillBarcode: (code: string) => void;
+  remainingSeconds?: number | null;
 }
 
 const SAMPLE_BARCODES = [
@@ -47,6 +48,7 @@ export function GuidedStepBar({
   activeHint,
   onSelectScenario,
   onFillBarcode,
+  remainingSeconds
 }: GuidedStepBarProps) {
   // Free Exploration Sandbox
   if (!scenario) {
@@ -133,6 +135,13 @@ export function GuidedStepBar({
           </span>
         </div>
         <div className="flex items-center space-x-3 text-xs font-mono">
+
+          {remainingSeconds != null && (
+  <span className={remainingSeconds <= 60 ? "text-red-400" : "text-yellow-300"}>
+    Time: {Math.floor(remainingSeconds / 60)}:
+    {String(remainingSeconds % 60).padStart(2, "0")}
+  </span>
+)}
           <span className="text-gray-300">
             Step: <strong className="text-white">{Math.min(currentStepIndex + 1, totalSteps)}</strong> / {totalSteps}
           </span>

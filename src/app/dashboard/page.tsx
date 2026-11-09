@@ -51,9 +51,12 @@ export default function DashboardPage() {
   const progressPercent = totalLessons > 0 ? Math.round((completedLessonCount / totalLessons) * 100) : 0;
 
   const allModulesCompleted = totalLessons > 0 && completedLessonCount >= totalLessons;
-  const hasAttempts = progress.scenarioAttempts.length > 0;
-  const bestAttempt = progress.scenarioAttempts.find((a) => a.passed);
-  const latestAttempt = progress.scenarioAttempts[0];
+  const practicalAssessmentAttempts = progress.scenarioAttempts.filter(
+    (attempt) => attempt.scenarioId === "scen-practical-assessment"
+  );
+  const hasAttempts = practicalAssessmentAttempts.length > 0;
+  const bestAttempt = practicalAssessmentAttempts.find((attempt) => attempt.passed);
+  const latestAttempt = practicalAssessmentAttempts[0];
 
   type SimulatorStatusType = "Pending" | "Passed" | "Failed";
   let simulatorStatus: SimulatorStatusType = "Pending";
@@ -77,11 +80,11 @@ export default function DashboardPage() {
   let certificationStatus: CertificationStatusType = "Pending";
   let certificationDetail = "";
 
-  const isCertified = allModulesCompleted;
+  const isCertified = allModulesCompleted && Boolean(bestAttempt);
 
   if (isCertified) {
     certificationStatus = "Certified";
-    certificationDetail = "All training modules completed • Certificate available";
+    certificationDetail = "Training modules and practical assessment completed • Certificate available";
   } else if (completedLessonCount > 0 || hasAttempts) {
     certificationStatus = "In Progress";
     if (!allModulesCompleted) {
@@ -289,7 +292,7 @@ export default function DashboardPage() {
               Test your ability to lookup items, set multipliers, tender cash, and generate customer receipts under simulated branch conditions.
             </p>
           </div>
-          <Link href="/simulator">
+          <Link href="/simulator?scenario=scen-practical-assessment">
             <Button
               size="lg"
               className="bg-[#E4002B] hover:bg-[#C10024] font-black text-sm px-6 py-4 flex items-center space-x-2"
