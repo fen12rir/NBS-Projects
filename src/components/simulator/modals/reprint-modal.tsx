@@ -142,7 +142,7 @@ export function ReprintModal({
       </div>
 
       {/* 4. BOTTOM TOOLBAR */}
-      <div className="bg-[#388E3C] border-t-2 border-black p-2 flex items-center justify-center space-x-6">
+      <div className="bg-[#388E3C] border-t-2 border-black px-4 py-2 flex items-center justify-center space-x-6">
         <button
           type="button"
           onClick={() => activeRcpt && onPrint(activeRcpt.orNumber)}

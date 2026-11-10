@@ -191,6 +191,7 @@ export function TransactionJournalScreen({
           </div>
         </div>
       </div>
+
     </div>
   );
 }

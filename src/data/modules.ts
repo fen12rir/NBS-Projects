@@ -51,9 +51,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
         instructions: [
           "Understand that POS combines hardware (terminal, barcode scanner, receipt printer) and software.",
           "Familiarize with the 12 screen regions: Transaction No, Cashier ID, Branch Code, Barcode input, Textfield area, POS Terminal, Function Keys panel, Line item table, Total Sales, Current Date, Total Quantity, and Time.",
-          "Verify the top header information matches your assigned terminal and cashier profile."
+          "Use F5 (Option / Next Option) to cycle forward across Main -> 2nd -> 3rd -> 4th Screens, F11 (Page Up) to jump backward (or from Main directly to 4th Screen), and F12 (Page Down) to return immediately to the Main Screen.",
+          "Observe how scanning a test item updates the Line Item Table, the black/green real-time Subtotal & Price Display, and the bottom Total Qty / Total Sales footer."
         ],
-        keyCallouts: ["F2: Lookup", "F3: Quantity", "F4: Payment", "F5: Option / Next Page"]
+        keyCallouts: ["F5: Option / Next Page", "F11: Page Up (Reverse / Jump to 4th)", "F12: Page Down (Return to Main)"]
       }
     ]
   },
@@ -92,11 +93,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Upon terminal boot, verify that the POS Date & Time matches current store opening time.",
-          "Press TAB to highlight the 'YES' button, then press ENTER.",
+          "If the date/time is wrong, selecting 'NO' displays the 'Kindly contact the Service Desk' warning (press ESC or Enter to return once resolved). When accurate, press TAB to highlight 'YES' and press ENTER.",
           "Press CTRL + ALT + C to close the setup dialog. The browser terminal displays 'POS Reloader'.",
           "Press F5 to reload the page and proceed to the USER LOGIN screen."
         ],
-        keyCallouts: ["TAB: Navigate buttons", "ENTER: Confirm", "CTRL+ALT+C: Close setup window", "F5: Reload to Login"]
+        keyCallouts: ["TAB: Navigate Yes/No", "ENTER: Confirm", "CTRL+ALT+C: Close setup window", "F5: Reload to Login"]
       },
       {
         id: "les-2-2",
@@ -122,7 +123,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           {
             src: "/assets/modules/module-2-start-of-day/images/pos-logout-step3-confirm.png",
             caption: "Logout Step 3: 'Are you sure you want to LOGOUT?' Press TAB to highlight [Yes], then press ENTER.",
-            alt: "Logout confirmation prompt"
+            alt: "Logout confirmation screen"
           },
           {
             src: "/assets/modules/module-2-start-of-day/images/pos-logout-step4-user-login.png",
@@ -170,13 +171,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "Press F2 (Lookup) from the main POS screen - the Lookup screen will open.",
-          "Press F2 again inside Lookup to search by SKU / Barcode: scan or type the GTIN then press ENTER.",
-          "Press F3 inside Lookup to search by Description: type a keyword and results appear instantly.",
-          "The PROMO column on the right displays any active promotional price alongside the regular SRP. The highlighted bar indicates your currently selected item.",
-          "Press ENTER or double-click a row to select the item, or press ALT+B (CANCEL) to exit without selecting."
+          "Press F2 (Lookup) from the main POS screen - the Lookup screen will open in F2 SKU / Barcode mode by default.",
+          "In F2 (SKU / Barcode) mode: scan or type the GTIN/SKU (e.g. 'NBS-BK-001') in 'Look for:' and press ENTER.",
+          "Press F3 inside Lookup to switch to Description search: type a title keyword (e.g. 'harvard') and press ENTER.",
+          "Press F4 inside Lookup to switch to Author / Brand search: type an author or brand name (e.g. 'Casio') and press ENTER.",
+          "The PROMO column on the right displays any active promotional price alongside the regular SRP. Press Alt+Enter (CONTINUE) or double-click a row to add the item to the sale, or press ALT+B (CANCEL) to exit without adding."
         ],
-        keyCallouts: ["F2: Open Lookup", "F2 (inside Lookup): SKU/Barcode search", "F3 (inside Lookup): Description search", "F11/F12: Scroll results up/down", "ENTER: Select item"]
+        keyCallouts: ["F2: Open Lookup / SKU Search", "F3 (inside Lookup): Description search", "F4 (inside Lookup): Author search", "Alt+Enter: Continue (Add Item)", "Alt+B: Cancel Lookup"]
       },
       {
         id: "les-3-2",
@@ -186,7 +187,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
         visualAssets: [
           {
             src: "/assets/modules/module-3-item-lookup-loyalty/images/lnqr-choose-option-menu.png",
-            caption: "After pressing F4 (Payment), the 'Choose Option' loyalty dialog appears. Press 1 for None, 2 for LNC Card, or 3 for LNQR / LNQR Plus.",
+            caption: "After the Bonus Buy List is closed, press F4 (Payment) again and the 'Choose Option' loyalty dialog appears. Press 1 for None, 2 for LNC Card, or 3 for LNQR / LNQR Plus.",
             alt: "Choose Option loyalty dialog with 1. None, 2. Laking National Card, 3. LNQR/LNQR Plus"
           },
           {
@@ -222,7 +223,8 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Scan or enter the item(s) into the active register, then press F4 (Payment) to proceed to payment.",
-          "A 'Choose Option' loyalty dialog appears - ask the customer if they have an NBS Loyalty membership:",
+          "The BONUS BUY LIST appears first. If no bag is selected, press Alt+B (or click [CANCEL]) and confirm [Yes] to return to the Main Screen (only use [OK] Alt+Enter when a bonus bag checkbox is checked).",
+          "Press F4 (Payment) again. A 'Choose Option' loyalty dialog appears - ask the customer if they have an NBS Loyalty membership:",
           "  • Press 1 - if the customer has NO loyalty card or QR code.",
           "  • Press 2 - if the customer has a physical Laking National Card (LNC).",
           "  • Press 3 - if the customer has LNQR or LNQR Plus (mobile app QR code).",
@@ -232,7 +234,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "A popup confirms: 'LNQR has been updated!' showing the customer name, card number, previous balance, earned Sulit Coins, and new balance. Press ENTER or click OK.",
           "The terminal returns to the active register home. The receipt automatically prints LNQR details including earned Sulit Coins."
         ],
-        keyCallouts: ["F4: Payment", "1: No Loyalty", "2: LNC Card", "3: LNQR / LNQR Plus", "TAB: Move to OK", "ENTER: Confirm"]
+        keyCallouts: ["F4: Payment", "Alt+B: Bonus Buy Cancel", "Alt+Enter: Bonus Buy OK (when checked)", "1: No Loyalty", "2: LNC Card", "3: LNQR / LNQR Plus", "TAB: Move to OK", "ENTER: Confirm"]
       }
     ]
   },
@@ -277,9 +279,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
         instructions: [
           "When a customer buys multiples of the same item, press F3 (Quantity).",
           "Type the number of pieces (e.g. 5) and press ENTER.",
-          "Scan the barcode or enter the item SKU. The line item will immediately record with the entered quantity."
+          "Scan the barcode or enter the item SKU. The line item will immediately record with the entered quantity.",
+          "For non-merchandise service fees or plastic/paper bags, press F6 (Non Mdse), select the service item, enter the quantity, and press Alt+Enter (or click OK) to add it and return to the Main Screen."
         ],
-        keyCallouts: ["F3: Quantity Entry", "ENTER: Confirm count"]
+        keyCallouts: ["F3: Quantity Entry", "F6: Non Mdse", "ENTER / Alt+Enter: Confirm"]
       },
       {
         id: "les-4-2",
@@ -408,11 +411,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Press F5 (Option) from the Main Screen to enter the 2nd Page.",
+          "For authorized unit price overrides: Press F3 (Price Change) on the 2nd Page, input manager override credentials, enter the new unit price and reason, and confirm (returns automatically to Main Screen).",
           "Press F6 (TRX Disc) to open the discount category list.",
-          "Select appropriate discount (e.g., Senior 20%, Employee 15%, LNQR Family Discount) and press Alt + Enter.",
-          "Input manager override credentials when prompted."
+          "Select appropriate discount (e.g., Senior 20%, Employee 15%, LNQR Family Discount), input customer ID details and manager override credentials when prompted, and press Alt + Enter (returns automatically to Main Screen)."
         ],
-        keyCallouts: ["F5: Option", "F6: TRX Disc", "Alt+Enter: Apply"]
+        keyCallouts: ["F5: Option", "F3: Price Change", "F6: TRX Disc", "Alt+Enter: Apply"]
       },
       {
         id: "les-5-2",
@@ -463,10 +466,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "To suspend: Press F9 (Suspend) on Main Page, then press ENTER.",
-          "To recall: Go to 2nd Page via F5, press F7 (Recall), provide override, and pick the suspended transaction.",
+          "To recall: Go to 2nd Page via F5, press F7 (Recall), provide override, and pick the suspended transaction (returns automatically to Main Screen).",
+          "To open the cash drawer without a sale: Press F9 (No Sale) on 2nd Page and provide manager override credentials (returns automatically to Main Screen).",
           "To reprint: Press F2 (Reprint) on 2nd Page, provide manager override, select OR number, and confirm."
         ],
-        keyCallouts: ["F9 (Main): Suspend", "F7 (2nd): Recall", "F2 (2nd): Reprint"]
+        keyCallouts: ["F9 (Main): Suspend", "F7 (2nd): Recall", "F9 (2nd): No Sale", "F2 (2nd): Reprint"]
       }
     ]
   },
@@ -525,10 +529,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Press F5 twice to navigate from Main -> 2nd -> 3rd Page.",
+          "To inspect electronic journals: Press F4 (Trx Journal) or F6 (Sales Journal) on the 3rd Page.",
           "For cashier change of shift: Press F8 (Cashier Reading) to print the Y-Reading summary.",
           "For terminal closing: Press F9 (Terminal Reading), press Tab to YES, and press ENTER to generate the final Z-Reading."
         ],
-        keyCallouts: ["F8 (3rd): Cashier Y-Reading", "F9 (3rd): Terminal Z-Reading"]
+        keyCallouts: ["F4 (3rd): Trx Journal", "F6 (3rd): Sales Journal", "F8 (3rd): Cashier Y-Reading", "F9 (3rd): Terminal Z-Reading"]
       },
       {
         id: "les-6-2",
@@ -548,11 +553,12 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "On the 3rd Page, press F10 (SDV).",
+          "To cancel a completed receipt from earlier in the shift: Press F2 (Post Void) on the 3rd Page, provide Manager Override credentials, and confirm the OR number.",
+          "On the 3rd Page, press F10 (SDV) to verify Sales Data.",
           "Check whether the Header, Detail, and PayDetail counts are listed as 'Tally'.",
           "If any row indicates 'Not Tally', take note of the discrepancy and immediately contact the Service Desk."
         ],
-        keyCallouts: ["F10 (3rd): SDV Check"]
+        keyCallouts: ["F2 (3rd): Post Void", "F10 (3rd): SDV Check"]
       }
     ]
   },
@@ -575,7 +581,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
         visualAssets: [
           {
             src: "/assets/modules/module-7-fourth-page-functions/images/functionkeys-4thpage.png",
-            caption: "Press F5 three times to advance from Main -> 2nd -> 3rd -> 4th Screen.",
+            caption: "Press F5 three times to advance from Main -> 2nd -> 3rd -> 4th Screen (use F12 to return to Main).",
             alt: "4th Screen function key layout showing Best Buy, Trx Comment, Non Sales, Zero Rated, Return, Refund"
           },
           {
@@ -595,12 +601,12 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "Press F5 three times to advance to the 4th Page.",
-          "Press F3 (TRX Comment).",
-          "Type the customer's registered company name, address, and TIN, then press OK.",
+          "Press F5 three times to advance to the 4th Page (or press F11 Page Up from Main Screen to wrap directly to the 4th Page; use F12 to return to Main).",
+          "Press F3 (TRX Comment). Type the customer's registered company name, address, and TIN, then press OK (returns automatically to Main Screen).",
+          "For non-sales reference coding: Navigate to the 4th Page and press F4 (Non Sales), enter the reference code, and confirm (returns automatically to Main Screen).",
           "These comments will automatically print on the official sales invoice receipt."
         ],
-        keyCallouts: ["F3 (4th): TRX Comment"]
+        keyCallouts: ["F3 (4th): TRX Comment", "F4 (4th): Non Sales", "F11: Page Up"]
       },
       {
         id: "les-7-2",
@@ -692,46 +698,96 @@ export const TRAINING_MODULES: TrainingModule[] = [
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-cashpayment-step1-f2.png",
-            caption: "Cash Tender: Press F2 (Cash) on Payment Screen to enter amount handed by customer.",
+            caption: "Cash Tender: Cash is selected by default upon opening the Payment Screen. Directly enter the amount handed by the customer.",
             alt: "Payment screen with F2 Cash tender button highlighted"
           }
         ],
         instructions: [
           "When all items are entered on the Main screen, press F4 (Payment).",
-          "In the Choose Option dialog, select option 1 (None) if the customer has no loyalty card (or 2 for LNC / 3 for LNQR).",
-          "On the authentic Payment Screen, cash payment is active by default (or press F2 Cash).",
-          "Type the amount handed by the customer (e.g. 250.00 or 500.00).",
+          "The BONUS BUY LIST appears first. If no bag is selected, press Alt+B (or click [CANCEL]) and confirm [Yes] to return to the Main Screen (only use [OK] Alt+Enter when a bonus bag checkbox is checked).",
+          "Press F4 (Payment) again. In the Choose Option dialog, select option 1 (None) if the customer has no loyalty card (or 2 for LNC / 3 for LNQR).",
+          "On the Payment Screen, Cash is already selected by default — no need to press F2 again. Directly type the amount handed by the customer (e.g. 250.00 or 500.00).",
           "Press Enter or click [Ok] to confirm tender.",
           "Observe the calculated Change due to the customer and wait for the simulated receipt to generate."
         ],
-        keyCallouts: ["F4: Payment Flow", "1: None (or 2/3 for Loyalty)", "F2 / Enter: Cash Tender"]
+        keyCallouts: ["F4: Payment Flow", "Alt+B: Bonus Buy Cancel", "1: None (or 2/3 for Loyalty)", "Enter: Confirm Cash Tender"]
       },
       {
         id: "les-8-2",
-        title: "Bank Cards, GCash, Gift Certificates & Sulit Coins",
-        objective: "Tender electronic payments, mobile wallets, and voucher codes.",
-        deckSlideRef: "Slides 104-116",
+        title: "Credit Card Terminal & E-Wallets (GCash / Maya)",
+        objective: "Process credit/debit card terminal swipes and mobile wallet (GCash/Maya) reference numbers via F3 Bank Card.",
+        deckSlideRef: "Slides 104-109",
         visualAssets: [
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step1-f3.png",
-            caption: "Card Payment Step 1: Press F3 (Bank Card) on Payment Screen, choose Credit Card, and enter the card number.",
+            caption: "Card Payment Step 1: Press F3 (Bank Card) on Payment Screen, choose Credit Card, and swipe or enter the card number.",
             alt: "Credit Card tender entry screen"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step2-f3.png",
-            caption: "Card Payment Step 2: Fill out required authorization details and confirmation.",
+            caption: "Card Payment Step 2: Copy the 6-character Authorization Code and 6-digit Invoice/Sales Slip # from the BDO POS terminal slip and press Ok.",
             alt: "Card authorization details prompt"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-gcash-step1-f3.png",
-            caption: "GCash Tender: Press F3 (Bank Card), select GCash option, and enter the 12-digit transaction reference number.",
+            caption: "GCash / Maya Tender: Press F3 (Bank Card), select GCASH or MAYA, and enter the transaction reference number shown on the terminal preview.",
             alt: "GCash mobile wallet payment entry screen"
+          }
+        ],
+        instructions: [
+          "On the Payment Screen, press F3 (Bank Card) to open the card and electronic wallet selector.",
+          "For Credit/Debit Card: Select 'CREDIT CARD' and press [Ok]. Swipe or enter the card number and press Enter.",
+          "Inspect the BDO POS terminal receipt on the right, enter the Authorization Code and Sales Slip / Invoice No., and click [Ok] to complete the card payment.",
+          "For GCash or Maya: Press F3 (Bank Card), select 'GCASH' (or 'MAYA') and press [Ok]. Verify the Amount, copy the Reference No. from the terminal preview, and click [Ok]."
+        ],
+        keyCallouts: ["F3: Bank Card", "CREDIT CARD: Swipe -> Auth Code & Slip No.", "GCASH / MAYA: Enter Reference No."]
+      },
+      {
+        id: "les-8-3",
+        title: "LNQR Sulit Coins Redemption & NBS Gift Card",
+        objective: "Redeem customer LNQR Sulit Coins with split cash balance and process NBS Gift Card / Sodexho Pass tenders.",
+        deckSlideRef: "Slides 110-114",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step1.png",
+            caption: "Sulit Coins Step 1: Press F3 (Bank Card), select LNQR Sulit Coins, press TAB to highlight [Ok], and press ENTER.",
+            alt: "Selecting LNQR Sulit Coins option on Payment screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step2.png",
+            caption: "Sulit Coins Step 2: Enter the Sulit Coins amount to redeem, scan the customer's LNQR barcode, and confirm before tendering the remaining cash balance.",
+            alt: "Sulit Coins amount and customer QR code entry screen"
+          },
+          {
+            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step3.png",
+            caption: "Sulit Coins Step 3: Confirmation popup displays completed LNQR processing; press ENTER to finalize receipt.",
+            alt: "Confirmation popup for completed Sulit Coins redemption"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-giftcard-step1-f3.png",
-            caption: "NBS Gift Card: Press F3 (Bank Card), select NBS Giftcard, and input the voucher credentials.",
+            caption: "NBS Gift Card: Press F3 (Bank Card), select NBS GIFTCARD, and input the Voucher Amount and Voucher Code.",
             alt: "NBS Gift Card redemption screen"
           },
+          {
+            src: "/assets/modules/module-8-payment-screens/videos/pos-sulitcoins-video.mp4",
+            caption: "Video Walkthrough: Demonstrating full LNQR Sulit Coins loyalty redemption and payment.",
+            alt: "Video demonstration of Sulit Coins payment flow"
+          }
+        ],
+        instructions: [
+          "For LNQR Sulit Coins: On the Payment Screen, press F3 (Bank Card), select 'LNQR Sulit Coins', and click [Ok].",
+          "Enter the Sulit Coins amount to redeem (e.g. 29.00) and the customer's LNQR code, then click [Ok].",
+          "The register automatically returns to Cash Payment Details for the remaining balance. Enter the cash tendered and press Enter, then confirm the 'LNQR has been updated!' dialog.",
+          "For NBS Gift Card: Press F3 (Bank Card), select 'NBS GIFTCARD', click [Ok], verify the Voucher Amount and Voucher Code, and click [Ok]."
+        ],
+        keyCallouts: ["F3 -> LNQR Sulit Coins", "Split Tender: Coins + Cash Balance", "F3 -> NBS GIFTCARD"]
+      },
+      {
+        id: "les-8-4",
+        title: "Gift Certificates (F5), Promo Coupons (F6) & Credit Memo (F8)",
+        objective: "Accept paper Gift Certificates, Promotional Coupons (With/Without Series), and store Credit Memos.",
+        deckSlideRef: "Slides 115-118",
+        visualAssets: [
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-giftcert-step1-f5.png",
             caption: "Gift Certificate Step 1: Press F5 (Gift Cert), select certificate series type, and scan or type GC number.",
@@ -744,43 +800,21 @@ export const TRAINING_MODULES: TrainingModule[] = [
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step1-f6.png",
-            caption: "Coupon Step 1: Press F6 (Coupon), choose series category, and select the promotional coupon type.",
+            caption: "Coupon Step 1: Press F6 (Coupon), choose series category (With Series / Without Series), and select the promotional coupon type.",
             alt: "Coupon category selection screen"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-coupon-step2-f6.png",
-            caption: "Coupon Step 2: Fill in the required details of the promotional coupon.",
+            caption: "Coupon Step 2: Fill in the required details of the promotional coupon and press Process Payment / Ok.",
             alt: "Coupon details entry prompt"
-          },
-          {
-            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step1.png",
-            caption: "Sulit Coins Step 1: Press F3 (Bank Card), select LNQR Sulit Coins, press TAB to highlight [Ok], and press ENTER.",
-            alt: "Selecting LNQR Sulit Coins option on Payment screen"
-          },
-          {
-            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step2.png",
-            caption: "Sulit Coins Step 2: Enter the Sulit Coins amount to redeem, press TAB, scan customer's LNQR barcode, and confirm.",
-            alt: "Sulit Coins amount and customer QR code entry screen"
-          },
-          {
-            src: "/assets/modules/module-8-payment-screens/images/pos-sulitcoins-step3.png",
-            caption: "Sulit Coins Step 3: Confirmation popup displays completed LNQR processing; press ENTER to finalize receipt.",
-            alt: "Confirmation popup for completed Sulit Coins redemption"
-          },
-          {
-            src: "/assets/modules/module-8-payment-screens/videos/pos-sulitcoins-video.mp4",
-            caption: "Video Walkthrough: Demonstrating full LNQR Sulit Coins loyalty redemption and payment.",
-            alt: "Video demonstration of Sulit Coins payment flow"
           }
         ],
         instructions: [
-          "When items are entered, press F4 (Payment) and select loyalty option (Option 1 None if no loyalty, 2 for LNC, 3 for LNQR).",
-          "On the Payment Screen, press F3 (Bank Card) for Credit/Debit Card, GCash, or QR PH.",
-          "For GCash: Enter the 12-digit transaction reference number and tender amount.",
-          "For Gift Certificates: Press F5 (Gift Cert), select series type, and enter the certificate code.",
-          "For Sulit Coins: Press F3 (Bank Card), select LNQR Sulit Coins, input coin amount, and enter the customer's LNQR code."
+          "For Gift Certificates: On the Payment Screen, press F5 (Gift Cert.), select the GC Type (e.g. NBS Gift Certificate), enter the GC Number and Amount, and press Enter or click [Ok].",
+          "For Promotional Coupons: Press F6 (Coupon), select 'Without Series' or 'With Series' in the Coupon Type dropdown, choose the promo campaign (e.g. NBS), verify the denomination, and press Enter or click [Ok].",
+          "For Store Credit Memo: Press F8 (Credit Memo), verify the Credit Memo number (e.g. CM-2026-0041) and amount from a previous return, and press Enter or click [Ok]."
         ],
-        keyCallouts: ["F4: Payment", "Option 1: None", "F3: Bank Card / GCash", "F5: Gift Cert", "F6: Coupon"]
+        keyCallouts: ["F5: Gift Cert.", "F6: Promo Coupon (With/Without Series)", "F8: Credit Memo"]
       }
     ]
   },

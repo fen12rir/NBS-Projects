@@ -162,12 +162,7 @@ export function TransactionCommentScreen({
       </div>
 
       {/* 4. BOTTOM GREEN BAR */}
-      <div className="bg-[#22A838] border-t-2 border-gray-400 h-9 flex items-center justify-between px-4 flex-shrink-0">
-        <div />
-        <div className="text-black font-bold font-sans text-xs tracking-tight">
-          {currentTime || "04:38:16 PM"}
-        </div>
-      </div>
+      <div className="bg-[#22A838] border-t-2 border-gray-400 h-9 flex-shrink-0" />
     </div>
   );
 }

@@ -68,6 +68,28 @@ export function TransactionDiscountScreen({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const selectedRowRef = useRef<HTMLTableRowElement>(null);
+  const [currentTime, setCurrentTime] = useState(() =>
+    new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    })
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     selectedRowRef.current?.scrollIntoView({ block: "nearest" });
@@ -217,7 +239,7 @@ export function TransactionDiscountScreen({
         </table>
       </div>
 
-      <div className="flex flex-shrink-0 flex-col items-center gap-2 border-t-2 border-black bg-[#388E3C] p-2">
+      <div className="flex flex-shrink-0 flex-col items-center gap-2 border-t-2 border-black bg-[#388E3C] px-4 py-2">
         {submitError && (
           <p role="alert" className="text-center text-xs font-bold text-white">
             {submitError}

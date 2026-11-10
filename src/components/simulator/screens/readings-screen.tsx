@@ -10,6 +10,8 @@ export interface ReadingsScreenProps {
   trxNumber?: string;
   totalQty?: number;
   totalSales?: number;
+  onConfirmZClearing?: () => void;
+  onPrint?: () => void;
   onClose: () => void;
 }
 
@@ -19,6 +21,8 @@ export function ReadingsScreen({
   terminalId = "0002",
   branchCode = "2999",
   trxNumber = "0212202629990003000595",
+  onConfirmZClearing,
+  onPrint,
   onClose,
 }: ReadingsScreenProps) {
   const isY = readingType === "Y";
@@ -41,6 +45,7 @@ export function ReadingsScreen({
           e.preventDefault();
           if (clearingFocus === "YES") {
             setZClearingStep(false);
+            onConfirmZClearing?.();
           } else {
             onClose();
           }
@@ -54,6 +59,7 @@ export function ReadingsScreen({
           onClose();
         } else if (e.key === "Enter") {
           e.preventDefault();
+          onPrint?.();
           alert(`${isY ? "Y" : "Z"} Reading printed successfully.`);
           onClose();
         }
@@ -61,7 +67,7 @@ export function ReadingsScreen({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [zClearingStep, clearingFocus, isY, onClose]);
+  }, [zClearingStep, clearingFocus, isY, onConfirmZClearing, onPrint, onClose]);
 
   const today = new Date();
   const months = [
@@ -71,6 +77,12 @@ export function ReadingsScreen({
   const todayLabel = `${today.getFullYear()}-${months[today.getMonth()]}-${String(
     today.getDate()
   ).padStart(2, "0")}`;
+  const currentTimeLabel = today.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
 
   return (
     <div className="flex min-h-0 w-full flex-1 select-none flex-col overflow-hidden bg-white font-sans">
@@ -102,7 +114,10 @@ export function ReadingsScreen({
               <div className="flex items-center justify-center space-x-4 pt-1">
                 <button
                   type="button"
-                  onClick={() => setZClearingStep(false)}
+                  onClick={() => {
+                    setZClearingStep(false);
+                    onConfirmZClearing?.();
+                  }}
                   className={`min-w-[75px] px-4 py-1 text-xs font-bold font-sans transition-all border-2 cursor-pointer ${
                     clearingFocus === "YES"
                       ? "bg-[#D4D0C8] border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-black outline outline-1 outline-dotted outline-black ring-1 ring-blue-600"
@@ -145,6 +160,7 @@ export function ReadingsScreen({
             <button
               type="button"
               onClick={() => {
+                onPrint?.();
                 alert(`${isY ? "Y" : "Z"} Reading printed successfully.`);
                 onClose();
               }}
