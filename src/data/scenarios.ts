@@ -1675,7 +1675,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 
       {
         stepNumber: 21,
-        instruction: "Step 21: Return to the Main Screen by pressing F5 (NEXT OPTION) on the 4th Screen.",
+        instruction: "Step 21: On the 4th Screen, Press F11 until you have returned to the Main Screen.",
         expectedAction: "NAV_MAIN",
         hint: "Click F5 Next Option on the 4th Screen to return to the Main Screen.",
         errorFeedback: "Press F5 to return to the Main Screen."
@@ -1779,10 +1779,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 
       {
         stepNumber: 35,
-        instruction: "Step 35: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
+        instruction: "Step 35: Press F11 (NEXT OPTION) on the 4th Screen until you have returned to the Main Screen.",
         expectedAction: "NAV_MAIN",
         hint: "Click F5 NEXT OPTION on the right button column to complete the page cycle.",
-        errorFeedback: "Press F5 on the 4th Screen to return to the Main Screen."
+        errorFeedback: "Press F11 on the 4th Screen to return to the Main Screen."
       },  
 
       {
@@ -1938,10 +1938,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 
       {
         stepNumber: 54,
-        instruction: "Step 54: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
+        instruction: "Step 54: Press F11 (NEXT OPTION) on the 4th Screen until you have returned to the Main Screen.",
         expectedAction: "NAV_MAIN",
         hint: "Click F5 NEXT OPTION on the right button column to complete the page cycle.",
-        errorFeedback: "Press F5 on the 4th Screen to return to the Main Screen."
+        errorFeedback: "Press F11 on the 4th Screen to until you have returned to the Main Screen."
       },
 
        {

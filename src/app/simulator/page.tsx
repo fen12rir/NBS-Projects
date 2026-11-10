@@ -297,7 +297,7 @@ function SimulatorContent() {
   const [isNonMdseOpen, setIsNonMdseOpen] = useState(false);
   const [journalModalMode, setJournalModalMode] = useState<"TRX_JOURNAL" | "SALES_JOURNAL" | null>(null);
   const [isNonSalesOpen, setIsNonSalesOpen] = useState(false);
-
+const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null);
   const [state, dispatch] = useReducer(
     posReducer,
     createInitialPOSState("Jan Angela")
@@ -399,8 +399,10 @@ function SimulatorContent() {
       const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
       const penalty = mistakes.length * 10;
       const score = timedOut ? 0 : Math.max(0, 100 - penalty);
+      const attemptId = `attempt-${Date.now()}`;
+      setCompletedAttemptId(attemptId);
       recordScenarioAttempt({
-        id: "attempt-" + Date.now(),
+        id: attemptId,
         scenarioId: activeScenario.id,
         scenarioTitle: activeScenario.title,
         timestamp: new Date().toISOString(),
@@ -4445,6 +4447,7 @@ function SimulatorContent() {
         returnLessonUrl={returnLessonUrl}
         returnButtonLabel={returnButtonLabel}
         onResetExam={handleResetExam}
+        attemptId={completedAttemptId}
       />
     </div>
   );
