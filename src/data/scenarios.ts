@@ -69,10 +69,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Press F5 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
+        instruction: "Step 6: Press F11 (NEXT OPTION) on the 4th Screen to return to the Main Screen.",
         expectedAction: "NAV_MAIN",
-        hint: "Click F5 NEXT OPTION on the right button column to complete the page cycle.",
-        errorFeedback: "Press F5 on the 4th Screen to return to the Main Screen."
+        hint: "Click F11 NEXT OPTION on the right button column to complete the page cycle.",
+        errorFeedback: "Press F11 on the 4th Screen to return to the Main Screen."
       }
     ]
   },
@@ -135,10 +135,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Complete the full keypad cycle by pressing F5 (NEXT OPTION) to return to the Main Screen.",
+        instruction: "Step 8: Complete the full keypad cycle by pressing F11 (NEXT OPTION) until you have returned to the Main Screen.",
         expectedAction: "NAV_MAIN",
-        hint: "Click F5 Next Option on the 4th Screen to return to the Main Screen.",
-        errorFeedback: "Press F5 to return to the Main Screen."
+        hint: "Click F11 Next Option on the 4th Screen until you have returned to the Main Screen.",
+        errorFeedback: "Press F11 to return to the Main Screen."
       }
     ]
   },
@@ -1149,10 +1149,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 12,
-        instruction: "Step 12: Return to the Main Screen by pressing F5 (NEXT OPTION) on the 4th Screen.",
+        instruction: "Step 12: Return to the Main Screen by pressing F11 (NEXT OPTION) on the 4th Screen.",
         expectedAction: "NAV_MAIN",
-        hint: "Click F5 Next Option on the 4th Screen to return to the Main Screen.",
-        errorFeedback: "Press F5 to return to the Main Screen."
+        hint: "Click F11 Next Option on the 4th Screen until you have returned to the Main Screen.",
+        errorFeedback: "Press F11 to return to the Main Screen."
       }
     ]
   },
