@@ -42,11 +42,11 @@ export default function CertificatePage() {
   );
   const allLessonsCompleted =
     totalLessons > 0 && progress.completedLessons.length >= totalLessons;
-  const practicalAssessmentPassed = progress.scenarioAttempts.some(
+  const practicalExamPassed = progress.scenarioAttempts.some(
     (attempt) =>
-      attempt.scenarioId === "scen-practical-assessment" && attempt.passed
+      attempt.scenarioId === "exam-practical" && attempt.passed
   );
-  const isCertified = allLessonsCompleted && practicalAssessmentPassed;
+  const isCertified = allLessonsCompleted && practicalExamPassed;
 
   if (!isCertified ) {
     return (

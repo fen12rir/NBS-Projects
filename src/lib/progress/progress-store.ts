@@ -17,6 +17,15 @@ export interface AttemptRecord {
   }[];
   hintsUsed: number;
   timeSpentSeconds: number;
+  caseResults?: {
+    caseId: string;
+    title: string;
+    caseNumber: number;
+    score: number;
+    passed: boolean;
+    timeSpentSeconds: number;
+    feedback: string[];
+  }[];
 }
 
 export interface UserProgress {
@@ -49,12 +58,11 @@ function addCertificationCompletionDate(progress: UserProgress): UserProgress {
   );
   const allLessonsCompleted =
     totalLessons > 0 && progress.completedLessons.length >= totalLessons;
-  const practicalAssessmentPassed = progress.scenarioAttempts.some(
-    (attempt) =>
-      attempt.scenarioId === "scen-practical-assessment" && attempt.passed
+  const practicalExamPassed = progress.scenarioAttempts.some(
+    (attempt) => attempt.scenarioId === "exam-practical" && attempt.passed
   );
 
-  if (!allLessonsCompleted || !practicalAssessmentPassed) {
+  if (!allLessonsCompleted || !practicalExamPassed) {
     if (!progress.certificationCompletedAt && !progress.certificateId) {
       return progress;
     }
@@ -73,6 +81,16 @@ function addCertificationCompletionDate(progress: UserProgress): UserProgress {
       progress.certificationCompletedAt || new Date().toISOString(),
     certificateId: progress.certificateId || generateCertificateId(),
   };
+}
+
+export function computeCompletedModules(completedLessons: string[]): string[] {
+  const completed: string[] = [];
+  for (const mod of TRAINING_MODULES) {
+    if (mod.lessons.length > 0 && mod.lessons.every((l) => completedLessons.includes(l.id))) {
+      completed.push(mod.id);
+    }
+  }
+  return completed;
 }
 
 async function syncToMariaDb(progress: UserProgress, newAttempt?: AttemptRecord): Promise<void> {
@@ -124,10 +142,14 @@ export function getLocalProgress(): UserProgress {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { completedLessons: [], completedModules: [], scenarioAttempts: [] };
     const stored = JSON.parse(raw) as UserProgress;
+    const autoModules = computeCompletedModules(stored.completedLessons || []);
+    const mergedModules = Array.from(new Set([...(stored.completedModules || []), ...autoModules]));
+    stored.completedModules = mergedModules;
     const updated = addCertificationCompletionDate(stored);
     if (
       updated.certificationCompletedAt !== stored.certificationCompletedAt ||
-      updated.certificateId !== stored.certificateId
+      updated.certificateId !== stored.certificateId ||
+      mergedModules.length !== (stored.completedModules?.length || 0)
     ) {
       saveLocalProgress(updated);
     }
@@ -142,6 +164,7 @@ export function saveLocalProgress(progress: UserProgress, newAttempt?: AttemptRe
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
+    window.dispatchEvent(new Event("nbs_progress_updated"));
     // Asynchronously push to MariaDB
     syncToMariaDb(progress, newAttempt);
   } catch (err) {
@@ -152,9 +175,12 @@ export function saveLocalProgress(progress: UserProgress, newAttempt?: AttemptRe
 export function markLessonAsCompleted(lessonId: string, moduleId: string): UserProgress {
   const current = getLocalProgress();
   const completedLessons = Array.from(new Set([...current.completedLessons, lessonId]));
+  const autoModules = computeCompletedModules(completedLessons);
+  const completedModules = Array.from(new Set([...current.completedModules, ...autoModules]));
   const updated: UserProgress = addCertificationCompletionDate({
     ...current,
     completedLessons,
+    completedModules,
     lastActiveLessonId: lessonId,
     lastActiveModuleId: moduleId,
   });

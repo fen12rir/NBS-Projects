@@ -29,6 +29,9 @@ import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option
 import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-terminal";
 import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-terminal-preview";
 import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
+import { CustomerPanel } from "@/components/simulator/customer-panel";
+import { ChangeCheckModal } from "@/components/simulator/modals/change-check-modal";
+import { MobileKeyStrip } from "@/components/simulator/mobile-key-strip";
 import { LogoutScreen } from "@/components/simulator/screens/logout-screen";
 import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
 import { ScenarioCompleteModal } from "@/components/simulator/modals/scenario-complete-modal";
@@ -37,6 +40,18 @@ import { StartOfDayIncorrectScreen } from "@/components/simulator/screens/start-
 import { StartOfDayCloseScreen } from "@/components/simulator/screens/start-of-day-close-screen";
 import { PosReloaderScreen } from "@/components/simulator/screens/pos-reloader-screen";
 import { UserLoginScreen } from "@/components/simulator/screens/user-login-screen";
+import { 
+  PracticalExamSession, 
+  generatePracticalExamSession 
+} from "@/data/practical-exam";
+import { 
+  gradeCase, 
+  gradeExamSession, 
+  TraineeActionLog, 
+  CaseGradingResult, 
+  CaseFinalSnapshot,
+  ExamSessionGradingResult 
+} from "@/lib/simulator/exam-grader";
 import { 
   posReducer, 
   createInitialPOSState, 
@@ -55,7 +70,7 @@ import { recordScenarioAttempt } from "@/lib/progress/progress-store";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles, User, Bell, X, Smartphone, Maximize2, AlertTriangle, RotateCw, ChevronUp, ChevronDown } from "lucide-react";
 
 export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_INCORRECT" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
 
@@ -148,8 +163,135 @@ function SimulatorContent() {
   const moduleParam = searchParams.get("module");
   const scenarioParam = searchParams.get("scenario");
   const lessonParam = searchParams.get("lesson");
+  const examParam = searchParams.get("exam");
+  const isExamMode = examParam === "practical" || scenarioParam === "scen-practical-assessment";
 
-  const initialScenario = scenarioParam 
+  const [examSession, setExamSession] = useState<PracticalExamSession | null>(null);
+  const [examCaseIndex, setExamCaseIndex] = useState(0);
+  const [examActionLog, setExamActionLog] = useState<TraineeActionLog[]>([]);
+  const [caseResults, setCaseResults] = useState<CaseGradingResult[]>([]);
+  const [caseStartTime, setCaseStartTime] = useState<number>(Date.now());
+  const [isChangeCheckModalOpen, setIsChangeCheckModalOpen] = useState(false);
+  const [pendingCashTender, setPendingCashTender] = useState<number>(0);
+  const [customerNotice, setCustomerNotice] = useState<{
+    name: string;
+    avatar: string;
+    quote: string;
+    caseNumber: number;
+    totalCases: number;
+  } | null>(null);
+
+  const logExamAction = (action: string, data?: any) => {
+    setExamActionLog((prev) => [...prev, { action, data, timestamp: Date.now() }]);
+  };
+
+  // Mobile / Focus Mode States (Forced Landscape)
+  const [isFocusMode, setIsFocusMode] = useState(false);
+  const [terminalScale, setTerminalScale] = useState(1);
+  const [isPortrait, setIsPortrait] = useState(false);
+  const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
+  const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(true);
+
+
+
+  const enterFocusMode = async () => {
+    setIsFocusMode(true);
+    // 1. Fullscreen API
+    try {
+      if (document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+      } else if ((document.documentElement as any).webkitRequestFullscreen) {
+        await (document.documentElement as any).webkitRequestFullscreen();
+      }
+    } catch {}
+
+    // 2. Lock to landscape where API is supported
+    try {
+      const orientation = (screen as any).orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
+      if (orientation && typeof orientation.lock === "function") {
+        await orientation.lock("landscape");
+      } else if ((screen as any).lockOrientation) {
+        (screen as any).lockOrientation("landscape");
+      }
+    } catch {}
+  };
+
+  const exitFocusMode = async () => {
+    setIsFocusMode(false);
+    // 1. Unlock screen orientation
+    try {
+      const orientation = (screen as any).orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
+      if (orientation && typeof orientation.unlock === "function") {
+        orientation.unlock();
+      } else if ((screen as any).unlockOrientation) {
+        (screen as any).unlockOrientation();
+      }
+    } catch {}
+
+    // 2. Exit fullscreen
+    try {
+      if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        }
+      }
+    } catch {}
+  };
+
+  const toggleFocusMode = () => {
+    if (isFocusMode) {
+      exitFocusMode();
+    } else {
+      enterFocusMode();
+    }
+  };
+
+  // Initialize Practical Exam Session
+  useEffect(() => {
+    if (isExamMode && !examSession) {
+      const session = generatePracticalExamSession();
+      setExamSession(session);
+      setExamCaseIndex(0);
+      setExamActionLog([]);
+      setCaseResults([]);
+      setCaseStartTime(Date.now());
+      if (session.cases[0]?.id === "case-open-shift") {
+        setTerminalMode("START_OF_DAY_VERIFY");
+      }
+    }
+  }, [isExamMode, examSession]);
+
+  // Synchronize payment terminal slip data whenever practical exam case changes
+  useEffect(() => {
+    if (!isExamMode || !examSession) return;
+    const currentCase = examSession.cases[examCaseIndex];
+    if (!currentCase) return;
+
+    const cardEvent = currentCase.events.find((e) => e.tender?.kind === "CREDIT_CARD");
+    if (cardEvent?.tender) {
+      setReceiptInvoiceNumber(cardEvent.tender.slipInvoice || "004921");
+      setReceiptAuthCode(cardEvent.tender.slipAuth || "AP8812");
+      setCardReceiptGeneratedAt(new Date());
+    }
+
+    const gcashEvent = currentCase.events.find((e) => e.tender?.kind === "GCASH");
+    if (gcashEvent?.tender) {
+      setGcashReferenceNumber(gcashEvent.tender.reference || "GC88492019");
+    }
+
+    const mayaEvent = currentCase.events.find((e) => e.tender?.kind === "MAYA");
+    if (mayaEvent?.tender) {
+      setMayaTraceNumber("001249");
+      setMayaReferenceNumber(mayaEvent.tender.reference || "MY994821");
+      setMayaGeneratedAt(new Date());
+    }
+  }, [isExamMode, examSession, examCaseIndex]);
+
+  const initialScenario = isExamMode
+    ? null
+    : scenarioParam 
     ? getScenarioById(scenarioParam) 
     : moduleParam 
     ? getScenarioForModule(moduleParam) 
@@ -303,16 +445,88 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     createInitialPOSState("Jan Angela")
   );
 
+  const examTenderKind = examSession?.cases[examCaseIndex]?.events.find(
+    (e) => e.tender?.kind === "CREDIT_CARD" || e.tender?.kind === "GCASH" || e.tender?.kind === "MAYA"
+  )?.tender?.kind;
+
   const isExternalReceiptShowing =
-    (selectedTenderMethod === "BANK_CARD" &&
-      selectedBankCardType === "CREDIT CARD" &&
-      bankCardStep !== "SELECT_TYPE") ||
-    (selectedTenderMethod === "BANK_CARD" &&
-      selectedBankCardType === "GCASH" &&
-      bankCardStep === "EWALLET_DETAILS") ||
-    (selectedTenderMethod === "BANK_CARD" &&
-      selectedBankCardType === "MAYA" &&
-      (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"));
+    selectedTenderMethod === "BANK_CARD" &&
+    selectedBankCardType !== "-SELECT-" &&
+    bankCardStep !== "SELECT_TYPE" &&
+    (
+      selectedBankCardType === "CREDIT CARD" ||
+      (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
+      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
+      (isExamMode && Boolean(examTenderKind))
+    );
+
+  const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" =
+    selectedBankCardType === "GCASH" || (isExamMode && examTenderKind === "GCASH")
+      ? "GCASH"
+      : selectedBankCardType === "MAYA" || (isExamMode && examTenderKind === "MAYA")
+      ? "MAYA"
+      : "BDO";
+
+  const currentGcashRef =
+    gcashReferenceNumber ||
+    (isExamMode
+      ? examSession?.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "GCASH")?.tender?.reference
+      : null) ||
+    "GC88492019";
+
+  const currentMayaTrace = mayaTraceNumber || "001249";
+  const currentMayaRef =
+    mayaReferenceNumber ||
+    (isExamMode
+      ? examSession?.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "MAYA")?.tender?.reference
+      : null) ||
+    "MY994821";
+
+  const currentCardInvoice =
+    receiptInvoiceNumber ||
+    (isExamMode
+      ? examSession?.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender?.slipInvoice
+      : null) ||
+    "004921";
+
+  const currentCardAuth =
+    receiptAuthCode ||
+    (isExamMode
+      ? examSession?.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender?.slipAuth
+      : null) ||
+    "AP8812";
+
+  const checkViewport = () => {
+    if (typeof window === "undefined") return;
+    const portrait = window.innerHeight > window.innerWidth;
+    setIsPortrait(portrait);
+
+    const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
+      ? window.innerHeight
+      : window.innerWidth;
+    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 200 : 85) : 65;
+    const effectiveHeight = isFocusMode && portrait && forceRotatePortrait
+      ? window.innerWidth - overhead
+      : window.innerHeight - overhead;
+
+    const targetWidth = isExternalReceiptShowing ? 1360 : 1080;
+    const availWidth = effectiveWidth - 16;
+    const scaleByWidth = Math.max(0.25, availWidth / targetWidth);
+    const scaleByHeight = Math.max(0.25, effectiveHeight / 600);
+    const scale = Math.min(1, scaleByWidth, scaleByHeight);
+
+    setTerminalScale(scale);
+  };
+
+  useEffect(() => {
+    checkViewport();
+    window.addEventListener("resize", checkViewport);
+    window.addEventListener("orientationchange", checkViewport);
+    return () => {
+      window.removeEventListener("resize", checkViewport);
+      window.removeEventListener("orientationchange", checkViewport);
+    };
+  }, [isFocusMode, forceRotatePortrait, isFocusHeaderExpanded, isExternalReceiptShowing]);
 
   const [showItemNotFound, setShowItemNotFound] = useState(false);
 
@@ -366,6 +580,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
   const [isExamCompleted, setIsExamCompleted] = useState(false);
   const hasRecordedAttemptRef = useRef(false);
 
+  // Auto-quit Focus Mode when practice scenario or assessment completes
+  useEffect(() => {
+    if ((isExamCompleted || timedOut) && isFocusMode) {
+      exitFocusMode();
+    }
+  }, [isExamCompleted, timedOut, isFocusMode]);
+
   // Error Feedback State
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
   const [isTerminalShaking, setIsTerminalShaking] = useState(false);
@@ -400,24 +621,35 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     }, 3800);
   };
 
-  const remainingSeconds =
-    activeScenario?.timeLimitSeconds == null
-      ? null
-      : Math.max(
-          0,
-          activeScenario.timeLimitSeconds -
-            Math.floor((now.getTime() - scenarioStartTime) / 1000)
-        );
+  const remainingSeconds = isExamMode
+    ? Math.max(
+        0,
+        (examSession?.totalTimeLimitSeconds || 900) -
+          Math.floor((now.getTime() - scenarioStartTime) / 1000)
+      )
+    : activeScenario?.timeLimitSeconds == null
+    ? null
+    : Math.max(
+        0,
+        activeScenario.timeLimitSeconds -
+          Math.floor((now.getTime() - scenarioStartTime) / 1000)
+      );
+
   useEffect(() => {
     if (
       remainingSeconds === 0 &&
       !isExamCompleted &&
       !timedOut &&
-      activeScenario?.timeLimitSeconds != null
+      (isExamMode || activeScenario?.timeLimitSeconds != null)
     ) {
       setTimedOut(true);
+      if (isExamMode) {
+        handleFinishExamSession(true);
+      }
     }
-  }, [remainingSeconds, isExamCompleted, timedOut, activeScenario]);
+  }, [remainingSeconds, isExamCompleted, timedOut, activeScenario, isExamMode]);
+
+  
 
   const fmtDate = (d: Date) =>
     d.toLocaleDateString("en-PH", { year: "numeric", month: "short", day: "2-digit" })
@@ -489,6 +721,14 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     if (e) e.preventDefault();
     setTerminalMode("ACTIVE_REGISTER");
     validateScenarioStep("LOGIN_SUBMIT", loginUsername);
+    if (isExamMode) {
+      logExamAction("LOGIN_SUBMIT", loginUsername);
+      if (examSession?.cases[examCaseIndex]?.id === "case-open-shift") {
+        setTimeout(() => {
+          handleAdvanceExamCase();
+        }, 800);
+      }
+    }
   };
 
   const handleConfirmLogout = () => {
@@ -496,6 +736,14 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setSelectedLogoutButton(null);
     setTerminalMode("USER_LOGIN");
     validateScenarioStep("CONFIRM_LOGOUT_YES");
+    if (isExamMode) {
+      logExamAction("CONFIRM_LOGOUT_YES");
+      if (examSession?.cases[examCaseIndex]?.id === "case-close-shift") {
+        setTimeout(() => {
+          handleAdvanceExamCase();
+        }, 500);
+      }
+    }
   };
 
   const handleCancelLogout = () => {
@@ -569,13 +817,17 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     if (isNaN(tenderVal) || tenderVal <= 0) {
       return;
     }
-    if (tenderVal < totals.totalAmount) {
-      alert(`Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${totals.totalAmount.toFixed(2)})!`);
+    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+    if (tenderVal < netDue) {
+      alert(`Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`);
       return;
     }
     setIsLnqrTenderProcessed(true);
     setIsFinalTenderStep(false);
     dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
+    if (isExamMode) {
+      setPendingCashTender(tenderVal);
+    }
 
     if (tenderTimerRef.current) {
       clearTimeout(tenderTimerRef.current);
@@ -590,9 +842,15 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       return;
     }
 
+    const processingDelay = isExamMode ? 1800 : 3000;
     tenderTimerRef.current = setTimeout(() => {
       setIsFinalTenderStep(true);
-    }, 7000);
+      if (isExamMode) {
+        setTimeout(() => {
+          setIsChangeCheckModalOpen(true);
+        }, 800);
+      }
+    }, processingDelay);
     validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
     validateScenarioStep("CONFIRM_TENDER", tenderVal);
   };
@@ -604,7 +862,30 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     }
     setIsLnqrUpdatedModalOpen(false);
     setIsConnectingLnqrServer(false);
-    setIsFinalTenderStep(true);
+    if (activeScenario?.id === "scen-les-8-3") {
+      dispatch({ type: "CLOSE_PAYMENT" });
+      dispatch({ type: "RESET_TRANSACTION" });
+      setIsLnqrCashPaymentOpen(false);
+      setIsLnqrTenderProcessed(false);
+      setIsFinalTenderStep(false);
+      setLnqrCashTenderInput("");
+      setIsLnqrScanScreenOpen(false);
+      setIsLncCardScreenOpen(false);
+      setIsLoyaltyOptionOpen(false);
+      setHasBonusBuyBeenPrompted(false);
+      setLoyaltyType("NONE");
+      setSelectedTenderMethod("CASH");
+      setSulitCoinsEarnedAmount(null);
+      setSulitCoinsRedeemedAmount(null);
+      setSulitCoinsRefNo("");
+    } else {
+      setIsFinalTenderStep(true);
+      if (isExamMode) {
+        setTimeout(() => {
+          setIsChangeCheckModalOpen(true);
+        }, 800);
+      }
+    }
     validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
@@ -644,6 +925,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setBankCardStep("FINAL_TEAROFF");
     setIsFinalTenderStep(true);
     validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
+    if (isExamMode) {
+      logExamAction("CONFIRM_TENDER", selectedBankCardType);
+      setTimeout(() => {
+        handleAdvanceExamCase(0);
+      }, 1200);
+    }
   };
 
   const handleConfirmSodexhoPayment = () => {
@@ -771,7 +1058,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       setMayaGeneratedAt(new Date());
       setGcashReferenceNumber("");
     } else if (cardType.toUpperCase() === "LNQR SULIT COINS") {
-      setCustomerQrInput("20260511LN000006");
+      setCustomerQrInput((prev) => prev.trim() || "20221003LN000004");
       setBankCardAmountInput("29.00");
       setGcashReferenceNumber("");
       setMayaTraceNumber("");
@@ -1017,6 +1304,11 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Do not intercept keystrokes when ChangeCheckModal is active
+      if (isChangeCheckModalOpen) {
+        return;
+      }
+
       // Tab Navigation
       if (e.key === "Tab" && posContainerRef.current) {
         // Sub-modes
@@ -1843,7 +2135,162 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     return false;
   };
 
+  const handleFinishExamSession = (timedOutOccurred = false) => {
+    if (!examSession) return;
+    if (isFocusMode) {
+      exitFocusMode();
+    }
+    const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
+    const finalGraded = gradeExamSession(examSession, caseResults, totalExamTime);
+    setIsExamCompleted(true);
+
+    const attemptId = `att-prac-${Date.now()}`;
+    recordScenarioAttempt({
+      id: attemptId,
+      scenarioId: "exam-practical",
+      scenarioTitle: "Practical Hands-On Exam (Full Shift Operations)",
+      timestamp: new Date().toISOString(),
+      score: timedOutOccurred ? 0 : finalGraded.totalScore,
+      passed: timedOutOccurred ? false : finalGraded.passed,
+      stepsCompleted: finalGraded.passedCasesCount,
+      totalSteps: finalGraded.casesTotal,
+      mistakes: [],
+      hintsUsed: 0,
+      timeSpentSeconds: totalExamTime,
+      caseResults: finalGraded.caseResults.map((c) => ({
+        caseId: c.caseId,
+        title: c.title,
+        caseNumber: c.caseNumber,
+        score: c.score,
+        passed: c.passed,
+        timeSpentSeconds: c.timeSpentSeconds,
+        feedback: c.feedback,
+      })),
+    });
+
+    router.push(`/results/${attemptId}`);
+  };
+
+  const handleAdvanceExamCase = (userChange?: number) => {
+    if (!examSession) return;
+    const currentCase = examSession.cases[examCaseIndex];
+    if (!currentCase) return;
+
+    const timeSpent = Math.max(1, Math.round((Date.now() - caseStartTime) / 1000));
+    const tenderAmountVal = pendingCashTender || totals.totalAmount;
+    const remainingDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+    const computedChange = Math.max(0, tenderAmountVal - remainingDue);
+    const snapshot: CaseFinalSnapshot = {
+      lineItemsCount: state.lineItems.length,
+      totalSales: totals.totalAmount,
+      tenderMethod: selectedTenderMethod,
+      tenderAmount: tenderAmountVal,
+      changeGiven: userChange ?? computedChange,
+      loyaltyType: loyaltyType,
+      voidCount: state.lineItems.filter((i) => i.isVoided).length,
+      discountType: state.appliedDiscount?.name,
+      isZeroRated: state.isZeroRated,
+    };
+
+    const graded = gradeCase(currentCase, examActionLog, snapshot, userChange, timeSpent);
+    const updatedCaseResults = [...caseResults, graded];
+    setCaseResults(updatedCaseResults);
+
+    // Reset simulator transaction state for next customer
+    dispatch({ type: "CLOSE_PAYMENT" });
+    dispatch({ type: "RESET_TRANSACTION" });
+    setIsLnqrCashPaymentOpen(false);
+    setIsLnqrTenderProcessed(false);
+    setIsFinalTenderStep(false);
+    setLnqrCashTenderInput("");
+    setIsLnqrScanScreenOpen(false);
+    setIsLncCardScreenOpen(false);
+    setIsLoyaltyOptionOpen(false);
+    setIsLnqrUpdatedModalOpen(false);
+    setHasBonusBuyBeenPrompted(false);
+    setLoyaltyType("NONE");
+    setSelectedTenderMethod("CASH");
+    setPendingCashTender(0);
+    setSulitCoinsRedeemedAmount(null);
+    setSulitCoinsEarnedAmount(null);
+    setSulitCoinsRefNo("");
+    setIsChangeCheckModalOpen(false);
+    setExamActionLog([]);
+    setCaseStartTime(Date.now());
+
+    const nextIndex = examCaseIndex + 1;
+    if (nextIndex < examSession.cases.length) {
+      setExamCaseIndex(nextIndex);
+      const nextCase = examSession.cases[nextIndex];
+      setCustomerNotice({
+        name: nextCase.customerName,
+        avatar: nextCase.customerName.charAt(0),
+        quote: nextCase.customerQuote,
+        caseNumber: nextIndex + 1,
+        totalCases: examSession.cases.length,
+      });
+      setTimeout(() => {
+        setCustomerNotice(null);
+      }, 5500);
+      if (nextCase.id === "case-close-shift") {
+        setTerminalMode("ACTIVE_REGISTER");
+      }
+    } else {
+      // Completed all cases
+      if (isFocusMode) {
+        exitFocusMode();
+      }
+      const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
+      const finalGraded = gradeExamSession(examSession, updatedCaseResults, totalExamTime);
+      setIsExamCompleted(true);
+
+      const attemptId = `att-prac-${Date.now()}`;
+      recordScenarioAttempt({
+        id: attemptId,
+        scenarioId: "exam-practical",
+        scenarioTitle: "Practical Hands-On Exam (Full Shift Operations)",
+        timestamp: new Date().toISOString(),
+        score: finalGraded.totalScore,
+        passed: finalGraded.passed,
+        stepsCompleted: finalGraded.passedCasesCount,
+        totalSteps: finalGraded.casesTotal,
+        mistakes: [],
+        hintsUsed: 0,
+        timeSpentSeconds: totalExamTime,
+        caseResults: finalGraded.caseResults.map((c) => ({
+          caseId: c.caseId,
+          title: c.title,
+          caseNumber: c.caseNumber,
+          score: c.score,
+          passed: c.passed,
+          timeSpentSeconds: c.timeSpentSeconds,
+          feedback: c.feedback,
+        })),
+      });
+
+      router.push(`/results/${attemptId}`);
+    }
+  };
+
+  const handleSyntheticKeyPress = (key: string, altKey = false, ctrlKey = false) => {
+    const evt = new KeyboardEvent("keydown", {
+      key,
+      altKey,
+      ctrlKey,
+      bubbles: true,
+      cancelable: true,
+    });
+    window.dispatchEvent(evt);
+  };
+
   const validateScenarioStep = (actionId: string, dataVal?: string | number): boolean => {
+    if (isExamMode) {
+      setExamActionLog((prev) => [
+        ...prev,
+        { action: actionId, data: dataVal, timestamp: Date.now() },
+      ]);
+      return true;
+    }
     if (!activeScenario || isExamCompleted) return true;
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return true;
@@ -1968,7 +2415,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
 
   const handleAction = (actionId: string) => {
     // In guided scenario, validate action before execution
-    if (activeScenario && !isExamCompleted) {
+    if (activeScenario && !isExamCompleted && !isExamMode) {
       const currentStep = activeScenario.steps[currentStepIndex];
       if (actionId === "HELP") {
         handleShowHint();
@@ -2345,6 +2792,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     dispatch({ type: "TENDER_PAYMENT", amount: amt });
     dispatch({ type: "SELECT_PAYMENT_METHOD", method: tenderName });
     validateScenarioStep("CONFIRM_TENDER", amt);
+    if (isExamMode) {
+      logExamAction("CONFIRM_TENDER", tenderName);
+      setTimeout(() => {
+        handleAdvanceExamCase(0);
+      }, 1000);
+    }
   };
 
   const handleConfirmTender = (e: React.FormEvent) => {
@@ -2352,6 +2805,15 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     const amount = parseFloat(cashTenderInput) || 0;
     dispatch({ type: "TENDER_PAYMENT", amount });
     validateScenarioStep("CONFIRM_TENDER", amount);
+    if (isExamMode) {
+      setPendingCashTender(amount);
+      setTimeout(() => {
+        setIsFinalTenderStep(true);
+        setTimeout(() => {
+          setIsChangeCheckModalOpen(true);
+        }, 800);
+      }, 1800);
+    }
   };
 
   const handleConfirmOverride = () => {
@@ -2542,82 +3004,311 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
-      <header className="relative z-50 bg-black text-white px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
-        <div className="flex items-center space-x-3">
+      <header className="relative z-50 bg-black text-white px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
+        <div className="flex items-center space-x-2 sm:space-x-3 truncate">
           {returnLessonUrl !== "/dashboard" ? (
-            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white">
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{returnButtonLabel}</span>
+            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xs:inline">{returnButtonLabel}</span>
+              <span className="xs:hidden">Back</span>
             </Link>
           ) : (
-            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white">
-              <ArrowLeft className="w-3.5 h-3.5" />
+            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+              <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
               <span>Dashboard</span>
             </Link>
           )}
-          <span className="text-gray-600">|</span>
-          <span className="font-bold text-red-500 uppercase">
+          <span className="text-gray-600 shrink-0">|</span>
+          <span className="font-bold text-red-500 uppercase hidden md:inline truncate">
             NBS Cashier POS Screen Fidelity Simulator
           </span>
+          <span className="font-bold text-red-500 uppercase md:hidden truncate">
+            NBS POS
+          </span>
         </div>
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-1.5">
-            <span className="text-gray-400 text-[11px] hidden md:inline">POS Screen:</span>
-            <select
-              value={terminalMode}
-              onChange={(e) => setTerminalMode(e.target.value as POSTerminalMode)}
-              className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
-            >
-              <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
-              <option value="START_OF_DAY_INCORRECT">1b. Start of Day (Incorrect Date)</option>
-              <option value="START_OF_DAY_CLOSE">2. Start of Day (Close Setup)</option>
-              <option value="POS_RELOADER">3. POS Reloader Screen</option>
-              <option value="USER_LOGIN">4. User Login</option>
-              <option value="ACTIVE_REGISTER">5. Active Sales Register</option>
-            </select>
-          </div>
-          <div className="text-gray-400 text-[11px] hidden sm:inline">
-            {activeScenario ? `Guided Mode: ${activeScenario.title}` : "Free Exploration Mode"}
+        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+          <button
+            type="button"
+            onClick={toggleFocusMode}
+            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2.5 py-1 text-[11px] sm:text-xs font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-sm shrink-0"
+          >
+            {isFocusMode ? (
+              <>
+                <X className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <span>Exit Focus</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <span>Focus Mode</span>
+              </>
+            )}
+          </button>
+          {!isExamMode && (
+            <div className="flex items-center space-x-1.5 hidden sm:flex">
+              <span className="text-gray-400 text-[11px] hidden md:inline">POS Screen:</span>
+              <select
+                value={terminalMode}
+                onChange={(e) => setTerminalMode(e.target.value as POSTerminalMode)}
+                className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
+              >
+                <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
+                <option value="START_OF_DAY_INCORRECT">1b. Start of Day (Incorrect Date)</option>
+                <option value="START_OF_DAY_CLOSE">2. Start of Day (Close Setup)</option>
+                <option value="POS_RELOADER">3. POS Reloader Screen</option>
+                <option value="USER_LOGIN">4. User Login</option>
+                <option value="ACTIVE_REGISTER">5. Active Sales Register</option>
+              </select>
+            </div>
+          )}
+          <div className="text-gray-400 text-[11px] hidden lg:inline">
+            {isExamMode
+              ? "Unguided Practical Assessment"
+              : activeScenario
+              ? `Guided: ${activeScenario.title}`
+              : "Free Exploration Mode"}
           </div>
         </div>
       </header>
 
-      {/* Guided Instruction Bar */}
-      <GuidedStepBar
-        scenario={activeScenario}
-        currentStepIndex={currentStepIndex}
-        hintsUsed={hintsUsed}
-        mistakesCount={mistakes.length}
-        onShowHint={handleShowHint}
-        onResetScenario={handleResetExam}
-        onResetTerminal={handleResetTerminal}
-        activeHint={activeHint}
-        onSelectScenario={handleSelectScenario}
-        onFillBarcode={handleFillBarcode}
-        remainingSeconds={remainingSeconds}
-      />
+      {/* Portrait Mode Quick Landscape / Focus Tip Strip */}
+      {isPortrait && !isFocusMode && (
+        <div className="w-full bg-[#005A36] text-white px-3 py-1 flex items-center justify-between text-[11px] font-medium border-b border-[#004D26] shadow-inner sm:hidden">
+          <div className="flex items-center space-x-1.5 truncate">
+            <Smartphone className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
+            <span className="truncate">Tip: Rotate to Landscape or tap Focus for full-screen view.</span>
+          </div>
+          <button
+            type="button"
+            onClick={toggleFocusMode}
+            className="bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider shrink-0 ml-2 shadow-xs cursor-pointer active:scale-95 flex items-center space-x-1"
+          >
+            <Maximize2 className="w-3 h-3 shrink-0" />
+            <span>Focus POS</span>
+          </button>
+        </div>
+      )}
 
-      {/* POS Terminal */}
-      <div className="flex-1 p-2 sm:p-4 flex items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0">
-        <div
-          ref={posContainerRef}
-          className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
-            isExternalReceiptShowing ? "-translate-x-16 xl:-translate-x-32" : "translate-x-0"
-          } ${isTerminalShaking ? "pos-shake-error ring-4 ring-red-600" : ""}`}
-        >
+      {/* New Customer Arrival Notification Toast (POS Green & Silver Theme) */}
+      {customerNotice && (
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 bg-[#D4D0C8] text-gray-900 border-4 border-[#006633] px-3.5 py-2.5 rounded shadow-2xl flex items-center space-x-3 max-w-lg w-[92%] sm:w-auto animate-in slide-in-from-top-4 fade-in duration-300 border-t-white border-l-white border-r-[#404040] border-b-[#404040]">
+          <div className="w-9 h-9 rounded-full bg-[#006633] text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-inner border border-emerald-400">
+            <User className="w-5 h-5 text-white shrink-0" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center space-x-2">
+              <span className="text-[10px] font-mono font-bold bg-[#006633] text-white border border-[#004D26] px-1.5 py-0.2 rounded uppercase">
+                Next Customer ({customerNotice.caseNumber}/{customerNotice.totalCases})
+              </span>
+            </div>
+            <div className="font-extrabold text-sm text-gray-900 truncate mt-0.5">
+              {customerNotice.name}
+            </div>
+            <p className="text-xs text-gray-700 italic truncate">
+              &ldquo;{customerNotice.quote}&rdquo;
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCustomerNotice(null)}
+            className="bg-[#D4D0C8] hover:bg-[#ECE9D8] text-gray-700 hover:text-gray-900 border border-gray-400 p-1 text-xs font-bold rounded cursor-pointer shrink-0"
+            title="Dismiss Notice"
+          >
+            <X className="w-3.5 h-3.5 shrink-0" />
+          </button>
+        </div>
+      )}
+
+      {/* Guided Instruction Bar OR Customer Interaction Panel (when not in Focus Mode) */}
+      {!isFocusMode && (
+        isExamMode && examSession ? (
+          <CustomerPanel
+            currentCase={examSession.cases[examCaseIndex]}
+            caseIndex={examCaseIndex}
+            totalCases={examSession.cases.length}
+            remainingSeconds={remainingSeconds}
+            hasSuspendedTrx={state.suspendedTransactions.length > 0}
+          />
+        ) : (
+          <GuidedStepBar
+            scenario={activeScenario}
+            currentStepIndex={currentStepIndex}
+            hintsUsed={hintsUsed}
+            mistakesCount={mistakes.length}
+            onShowHint={handleShowHint}
+            onResetScenario={handleResetExam}
+            onResetTerminal={handleResetTerminal}
+            activeHint={activeHint}
+            onSelectScenario={handleSelectScenario}
+            onFillBarcode={handleFillBarcode}
+            remainingSeconds={remainingSeconds}
+          />
+        )
+      )}
+
+      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode) */}
+      <div
+        className={`${
+          isFocusMode
+            ? isPortrait && forceRotatePortrait
+              ? "fixed z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
+              : "fixed inset-0 z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
+            : "flex-1 p-2 sm:p-4 flex flex-col items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0"
+        }`}
+        style={
+          isFocusMode && isPortrait && forceRotatePortrait
+            ? {
+                width: "100vh",
+                height: "100vw",
+                position: "fixed",
+                top: 0,
+                left: "100%",
+                transform: "rotate(90deg)",
+                transformOrigin: "top left",
+              }
+            : undefined
+        }
+      >
+        {isFocusMode && (
+          <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-20 shrink-0">
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className="font-bold text-red-500 uppercase tracking-wider text-[11px] shrink-0">
+                NBS POS FOCUS MODE
+              </span>
+              {!isFocusHeaderExpanded && (
+                <button
+                  type="button"
+                  onClick={() => setIsFocusHeaderExpanded(true)}
+                  className="hidden xs:flex items-center space-x-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] px-2 py-0.5 rounded cursor-pointer truncate border border-gray-700 text-left"
+                  title="Click to view full instructions"
+                >
+                  <span className="truncate max-w-[160px] sm:max-w-xs text-emerald-400 font-medium">
+                    {isExamMode && examSession
+                      ? `Customer #${examCaseIndex + 1}/${examSession.cases.length}: ${examSession.cases[examCaseIndex]?.customerName || "Customer"}`
+                      : activeScenario
+                      ? `${activeScenario.title} (Step ${currentStepIndex + 1}/${activeScenario.steps.length})`
+                      : "Free Exploration Sandbox"}
+                  </span>
+                  <span className="text-gray-400 text-[9px] shrink-0 font-mono">(Hidden)</span>
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsFocusHeaderExpanded((prev) => !prev)}
+                title={isFocusHeaderExpanded ? "Hide instructions to enlarge terminal" : "Show customer instructions"}
+                className={`flex items-center space-x-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-bold border transition-colors cursor-pointer shrink-0 ${
+                  isFocusHeaderExpanded
+                    ? "bg-gray-800 text-gray-200 border-gray-600 hover:bg-gray-700 hover:text-white"
+                    : "bg-[#006633] text-white border-green-600 hover:bg-[#005229] shadow-sm"
+                }`}
+              >
+                {isFocusHeaderExpanded ? (
+                  <>
+                    <ChevronUp className="w-3.5 h-3.5 shrink-0" />
+                    <span>Hide Guide</span>
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="w-3.5 h-3.5 shrink-0" />
+                    <span>Show Guide</span>
+                  </>
+                )}
+              </button>
+
+              {isPortrait && (
+                <button
+                  type="button"
+                  onClick={() => setForceRotatePortrait((prev) => !prev)}
+                  title="Toggle Forced Landscape"
+                  className="bg-gray-800 hover:bg-gray-700 text-yellow-300 px-2 py-0.5 rounded text-[10px] font-mono border border-gray-700 cursor-pointer flex items-center space-x-1"
+                >
+                  <RotateCw className="w-3 h-3 shrink-0" />
+                  <span>{forceRotatePortrait ? "Reset Rotation" : "Force Landscape"}</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={exitFocusMode}
+                className="bg-red-700 hover:bg-red-600 text-white font-bold px-2.5 py-0.5 rounded text-[11px] cursor-pointer"
+              >
+                Exit Focus [Esc]
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* In Focus Mode: Guided Instruction Bar OR Customer Interaction Panel */}
+        {isFocusMode && isFocusHeaderExpanded && (
+          <div className="w-full shrink-0 z-20 overflow-y-auto max-h-36 sm:max-h-48 border-b border-gray-700 bg-gray-900 shadow-md">
+            {isExamMode && examSession ? (
+              <CustomerPanel
+                currentCase={examSession.cases[examCaseIndex]}
+                caseIndex={examCaseIndex}
+                totalCases={examSession.cases.length}
+                remainingSeconds={remainingSeconds}
+                hasSuspendedTrx={state.suspendedTransactions.length > 0}
+              />
+            ) : (
+              <GuidedStepBar
+                scenario={activeScenario}
+                currentStepIndex={currentStepIndex}
+                hintsUsed={hintsUsed}
+                mistakesCount={mistakes.length}
+                onShowHint={handleShowHint}
+                onResetScenario={handleResetExam}
+                onResetTerminal={handleResetTerminal}
+                activeHint={activeHint}
+                onSelectScenario={handleSelectScenario}
+                onFillBarcode={handleFillBarcode}
+                remainingSeconds={remainingSeconds}
+              />
+            )}
+          </div>
+        )}
+
+        <div className={`flex-1 flex flex-col items-center justify-center min-h-0 w-full overflow-hidden ${isFocusMode ? "py-0 px-1" : "p-2"}`}>
+          <div
+            style={{
+              width: `${Math.round((isExternalReceiptShowing ? 1360 : 1080) * terminalScale)}px`,
+              height: `${Math.round(600 * terminalScale)}px`,
+              position: "relative",
+            }}
+            className="shrink-0 flex items-start justify-start"
+          >
+            <div
+              style={{
+                width: isExternalReceiptShowing ? "1360px" : "1080px",
+                height: "600px",
+                transform: terminalScale < 1 ? `scale(${terminalScale})` : undefined,
+                transformOrigin: "top left",
+              }}
+              className="flex items-center justify-center gap-4 shrink-0 transition-transform duration-200"
+            >
+              <div
+                ref={posContainerRef}
+                className={`w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative ${
+                  isTerminalShaking ? "pos-shake-error ring-4 ring-red-600" : ""
+                }`}
+              >
           {/* In-Terminal Mistake Notice */}
           {errorNotice && (
             <div
               role="alert"
-              className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-[#E4002B] text-white px-5 py-2 text-xs font-bold font-sans shadow-2xl border-2 border-white flex items-center space-x-3 animate-in fade-in slide-in-from-top-2 tracking-wide max-w-xl text-center"
+              className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-[#E4002B] text-white px-5 py-2 text-xs font-bold font-sans shadow-2xl border-2 border-white flex items-center space-x-2.5 animate-in fade-in slide-in-from-top-2 tracking-wide max-w-xl text-center"
             >
-              <span>⚠️ {errorNotice}</span>
+              <AlertTriangle className="w-4 h-4 text-white shrink-0" />
+              <span>{errorNotice}</span>
               <button
                 type="button"
                 onClick={() => setErrorNotice(null)}
-                className="text-white hover:text-yellow-300 font-extrabold text-sm ml-2 cursor-pointer"
+                className="text-white hover:text-yellow-300 font-extrabold ml-2 p-0.5 cursor-pointer shrink-0"
+                title="Dismiss"
               >
-                ✕
+                <X className="w-3.5 h-3.5 shrink-0" />
               </button>
             </div>
           )}
@@ -2794,6 +3485,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     setIsTrxVoidModalOpen(false);
                     setHasBonusBuyBeenPrompted(false);
                     validateScenarioStep("CONFIRM_TRX_VOID", reason);
+                    if (isExamMode && examSession?.cases[examCaseIndex]?.id === "case-trx-void") {
+                      logExamAction("CONFIRM_TRX_VOID", reason);
+                      setTimeout(() => {
+                        handleAdvanceExamCase();
+                      }, 1000);
+                    }
                   }}
                   onCancel={() => setIsTrxVoidModalOpen(false)}
                 />
@@ -2890,6 +3587,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     setIsRecallOpen(false);
                     dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_RECALL", id);
+                    if (isExamMode && examSession?.cases[examCaseIndex]?.id === "case-suspend-recall") {
+                      logExamAction("CONFIRM_RECALL", id);
+                      setTimeout(() => {
+                        handleAdvanceExamCase();
+                      }, 1200);
+                    }
                   }}
                   onCancel={() => {
                     setIsRecallOpen(false);
@@ -3556,7 +4259,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                                   const hasChange = changeDue > 0;
                                   return (
                                     <div className="inline-flex items-center space-x-1.5 bg-amber-100 border-2 border-amber-500 text-amber-900 font-extrabold text-xs px-3 py-1 rounded shadow-sm">
-                                      <span className="text-sm">🔔</span>
+                                      <Bell className="w-3.5 h-3.5 text-amber-700 shrink-0" />
                                       <span>
                                         [ CASH DRAWER: OPEN ] {hasChange ? `Change: ₱${changeDue.toFixed(2)}` : "Change: ₱0.00 (Exact Amount)"}
                                       </span>
@@ -4459,13 +5162,17 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                 <>
                   {pendingSodexhoNotice && (
                     <div className="bg-[#FFF275] border-b-2 border-yellow-600 px-4 py-1.5 text-xs font-bold text-gray-900 flex justify-between items-center shadow-md animate-in fade-in flex-shrink-0">
-                      <span>⚠️ {pendingSodexhoNotice}</span>
+                      <div className="flex items-center space-x-1.5">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-800 shrink-0" />
+                        <span>{pendingSodexhoNotice}</span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => setPendingSodexhoNotice(null)}
-                        className="text-gray-700 hover:text-black font-extrabold ml-2 px-1 text-sm cursor-pointer"
+                        className="text-gray-700 hover:text-black font-extrabold ml-2 p-0.5 cursor-pointer shrink-0"
+                        title="Dismiss"
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5 shrink-0" />
                       </button>
                     </div>
                   )}
@@ -4817,41 +5524,62 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
           </>
         )}
         </div>
-        {selectedTenderMethod === "BANK_CARD" &&
-         selectedBankCardType === "CREDIT CARD" &&
-         bankCardStep !== "SELECT_TYPE" && (
-           <BdoCardTerminal
-             isExternalReceiptShowing={isExternalReceiptShowing}
-             invoiceNumber={receiptInvoiceNumber}
-             authCode={receiptAuthCode}
-             generatedAt={cardReceiptGeneratedAt}
-             totalAmount={totals.totalAmount}
-           />
-         )}
+        {/* EXTERNAL CARD / EWALLET TERMINAL SLIP BESIDE POS */}
+        {isExternalReceiptShowing && (
+          <div className="shrink-0 flex items-center justify-center animate-in fade-in slide-in-from-right-4 duration-300">
+            {activeExternalTerminalType === "GCASH" ? (
+              <GcashTerminalPreview
+                isExternalReceiptShowing={isExternalReceiptShowing}
+                referenceNumber={currentGcashRef}
+              />
+            ) : activeExternalTerminalType === "MAYA" ? (
+              <MayaTerminalReceipt
+                isExternalReceiptShowing={isExternalReceiptShowing}
+                traceNumber={currentMayaTrace}
+                referenceNumber={currentMayaRef}
+                generatedAt={mayaGeneratedAt || new Date()}
+                totalAmount={totals.totalAmount || 2990}
+              />
+            ) : (
+              <BdoCardTerminal
+                isExternalReceiptShowing={isExternalReceiptShowing}
+                invoiceNumber={currentCardInvoice}
+                authCode={currentCardAuth}
+                generatedAt={cardReceiptGeneratedAt || new Date()}
+                totalAmount={totals.totalAmount || 2990}
+              />
+            )}
+          </div>
+        )}
+        </div>
+        {/* End Scaled Terminal Container */}
+        </div>
+        </div>
 
-        {selectedTenderMethod === "BANK_CARD" &&
-         selectedBankCardType === "GCASH" &&
-         bankCardStep === "EWALLET_DETAILS" && (
-           <GcashTerminalPreview
-             isExternalReceiptShowing={isExternalReceiptShowing}
-             referenceNumber={gcashReferenceNumber}
-           />
-         )}
-
-        {selectedTenderMethod === "BANK_CARD" &&
-         selectedBankCardType === "MAYA" &&
-         (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF") && (
-           <MayaTerminalReceipt
-             isExternalReceiptShowing={isExternalReceiptShowing}
-             traceNumber={mayaTraceNumber}
-             referenceNumber={mayaReferenceNumber}
-             generatedAt={mayaGeneratedAt}
-             totalAmount={totals.totalAmount}
-           />
-         )}
+        {/* Touch Key Strip Footer - Consumes the whole width below the terminal */}
+        {(isFocusMode || terminalScale < 1) && (
+          <div className="w-full shrink-0 z-30">
+            <MobileKeyStrip onKeyPress={handleSyntheticKeyPress} />
+          </div>
+        )}
       </div>
 
-      
+      {/* CHANGE CHECK EXAM MODAL */}
+      <ChangeCheckModal
+        isOpen={isChangeCheckModalOpen}
+        totalSales={totals.totalAmount}
+        sulitCoinsRedeemed={sulitCoinsRedeemedAmount || 0}
+        expectedTenderAmount={pendingCashTender || totals.totalAmount}
+        onConfirmChange={(val) => {
+          setIsChangeCheckModalOpen(false);
+          const remainingDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+          const computedChange = Math.max(0, (pendingCashTender || totals.totalAmount) - remainingDue);
+          const actualChange = val ?? computedChange;
+          if (isExamMode) {
+            handleAdvanceExamCase(actualChange);
+          }
+        }}
+      />
 
       {/* Keyframe Styles */}
       <style jsx global>{`
@@ -4877,21 +5605,23 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       />
 
       {/* QUICK CATALOG PICKER */}
-      <div className="max-w-[1080px] w-full mx-auto px-4 pb-4">
-        <div className="bg-gray-800 p-2 border border-gray-700 text-xs font-mono text-gray-300 flex items-center space-x-2 overflow-x-auto">
-          <span className="text-yellow-400 font-bold whitespace-nowrap">Catalog Quick-Fill:</span>
-          {SYNTHETIC_PRODUCTS.map((p) => (
-            <button
-              key={p.sku}
-              type="button"
-              onClick={() => setBarcodeInput(p.sku)}
-              className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-none border border-gray-500 whitespace-nowrap text-[11px]"
-            >
-              {p.sku} ({p.srp} PHP)
-            </button>
-          ))}
+      {!isExamMode && (
+        <div className="max-w-[1080px] w-full mx-auto px-4 pb-4 hidden md:block">
+          <div className="bg-gray-800 p-2 border border-gray-700 text-xs font-mono text-gray-300 flex items-center space-x-2 overflow-x-auto">
+            <span className="text-yellow-400 font-bold whitespace-nowrap">Catalog Quick-Fill:</span>
+            {SYNTHETIC_PRODUCTS.map((p) => (
+              <button
+                key={p.sku}
+                type="button"
+                onClick={() => setBarcodeInput(p.sku)}
+                className="bg-gray-700 hover:bg-gray-600 text-white px-2 py-1 rounded-none border border-gray-500 whitespace-nowrap text-[11px]"
+              >
+                {p.sku} ({p.srp} PHP)
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* F3 QUANTITY MODAL */}
       {(isQuantityModalOpen || state.isQuantityInputActive) && (

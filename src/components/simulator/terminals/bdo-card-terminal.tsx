@@ -20,9 +20,7 @@ export function BdoCardTerminal({
   return (
     <aside
       aria-label="External card terminal receipt preview"
-      className={`w-full max-w-[240px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl z-40 transition-all duration-500 ease-in-out animate-in fade-in duration-300 xl:absolute xl:left-[calc(50%+540px+16px)] xl:top-1/2 xl:-translate-y-1/2 ${
-        isExternalReceiptShowing ? "xl:-translate-x-32" : "xl:translate-x-0"
-      } max-xl:fixed max-xl:right-4 max-xl:top-24 max-xl:max-h-[85vh] max-xl:overflow-y-auto`}
+      className="w-full max-w-[260px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl transition-all duration-300"
     >
       <div className="mb-2 text-center font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
         Card Terminal

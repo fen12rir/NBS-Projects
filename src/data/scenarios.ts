@@ -1716,104 +1716,112 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: Select option 1 (None) to proceed directly to the Payment Screen where Sulit Coins redemption is located.",
+        instruction: "Step 5: The customer has LNQR! Select option 3 (LNQR / LNQR PLUS) by pressing 3 on your keyboard (or clicking '3. LNQR / LNQR PLUS').",
         expectedAction: "CHOOSE_LNQR_OPTION",
-        expectedData: 1,
-        hint: "Press 1 on your keyboard or click '1. None'.",
-        errorFeedback: "Select option 1 (None)."
+        expectedData: 3,
+        hint: "Press 3 on your keyboard or click '3. LNQR / LNQR PLUS'.",
+        errorFeedback: "Select option 3 (LNQR / LNQR PLUS)."
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: On the Payment Screen, press F3 (BANK CARD) to access LNQR Sulit Coins redemption.",
+        instruction: "Step 6: On the LNQR scan screen, scan or verify the customer QR code '20221003LN000004', then press ENTER (or click [Ok]).",
+        expectedAction: "SUBMIT_LNQR",
+        expectedData: "20221003LN000004",
+        hint: "Verify customer QR code '20221003LN000004' and press Enter or click [Ok].",
+        errorFeedback: "Scan or submit customer QR code '20221003LN000004'."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7: On the Payment Screen, press F3 (BANK CARD) to access LNQR Sulit Coins redemption.",
         expectedAction: "PAY_CARD",
         hint: "Click F3 Bank Card on the right column or press F3.",
         errorFeedback: "Press F3 (BANK CARD) on the Payment Screen."
       },
       {
-        stepNumber: 7,
-        instruction: "Step 7: Select 'LNQR Sulit Coins' from the Please Select Card Type list and click [Ok].",
+        stepNumber: 8,
+        instruction: "Step 8: Select 'LNQR Sulit Coins' from the Please Select Card Type list and click [Ok].",
         expectedAction: "SELECT_CARD_TYPE",
         expectedData: "LNQR Sulit Coins",
         hint: "Choose 'LNQR Sulit Coins' in the card type dropdown and click [Ok].",
         errorFeedback: "Select 'LNQR Sulit Coins' and click [Ok]."
       },
       {
-        stepNumber: 8,
-        instruction: "Step 8: On the LNQR Sulit Coins Payment Details screen, verify or enter '29.00' in Enter Amount and the customer QR code ('20221003LN000004'), then click [Ok] (or press Enter) to deduct ₱29.00.",
+        stepNumber: 9,
+        instruction: "Step 9: On the LNQR Sulit Coins Payment Details screen, verify or enter '29.00' in Enter Amount and the customer QR code ('20221003LN000004'), then click [Ok] (or press Enter) to deduct ₱29.00.",
         expectedAction: "REDEEM_SULIT_COINS",
         expectedData: 29,
         hint: "Verify Enter Amount is 29.00 and QR code is 20221003LN000004, then click [Ok].",
         errorFeedback: "Submit the PHP 29.00 LNQR Sulit Coins redemption by clicking [Ok]."
       },
       {
-        stepNumber: 9,
-        instruction: "Step 9: The POS switches to Cash Payment Details for the remaining ₱391.00 balance. Verify or enter '3000.00' (or '500') and press ENTER (or click [Ok]).",
+        stepNumber: 10,
+        instruction: "Step 10: The POS switches to Cash Payment Details for the remaining ₱391.00 balance. Verify or enter '3000.00' (or '500') and press ENTER (or click [Ok]).",
         expectedAction: "SUBMIT_CASH_TENDER",
         hint: "Press Enter or click [Ok] on the Cash Payment Details screen to tender the remaining balance.",
         errorFeedback: "Submit the cash tender for the remaining balance."
       },
       {
-        stepNumber: 10,
-        instruction: "Step 10: When the 'LNQR has been updated!' confirmation dialog appears, press ENTER (or click [OK]) to finish Customer 1's transaction.",
+        stepNumber: 11,
+        instruction: "Step 11: When the 'LNQR has been updated!' confirmation dialog appears, press ENTER (or click [OK]) to finish Customer 1's transaction.",
         expectedAction: "CONFIRM_LNQR_UPDATED",
         hint: "Click [OK] or press Enter in the 'LNQR has been updated!' popup.",
         errorFeedback: "Confirm the LNQR updated dialog by clicking [OK] or pressing Enter."
       },
       {
-        stepNumber: 11,
-        instruction: "Step 11: Customer 2 approaches with an NBS Gift Card! Scan or enter 'NBS-PAP-003' (A4 Copy Paper, ₱240.00) and press ENTER.",
+        stepNumber: 12,
+        instruction: "Step 12: Customer 2 approaches with an NBS Gift Card! Scan or enter 'NBS-PAP-003' (A4 Copy Paper, ₱240.00) and press ENTER.",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-PAP-003",
         hint: "Type NBS-PAP-003 in the yellow barcode box and press Enter.",
         errorFeedback: "Scan or enter 'NBS-PAP-003' for Customer 2."
       },
       {
-        stepNumber: 12,
-        instruction: "Step 12: Press F4 (PAYMENT) to open the payment flow.",
+        stepNumber: 13,
+        instruction: "Step 13: Press F4 (PAYMENT) to open the payment flow.",
         expectedAction: "GO_PAYMENT",
         hint: "Press F4 or click F4 Payment.",
         errorFeedback: "Press F4 (PAYMENT) to proceed."
       },
       {
-        stepNumber: 13,
-        instruction: "Step 13: On the BONUS BUY LIST, press Alt+B (or click [CANCEL]) and confirm [Yes] to return to the Main Screen.",
+        stepNumber: 14,
+        instruction: "Step 14: On the BONUS BUY LIST, press Alt+B (or click [CANCEL]) and confirm [Yes] to return to the Main Screen.",
         expectedAction: "CONFIRM_BEST_BUY",
         hint: "Press Alt+B or click [CANCEL] then press ENTER on [Yes].",
         errorFeedback: "Close the Bonus Buy List with [CANCEL] (Alt+B) and confirm [Yes]."
       },
       {
-        stepNumber: 14,
-        instruction: "Step 14: Back on the Main Screen, press F4 (Payment) again to open the 'Choose Option' prompt.",
+        stepNumber: 15,
+        instruction: "Step 15: Back on the Main Screen, press F4 (Payment) again to open the 'Choose Option' prompt.",
         expectedAction: "GO_PAYMENT",
         hint: "Press F4 or click F4 Payment.",
         errorFeedback: "Press F4 (Payment) again."
       },
       {
-        stepNumber: 15,
-        instruction: "Step 15: Select option 1 (None) by pressing 1 on your keyboard (or clicking '1. None').",
+        stepNumber: 16,
+        instruction: "Step 16: Select option 1 (None) by pressing 1 on your keyboard (or clicking '1. None').",
         expectedAction: "CHOOSE_LNQR_OPTION",
         expectedData: 1,
         hint: "Press 1 on your keyboard or click '1. None'.",
         errorFeedback: "Select option 1 (None)."
       },
       {
-        stepNumber: 16,
-        instruction: "Step 16: Press F3 (BANK CARD) on the Payment Screen to select NBS Gift Card.",
+        stepNumber: 17,
+        instruction: "Step 17: Press F3 (BANK CARD) on the Payment Screen to select NBS Gift Card.",
         expectedAction: "PAY_CARD",
         hint: "Click F3 Bank Card on the right column or press F3.",
         errorFeedback: "Press F3 (BANK CARD) on the Payment Screen."
       },
       {
-        stepNumber: 17,
-        instruction: "Step 17: Select 'NBS GIFTCARD' from the Please Select Card Type list and click [Ok].",
+        stepNumber: 18,
+        instruction: "Step 18: Select 'NBS GIFTCARD' from the Please Select Card Type list and click [Ok].",
         expectedAction: "SELECT_CARD_TYPE",
         expectedData: "NBS GIFTCARD",
         hint: "Choose 'NBS GIFTCARD' in the card type dropdown and click [Ok].",
         errorFeedback: "Select 'NBS GIFTCARD' and click [Ok]."
       },
       {
-        stepNumber: 18,
-        instruction: "Step 18: On the NBS GIFTCARD Payment Details screen, verify the amount ('240.00') and Gift Card number, then click [Ok] (or press Enter) to complete Lesson 8-3.",
+        stepNumber: 19,
+        instruction: "Step 19: On the NBS GIFTCARD Payment Details screen, verify the amount ('240.00') and Gift Card number, then click [Ok] (or press Enter) to complete Lesson 8-3.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 240,
         hint: "Verify the Gift Card details and click [Ok] or press Enter.",
@@ -2200,7 +2208,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   },
   {
     id: "scen-mod-9",
-    title: "Module 9 Capstone Assessment: Comprehensive Cashier Certification",
+    title: "Module 9 Practical Assessment: Comprehensive Cashier Certification",
     description: "Final practical certification combining Lookup search, Quantity Multiplier, Multi-Item Scanning, Item Void with Manager Override, Loyalty prompt selection, and Cash Tender checkout.",
     moduleRef: "mod-9",
     passingScore: 75,
