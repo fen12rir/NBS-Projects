@@ -29,7 +29,7 @@ import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option
 import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-terminal";
 import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-terminal-preview";
 import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
-import { LogoutModal } from "@/components/simulator/modals/logout-modal";
+import { LogoutScreen } from "@/components/simulator/screens/logout-screen";
 import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
 import { ScenarioCompleteModal } from "@/components/simulator/modals/scenario-complete-modal";
 import { StartOfDayVerifyScreen } from "@/components/simulator/screens/start-of-day-verify-screen";
@@ -182,7 +182,7 @@ function SimulatorContent() {
   const [selectedSodButton, setSelectedSodButton] = useState<"YES" | "NO" | null>(null);
   const [loginUsername, setLoginUsername] = useState("241209");
   const [loginPassword, setLoginPassword] = useState("******");
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLogoutScreenOpen, setIsLogoutScreenOpen] = useState(false);
   const [selectedLogoutButton, setSelectedLogoutButton] = useState<"YES" | "NO" | null>(null);
 
   // Module 3: LNQR Loyalty States
@@ -362,6 +362,44 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     return () => clearInterval(timer);
   }, []);
 
+  const [timedOut, setTimedOut] = useState(false);
+  const [isExamCompleted, setIsExamCompleted] = useState(false);
+  const hasRecordedAttemptRef = useRef(false);
+
+  // Error Feedback State
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
+  const [isTerminalShaking, setIsTerminalShaking] = useState(false);
+  const errorTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const triggerErrorEffect = (message?: string) => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sawtooth";
+        osc.frequency.setValueAtTime(160, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.22);
+      }
+    } catch {}
+
+    setIsTerminalShaking(true);
+    setTimeout(() => setIsTerminalShaking(false), 450);
+
+    if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
+    setErrorNotice(message || "Incorrect action. Please follow current step instructions.");
+    errorTimerRef.current = setTimeout(() => {
+      setErrorNotice(null);
+    }, 3800);
+  };
+
   const remainingSeconds =
     activeScenario?.timeLimitSeconds == null
       ? null
@@ -375,7 +413,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       remainingSeconds === 0 &&
       !isExamCompleted &&
       !timedOut &&
-      activeScenario?.id === "scen-practical-assessment"
+      activeScenario?.timeLimitSeconds != null
     ) {
       setTimedOut(true);
     }
@@ -454,14 +492,14 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
   };
 
   const handleConfirmLogout = () => {
-    setIsLogoutModalOpen(false);
+    setIsLogoutScreenOpen(false);
     setSelectedLogoutButton(null);
     setTerminalMode("USER_LOGIN");
     validateScenarioStep("CONFIRM_LOGOUT_YES");
   };
 
   const handleCancelLogout = () => {
-    setIsLogoutModalOpen(false);
+    setIsLogoutScreenOpen(false);
     setSelectedLogoutButton(null);
   };
 
@@ -538,7 +576,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setIsLnqrTenderProcessed(true);
     setIsFinalTenderStep(false);
     dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
-    validateScenarioStep("CONFIRM_TENDER", tenderVal);
 
     if (tenderTimerRef.current) {
       clearTimeout(tenderTimerRef.current);
@@ -549,12 +586,15 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       tenderTimerRef.current = setTimeout(() => {
         setIsLnqrUpdatedModalOpen(true);
       }, 1000);
+      validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
       return;
     }
 
     tenderTimerRef.current = setTimeout(() => {
       setIsFinalTenderStep(true);
     }, 7000);
+    validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
+    validateScenarioStep("CONFIRM_TENDER", tenderVal);
   };
 
   const handleConfirmLnqrUpdated = () => {
@@ -584,6 +624,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       setSulitCoinsRefNo(refNo);
       setSulitCoinsEarnedAmount(29.70);
       setIsSulitLoading(true);
+      validateScenarioStep("REDEEM_SULIT_COINS", redeemedCoins);
 
       setTimeout(() => {
         setIsSulitLoading(false);
@@ -600,9 +641,9 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
 
     dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
     dispatch({ type: "SELECT_PAYMENT_METHOD", method: "BANK_CARD" });
-    validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
     setBankCardStep("FINAL_TEAROFF");
     setIsFinalTenderStep(true);
+    validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
   };
 
   const handleConfirmSodexhoPayment = () => {
@@ -693,9 +734,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     const cardType =
       selectedBankCardType === "-SELECT-" ? "CREDIT CARD" : selectedBankCardType;
     setSelectedBankCardType(cardType);
-    if (activeScenario?.id === "scen-les-8-2" || activeScenario?.id === "scen-mod-8" || activeScenario?.id === "scen-practical-assessment") {
-      validateScenarioStep("SELECT_CARD_TYPE", cardType);
-    }
+    validateScenarioStep("SELECT_CARD_TYPE", cardType);
 
     if (cardType === "SODEXHO") {
       setBankCardStep("SODEXHO_SERIES");
@@ -718,6 +757,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
 
   const handleConfirmEwalletType = (cardType: string) => {
     setSelectedBankCardType(cardType);
+    validateScenarioStep("SELECT_CARD_TYPE", cardType);
     setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
     setBankCardRefNo("");
     if (cardType.toUpperCase() === "GCASH") {
@@ -759,6 +799,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         }
         if (cardType.toUpperCase() === "SODEXHO") {
           setSelectedBankCardType("SODEXHO");
+          validateScenarioStep("SELECT_CARD_TYPE", "SODEXHO");
           setBankCardStep("SODEXHO_SERIES");
           return;
         }
@@ -781,6 +822,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         return;
       }
       if (bankCardStep === "SWIPE_CARD") {
+        validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
         setBankCardStep("DETAILS");
         if (
           activeScenario?.id === "scen-les-8-2" ||
@@ -807,6 +849,26 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     }
 
     if (!isLnqrTenderProcessed) {
+      if (selectedTenderMethod === "GIFT_CERT") {
+        setIsFinalTenderStep(true);
+        handleConfirmElectronicTender("Gift Certificate", totals.totalAmount || 500);
+        return;
+      }
+      if (selectedTenderMethod === "COUPON") {
+        if (couponEntryMode === "SELECT") {
+          setCouponEntryMode("WITHOUT_SERIES");
+          validateScenarioStep("SELECT_COUPON_MODE", "WITHOUT_SERIES");
+          return;
+        }
+        setIsFinalTenderStep(true);
+        handleConfirmElectronicTender("Coupon", totals.totalAmount || 50);
+        return;
+      }
+      if (selectedTenderMethod === "CREDIT_MEMO") {
+        setIsFinalTenderStep(true);
+        handleConfirmElectronicTender("Credit Memo", totals.totalAmount || 2990);
+        return;
+      }
       handleConfirmLnqrCashTender();
       return;
     }
@@ -865,7 +927,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       !state.managerOverrideOpen &&
       !state.paymentDialogOpen &&
       state.currentPage === "MAIN" &&
-      !isLogoutModalOpen &&
+      !isLogoutScreenOpen &&
       !isLoyaltyOptionOpen &&
       !isLnqrScanScreenOpen &&
       !isLncCardScreenOpen &&
@@ -885,7 +947,8 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       !isNonMdseOpen &&
       journalModalMode === null &&
       !isNonSalesOpen &&
-      !isBonusBuyOpen
+      !isBonusBuyOpen &&
+      !isLogoutScreenOpen
     ) {
       barcodeRef.current?.focus();
     }
@@ -896,7 +959,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     state.managerOverrideOpen,
     state.paymentDialogOpen,
     state.currentPage,
-    isLogoutModalOpen,
+    isLogoutScreenOpen,
     isLoyaltyOptionOpen,
     isLnqrScanScreenOpen,
     isLncCardScreenOpen,
@@ -948,6 +1011,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setIsVoidSkuMode(false);
     setSelectedVoidItemId(null);
     setPendingVoidReason(null);
+    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
     validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
   };
 
@@ -1116,6 +1180,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
           e.preventDefault();
           setSelectedSodButton(null);
           setTerminalMode("START_OF_DAY_VERIFY");
+          validateScenarioStep("BACK_TO_SOD_VERIFY");
           return;
         }
       }
@@ -1148,7 +1213,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       }
 
       // 4. If in LOGOUT confirmation modal
-      if (isLogoutModalOpen) {
+      if (isLogoutScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
           setSelectedLogoutButton((prev) => {
@@ -1159,10 +1224,10 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         }
         if (e.key === "Enter") {
           e.preventDefault();
-          if (selectedLogoutButton === "YES") {
-            handleConfirmLogout();
-          } else if (selectedLogoutButton === "NO") {
+          if (selectedLogoutButton === "NO") {
             handleCancelLogout();
+          } else {
+            handleConfirmLogout();
           }
           return;
         }
@@ -1343,14 +1408,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
           e.preventDefault();
           setSelectedTenderMethod("EPURSE");
           setElectronicPaymentType("GCash / QR PH");
-          setIsElectronicPaymentOpen(true);
           return;
         }
         if (e.key === "F8") {
           e.preventDefault();
           setSelectedTenderMethod("CREDIT_MEMO");
           setElectronicPaymentType("Debit Card / BancNet");
-          setIsElectronicPaymentOpen(true);
           validateScenarioStep("PAY_CREDIT_MEMO");
           return;
         }
@@ -1386,6 +1449,9 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         if (journalModalMode !== null) {
           e.preventDefault();
           setJournalModalMode(null);
+          if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CLOSE_JOURNAL") {
+            validateScenarioStep("CLOSE_JOURNAL");
+          }
           return;
         }
         if (isNonSalesOpen) {
@@ -1408,6 +1474,26 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
   });
 
   const handlePhysicalFKey = (fKey: string) => {
+    if (readingsType !== null || isSdvOpen || journalModalMode !== null) {
+      if (
+        fKey === "F2" ||
+        fKey === "F4" ||
+        fKey === "F6" ||
+        fKey === "F8" ||
+        fKey === "F9" ||
+        fKey === "F10" ||
+        fKey === "F5" ||
+        fKey === "F11" ||
+        fKey === "F12"
+      ) {
+        setReadingsType(null);
+        setIsSdvOpen(false);
+        setJournalModalMode(null);
+      } else {
+        return;
+      }
+    }
+
     if (
       state.currentPage === "LOOKUP" ||
       state.currentPage === "PAYMENT" ||
@@ -1420,7 +1506,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       isRecallOpen ||
       isReprintOpen ||
       isSdvOpen ||
-      readingsType !== null ||
       isTrxCommentOpen ||
       returnRefundMode !== null ||
       isElectronicPaymentOpen ||
@@ -1429,19 +1514,29 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       isNonMdseOpen ||
       journalModalMode !== null ||
       isNonSalesOpen ||
-      isBonusBuyOpen
+      isBonusBuyOpen ||
+      isLogoutScreenOpen
     ) {
       return;
     }
 
     const currentKeys = RIGHT_FUNCTION_KEYS[state.currentPage] || [];
     const matched = currentKeys.find((k) => k.key === fKey);
-    if (matched && !matched.disabled) {
+    if (matched) {
       if (
         state.currentPage === "MAIN" &&
         state.lineItems.length === 0 &&
         (matched.key === "F4" || matched.key === "F7" || matched.key === "F8" || matched.key === "F9")
       ) {
+        if (activeScenario) {
+          handleAction(matched.actionId);
+        }
+        return;
+      }
+      if (matched.disabled) {
+        if (activeScenario) {
+          handleAction(matched.actionId);
+        }
         return;
       }
       handleAction(matched.actionId);
@@ -1477,15 +1572,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     }
   };
 
-  const validateScenarioStep = (actionId: string, dataVal?: string | number) => {
-    if (!activeScenario || isExamCompleted || timedOut) return;
+  const isStepMatch = (actionId: string, dataVal?: string | number): boolean => {
+    if (!activeScenario || isExamCompleted) return true;
     const currentStep = activeScenario.steps[currentStepIndex];
-    if (!currentStep) return;
+    if (!currentStep) return true;
 
-    // Check action match with flexible aliasing
     let actionMatches = currentStep.expectedAction === actionId;
 
-    // Supervisor override / modal completion aliasing
     const modalConfirmActions = [
       "CONFIRM_OVERRIDE",
       "APPLY_DISCOUNT",
@@ -1512,7 +1605,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       actionMatches = true;
     }
 
-    // Tender submission aliasing
     if (
       (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "SUBMIT_CASH_TENDER") ||
       (currentStep.expectedAction === "SUBMIT_CASH_TENDER" && actionId === "CONFIRM_TENDER")
@@ -1520,11 +1612,248 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       actionMatches = true;
     }
 
+    if (
+      (currentStep.expectedAction === "REFUND_ORNO" && (actionId === "SUBMIT_REFUND_ORNO" || actionId === "REFUND_ORNO")) ||
+      (currentStep.expectedAction === "SUBMIT_REFUND_ORNO" && (actionId === "SUBMIT_REFUND_ORNO" || actionId === "REFUND_ORNO"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "PAY_CASH" && (actionId === "CONFIRM_TENDER" || actionId === "SUBMIT_CASH_TENDER")) ||
+      (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "PAY_CASH")
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
+      (actionId === "PAY_CASH" || actionId === "PAY_CARD")
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "LOOKUP_SEARCH" && (actionId === "LOOKUP_SEARCH" || actionId === "LOOKUP_QUERY" || actionId === "ADD_ITEM")) ||
+      (currentStep.expectedAction === "LOOKUP_QUERY" && (actionId === "LOOKUP_QUERY" || actionId === "ADD_ITEM"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (currentStep.expectedAction === "SUSPEND" && actionId === "CONFIRM_SUSPEND") {
+      actionMatches = true;
+    }
+
+    if (currentStep.expectedAction === "RECALL" && (actionId === "CONFIRM_OVERRIDE" || actionId === "CONFIRM_RECALL")) {
+      actionMatches = true;
+    }
+
+    if (currentStep.expectedAction === "POST_VOID" && (actionId === "CONFIRM_OVERRIDE" || actionId === "CONFIRM_POST_VOID")) {
+      actionMatches = true;
+    }
+
+    if (actionId === "PAGE_DOWN") {
+      const pageCycle: Record<string, string> = {
+        MAIN: "NAV_SECOND",
+        SECOND: "NAV_THIRD",
+        THIRD: "NAV_FOURTH",
+        FOURTH: "NAV_MAIN",
+      };
+      if (
+        pageCycle[state.currentPage] === currentStep.expectedAction ||
+        (state.currentPage === "FOURTH" && (currentStep.expectedAction === "PAGE_DOWN" || currentStep.expectedAction === "NAV_MAIN"))
+      ) {
+        actionMatches = true;
+      }
+    }
+    if (actionId === "PAGE_UP") {
+      const pageCycleRev: Record<string, string> = {
+        MAIN: "NAV_FOURTH",
+        FOURTH: "NAV_THIRD",
+        THIRD: "NAV_SECOND",
+        SECOND: "NAV_MAIN",
+      };
+      if (pageCycleRev[state.currentPage] === currentStep.expectedAction) {
+        actionMatches = true;
+      }
+    }
+    if (
+      (currentStep.expectedAction === "PAGE_DOWN" && (actionId === "PAGE_DOWN" || actionId === "NAV_MAIN")) ||
+      (currentStep.expectedAction === "NAV_MAIN" && (actionId === "PAGE_DOWN" || actionId === "NAV_MAIN"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "TRIGGER_LOGOUT" && (actionId === "LOGOUT" || actionId === "TRIGGER_LOGOUT")) ||
+      (currentStep.expectedAction === "LOGOUT" && (actionId === "LOGOUT" || actionId === "TRIGGER_LOGOUT"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "SET_QTY" && (actionId === "SET_QTY_MODE" || actionId === "SET_QTY")) ||
+      (currentStep.expectedAction === "SET_QTY_MODE" && (actionId === "SET_QTY_MODE" || actionId === "SET_QTY"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "RETURN" && (actionId === "RETURN_EXCHANGE" || actionId === "RETURN")) ||
+      (currentStep.expectedAction === "RETURN_EXCHANGE" && (actionId === "RETURN_EXCHANGE" || actionId === "RETURN"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "DISCOUNT" && (actionId === "TRX_DISC" || actionId === "DISCOUNT")) ||
+      (currentStep.expectedAction === "TRX_DISC" && (actionId === "TRX_DISC" || actionId === "DISCOUNT"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "SDV" && (actionId === "SDV_CHECK" || actionId === "SDV")) ||
+      (currentStep.expectedAction === "SDV_CHECK" && (actionId === "SDV_CHECK" || actionId === "SDV"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "BEST_BUY" && (actionId === "BONUS_BUY" || actionId === "BEST_BUY")) ||
+      (currentStep.expectedAction === "BONUS_BUY" && (actionId === "BONUS_BUY" || actionId === "BEST_BUY"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "TOGGLE_DISC" && (actionId === "ON_OFF_DISCOUNT" || actionId === "TOGGLE_DISC")) ||
+      (currentStep.expectedAction === "ON_OFF_DISCOUNT" && (actionId === "ON_OFF_DISCOUNT" || actionId === "TOGGLE_DISC"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "CHOOSE_LNC_OPTION" && (actionId === "CHOOSE_LNQR_OPTION" || actionId === "CHOOSE_LNC_OPTION")) ||
+      (currentStep.expectedAction === "CHOOSE_LNQR_OPTION" && actionId === "CHOOSE_LNC_OPTION")
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "CONFIRM_LNC_CARD" && (actionId === "SUBMIT_LNC" || actionId === "CONFIRM_LNC_CARD")) ||
+      (currentStep.expectedAction === "SUBMIT_LNC" && (actionId === "SUBMIT_LNC" || actionId === "CONFIRM_LNC_CARD"))
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "CONFIRM_GC_TENDER" && (actionId === "CONFIRM_TENDER" || actionId === "CONFIRM_GC_TENDER")) ||
+      (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "CONFIRM_GC_TENDER")
+    ) {
+      actionMatches = true;
+    }
+
+    if (
+      (currentStep.expectedAction === "PAGE_UP" && (actionId === "PAGE_UP" || actionId === "NAV_FOURTH" || actionId === "NAV_THIRD" || actionId === "NAV_SECOND" || actionId === "NAV_MAIN")) ||
+      (currentStep.expectedAction === "NAV_FOURTH" && actionId === "PAGE_UP" && state.currentPage === "MAIN")
+    ) {
+      actionMatches = true;
+    }
+
+    let dataMatches = true;
+    if (currentStep.expectedData !== undefined && dataVal !== undefined) {
+      if (currentStep.expectedAction === "LOOKUP_QUERY") {
+        dataMatches = String(dataVal).trim().length > 0;
+      } else if (typeof currentStep.expectedData === "number" || !isNaN(Number(currentStep.expectedData))) {
+        dataMatches =
+          Number(currentStep.expectedData) === Number(dataVal) ||
+          (actionId === "CONFIRM_TENDER" && Number(dataVal) > 0);
+      } else {
+        dataMatches = String(currentStep.expectedData).toUpperCase() === String(dataVal).toUpperCase();
+      }
+    }
+
+    return actionMatches && dataMatches;
+  };
+
+  const isActionAllowedInScenario = (actionId: string, dataVal?: string | number): boolean => {
+    if (isStepMatch(actionId, dataVal)) return true;
+    if (!activeScenario || isExamCompleted) return true;
+    const currentStep = activeScenario.steps[currentStepIndex];
+    if (!currentStep) return true;
+
+    // Target Screen Navigation
+    const SCREEN_OF_ACTION: Record<string, "MAIN" | "SECOND" | "THIRD" | "FOURTH"> = {
+      SET_QTY: "MAIN",
+      SET_QTY_MODE: "MAIN",
+      GO_PAYMENT: "MAIN",
+      NON_MDSE: "MAIN",
+      ITEM_VOID: "MAIN",
+      TRX_VOID: "MAIN",
+      SUSPEND: "MAIN",
+      LOOKUP: "MAIN",
+      CSA_TOGGLE: "MAIN",
+      PRICE_CHANGE: "SECOND",
+      TRX_DISC: "SECOND",
+      DISCOUNT: "SECOND",
+      RECALL: "SECOND",
+      LOGOUT: "SECOND",
+      TRIGGER_LOGOUT: "SECOND",
+      NO_SALE: "SECOND",
+      ON_OFF_DISCOUNT: "SECOND",
+      TOGGLE_DISC: "SECOND",
+      REPRINT: "SECOND",
+      TRX_JOURNAL: "THIRD",
+      SALES_JOURNAL: "THIRD",
+      READING_Y: "THIRD",
+      READING_Z: "THIRD",
+      SDV: "THIRD",
+      SDV_CHECK: "THIRD",
+      POST_VOID: "THIRD",
+      TRX_COMMENT: "FOURTH",
+      NON_SALES: "FOURTH",
+      ZERO_RATED: "FOURTH",
+      RETURN: "FOURTH",
+      RETURN_EXCHANGE: "FOURTH",
+      REFUND: "FOURTH",
+      BONUS_BUY: "FOURTH",
+      BEST_BUY: "FOURTH",
+    };
+
+    const targetScreen = SCREEN_OF_ACTION[currentStep.expectedAction];
+    if (targetScreen) {
+      if (actionId === "NAV_SECOND" && state.currentPage === "MAIN" && targetScreen !== "MAIN") {
+        return true;
+      }
+      if (actionId === "NAV_THIRD" && state.currentPage === "SECOND" && (targetScreen === "THIRD" || targetScreen === "FOURTH")) {
+        return true;
+      }
+      if (actionId === "NAV_FOURTH" && state.currentPage === "THIRD" && targetScreen === "FOURTH") {
+        return true;
+      }
+      if ((actionId === "PAGE_DOWN" || actionId === "NAV_MAIN") && targetScreen === "MAIN") {
+        return true;
+      }
+      if (actionId === "PAGE_UP" || actionId === "PAGE_DOWN") {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  const validateScenarioStep = (actionId: string, dataVal?: string | number): boolean => {
+    if (!activeScenario || isExamCompleted) return true;
+    const currentStep = activeScenario.steps[currentStepIndex];
+    if (!currentStep) return true;
+
     // Auto-advance if trainee tenders cash while at PAY_CASH step
     if (
       currentStep.expectedAction === "PAY_CASH" &&
       (actionId === "CONFIRM_TENDER" || actionId === "SUBMIT_CASH_TENDER")
     ) {
+      setErrorNotice(null);
       setActiveHint(null);
       const nextIndex = currentStepIndex + 1;
       if (nextIndex < activeScenario.steps.length) {
@@ -1535,11 +1864,11 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
           if (finishedIndex >= activeScenario.steps.length) {
             setIsExamCompleted(true);
           }
-          return;
+          return true;
         }
       }
       setCurrentStepIndex(nextIndex);
-      return;
+      return true;
     }
 
     // Auto-advance if trainee tenders while at CHOOSE_LNQR_OPTION
@@ -1547,54 +1876,84 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
       (actionId === "PAY_CASH" || actionId === "PAY_CARD")
     ) {
+      setErrorNotice(null);
       setActiveHint(null);
       setCurrentStepIndex(currentStepIndex + 1);
-      return;
+      return true;
     }
 
-    // Reopening payment after Bonus Buy can be required to reach the loyalty choice.
-    if (
-      currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
-      actionId === "GO_PAYMENT"
-    ) {
-      return;
-    }
-
-    let dataMatches = true;
-    if (currentStep.expectedData !== undefined && dataVal !== undefined) {
-      if (typeof currentStep.expectedData === "number" || !isNaN(Number(currentStep.expectedData))) {
-        dataMatches =
-          Number(currentStep.expectedData) === Number(dataVal) ||
-          (actionId === "CONFIRM_TENDER" && Number(dataVal) > 0);
-      } else {
-        dataMatches =
-          String(currentStep.expectedData).trim().toUpperCase() ===
-          String(dataVal).trim().toUpperCase();
-      }
-    }
-
-    if (actionMatches && dataMatches) {
+    if (isStepMatch(actionId, dataVal)) {
+      setErrorNotice(null);
       setActiveHint(null);
-      const nextIndex = currentStepIndex + 1;
+      let nextIndex = currentStepIndex + 1;
+      if (
+        nextIndex < activeScenario.steps.length &&
+        (activeScenario.steps[nextIndex].expectedAction === "PAGE_DOWN" || activeScenario.steps[nextIndex].expectedAction === "NAV_MAIN") &&
+        state.currentPage === "MAIN"
+      ) {
+        nextIndex++;
+      }
+      setCurrentStepIndex(nextIndex);
+      if (nextIndex >= activeScenario.steps.length) {
+        setIsExamCompleted(true);
+      } else {
+        const nextExpected = activeScenario.steps[nextIndex]?.expectedAction;
+        const isFinishingPayment =
+          currentStep.expectedAction === "CONFIRM_TENDER" ||
+          currentStep.expectedAction === "CONFIRM_GC_TENDER" ||
+          currentStep.expectedAction === "CONFIRM_LNQR_UPDATED";
+        if (
+          isFinishingPayment &&
+          nextExpected &&
+          nextExpected !== "CONFIRM_LNQR_UPDATED" &&
+          nextExpected !== "CONFIRM_TENDER"
+        ) {
+          if (tenderTimerRef.current) {
+            clearTimeout(tenderTimerRef.current);
+            tenderTimerRef.current = null;
+          }
+          handleCloseCompletedReceipt();
+        }
+      }
+      return true;
+    }
+
+    // Strict navigation validation per target screen
+
+    // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
+    if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
+      return true;
+    }
+
+    // If trainee presses F2 (PAY_CASH) while at CONFIRM_TENDER step, do not record mistake:
+    if (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "PAY_CASH") {
+      return true;
+    }
+
+    // If trainee switches lookup search mode (F2/F3/F4) while at LOOKUP_QUERY step, allow without mistake:
+    if (currentStep.expectedAction === "LOOKUP_QUERY" && actionId === "LOOKUP_SEARCH") {
+      return true;
+    }
+
+    // If trainee toggles Bonus Buy checkbox while at CONFIRM_BEST_BUY step, allow without mistake:
+    if (currentStep.expectedAction === "CONFIRM_BEST_BUY" && actionId === "CHECK_BONUS_BUY") {
+      return true;
+    }
+
+    // In Lookup, if step expects LOOKUP_QUERY and trainee selects/double-clicks an item directly:
+    if ((currentStep.expectedAction === "LOOKUP_SEARCH" || currentStep.expectedAction === "LOOKUP_QUERY") && actionId === "ADD_ITEM") {
+      setErrorNotice(null);
+      setActiveHint(null);
+      const nextStep = activeScenario.steps[currentStepIndex + 1];
+      const nextIndex = nextStep?.expectedAction === "CLOSE_LOOKUP" ? currentStepIndex + 2 : currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       if (nextIndex >= activeScenario.steps.length) {
         setIsExamCompleted(true);
       }
-      return;
+      return true;
     }
 
-    const isNavigationAction = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(actionId);
-    const stepExpectsNavigation = ["NAV_SECOND", "NAV_THIRD", "NAV_FOURTH", "NAV_MAIN"].includes(currentStep.expectedAction);
-
-    if (isNavigationAction && stepExpectsNavigation) {
-      return;
-    }
-
-    // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
-    if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
-      return;
-    }
-
+    triggerErrorEffect(currentStep.errorFeedback || "Incorrect action. Please check instructions.");
     setMistakes((prev) => [
       ...prev,
       {
@@ -1604,9 +1963,38 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         feedback: currentStep.errorFeedback,
       },
     ]);
+    return false;
   };
 
   const handleAction = (actionId: string) => {
+    // In guided scenario, validate action before execution
+    if (activeScenario && !isExamCompleted) {
+      const currentStep = activeScenario.steps[currentStepIndex];
+      if (actionId === "HELP") {
+        handleShowHint();
+        return;
+      }
+      if (isVoidSkuMode && (actionId === "PAGE_DOWN" || actionId === "PAGE_UP")) {
+        // Allowed for navigating items
+      } else if (!isActionAllowedInScenario(actionId)) {
+        const feedbackMsg =
+          state.currentPage === "FOURTH" && (actionId === "CUSTOMER" || actionId === "NAV_FOURTH")
+            ? "On the 4th Screen, F5 is Customer. Press F12 (PAGE DOWN) to return to the Main Screen."
+            : (currentStep?.errorFeedback || "Incorrect action for the current step.");
+        triggerErrorEffect(feedbackMsg);
+        setMistakes((prev) => [
+          ...prev,
+          {
+            step: currentStepIndex + 1,
+            actionAttempted: actionId,
+            expected: currentStep?.expectedAction || "",
+            feedback: feedbackMsg,
+          },
+        ]);
+        return; // Block execution and prevent page transition!
+      }
+    }
+
     switch (actionId) {
       case "HELP":
         handleShowHint();
@@ -1753,7 +2141,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       case "TRX_VOID":
         if (state.lineItems.length === 0) return;
         dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "Trx Void" });
-        
         validateScenarioStep("TRX_VOID");
         break;
       case "TRX_DISC":
@@ -1782,6 +2169,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         validateScenarioStep("SDV_CHECK");
         break;
       case "NO_SALE":
+        dispatch({ type: "REQUEST_MANAGER_OVERRIDE", targetAction: "No Sale" });
         validateScenarioStep("NO_SALE");
         break;
       case "ON_OFF_DISCOUNT":
@@ -1845,7 +2233,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         validateScenarioStep("REFUND");
         break;
       case "LOGOUT":
-        setIsLogoutModalOpen(true);
+        setIsLogoutScreenOpen(true);
         setSelectedLogoutButton(null);
         validateScenarioStep("TRIGGER_LOGOUT");
         break;
@@ -1903,6 +2291,25 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       setBarcodeInput("");
       return;
     }
+
+    if (activeScenario && !isExamCompleted) {
+      const currentStep = activeScenario.steps[currentStepIndex];
+      if (!isActionAllowedInScenario("ADD_ITEM", code)) {
+        triggerErrorEffect(currentStep?.errorFeedback || `Expected ${currentStep?.expectedData || "different item"}, but entered '${code}'.`);
+        setMistakes((prev) => [
+          ...prev,
+          {
+            step: currentStepIndex + 1,
+            actionAttempted: `ADD_ITEM (${code})`,
+            expected: `ADD_ITEM (${currentStep?.expectedData || ""})`,
+            feedback: currentStep?.errorFeedback || "Incorrect item barcode entered.",
+          },
+        ]);
+        setBarcodeInput("");
+        return;
+      }
+    }
+
     dispatch({ type: "ADD_ITEM_BY_CODE", code });
     validateScenarioStep("ADD_ITEM", code);
     setBarcodeInput("");
@@ -1910,6 +2317,22 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
 
   const handleConfirmQuantity = (qtyVal?: number) => {
     const qty = qtyVal !== undefined ? qtyVal : parseInt(qtyInput, 10) || 1;
+    if (activeScenario && !isExamCompleted) {
+      const currentStep = activeScenario.steps[currentStepIndex];
+      if (!isActionAllowedInScenario("CONFIRM_QTY", qty)) {
+        triggerErrorEffect(currentStep?.errorFeedback || `Expected quantity ${currentStep?.expectedData}, but entered ${qty}.`);
+        setMistakes((prev) => [
+          ...prev,
+          {
+            step: currentStepIndex + 1,
+            actionAttempted: `CONFIRM_QTY (${qty})`,
+            expected: `CONFIRM_QTY (${currentStep?.expectedData || ""})`,
+            feedback: currentStep?.errorFeedback || "Incorrect quantity entered.",
+          },
+        ]);
+        return;
+      }
+    }
     dispatch({ type: "SET_QUANTITY_CONFIRM", quantity: qty });
     setIsQuantityModalOpen(false);
     validateScenarioStep("CONFIRM_QTY", qty);
@@ -1942,12 +2365,17 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       setSelectedVoidItemId(null);
       setPendingVoidReason(null);
       setIsItemVoidModalOpen(true);
-    }else if (target === "Recall") {
+    } else if (target === "Trx Void") {
+      setIsTrxVoidModalOpen(true);
+    } else if (target === "Recall") {
       setIsRecallOpen(true);
     } else if (target === "Reprint") {
       setIsReprintOpen(true);
     } else if (target === "Zero Rated") {
       dispatch({ type: "SET_ZERO_RATED", isZeroRated: !state.isZeroRated });
+      dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+    } else if (target === "No Sale") {
+      dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
     } else if (target === "Refund") {
       setReturnRefundMode("REFUND");
     }
@@ -1977,6 +2405,8 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setHintsUsed(0);
     setActiveHint(null);
     setIsExamCompleted(false);
+    setTimedOut(false);
+    hasRecordedAttemptRef.current = false;
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
     setIsLoyaltyOptionOpen(false);
@@ -2052,6 +2482,9 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setHintsUsed(0);
     setActiveHint(null);
     setIsExamCompleted(false);
+    setTimedOut(false);
+    setScenarioStartTime(Date.now());
+    hasRecordedAttemptRef.current = false;
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
     setIsBonusBuyOpen(false);
@@ -2170,8 +2603,24 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
           ref={posContainerRef}
           className={`w-full max-w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative transition-transform duration-500 ease-in-out ${
             isExternalReceiptShowing ? "-translate-x-16 xl:-translate-x-32" : "translate-x-0"
-          }`}
+          } ${isTerminalShaking ? "pos-shake-error ring-4 ring-red-600" : ""}`}
         >
+          {/* In-Terminal Mistake Notice */}
+          {errorNotice && (
+            <div
+              role="alert"
+              className="absolute top-2 left-1/2 -translate-x-1/2 z-50 bg-[#E4002B] text-white px-5 py-2 text-xs font-bold font-sans shadow-2xl border-2 border-white flex items-center space-x-3 animate-in fade-in slide-in-from-top-2 tracking-wide max-w-xl text-center"
+            >
+              <span>⚠️ {errorNotice}</span>
+              <button
+                type="button"
+                onClick={() => setErrorNotice(null)}
+                className="text-white hover:text-yellow-300 font-extrabold text-sm ml-2 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
           {showItemNotFound && (
             <div
               role="alert"
@@ -2197,6 +2646,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
               onBackToVerify={() => {
                 setSelectedSodButton(null);
                 setTerminalMode("START_OF_DAY_VERIFY");
+                validateScenarioStep("BACK_TO_SOD_VERIFY");
               }}
             />
           )}
@@ -2240,6 +2690,15 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     validateScenarioStep("CLOSE_LOOKUP");
                   }}
                   onSelectItem={(sku) => {
+                    const currentStep = activeScenario?.steps[currentStepIndex];
+                    if (
+                      currentStep &&
+                      (currentStep.expectedAction === "LOOKUP_QUERY" || currentStep.expectedAction === "LOOKUP_SEARCH") &&
+                      activeScenario?.steps[currentStepIndex + 1]?.expectedAction === "CLOSE_LOOKUP"
+                    ) {
+                      validateScenarioStep("LOOKUP_QUERY", sku);
+                      return;
+                    }
                     setBarcodeInput(sku);
                     dispatch({ type: "ADD_ITEM_BY_CODE", code: sku });
                     validateScenarioStep("ADD_ITEM", sku);
@@ -2248,6 +2707,9 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   }}
                   onSearchModeChange={(mode) => {
                     validateScenarioStep("LOOKUP_SEARCH", mode);
+                  }}
+                  onSearchSubmit={(query) => {
+                    validateScenarioStep("LOOKUP_QUERY", query);
                   }}
                   initialSearch={state.lookupSearchTerm}
                 />
@@ -2265,9 +2727,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     setBarcodeInput("");
                     setIsRefundSkuMode(true);
                     setReturnRefundMode(null);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_RETURN", data.orNumber);
                   }}
-                  onRefundOrnoSubmit={(orNumber: string) => validateScenarioStep("SUBMIT_REFUND_ORNO", orNumber)}
+                  onRefundOrnoSubmit={(orNumber: string) => {
+                    validateScenarioStep("SUBMIT_REFUND_ORNO", orNumber);
+                    validateScenarioStep("REFUND_ORNO", orNumber);
+                  }}
                   onConfirmRefund={(data) => {
                     dispatch({
                       type: "PROCESS_REFUND",
@@ -2275,6 +2741,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                       reason: data.reason,
                     });
                     setReturnRefundMode(null);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_REFUND", data.amount);
                   }}
                   onCancel={() => setReturnRefundMode(null)}
@@ -2325,6 +2792,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   onConfirm={(reason) => {
                     dispatch({ type: "VOID_TRANSACTION" });
                     setIsTrxVoidModalOpen(false);
+                    setHasBonusBuyBeenPrompted(false);
                     validateScenarioStep("CONFIRM_TRX_VOID", reason);
                   }}
                   onCancel={() => setIsTrxVoidModalOpen(false)}
@@ -2340,6 +2808,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   onConfirm={() => {
                     dispatch({ type: "SUSPEND_TRANSACTION" });
                     setIsSuspendModalOpen(false);
+                    setHasBonusBuyBeenPrompted(false);
                     validateScenarioStep("CONFIRM_SUSPEND");
                   }}
                   onCancel={() => setIsSuspendModalOpen(false)}
@@ -2348,7 +2817,12 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                 <TransactionJournalScreen
                   mode={journalModalMode}
                   state={state}
-                  onClose={() => setJournalModalMode(null)}
+                  onClose={() => {
+                    setJournalModalMode(null);
+                    if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CLOSE_JOURNAL") {
+                      validateScenarioStep("CLOSE_JOURNAL");
+                    }
+                  }}
                 />
                             ) : isNonMdseOpen ? (
                 <NonMerchandiseScreen
@@ -2360,7 +2834,10 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   initialCategory={pendingSodexhoVariance !== null ? "Sodexho Variance (ZSOI)" : undefined}
                   initialAmount={pendingSodexhoVariance !== null ? pendingSodexhoVariance.toFixed(2) : undefined}
                   initialReferenceNo={sodexhoNumber || "PP12345678"}
-                  onCancel={() => setIsNonMdseOpen(false)}
+                  onCancel={() => {
+                    setIsNonMdseOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                  }}
                   onSubmit={(data) => {
                     dispatch({
                       type: "ADD_NON_MDSE_ITEM",
@@ -2372,6 +2849,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     setIsNonMdseOpen(false);
                     setPendingSodexhoVariance(null);
                     setPendingSodexhoNotice(null);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
                   }}
                 />
@@ -2380,7 +2858,10 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   clerkName={state.cashierName}
                   terminalId={state.terminalId}
                   branchCode={state.branchCode}
-                  onCancel={() => setIsTrxDiscOpen(false)}
+                  onCancel={() => {
+                    setIsTrxDiscOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                  }}
                   onSubmit={(discount) => {
                     dispatch({
                       type: "APPLY_DISCOUNT",
@@ -2390,6 +2871,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                       },
                     });
                     setIsTrxDiscOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("APPLY_DISCOUNT", discount.code);
                   }}
                 />
@@ -2406,9 +2888,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   onRecall={(id) => {
                     dispatch({ type: "RECALL_TRANSACTION", transactionId: id });
                     setIsRecallOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_RECALL", id);
                   }}
-                  onCancel={() => setIsRecallOpen(false)}
+                  onCancel={() => {
+                    setIsRecallOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                  }}
                 />
               ) : isReprintOpen ? (
                 <ReprintModal
@@ -2416,13 +2902,19 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   onPrint={(orNo: string) => {
                     setIsReprintOpen(false);
                     setIsReprintReceiptOpen(true);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_REPRINT", orNo);
                   }}
                   onCancel={() => setIsReprintOpen(false)}
                 />
               ) : isSdvOpen ? (
                 <SdvModal
-                  onClose={() => setIsSdvOpen(false)}
+                  onClose={() => {
+                    setIsSdvOpen(false);
+                    if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CLOSE_SDV") {
+                      validateScenarioStep("CLOSE_SDV");
+                    }
+                  }}
                 />
               ) : readingsType !== null ? (
                 <ReadingsScreen
@@ -2433,6 +2925,17 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   trxNumber={state.transactionNumber}
                   totalQty={totals.totalQty}
                   totalSales={totals.totalAmount}
+                  onConfirmZClearing={() => {
+                    if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CONFIRM_Z_CLEARING") {
+                      validateScenarioStep("CONFIRM_Z_CLEARING");
+                    }
+                  }}
+                  onPrint={() => {
+                    const expected = activeScenario?.steps[currentStepIndex]?.expectedAction;
+                    if (expected === "PRINT_READING_Y" || expected === "PRINT_READING_Z") {
+                      validateScenarioStep(expected);
+                    }
+                  }}
                   onClose={() => setReadingsType(null)}
                 />
               ) : isBonusBuyOpen ? (
@@ -2442,6 +2945,11 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   terminalId={state.terminalId}
                   branchCode={state.branchCode}
                   trxNumber={state.transactionNumber || "1023202629990004001559"}
+                  onCheckPromo={(rowIdx, checked) => {
+                    if (checked) {
+                      validateScenarioStep("CHECK_BONUS_BUY", rowIdx);
+                    }
+                  }}
                   onConfirm={(promo) => {
                     if (promo) {
                       dispatch({
@@ -2453,8 +2961,26 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                       });
                     }
                     setIsBonusBuyOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                    validateScenarioStep("CONFIRM_BEST_BUY");
                   }}
-                  onCancel={() => setIsBonusBuyOpen(false)}
+                  onCancel={() => {
+                    setIsBonusBuyOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                    validateScenarioStep("CONFIRM_BEST_BUY");
+                  }}
+                />
+              ) : isLogoutScreenOpen ? (
+                <LogoutScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  currentTime={fmtTime(now)}
+                  currentDate={fmtDate(now)}
+                  selectedButton={selectedLogoutButton}
+                  onConfirm={handleConfirmLogout}
+                  onCancel={handleCancelLogout}
                 />
               ) : isLoyaltyOptionOpen ? (
                 <ChooseOptionScreen
@@ -2612,9 +3138,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                       },
                     });
                     setIsTrxCommentOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("SAVE_TRX_COMMENT");
                   }}
-                  onCancel={() => setIsTrxCommentOpen(false)}
+                  onCancel={() => {
+                    setIsTrxCommentOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                  }}
                 />
               ) : (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) ? (
                 <div className="flex-1 min-h-0 flex flex-col bg-white font-sans select-none overflow-hidden">
@@ -3373,6 +3903,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                                 <form
                                   onSubmit={(e) => {
                                     e.preventDefault();
+                                    validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
                                     setBankCardStep("DETAILS");
                                     if (
                                       activeScenario?.id === "scen-les-8-2" ||
@@ -3552,7 +4083,9 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                                 value={couponEntryMode}
                                 onChange={(e) => {
                                   if (e.target.value !== "SELECT") {
-                                    setCouponEntryMode(e.target.value as "WITH_SERIES" | "WITHOUT_SERIES");
+                                    const modeVal = e.target.value as "WITH_SERIES" | "WITHOUT_SERIES";
+                                    setCouponEntryMode(modeVal);
+                                    validateScenarioStep("SELECT_COUPON_MODE", modeVal);
                                   }
                                 }}
                                 className="w-56 bg-white border-2 border-gray-500 px-2 py-1 text-xs font-bold shadow-inner"
@@ -3919,9 +4452,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                     </div>
 
                     {/* Right 2 cols */}
-                    <div className="col-span-2 bg-[#22A838] flex items-center justify-center px-1 text-black font-bold font-sans text-xs tracking-tight">
-                      {now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}
-                    </div>
+                    <div className="col-span-2 bg-[#22A838]" />
                   </div>
                 </div>
               ) : (
@@ -4198,8 +4729,11 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                   <button
                     key={kDef.key}
                     tabIndex={-1}
-                    disabled={isDisabled}
-                    onClick={() => handleAction(kDef.actionId)}
+                    disabled={isDisabled && !activeScenario}
+                    onClick={() => {
+                      if (isDisabled && !activeScenario) return;
+                      handleAction(kDef.actionId);
+                    }}
                     className={
                       "w-full flex-1 min-h-[50px] p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
                       (kDef.disabled
@@ -4317,13 +4851,19 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
          )}
       </div>
 
-      {/* LOGOUT CONFIRMATION MODAL */}
-      <LogoutModal
-        isOpen={isLogoutModalOpen}
-        selectedButton={selectedLogoutButton}
-        onConfirm={handleConfirmLogout}
-        onCancel={handleCancelLogout}
-      />
+      
+
+      {/* Keyframe Styles */}
+      <style jsx global>{`
+        @keyframes posTerminalShake {
+          0%, 100% { transform: translateX(0); }
+          20%, 60% { transform: translateX(-8px); }
+          40%, 80% { transform: translateX(8px); }
+        }
+        .pos-shake-error {
+          animation: posTerminalShake 0.4s ease-in-out;
+        }
+      `}</style>
 
       {/* LNQR HAS BEEN UPDATED MODAL */}
       <LnqrUpdatedModal
@@ -4415,9 +4955,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
               reason: data.reason,
             });
             setIsPriceChangeOpen(false);
+            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
             validateScenarioStep("CONFIRM_PRICE_CHANGE", data.newPrice);
           }}
-          onCancel={() => setIsPriceChangeOpen(false)}
+          onCancel={() => {
+            setIsPriceChangeOpen(false);
+            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+          }}
         />
       )}
 
@@ -4428,9 +4972,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
         <NonSalesModal
           onConfirm={(data) => {
             setIsNonSalesOpen(false);
+            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
             validateScenarioStep("CONFIRM_NON_SALES", data.amount);
           }}
-          onCancel={() => setIsNonSalesOpen(false)}
+          onCancel={() => {
+            setIsNonSalesOpen(false);
+            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+          }}
         />
       )}
 

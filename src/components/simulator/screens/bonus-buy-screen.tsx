@@ -33,6 +33,7 @@ interface BonusBuyScreenProps {
   terminalId?: string;
   branchCode?: string;
   trxNumber?: string;
+  onCheckPromo?: (rowIdx: number, checked: boolean) => void;
   onConfirm: (promo: {
     promoCode: string;
     promoItem: string;
@@ -48,6 +49,7 @@ export function BonusBuyScreen({
   terminalId = "0004",
   branchCode = "2999",
   trxNumber = "1023202629990004001559",
+  onCheckPromo,
   onConfirm,
   onCancel,
 }: BonusBuyScreenProps) {
@@ -100,9 +102,10 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 2. Alt+Enter -> Trigger OK confirmation
+      // 2. Alt+Enter -> Trigger OK confirmation (only when a bonus item checkbox is checked)
       if (e.altKey && e.key === "Enter") {
         e.preventDefault();
+        if (checkedRow === null) return;
         setConfirmSelectedBtn("YES");
         setConfirmDialogAction("OK");
         return;
@@ -144,9 +147,34 @@ export function BonusBuyScreen({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [confirmDialogAction, confirmSelectedBtn, selectedRow, checkedRow, quantities]);
 
+  const [currentTime, setCurrentTime] = useState(() =>
+    new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    })
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleToggleCheckbox = (rowIdx: number) => {
     setSelectedRow(rowIdx);
-    setCheckedRow((prev) => (prev === rowIdx ? null : rowIdx));
+    const nextChecked = checkedRow === rowIdx ? null : rowIdx;
+    setCheckedRow(nextChecked);
+    onCheckPromo?.(rowIdx, nextChecked !== null);
   };
 
   const handleQuantityChange = (rowIdx: number, val: string) => {
@@ -386,8 +414,8 @@ export function BonusBuyScreen({
         </table>
       </div>
 
-      {/* 6. BOTTOM GREEN BAR: Centered OK / CANCEL & Page: 1 / 0 on far right */}
-      <div className="bg-[#22A838] border-t border-green-700 px-4 py-1.5 flex items-center justify-between text-xs font-sans h-12 flex-shrink-0">
+      {/* 6. BOTTOM GREEN BAR: Centered OK / CANCEL & Page: 1 / 0 + Clock on far right */}
+      <div className="bg-[#22A838] border-t border-green-700 px-4 py-1 flex items-center justify-between text-xs font-sans h-11 flex-shrink-0">
         <div className="w-1/4" />
 
         {/* Center: OK Alt-Enter & CANCEL Alt-B */}
@@ -395,14 +423,20 @@ export function BonusBuyScreen({
           {/* OK Alt-Enter */}
           <button
             type="button"
+            disabled={checkedRow === null}
             onClick={() => {
+              if (checkedRow === null) return;
               setConfirmSelectedBtn("YES");
               setConfirmDialogAction("OK");
             }}
-            className="w-32 h-9 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white flex flex-col items-center justify-center cursor-pointer"
+            className={`w-32 h-8 border-2 flex flex-col items-center justify-center ${
+              checkedRow === null
+                ? "bg-gray-400 border-gray-500 text-gray-600 cursor-not-allowed opacity-50"
+                : "bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white cursor-pointer"
+            }`}
           >
-            <span className="font-extrabold text-sm text-[#000080] leading-none">OK</span>
-            <span className="text-[10px] text-gray-900 leading-tight">Alt-Enter</span>
+            <span className="font-extrabold text-xs text-[#000080] leading-none">OK</span>
+            <span className="text-[9px] text-gray-900 leading-tight">Alt-Enter</span>
           </button>
 
           {/* CANCEL Alt-B */}
@@ -412,15 +446,15 @@ export function BonusBuyScreen({
               setConfirmSelectedBtn("YES");
               setConfirmDialogAction("CANCEL");
             }}
-            className="w-32 h-9 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white flex flex-col items-center justify-center cursor-pointer"
+            className="w-32 h-8 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white flex flex-col items-center justify-center cursor-pointer"
           >
-            <span className="font-extrabold text-sm text-[#000080] leading-none">CANCEL</span>
-            <span className="text-[10px] text-gray-900 leading-tight">Alt-B</span>
+            <span className="font-extrabold text-xs text-[#000080] leading-none">CANCEL</span>
+            <span className="text-[9px] text-gray-900 leading-tight">Alt-B</span>
           </button>
         </div>
 
         {/* Far Right: Page: 1 / 0 */}
-        <div className="w-1/4 text-right font-sans font-bold text-sm text-gray-900 pr-2">
+        <div className="w-1/4 text-right font-sans font-bold text-xs text-gray-900 pr-2">
           Page: 1 / 0
         </div>
       </div>

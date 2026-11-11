@@ -55,7 +55,7 @@ export function SdvModal({
       </div>
 
       {/* 6. GREEN BOTTOM TOOLBAR */}
-      <div className="bg-[#388E3C] border-t-2 border-black p-2 flex items-center justify-center">
+      <div className="bg-[#388E3C] border-t-2 border-black px-4 py-2 flex items-center justify-center">
         <button
           type="button"
           onClick={onClose}

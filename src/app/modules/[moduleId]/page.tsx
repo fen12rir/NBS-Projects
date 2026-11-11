@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
-import { getScenarioForLesson } from "@/data/scenarios";
+import { getScenarioForLesson, getScenarioForModule } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
 import { 
   ArrowLeft, 
@@ -17,7 +17,8 @@ import {
   ChevronRight, 
   Monitor, 
   FileText,
-  Award
+  Award,
+  Clock
 } from "lucide-react";
 
 export default function ModuleDetailPage() {
@@ -62,6 +63,7 @@ export default function ModuleDetailPage() {
     progress.completedLessons.includes(l.id)
   ).length;
   const isAllComplete = completedInMod === currentModule.lessons.length;
+  const moduleAssessment = getScenarioForModule(currentModule.id);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
@@ -209,11 +211,19 @@ export default function ModuleDetailPage() {
               </p>
             </div>
           </div>
-          <Link href={`/simulator?module=${currentModule.id}`} className="w-full sm:w-auto flex-shrink-0">
-            <Button size="sm" className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs whitespace-nowrap px-4 py-2.5 shadow-sm">
-              Take Module Assessment
-            </Button>
-          </Link>
+          <div className="w-full sm:w-auto flex-shrink-0 flex flex-col items-center gap-1.5">
+            <Link href={`/simulator?module=${currentModule.id}`} className="w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs whitespace-nowrap px-4 py-2.5 shadow-sm">
+                Take Module Assessment
+              </Button>
+            </Link>
+            {moduleAssessment?.timeLimitSeconds && (
+              <span className="inline-flex items-center justify-center space-x-1 text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 bg-red-500/20 text-red-200 border border-red-400/40">
+                <Clock className="w-3 h-3" />
+                <span>Time Limit: {Math.floor(moduleAssessment.timeLimitSeconds / 60)} Mins</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Module Navigation Footer */}

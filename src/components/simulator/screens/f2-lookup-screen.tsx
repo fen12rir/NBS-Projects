@@ -11,6 +11,7 @@ interface F2LookupScreenProps {
   onCancel: () => void;
   onSelectItem: (sku: string) => void;
   onSearchModeChange?: (mode: string) => void;
+  onSearchSubmit?: (query: string, mode: string) => void;
   initialSearch?: string;
 }
 
@@ -24,6 +25,7 @@ export function F2LookupScreen({
   onCancel,
   onSelectItem,
   onSearchModeChange,
+  onSearchSubmit,
   initialSearch = "",
 }: F2LookupScreenProps) {
   const [mode, setMode] = useState<LookupMode>("SKU");
@@ -34,6 +36,28 @@ export function F2LookupScreen({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
+  const [currentTime, setCurrentTime] = useState(() =>
+    new Date().toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    })
+  );
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(
+        new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: true,
+        })
+      );
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -129,6 +153,9 @@ export function F2LookupScreen({
           setSubmittedSearch(query ? query : null);
           setPage(1);
           setSelectedIndex(0);
+          if (query) {
+            onSearchSubmit?.(query, mode);
+          }
           return;
         }
 
@@ -402,7 +429,7 @@ export function F2LookupScreen({
         </div>
 
         {/* Page Counter on Far Right */}
-        <div className="w-[100px] text-right font-mono text-xs font-bold text-gray-900 pr-1">
+        <div className="w-[100px] text-right font-mono text-xs font-bold text-gray-900 pr-2">
           Page: {page}/{totalPages}
         </div>
       </div>

@@ -18,7 +18,12 @@ const fmtDayName = (d: Date) =>
   d.toLocaleDateString("en-US", { weekday: "long" });
 
 const fmtTime = (d: Date) =>
-  d.toLocaleTimeString("en-US", { hour12: false });
+  d.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
 
 export function StartOfDayVerifyScreen({
   now,

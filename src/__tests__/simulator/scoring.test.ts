@@ -2,10 +2,10 @@ import { describe, it, expect } from "vitest";
 import { TRAINING_SCENARIOS } from "@/data/scenarios";
 
 describe("Training Scenario & Scoring Validation", () => {
-  it("has the basic cash sale scenario with 9 ordered steps including loyalty selection", () => {
+  it("has the basic cash sale scenario with 10 ordered steps including bonus buy and loyalty selection", () => {
     const scenario = TRAINING_SCENARIOS.find((s) => s.id === "scen-cash-sale-basic")!;
     expect(scenario.id).toBe("scen-cash-sale-basic");
-    expect(scenario.steps.length).toBe(9);
+    expect(scenario.steps.length).toBe(10);
     expect(scenario.passingScore).toBe(70);
   });
 
