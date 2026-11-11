@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { LearningShell } from "@/components/layout/learning-shell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,7 +21,8 @@ import {
   ChevronRight, 
   Flame, 
   Clock, 
-  RotateCcw 
+  RotateCcw,
+  FileText
 } from "lucide-react";
 
 export default function DashboardPage() {
@@ -51,12 +53,12 @@ export default function DashboardPage() {
   const progressPercent = totalLessons > 0 ? Math.round((completedLessonCount / totalLessons) * 100) : 0;
 
   const allModulesCompleted = totalLessons > 0 && completedLessonCount >= totalLessons;
-  const practicalAssessmentAttempts = progress.scenarioAttempts.filter(
-    (attempt) => attempt.scenarioId === "scen-practical-assessment"
+  const practicalExamAttempts = progress.scenarioAttempts.filter(
+    (attempt) => attempt.scenarioId === "exam-practical"
   );
-  const hasAttempts = practicalAssessmentAttempts.length > 0;
-  const bestAttempt = practicalAssessmentAttempts.find((attempt) => attempt.passed);
-  const latestAttempt = practicalAssessmentAttempts[0];
+  const hasAttempts = practicalExamAttempts.length > 0;
+  const bestAttempt = practicalExamAttempts.find((attempt) => attempt.passed);
+  const latestAttempt = practicalExamAttempts[0];
 
   type SimulatorStatusType = "Pending" | "Passed" | "Failed";
   let simulatorStatus: SimulatorStatusType = "Pending";
@@ -67,13 +69,13 @@ export default function DashboardPage() {
     simulatorStatusDetail = `${completedLessonCount} of ${totalLessons} lessons completed • Finish all modules first`;
   } else if (!hasAttempts) {
     simulatorStatus = "Pending";
-    simulatorStatusDetail = "All modules completed • Awaiting simulator assessment";
+    simulatorStatusDetail = "All modules completed • Awaiting practical exam";
   } else if (bestAttempt) {
     simulatorStatus = "Passed";
-    simulatorStatusDetail = `All modules completed • Assessment passed (${bestAttempt.score}%)`;
+    simulatorStatusDetail = `All modules completed • Practical exam passed (${bestAttempt.score}%)`;
   } else {
     simulatorStatus = "Failed";
-    simulatorStatusDetail = `Assessment failed (${latestAttempt?.score ?? 0}%) • Retake required (70% to pass)`;
+    simulatorStatusDetail = `Practical exam failed (${latestAttempt?.score ?? 0}%) • Retake required (80% to pass)`;
   }
 
   type CertificationStatusType = "Pending" | "In Progress" | "Certified";
@@ -100,10 +102,8 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <DashboardHeader />
-
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <LearningShell>
+      <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Welcome Banner & Summary */}
         <div className="bg-white border border-gray-200 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div className="space-y-2">
@@ -282,27 +282,60 @@ export default function DashboardPage() {
         </div>
 
         {/* Practical Assessment Banner */}
-        <div className="bg-[#0B192C] text-white p-6 sm:p-8 border-4 border-gray-900 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <Badge variant="warning">Practical Hands-On Exam</Badge>
-            <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
-              Practical Assessment: Cashier Core Cash Sale
-            </h2>
-            <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
-              Test your ability to lookup items, set multipliers, tender cash, and generate customer receipts under simulated branch conditions.
-            </p>
-          </div>
-          <Link href="/simulator?scenario=scen-practical-assessment">
-            <Button
-              size="lg"
-              className="bg-[#E4002B] hover:bg-[#C10024] font-black text-sm px-6 py-4 flex items-center space-x-2"
-            >
-              <span>Begin Assessment</span>
-              <ChevronRight className="w-5 h-5" />
-            </Button>
-          </Link>
-        </div>
-      </main>
-    </div>
+        {(() => {
+          const latestExamAttempt = progress.scenarioAttempts.find(
+            (a) => a.scenarioId === "exam-practical" || a.scenarioId === "scen-practical-assessment"
+          );
+
+          return (
+            <div className="bg-[#0B192C] text-white p-6 sm:p-8 border-4 border-gray-900 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="danger">Practical Hands-On Exam</Badge>
+                  <Badge
+                    variant="warning"
+                    className="border-yellow-400/50 text-yellow-300 bg-yellow-400/10 font-mono font-bold flex items-center space-x-1 text-xs px-2.5 py-0.5"
+                  >
+                    <Clock className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
+                    <span>15-Min Time Limit</span>
+                  </Badge>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+                  Practical Assessment: Full Shift Unguided Operations
+                </h2>
+                <p className="text-sm text-gray-300 max-w-2xl leading-relaxed">
+                  Handle realistic customer situations with no step-by-step guides. Open your shift, process cash, cards, e-wallets, loyalty, discounts, voids, and close your register.
+                </p>
+              </div>
+
+              <div className="flex flex-col items-stretch gap-2.5 shrink-0 w-full sm:w-80">
+                <Link href="/simulator?exam=practical" className="w-full block">
+                  <Button
+                    className="w-full h-12 bg-[#E4002B] hover:bg-[#C10024] font-black text-sm px-4 flex items-center justify-center space-x-2 cursor-pointer shadow-lg rounded-none border-2 border-transparent"
+                  >
+                    <span>{latestExamAttempt ? "Retake Practical Exam" : "Begin Practical Exam"}</span>
+                    <ChevronRight className="w-5 h-5 shrink-0" />
+                  </Button>
+                </Link>
+
+                {latestExamAttempt && (
+                  <Link href={`/results/${latestExamAttempt.id}`} className="w-full block">
+                    <Button
+                      variant="outline"
+                      className="w-full h-11 bg-white/10 hover:bg-white/20 text-white border-2 border-white/40 hover:border-white font-bold text-xs px-4 flex items-center justify-center space-x-1.5 cursor-pointer rounded-none"
+                    >
+                      <FileText className="w-4 h-4 text-yellow-300 shrink-0" />
+                      <span className="truncate">
+                        View Exam Results ({latestExamAttempt.score}% {latestExamAttempt.passed ? "Passed" : "Needs Review"})
+                      </span>
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+      </div>
+    </LearningShell>
   );
 }

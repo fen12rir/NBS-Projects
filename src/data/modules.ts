@@ -775,12 +775,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "For LNQR Sulit Coins: On the Payment Screen, press F3 (Bank Card), select 'LNQR Sulit Coins', and click [Ok].",
-          "Enter the Sulit Coins amount to redeem (e.g. 29.00) and the customer's LNQR code, then click [Ok].",
+          "For LNQR Sulit Coins: Because the customer is redeeming LNQR Sulit Coins, choose option '3. LNQR / LNQR PLUS' on the Choose Option prompt and scan/verify their LNQR code.",
+          "On the Payment Screen, press F3 (Bank Card), select 'LNQR Sulit Coins', and click [Ok].",
+          "Enter or verify the Sulit Coins amount to redeem (e.g. 29.00) and the customer's LNQR code, then click [Ok].",
           "The register automatically returns to Cash Payment Details for the remaining balance. Enter the cash tendered and press Enter, then confirm the 'LNQR has been updated!' dialog.",
-          "For NBS Gift Card: Press F3 (Bank Card), select 'NBS GIFTCARD', click [Ok], verify the Voucher Amount and Voucher Code, and click [Ok]."
+          "For NBS Gift Card: Choose option '1. None', press F3 (Bank Card), select 'NBS GIFTCARD', click [Ok], verify the Voucher Amount and Voucher Code, and click [Ok]."
         ],
-        keyCallouts: ["F3 -> LNQR Sulit Coins", "Split Tender: Coins + Cash Balance", "F3 -> NBS GIFTCARD"]
+        keyCallouts: ["Option 3: LNQR / LNQR PLUS", "F3 -> LNQR Sulit Coins", "Split Tender: Coins + Cash Balance", "F3 -> NBS GIFTCARD"]
       },
       {
         id: "les-8-4",

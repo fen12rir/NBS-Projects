@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { LearningShell } from "@/components/layout/learning-shell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,11 @@ import {
   Clock, 
   AlertTriangle, 
   HelpCircle,
-  FileText
+  FileText,
+  UserCheck,
+  User,
+  ShoppingBag,
+  ExternalLink
 } from "lucide-react";
 
 export default function AssessmentResultPage() {
@@ -27,158 +31,342 @@ export default function AssessmentResultPage() {
 
   const [attempt, setAttempt] = useState<AttemptRecord | null>(null);
   const [history, setHistory] = useState<AttemptRecord[]>([]);
+  const [progress, setProgress] = useState<UserProgress | null>(null);
 
   useEffect(() => {
-    const progress = getLocalProgress();
-    const found = progress.scenarioAttempts.find((a) => a.id === attemptId);
+    const p = getLocalProgress();
+    setProgress(p);
+    const found = p.scenarioAttempts.find((a) => a.id === attemptId);
     if (found) {
       setAttempt(found);
-    } else if (progress.scenarioAttempts.length > 0) {
-      setAttempt(progress.scenarioAttempts[0]);
+    } else if (p.scenarioAttempts.length > 0) {
+      setAttempt(p.scenarioAttempts[0]);
     }
-    setHistory(progress.scenarioAttempts);
+    setHistory(p.scenarioAttempts);
   }, [attemptId]);
 
   if (!attempt) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <DashboardHeader />
-        <div className="max-w-xl mx-auto py-16 text-center">
+      <LearningShell>
+        <div className="max-w-xl mx-auto py-16 px-4 text-center">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-500">
+            <FileText className="w-6 h-6" />
+          </div>
           <h2 className="text-xl font-bold text-gray-900">Attempt Record Not Found</h2>
-          <p className="text-sm text-gray-500 mt-2">No score details available for this session.</p>
+          <p className="text-sm text-gray-500 mt-1">No score details available for this session.</p>
           <Link href="/dashboard" className="mt-4 inline-block">
-            <Button>Return to Dashboard</Button>
+            <Button className="bg-[#E4002B] hover:bg-[#C10024] text-white">Return to Dashboard</Button>
           </Link>
         </div>
-      </div>
+      </LearningShell>
     );
   }
 
   const isPassed = attempt.passed;
+  const isPracticalExam = Boolean(attempt.caseResults && attempt.caseResults.length > 0);
+  const isCertified = Boolean(progress?.certificationCompletedAt);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <DashboardHeader />
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <LearningShell>
+      <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+        {/* Navigation Breadcrumb */}
         <div>
           <Link
             href="/dashboard"
-            className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B]"
+            className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Dashboard</span>
           </Link>
         </div>
 
-        {/* Big Outcome Banner */}
-        <div
-          className={`p-8 border-4 text-center space-y-4 shadow-xl ${
-            isPassed
-              ? "bg-emerald-50 border-emerald-600 text-emerald-950"
-              : "bg-amber-50 border-amber-600 text-amber-950"
-          }`}
-        >
-          <div className="inline-flex items-center justify-center p-3 rounded-full bg-white shadow-sm">
-            {isPassed ? (
-              <CheckCircle2 className="w-12 h-12 text-emerald-600" />
-            ) : (
-              <AlertTriangle className="w-12 h-12 text-amber-600" />
-            )}
-          </div>
+        {/* Primary Result Summary Card */}
+        <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+          {/* Top Status Strip */}
+          <div className={`h-2.5 ${isPassed ? "bg-emerald-600" : "bg-[#E4002B]"}`} />
 
-          <Badge variant={isPassed ? "success" : "warning"} className="text-xs tracking-wider">
-            {isPassed ? "OFFICIAL PASS" : "NEEDS PRACTICE"}
-          </Badge>
+          <div className="p-6 sm:p-8 space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={isPassed ? "success" : "danger"}>
+                    {isPassed ? "Official Pass" : "Needs Practice"}
+                  </Badge>
+                  <span className="text-xs font-mono font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
+                    {attempt.scenarioTitle}
+                  </span>
+                </div>
 
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
-            {isPassed ? "Assessment Passed!" : "Practical Assessment Incomplete"}
-          </h1>
+                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">
+                  {isPracticalExam
+                    ? isPassed
+                      ? "Practical Hands-On Exam Passed!"
+                      : "Practical Hands-On Exam Needs Review"
+                    : isPassed
+                    ? "Module Assessment Passed!"
+                    : "Assessment Needs Review"}
+                </h1>
 
-          <p className="text-sm max-w-xl mx-auto text-gray-700 leading-relaxed">
-            {isPassed
-              ? "Outstanding! You demonstrated proficient navigation of item entry, quantity settings, and cash tender per NBS cashier SOP."
-              : "You completed the cashier workflow, but several incorrect function keys or sequences were recorded. Review the mistake breakdown below and retry."}
-          </p>
+                <p className="text-xs sm:text-sm text-gray-600 max-w-2xl leading-relaxed">
+                  {isPassed
+                    ? "Outstanding! You demonstrated proficient cashier operations adhering to official National Book Store SOP guidelines. All critical milestones and tender amounts verified."
+                    : "You completed the cashier workflow, but certain validation steps or function key sequences were missed or executed incorrectly. Review the breakdown below and retry."}
+                </p>
+              </div>
 
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-6 text-sm font-mono font-bold">
-            <div>
-              <span className="text-xs text-gray-500 block">FINAL SCORE:</span>
-              <span className={`text-3xl ${isPassed ? "text-emerald-700" : "text-amber-700"}`}>
-                {attempt.score}%
-              </span>
+              {/* Score Highlight Badge */}
+              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg shrink-0 w-full md:w-44 text-center">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
+                  Final Score
+                </span>
+                <span className={`text-4xl font-black font-mono my-0.5 ${isPassed ? "text-emerald-600" : "text-[#E4002B]"}`}>
+                  {attempt.score}%
+                </span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase">
+                  Passing Mark: 80%
+                </span>
+              </div>
             </div>
-            <div className="h-8 w-px bg-gray-300"></div>
-            <div>
-              <span className="text-xs text-gray-500 block">STEPS COMPLETED:</span>
-              <span className="text-2xl text-gray-900">{attempt.stepsCompleted} / {attempt.totalSteps}</span>
-            </div>
-            <div className="h-8 w-px bg-gray-300"></div>
-            <div>
-              <span className="text-xs text-gray-500 block">MISTAKES LOGGED:</span>
-              <span className="text-2xl text-red-600">{attempt.mistakes.length}</span>
-            </div>
-            <div className="h-8 w-px bg-gray-300"></div>
-            <div>
-              <span className="text-xs text-gray-500 block">TIME SPENT:</span>
-              <span className="text-2xl text-gray-900">{attempt.timeSpentSeconds}s</span>
+
+            {/* 3 Metric Summary Tiles */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
+                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                  {isPracticalExam ? "Cases Passed" : "Steps Completed"}
+                </div>
+                <div className="text-xl font-black text-gray-900 mt-1 font-mono">
+                  {attempt.stepsCompleted}{" "}
+                  <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
+                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                  Total Time Elapsed
+                </div>
+                <div className="text-xl font-black text-gray-900 mt-1 font-mono">
+                  {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
+                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
+                  Status Classification
+                </div>
+                <div className="text-xl font-black mt-1 font-mono">
+                  {isPassed ? (
+                    <span className="text-emerald-600 flex items-center space-x-1">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>QUALIFIED</span>
+                    </span>
+                  ) : (
+                    <span className="text-[#E4002B] flex items-center space-x-1">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>RETAKE REQUIRED</span>
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Mistakes Review Table */}
-        <div className="bg-white border border-gray-200 p-6 space-y-4">
-          <div className="flex items-center justify-between border-b pb-3">
-            <h2 className="text-base font-bold text-gray-900 uppercase tracking-tight">
-              Detailed Mistake Log & Feedback
-            </h2>
-            <span className="text-xs font-mono text-gray-400">
-              {attempt.mistakes.length} item(s) recorded
-            </span>
-          </div>
-
-          {attempt.mistakes.length === 0 ? (
-            <div className="p-6 bg-emerald-50 text-emerald-800 text-xs font-mono flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span>Flawless session! No incorrect function keys or invalid tender sequences occurred.</span>
+        {/* Certificate Callout Banner: Only if passed and officially certified */}
+        {isPassed && isCertified ? (
+          <div className="bg-emerald-50 border-2 border-emerald-400/60 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg shadow-xs">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Award className="w-6 h-6 shrink-0" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-emerald-950 text-sm sm:text-base">
+                  Official NBS Cashier Certification Unlocked!
+                </h3>
+                <p className="text-xs text-emerald-800 leading-relaxed">
+                  You have successfully satisfied all curriculum modules and practical exam requirements. Your personalized certificate is ready.
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="divide-y divide-gray-100 text-xs">
-              {attempt.mistakes.map((m, idx) => (
-                <div key={idx} className="py-3 space-y-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="bg-red-100 text-red-800 font-bold px-1.5 py-0.5 text-[10px]">
-                      Step {m.step}
-                    </span>
-                    <span className="font-bold text-gray-800">
-                      Action Attempted: <code className="text-red-700 bg-red-50 px-1">{m.actionAttempted}</code>
-                    </span>
+            <Link href="/certificate" className="shrink-0 w-full sm:w-auto">
+              <Button
+                size="sm"
+                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2.5 shadow-sm"
+              >
+                <Award className="w-4 h-4 shrink-0" />
+                <span>View &amp; Print Certificate</span>
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="bg-red-50 border-2 border-red-300 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg shadow-xs">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-11 h-11 rounded-full bg-[#E4002B] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <AlertTriangle className="w-6 h-6 shrink-0" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
+                  Official NBS Certification Locked (Passing Mark: 80%)
+                </h3>
+                <p className="text-xs text-red-800 leading-relaxed">
+                  {attempt.score >= 80 ? (
+                    <>
+                      You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
+                      <strong>{attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} failed</strong>{" "}
+                      due to critical missed steps or incorrect change. To unlock official certification, you must achieve <strong>80% overall</strong> and pass <strong>at least 6 of the 7 cases</strong> (max 1 failed case).
+                    </>
+                  ) : (
+                    <>
+                      Trainee achieved <strong>{attempt.score}%</strong>. To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and pass at least 6 of the 7 customer cases.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+            <Link href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"} className="shrink-0 w-full sm:w-auto">
+              <Button
+                size="sm"
+                className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2.5 shadow-sm"
+              >
+                <RotateCcw className="w-4 h-4 shrink-0" />
+                <span>Retake Practical Exam</span>
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Practical Exam Per-Case Score Breakdown */}
+        {isPracticalExam && attempt.caseResults && (
+          <div className="bg-white border border-gray-200 p-5 sm:p-6 space-y-4 shadow-sm rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-2">
+              <div>
+                <h2 className="text-sm sm:text-base font-extrabold text-gray-900 uppercase tracking-tight flex items-center space-x-2">
+                  <UserCheck className="w-5 h-5 text-[#E4002B] shrink-0" />
+                  <span>Customer Interaction Breakdown</span>
+                </h2>
+                <p className="text-xs text-gray-500">
+                  Performance across each unguided customer transaction in your shift
+                </p>
+              </div>
+              <span className="text-xs font-mono text-gray-600 font-bold bg-gray-100 px-2.5 py-1 rounded">
+                {attempt.caseResults.filter((c) => c.passed).length} / {attempt.caseResults.length} Cases Passed
+              </span>
+            </div>
+
+            <div className="divide-y divide-gray-100">
+              {attempt.caseResults.map((c) => (
+                <div key={c.caseId} className="py-4 space-y-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2.5">
+                      <span className="bg-[#0B192C] text-white font-mono font-bold px-2 py-0.5 rounded text-xs shrink-0">
+                        Case #{c.caseNumber}
+                      </span>
+                      <span className="font-bold text-xs sm:text-sm text-gray-900">
+                        {c.title}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center space-x-3 self-end sm:self-auto">
+                      <span className="text-xs text-gray-500 font-mono font-medium flex items-center space-x-1">
+                        <Clock className="w-3 h-3 text-gray-400 shrink-0" />
+                        <span>{c.timeSpentSeconds}s</span>
+                      </span>
+                      <span className={`font-mono font-bold text-sm ${c.passed ? "text-emerald-700" : "text-[#E4002B]"}`}>
+                        {c.score}%
+                      </span>
+                      <Badge variant={c.passed ? "success" : "danger"}>
+                        {c.passed ? "Passed" : "Failed"}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="text-gray-600 pl-2 border-l-2 border-red-300 ml-1 mt-1">
-                    {m.feedback}
-                  </div>
+
+                  {c.feedback && c.feedback.length > 0 && (
+                    <div className="bg-red-50/80 border-l-4 border-[#E4002B] p-3 text-xs text-red-950 space-y-1.5 rounded-r">
+                      <div className="font-bold text-[11px] uppercase tracking-wider text-[#E4002B] flex items-center space-x-1">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                        <span>SOP Checklist &amp; Auditor Observations:</span>
+                      </div>
+                      <div className="space-y-1 pl-4">
+                        {c.feedback.map((f, fIdx) => (
+                          <div key={fIdx} className="flex items-start space-x-1.5">
+                            <span className="text-[#E4002B] font-bold">•</span>
+                            <span className="leading-relaxed">{f}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
+
+        {/* Regular Guided Scenario Mistakes Review Table */}
+        {!isPracticalExam && (
+          <div className="bg-white border border-gray-200 p-5 sm:p-6 space-y-4 shadow-sm rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-2">
+              <h2 className="text-sm sm:text-base font-extrabold text-gray-900 uppercase tracking-tight flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-[#E4002B]" />
+                <span>Detailed Mistake Log &amp; Feedback</span>
+              </h2>
+              <span className="text-xs font-mono text-gray-500">
+                {attempt.mistakes.length} item(s) recorded
+              </span>
+            </div>
+
+            {attempt.mistakes.length === 0 ? (
+              <div className="p-5 bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-mono flex items-center space-x-2 rounded-md">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Flawless session! No incorrect function keys or invalid tender sequences occurred.</span>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100 text-xs">
+                {attempt.mistakes.map((m, idx) => (
+                  <div key={idx} className="py-3 space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="bg-red-100 text-[#E4002B] font-bold px-2 py-0.5 text-[10px] rounded font-mono">
+                        Step {m.step}
+                      </span>
+                      <span className="font-bold text-gray-800">
+                        Action Attempted: <code className="text-[#E4002B] bg-red-50 px-1 py-0.5 rounded font-mono">{m.actionAttempted}</code>
+                      </span>
+                    </div>
+                    <div className="text-gray-600 pl-3 border-l-2 border-[#E4002B]/40 ml-1">
+                      {m.feedback}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-          <Link href="/simulator" className="w-full sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto font-bold text-xs bg-[#E4002B] hover:bg-[#C10024] flex items-center justify-center space-x-2">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
+          <Link
+            href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"}
+            className="w-full sm:w-auto"
+          >
+            <Button
+              size="lg"
+              className="w-full sm:w-auto font-bold text-xs bg-[#E4002B] hover:bg-[#C10024] text-white flex items-center justify-center space-x-2 cursor-pointer shadow-sm px-6 py-2.5"
+            >
               <RotateCcw className="w-4 h-4" />
-              <span>Retry Practical Assessment</span>
+              <span>{isPracticalExam ? "Retake Practical Exam" : "Retry Assessment"}</span>
             </Button>
           </Link>
 
           <Link href="/dashboard" className="w-full sm:w-auto">
-            <Button variant="outline" size="lg" className="w-full sm:w-auto font-bold text-xs border-gray-300">
+            <Button
+              variant="outline"
+              size="lg"
+              className="w-full sm:w-auto font-bold text-xs border-gray-300 text-gray-700 hover:text-gray-900 cursor-pointer px-6 py-2.5"
+            >
               Return to Course Dashboard
             </Button>
           </Link>
         </div>
-      </main>
-    </div>
+      </div>
+    </LearningShell>
   );
 }

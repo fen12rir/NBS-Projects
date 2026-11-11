@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
+import { LearningShell } from "@/components/layout/learning-shell";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,10 +105,8 @@ function LessonDetailContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <DashboardHeader />
-
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <LearningShell currentModuleId={moduleId} currentLessonId={lessonId}>
+      <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Navigation Breadcrumb */}
         <div className="flex items-center justify-between">
           <Link
@@ -403,8 +402,8 @@ function LessonDetailContent() {
             )}
           </div>
         </div>
-      </main>
-    </div>
+      </div>
+    </LearningShell>
   );
 }
 

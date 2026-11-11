@@ -1,4 +1,5 @@
 import React from "react";
+import { AlertTriangle, X } from "lucide-react";
 
 interface LnqrUpdatedModalProps {
   isOpen: boolean;
@@ -51,9 +52,9 @@ export function LnqrUpdatedModal({
               <button
                 type="button"
                 onClick={onConfirm}
-                className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-[10px] text-gray-200 leading-none cursor-pointer"
+                className="w-3.5 h-3.5 bg-[#4A6475] hover:bg-red-700 border border-[#7A93A4] flex items-center justify-center text-gray-200 cursor-pointer"
               >
-                ✕
+                <X className="w-2.5 h-2.5 shrink-0" />
               </button>
             </div>
           </div>
@@ -62,9 +63,7 @@ export function LnqrUpdatedModal({
           <div className="p-4 space-y-4">
             <div className="flex items-start space-x-3">
               {/* Yellow Warning Triangle Icon */}
-              <div className="text-amber-500 font-extrabold text-2xl leading-none flex-shrink-0">
-                ⚠️
-              </div>
+              <AlertTriangle className="w-6 h-6 text-amber-500 shrink-0 mt-0.5" />
               <div className="text-xs font-sans text-gray-900 space-y-1 font-semibold leading-relaxed">
                 <div className="font-bold text-sm text-gray-900 mb-1">
                   LNQR has been updated!

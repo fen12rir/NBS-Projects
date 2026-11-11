@@ -35,7 +35,7 @@ export function Certificate({
 
       <div
         data-certificate-date
-        className="absolute left-[10.5%] top-[60.5%] flex h-[8%] w-[85%] items-center justify-center text-center text-[clamp(0.875rem,1.8vw,1.25rem)] text-gray-900"
+        className="absolute left-[12%] top-[60%] flex h-[8%] w-[85%] items-center justify-center text-center text-[clamp(0.875rem,1.8vw,1.25rem)] text-gray-900"
       >
         {completionDate}
       </div>

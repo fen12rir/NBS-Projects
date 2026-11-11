@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { CheckCircle2 } from "lucide-react";
 import { POSTransactionState } from "@/lib/simulator/pos-state-machine";
 import { formatCurrency } from "@/lib/utils";
 
@@ -99,8 +100,9 @@ export function TransactionJournalScreen({
           </button>
 
           {isPrinted && (
-            <p role="status" className="text-center text-xs font-bold text-green-800 bg-green-50 border border-green-200 px-3 py-1.5 rounded">
-              ✓ Journal tape sent to POS printer
+            <p role="status" className="text-center text-xs font-bold text-green-800 bg-green-50 border border-green-200 px-3 py-1.5 rounded flex items-center justify-center space-x-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-green-700 shrink-0" />
+              <span>Journal tape sent to POS printer</span>
             </p>
           )}
         </div>

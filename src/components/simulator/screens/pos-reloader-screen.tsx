@@ -1,4 +1,5 @@
 import React from "react";
+import { X, Search, Newspaper, ArrowLeft, ArrowRight, RotateCw, Home } from "lucide-react";
 
 interface PosReloaderScreenProps {
   onReloadToLogin: () => void;
@@ -21,12 +22,12 @@ export function PosReloaderScreen({ onReloadToLogin }: PosReloaderScreenProps) {
       {/* Retro Browser Navigation / Address Bar */}
       <div className="bg-[#ECE9D8] border-b border-gray-400 px-3 py-1.5 flex items-center space-x-2 text-xs">
         {/* Back / Forward / Refresh */}
-        <div className="flex items-center space-x-1 text-gray-500 font-mono text-sm select-none">
-          <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">←</span>
-          <span className="px-1 border border-gray-300 bg-gray-100 opacity-60">→</span>
-          <span className="px-1 border border-gray-300 bg-gray-100">↺</span>
-          <span className="px-1 border border-gray-300 bg-gray-100">✕</span>
-          <span className="px-1 border border-gray-300 bg-gray-100">⌂</span>
+        <div className="flex items-center space-x-1 text-gray-500 font-mono text-xs select-none">
+          <span className="p-1 border border-gray-300 bg-gray-100 opacity-60"><ArrowLeft className="w-3 h-3" /></span>
+          <span className="p-1 border border-gray-300 bg-gray-100 opacity-60"><ArrowRight className="w-3 h-3" /></span>
+          <span className="p-1 border border-gray-300 bg-gray-100"><RotateCw className="w-3 h-3" /></span>
+          <span className="p-1 border border-gray-300 bg-gray-100"><X className="w-3 h-3" /></span>
+          <span className="p-1 border border-gray-300 bg-gray-100"><Home className="w-3 h-3" /></span>
         </div>
 
         {/* URL Address Input */}
@@ -38,7 +39,7 @@ export function PosReloaderScreen({ onReloadToLogin }: PosReloaderScreenProps) {
         {/* Search / Go */}
         <div className="w-36 bg-white border border-gray-500 px-2 py-0.5 text-xs text-gray-500 font-sans flex items-center justify-between shadow-inner">
           <span>Google</span>
-          <span className="text-gray-400 text-[10px]">🔍</span>
+          <Search className="w-3 h-3 text-gray-400 shrink-0" />
         </div>
       </div>
 
@@ -49,7 +50,7 @@ export function PosReloaderScreen({ onReloadToLogin }: PosReloaderScreenProps) {
           <span>Getting Started</span>
         </span>
         <span className="flex items-center space-x-1">
-          <span className="text-orange-500 font-bold">📰</span>
+          <Newspaper className="w-3.5 h-3.5 text-orange-500 shrink-0" />
           <span>Latest Headlines</span>
         </span>
       </div>
