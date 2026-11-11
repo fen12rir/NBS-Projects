@@ -115,16 +115,21 @@ export default function AssessmentResultPage() {
               </div>
 
               {/* Score Highlight Badge */}
-              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg shrink-0 w-full md:w-44 text-center">
+              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg shrink-0 w-full md:w-48 text-center">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
                   Final Score
                 </span>
                 <span className={`text-4xl font-black font-mono my-0.5 ${isPassed ? "text-emerald-600" : "text-[#E4002B]"}`}>
                   {attempt.score}%
                 </span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">
+                <span className="text-[10px] font-bold text-gray-500 uppercase">
                   Passing Mark: 80%
                 </span>
+                {isPracticalExam && (
+                  <span className="text-[9px] font-semibold text-gray-500 mt-1 bg-gray-200/70 px-2 py-0.5 rounded">
+                    Requires &ge;6 of 7 cases passed
+                  </span>
+                )}
               </div>
             </div>
 
@@ -132,12 +137,21 @@ export default function AssessmentResultPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
                 <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                  {isPracticalExam ? "Cases Passed" : "Steps Completed"}
+                  {isPracticalExam ? "Customers Served & Passed" : "Steps Completed"}
                 </div>
                 <div className="text-xl font-black text-gray-900 mt-1 font-mono">
                   {attempt.stepsCompleted}{" "}
                   <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
                 </div>
+                {isPracticalExam && (
+                  <div className="text-[10px] text-gray-500 mt-1">
+                    {attempt.stepsCompleted >= 6 ? (
+                      <span className="text-emerald-600 font-medium">Case count met (&ge;6/7)</span>
+                    ) : (
+                      <span className="text-red-600 font-medium">{attempt.totalSteps - attempt.stepsCompleted} unserved/failed cases</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
@@ -147,6 +161,7 @@ export default function AssessmentResultPage() {
                 <div className="text-xl font-black text-gray-900 mt-1 font-mono">
                   {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
                 </div>
+                <div className="text-[10px] text-gray-500 mt-1">15-minute standard shift limit</div>
               </div>
 
               <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
@@ -166,6 +181,13 @@ export default function AssessmentResultPage() {
                     </span>
                   )}
                 </div>
+                {!isPassed && isPracticalExam && (
+                  <div className="text-[10px] text-red-600 font-medium mt-1">
+                    {attempt.stepsCompleted < 6
+                      ? `Incomplete shift (${attempt.stepsCompleted}/7 served)`
+                      : "Minimum score not reached"}
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -207,19 +229,24 @@ export default function AssessmentResultPage() {
                 <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
                   Official NBS Certification Locked (Passing Mark: 80%)
                 </h3>
-                <p className="text-xs text-red-800 leading-relaxed">
-                  {attempt.score >= 80 ? (
-                    <>
+                <div className="text-xs text-red-800 leading-relaxed space-y-1">
+                  {attempt.score >= 80 && attempt.stepsCompleted < 6 ? (
+                    <p>
+                      You achieved a score of <strong>{attempt.score}%</strong> on completed interactions, but only{" "}
+                      <strong>{attempt.stepsCompleted} of {attempt.totalSteps} customers were served</strong> ({attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} unserved or abandoned). To earn official NBS cashier certification, you must handle <strong>all customer cases</strong> during your shift and pass <strong>at least 6 of the 7 cases</strong> with an <strong>80% overall score</strong>.
+                    </p>
+                  ) : attempt.score >= 80 ? (
+                    <p>
                       You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
                       <strong>{attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} failed</strong>{" "}
                       due to critical missed steps or incorrect change. To unlock official certification, you must achieve <strong>80% overall</strong> and pass <strong>at least 6 of the 7 cases</strong> (max 1 failed case).
-                    </>
+                    </p>
                   ) : (
-                    <>
-                      Trainee achieved <strong>{attempt.score}%</strong>. To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and pass at least 6 of the 7 customer cases.
-                    </>
+                    <p>
+                      Trainee achieved <strong>{attempt.score}%</strong> ({attempt.stepsCompleted} of {attempt.totalSteps} cases passed). To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
             </div>
             <Link href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"} className="shrink-0 w-full sm:w-auto">

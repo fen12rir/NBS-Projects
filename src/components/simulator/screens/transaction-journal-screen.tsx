@@ -18,6 +18,7 @@ export function TransactionJournalScreen({
 }: TransactionJournalScreenProps) {
   const [isPrinted, setIsPrinted] = useState(false);
   const isSalesJournal = mode === "SALES_JOURNAL";
+  const [helpNotice, setHelpNotice] = useState<string | null>(null);
 
   const printJournal = useCallback(() => {
     setIsPrinted(true);
@@ -33,7 +34,7 @@ export function TransactionJournalScreen({
         printJournal();
       } else if (event.key === "F1") {
         event.preventDefault();
-        alert("Press ENTER to print the journal tape, or Alt+B / ESC to return to the POS screen.");
+        setHelpNotice("Press ENTER to print tape, or Alt+B / ESC to return.");
       }
     };
 
@@ -83,12 +84,17 @@ export function TransactionJournalScreen({
 
           <button
             type="button"
-            onClick={() => alert("Press ENTER to print the journal tape, or Alt+B / ESC to return to the POS screen.")}
+            onClick={() => setHelpNotice("Press ENTER to print tape, or Alt+B / ESC to return.")}
             className="flex w-36 cursor-pointer flex-col items-center border-2 border-b-[#800000] border-l-[#ff6b6b] border-r-[#800000] border-t-[#ff6b6b] bg-[#E4002B] py-2 text-xs font-extrabold text-white shadow hover:bg-[#C10024]"
           >
             <span className="text-sm font-black">Help</span>
             <span className="text-[10px]">F1</span>
           </button>
+          {helpNotice && (
+            <div className="text-[11px] font-bold text-gray-900 bg-white/90 p-1.5 border border-gray-400 max-w-[150px] text-center">
+              {helpNotice}
+            </div>
+          )}
 
           <button
             type="button"

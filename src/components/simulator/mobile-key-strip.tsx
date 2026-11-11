@@ -8,12 +8,12 @@ interface MobileKeyStripProps {
 
 export function MobileKeyStrip({ onKeyPress }: MobileKeyStripProps) {
   const commonKeys = [
-    { label: "ESC", key: "Escape" },
+    { label: "ESC", key: "Escape", isEsc: true },
     { label: "TAB", key: "Tab" },
     { label: "ENTER", key: "Enter", primary: true },
     { label: "Alt+B", key: "b", altKey: true, highlight: true },
     { label: "Alt+Enter", key: "Enter", altKey: true, highlight: true },
-    { label: "Ctrl+Alt+C", key: "c", ctrlKey: true, altKey: true },
+    { label: "Cancel", key: "c", ctrlKey: true, altKey: true, title: "Ctrl+Alt+C (Cancel Transaction)" },
   ];
 
   const fKeys = [
@@ -32,20 +32,23 @@ export function MobileKeyStrip({ onKeyPress }: MobileKeyStripProps) {
   ];
 
   return (
-    <div className="w-full bg-gray-950/95 border-t border-gray-800 px-2 py-1 overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-30">
-      <div className="flex items-center justify-start md:justify-center gap-1 sm:gap-1.5 w-max md:w-full min-w-max md:min-w-0">
+    <div className="w-full bg-gray-950/95 border-t border-gray-800 py-1 overflow-x-auto select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden z-30 touch-pan-x px-4 sm:px-8 scroll-px-6">
+      <div className="flex items-center justify-start md:justify-center gap-1 sm:gap-1.5 min-w-max pl-2 pr-16 sm:pr-24">
         {/* Control Keys */}
         <div className="flex items-center gap-1 shrink-0 md:shrink md:flex-1">
           {commonKeys.map((k) => (
             <button
               key={k.label}
               type="button"
+              title={(k as any).title || k.label}
               onClick={() => onKeyPress(k.key, k.altKey, k.ctrlKey)}
               className={`shrink-0 md:shrink md:flex-1 h-7 sm:h-8 px-2 sm:px-2.5 py-0.5 text-[11px] font-mono font-bold rounded shadow-xs active:scale-95 transition-transform cursor-pointer text-center whitespace-nowrap flex items-center justify-center ${
                 k.primary
                   ? "bg-emerald-600 hover:bg-emerald-500 text-white"
                   : k.highlight
                   ? "bg-amber-600 hover:bg-amber-500 text-white"
+                  : (k as any).isEsc
+                  ? "bg-red-900/80 hover:bg-red-800 text-white border border-red-700"
                   : "bg-gray-800 hover:bg-gray-700 text-gray-200 border border-gray-600"
               }`}
             >
@@ -64,7 +67,9 @@ export function MobileKeyStrip({ onKeyPress }: MobileKeyStripProps) {
               key={k.label}
               type="button"
               onClick={() => onKeyPress(k.key)}
-              className="shrink-0 md:shrink md:flex-1 h-7 sm:h-8 px-1.5 sm:px-2 py-0.5 text-[11px] font-mono font-bold bg-gray-800 hover:bg-gray-700 text-yellow-300 border border-gray-700 rounded shadow-xs active:scale-95 transition-transform cursor-pointer text-center whitespace-nowrap flex items-center justify-center"
+              className={`shrink-0 md:shrink md:flex-1 h-7 sm:h-8 px-1.5 sm:px-2 py-0.5 text-[11px] font-mono font-bold bg-gray-800 hover:bg-gray-700 text-yellow-300 border rounded shadow-xs active:scale-95 transition-transform cursor-pointer text-center whitespace-nowrap flex items-center justify-center ${
+                k.label === "F12" ? "border-yellow-500/60 ring-1 ring-yellow-500/30" : "border-gray-700"
+              }`}
             >
               {k.label}
             </button>

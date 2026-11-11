@@ -13,6 +13,7 @@ export interface ReadingsScreenProps {
   onConfirmZClearing?: () => void;
   onPrint?: () => void;
   onClose: () => void;
+  onShowAlert?: (message: string, title?: string, type?: "info" | "success" | "warning") => void;
 }
 
 export function ReadingsScreen({
@@ -24,6 +25,7 @@ export function ReadingsScreen({
   onConfirmZClearing,
   onPrint,
   onClose,
+  onShowAlert,
 }: ReadingsScreenProps) {
   const isY = readingType === "Y";
 
@@ -60,7 +62,9 @@ export function ReadingsScreen({
         } else if (e.key === "Enter") {
           e.preventDefault();
           onPrint?.();
-          alert(`${isY ? "Y" : "Z"} Reading printed successfully.`);
+          if (onShowAlert) {
+            onShowAlert(`${isY ? "Y" : "Z"} Reading printed successfully. Tape printed and archived.`, `${isY ? "Y" : "Z"} Reading Output`, "success");
+          }
           onClose();
         }
       }
@@ -161,7 +165,9 @@ export function ReadingsScreen({
               type="button"
               onClick={() => {
                 onPrint?.();
-                alert(`${isY ? "Y" : "Z"} Reading printed successfully.`);
+                if (onShowAlert) {
+                  onShowAlert(`${isY ? "Y" : "Z"} Reading printed successfully. Tape printed and archived.`, `${isY ? "Y" : "Z"} Reading Output`, "success");
+                }
                 onClose();
               }}
               className="w-36 py-2 bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] text-blue-900 font-extrabold text-xs shadow flex flex-col items-center cursor-pointer active:border-t-[#404040] active:border-l-[#404040] active:border-r-white active:border-b-white"

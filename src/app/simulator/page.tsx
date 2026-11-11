@@ -31,6 +31,7 @@ import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-ter
 import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
 import { CustomerPanel } from "@/components/simulator/customer-panel";
 import { ChangeCheckModal } from "@/components/simulator/modals/change-check-modal";
+import { PosAlertModal, PosAlertState } from "@/components/simulator/modals/pos-alert-modal";
 import { MobileKeyStrip } from "@/components/simulator/mobile-key-strip";
 import { LogoutScreen } from "@/components/simulator/screens/logout-screen";
 import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
@@ -188,14 +189,60 @@ function SimulatorContent() {
   // Mobile / Focus Mode States (Forced Landscape)
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [terminalScale, setTerminalScale] = useState(1);
+  const [userZoomLevel, setUserZoomLevel] = useState(1);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
-  const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(true);
+  const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(false);
 
+  // POS Green & Silver Alert Modal state
+  const [posAlert, setPosAlert] = useState<PosAlertState | null>(null);
+  const showPosAlert = (
+    message: string,
+    title?: string,
+    type: PosAlertState["type"] = "info",
+    onClose?: () => void
+  ) => {
+    setPosAlert({ isOpen: true, message, title, type, onClose });
+  };
 
+  // Keyboard & Input Zoom tracking
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA")
+      ) {
+        setIsInputFocused(true);
+        // Scroll target input smoothly into view
+        setTimeout(() => {
+          try {
+            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+          } catch {}
+        }, 150);
+      }
+    };
+
+    const handleFocusOut = () => {
+      setIsInputFocused(false);
+    };
+
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+    return () => {
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+    };
+  }, []);
 
   const enterFocusMode = async () => {
     setIsFocusMode(true);
+    // Push history state so mobile back gesture exits focus mode without leaving simulator
+    try {
+      window.history.pushState({ posFocusMode: true }, "");
+    } catch {}
+
     // 1. Fullscreen API
     try {
       if (document.documentElement.requestFullscreen) {
@@ -216,8 +263,12 @@ function SimulatorContent() {
     } catch {}
   };
 
-  const exitFocusMode = async () => {
+  const exitFocusMode = async (triggerHistoryBack = true) => {
     setIsFocusMode(false);
+    setUserZoomLevel(1);
+    if (triggerHistoryBack && typeof window !== "undefined" && window.history.state?.posFocusMode) {
+      window.history.back();
+    }
     // 1. Unlock screen orientation
     try {
       const orientation = (screen as any).orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
@@ -247,6 +298,17 @@ function SimulatorContent() {
       enterFocusMode();
     }
   };
+
+  // Mobile Hardware / Browser Back button handling in Focus Mode
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isFocusMode) {
+        exitFocusMode(false);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isFocusMode]);
 
   // Initialize Practical Exam Session
   useEffect(() => {
@@ -498,13 +560,16 @@ function SimulatorContent() {
 
   const checkViewport = () => {
     if (typeof window === "undefined") return;
+    // When virtual keyboard opens on mobile, prevent crushing scale
+    if (isInputFocused) return;
+
     const portrait = window.innerHeight > window.innerWidth;
     setIsPortrait(portrait);
 
     const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
       ? window.innerHeight
       : window.innerWidth;
-    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 200 : 85) : 65;
+    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 160 : 70) : 65;
     const effectiveHeight = isFocusMode && portrait && forceRotatePortrait
       ? window.innerWidth - overhead
       : window.innerHeight - overhead;
@@ -814,7 +879,11 @@ function SimulatorContent() {
     }
     const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
     if (tenderVal < netDue) {
-      alert(`Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`);
+      showPosAlert(
+        `Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`,
+        "Tender Error",
+        "warning"
+      );
       return;
     }
     setIsLnqrTenderProcessed(true);
@@ -891,7 +960,7 @@ function SimulatorContent() {
     ) {
       const redeemedCoins = Number(bankCardAmountInput.trim());
       if (!bankCardAmountInput.trim() || !Number.isFinite(redeemedCoins) || redeemedCoins < 0) {
-        alert("Enter a valid Sulit Coins amount.");
+        showPosAlert("Please enter a valid Sulit Coins amount.", "Sulit Coins Error", "warning");
         return;
       }
 
@@ -931,7 +1000,7 @@ function SimulatorContent() {
   const handleConfirmSodexhoPayment = () => {
     const tenderVal = parseFloat(sodexhoAvailAmount || sodexhoDenom) || 0;
     if (tenderVal <= 0) {
-      alert("Please select or enter a valid Sodexho denomination.");
+      showPosAlert("Please select or enter a valid Sodexho denomination.", "Sodexho Tender", "warning");
       return;
     }
 
@@ -940,14 +1009,22 @@ function SimulatorContent() {
       const diff = tenderVal - currentTotal;
       const changeDifference = diff > 0 ? diff : 0;
       setPendingSodexhoVariance(changeDifference);
-      alert("Sodexho Amount is greater than total transaction amount. Please perform Variance or use other payments.");
+      showPosAlert(
+        "Sodexho Amount is greater than total transaction amount. Please perform Variance or use other payments.",
+        "Sodexho Amount Error",
+        "warning"
+      );
       dispatch({ type: "CLOSE_PAYMENT" });
       setSelectedTenderMethod("CASH");
       setSelectedBankCardType("-SELECT-");
       setBankCardStep("SELECT_TYPE");
       return;
     } else if (tenderVal < currentTotal - 0.009) {
-      alert("Sodexho Amount is less than total transaction amount. Please enter the full amount or split tender.");
+      showPosAlert(
+        "Sodexho Amount is less than total transaction amount. Please enter the full amount or split tender.",
+        "Sodexho Amount Error",
+        "warning"
+      );
       return;
     }
 
@@ -2263,6 +2340,28 @@ function SimulatorContent() {
   };
 
   const handleSyntheticKeyPress = (key: string, altKey = false, ctrlKey = false) => {
+    if (key === "Enter") {
+      // 1. If yellow barcode input on MAIN page has content, trigger barcode scan directly
+      if (state.currentPage === "MAIN" && barcodeInput.trim()) {
+        handleBarcodeSubmit({ preventDefault: () => {} } as React.FormEvent);
+        return;
+      }
+
+      // 2. If a form input is currently focused in the DOM, submit its form
+      const activeEl = document.activeElement as HTMLElement | null;
+      if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "SELECT")) {
+        const form = (activeEl as HTMLInputElement).form;
+        if (form) {
+          if (typeof form.requestSubmit === "function") {
+            form.requestSubmit();
+          } else {
+            form.submit();
+          }
+          return;
+        }
+      }
+    }
+
     const evt = new KeyboardEvent("keydown", {
       key,
       altKey,
@@ -3174,7 +3273,40 @@ function SimulatorContent() {
               )}
             </div>
 
-            <div className="flex items-center space-x-2 shrink-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+              {/* Manual Zoom Controls in Focus Mode */}
+              <div className="flex items-center bg-gray-800 rounded px-1.5 py-0.5 border border-gray-700">
+                <button
+                  type="button"
+                  onClick={() => setUserZoomLevel((prev) => Math.max(0.7, Number((prev - 0.15).toFixed(2))))}
+                  className="w-5 h-5 flex items-center justify-center text-[12px] font-mono hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  title="Zoom Out"
+                >
+                  -
+                </button>
+                <span className="text-[10px] font-mono font-bold text-gray-300 min-w-[34px] text-center select-none">
+                  {Math.round(userZoomLevel * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setUserZoomLevel((prev) => Math.min(2.0, Number((prev + 0.15).toFixed(2))))}
+                  className="w-5 h-5 flex items-center justify-center text-[12px] font-mono hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  title="Zoom In"
+                >
+                  +
+                </button>
+                {userZoomLevel !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setUserZoomLevel(1)}
+                    className="text-[9px] text-yellow-400 hover:text-yellow-300 ml-1 underline cursor-pointer"
+                    title="Reset Zoom"
+                  >
+                    100%
+                  </button>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsFocusHeaderExpanded((prev) => !prev)}
@@ -3188,12 +3320,14 @@ function SimulatorContent() {
                 {isFocusHeaderExpanded ? (
                   <>
                     <ChevronUp className="w-3.5 h-3.5 shrink-0" />
-                    <span>Hide Guide</span>
+                    <span className="hidden sm:inline">Hide Guide</span>
+                    <span className="sm:hidden">Hide</span>
                   </>
                 ) : (
                   <>
                     <ChevronDown className="w-3.5 h-3.5 shrink-0" />
-                    <span>Show Guide</span>
+                    <span className="hidden sm:inline">Show Guide</span>
+                    <span className="sm:hidden">Guide</span>
                   </>
                 )}
               </button>
@@ -3206,16 +3340,17 @@ function SimulatorContent() {
                   className="bg-gray-800 hover:bg-gray-700 text-yellow-300 px-2 py-0.5 rounded text-[10px] font-mono border border-gray-700 cursor-pointer flex items-center space-x-1"
                 >
                   <RotateCw className="w-3 h-3 shrink-0" />
-                  <span>{forceRotatePortrait ? "Reset Rotation" : "Force Landscape"}</span>
+                  <span className="hidden sm:inline">{forceRotatePortrait ? "Reset Rotation" : "Force Landscape"}</span>
+                  <span className="sm:hidden">{forceRotatePortrait ? "Reset" : "Rotate"}</span>
                 </button>
               )}
 
               <button
                 type="button"
-                onClick={exitFocusMode}
+                onClick={() => exitFocusMode()}
                 className="bg-red-700 hover:bg-red-600 text-white font-bold px-2.5 py-0.5 rounded text-[11px] cursor-pointer"
               >
-                Exit Focus [Esc]
+                Exit [Esc]
               </button>
             </div>
           </div>
@@ -3250,24 +3385,36 @@ function SimulatorContent() {
           </div>
         )}
 
-        <div className={`flex-1 flex flex-col items-center justify-center min-h-0 w-full overflow-hidden ${isFocusMode ? "py-0 px-1" : "p-2"}`}>
-          <div
-            style={{
-              width: `${Math.round((isExternalReceiptShowing ? 1360 : 1080) * terminalScale)}px`,
-              height: `${Math.round(600 * terminalScale)}px`,
-              position: "relative",
-            }}
-            className="shrink-0 flex items-start justify-start"
-          >
-            <div
-              style={{
-                width: isExternalReceiptShowing ? "1360px" : "1080px",
-                height: "600px",
-                transform: terminalScale < 1 ? `scale(${terminalScale})` : undefined,
-                transformOrigin: "top left",
-              }}
-              className="flex items-center justify-center gap-4 shrink-0 transition-transform duration-200"
-            >
+        <div
+          className={`flex-1 flex flex-col items-center justify-center min-h-0 w-full transition-all duration-200 ${
+            isFocusMode
+              ? userZoomLevel > 1 || isInputFocused
+                ? "overflow-auto touch-pan-x touch-pan-y py-1 px-1"
+                : "overflow-hidden py-0 px-1"
+              : "overflow-hidden p-2"
+          }`}
+        >
+          {(() => {
+            const currentZoom = isInputFocused ? Math.max(userZoomLevel, 1.2) : userZoomLevel;
+            const finalScale = terminalScale * currentZoom;
+            return (
+              <div
+                style={{
+                  width: `${Math.round((isExternalReceiptShowing ? 1360 : 1080) * finalScale)}px`,
+                  height: `${Math.round(600 * finalScale)}px`,
+                  position: "relative",
+                }}
+                className="shrink-0 flex items-start justify-start"
+              >
+                <div
+                  style={{
+                    width: isExternalReceiptShowing ? "1360px" : "1080px",
+                    height: "600px",
+                    transform: finalScale < 1 || currentZoom > 1 ? `scale(${finalScale})` : undefined,
+                    transformOrigin: isInputFocused ? "top center" : "top left",
+                  }}
+                  className="flex items-center justify-center gap-4 shrink-0 transition-transform duration-200 ease-out"
+                >
               <div
                 ref={posContainerRef}
                 className={`w-[1080px] h-[600px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden flex-shrink-0 relative ${
@@ -3621,6 +3768,7 @@ function SimulatorContent() {
                       validateScenarioStep(expected);
                     }
                   }}
+                  onShowAlert={(msg, title, type) => showPosAlert(msg, title, type)}
                   onClose={() => setReadingsType(null)}
                 />
               ) : isBonusBuyOpen ? (
@@ -5526,10 +5674,12 @@ function SimulatorContent() {
             )}
           </div>
         )}
-        </div>
-        {/* End Scaled Terminal Container */}
-        </div>
-        </div>
+            </div>
+            {/* End Scaled Terminal Container */}
+          </div>
+        );
+      })()}
+      </div>
 
         {/* Touch Key Strip Footer - Consumes the whole width below the terminal */}
         {(isFocusMode || terminalScale < 1) && (
@@ -5701,6 +5851,9 @@ function SimulatorContent() {
         returnButtonLabel={returnButtonLabel}
         onResetExam={handleResetExam}
       />
+
+      {/* POS Green Beveled Alert Modal */}
+      <PosAlertModal alert={posAlert} onClose={() => setPosAlert(null)} />
     </div>
   );
 }

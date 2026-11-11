@@ -204,21 +204,14 @@ export function LearningSidebar({
                 >
                   {/* Module Bar */}
                   <div
-                    className={`flex items-center justify-between px-2.5 py-2 cursor-pointer text-xs transition-colors ${
+                    className={`flex items-center justify-between px-2.5 py-2 cursor-pointer text-xs transition-colors select-none ${
                       isCurrentMod
                         ? "bg-[#FFF1F2]/80 text-[#E4002B] font-bold border-l-4 border-[#E4002B]"
                         : "text-gray-800 hover:bg-gray-50"
                     }`}
                     onClick={() => toggleModule(mod.id)}
                   >
-                    <Link
-                      href={`/modules/${mod.id}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (onCloseMobile) onCloseMobile();
-                      }}
-                      className="flex items-center space-x-2 flex-1 min-w-0 pr-1 hover:underline"
-                    >
+                    <div className="flex items-center space-x-2 flex-1 min-w-0 pr-1">
                       {isCompleted ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                       ) : inProgress ? (
@@ -229,19 +222,44 @@ export function LearningSidebar({
                       <span className="truncate text-[11px] font-semibold">
                         M{modIdx + 1}: {mod.title.replace(/^Module \d+:\s*/, "")}
                       </span>
-                    </Link>
-                    <span className="text-gray-400 pl-1 shrink-0">
+                    </div>
+
+                    <button
+                      type="button"
+                      aria-label={isExpanded ? "Collapse module" : "Expand module"}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleModule(mod.id);
+                      }}
+                      className="p-1.5 -mr-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded cursor-pointer shrink-0"
+                    >
                       {isExpanded ? (
-                        <ChevronDown className="w-3.5 h-3.5" />
+                        <ChevronDown className="w-4 h-4" />
                       ) : (
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <ChevronRight className="w-4 h-4" />
                       )}
-                    </span>
+                    </button>
                   </div>
 
                   {/* Sub-lessons */}
                   {isExpanded && (
                     <div className="bg-gray-50/80 py-1.5 pl-4 pr-1.5 space-y-0.5 border-t border-gray-100 text-[11px]">
+                      {/* Module Overview Link */}
+                      <Link
+                        href={`/modules/${mod.id}`}
+                        onClick={onCloseMobile}
+                        className={`flex items-center justify-between px-2.5 py-1.5 rounded-md transition-all ${
+                          !currentLessonId && isCurrentMod
+                            ? "bg-[#E4002B] text-white font-bold shadow-xs"
+                            : "text-gray-600 hover:text-gray-900 hover:bg-gray-200/60"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-1.5 truncate pr-1">
+                          <BookOpen className={`w-3 h-3 shrink-0 ${!currentLessonId && isCurrentMod ? "text-white" : "text-gray-400"}`} />
+                          <span className="truncate font-medium">Module Overview &amp; Objectives</span>
+                        </div>
+                      </Link>
                       {mod.lessons.map((les) => {
                         const isCurrentLes = currentLessonId === les.id;
                         const isLesCompleted = progress?.completedLessons.includes(les.id);
