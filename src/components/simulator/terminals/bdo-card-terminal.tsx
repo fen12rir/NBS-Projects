@@ -6,6 +6,7 @@ interface BdoCardTerminalProps {
   authCode: string;
   generatedAt: Date | null;
   totalAmount: number;
+  onUseSlip?: () => void;
 }
 
 export function BdoCardTerminal({
@@ -14,6 +15,7 @@ export function BdoCardTerminal({
   authCode,
   generatedAt,
   totalAmount,
+  onUseSlip,
 }: BdoCardTerminalProps) {
   const dateObj = generatedAt || new Date();
 
@@ -22,10 +24,26 @@ export function BdoCardTerminal({
       aria-label="External card terminal receipt preview"
       className="w-full max-w-[260px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl transition-all duration-300"
     >
-      <div className="mb-2 text-center font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
-        Card Terminal
+      <div className="mb-2 flex items-center justify-between font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
+        <span>Card Terminal</span>
+        {onUseSlip && (
+          <button
+            type="button"
+            onClick={onUseSlip}
+            className="cursor-pointer rounded bg-emerald-700 hover:bg-emerald-600 px-2 py-0.5 text-[9px] font-mono font-bold text-white shadow-xs transition-colors"
+            title="Click to copy Auth Code & Slip No. into POS fields"
+          >
+            📋 Use Slip Info
+          </button>
+        )}
       </div>
-      <div className="mx-auto min-h-[380px] w-full max-w-[190px] bg-[#fffef8] px-3 py-5 font-mono text-[9px] leading-tight text-gray-900 shadow-md">
+      <div
+        onClick={onUseSlip}
+        className={`mx-auto min-h-[380px] w-full max-w-[190px] bg-[#fffef8] px-3 py-5 font-mono text-[9px] leading-tight text-gray-900 shadow-md ${
+          onUseSlip ? "cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all" : ""
+        }`}
+        title={onUseSlip ? "Click receipt to fill Auth Code & Slip No. into POS" : undefined}
+      >
         <header className="mb-4 text-center">
           <div className="mb-2 text-3xl font-black tracking-tight">BDO</div>
           <div>NATIONAL BOOK STORE</div>

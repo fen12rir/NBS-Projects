@@ -1000,6 +1000,21 @@ function SimulatorContent() {
       return;
     }
 
+    // Auto-fallback to terminal receipt details if trainee submits without re-typing
+    if (!bankCardAuthCode.trim() && currentCardAuth) {
+      setBankCardAuthCode(currentCardAuth);
+    }
+    if (!bankCardSlipNo.trim() && currentCardInvoice) {
+      setBankCardSlipNo(currentCardInvoice);
+    }
+    if (!bankCardRefNo.trim()) {
+      if (selectedBankCardType.toUpperCase() === "GCASH" && currentGcashRef) {
+        setBankCardRefNo(currentGcashRef);
+      } else if (selectedBankCardType.toUpperCase() === "MAYA" && currentMayaRef) {
+        setBankCardRefNo(currentMayaRef);
+      }
+    }
+
     dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
     dispatch({ type: "SELECT_PAYMENT_METHOD", method: "BANK_CARD" });
     setBankCardStep("FINAL_TEAROFF");
@@ -1092,14 +1107,24 @@ function SimulatorContent() {
     setBankCardValidUntil("2028-12-31");
     setBankCardAuthCode("");
     setBankCardSlipNo("");
-    setReceiptAuthCode("");
-    setReceiptInvoiceNumber("");
+    const examCardTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender
+      : null;
+    const examGcashTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "GCASH")?.tender
+      : null;
+    const examMayaTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "MAYA")?.tender
+      : null;
+
+    setReceiptAuthCode(examCardTender?.slipAuth || "AP8812");
+    setReceiptInvoiceNumber(examCardTender?.slipInvoice || "004921");
     setCardReceiptGeneratedAt(null);
     setBankCardRefNo("");
     setBankCardAmountInput("");
-    setGcashReferenceNumber("");
-    setMayaTraceNumber("");
-    setMayaReferenceNumber("");
+    setGcashReferenceNumber(examGcashTender?.reference || "GC88492019");
+    setMayaTraceNumber("001249");
+    setMayaReferenceNumber(examMayaTender?.reference || "MY994821");
     setMayaGeneratedAt(null);
     setPendingSodexhoVariance(null);
     setPendingSodexhoNotice(null);
@@ -1117,8 +1142,11 @@ function SimulatorContent() {
     }
 
     if (cardType === "CREDIT CARD") {
-      setReceiptInvoiceNumber(generateInvoiceNumber());
-      setReceiptAuthCode(generateApprovalCode());
+      const examCardTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender
+        : null;
+      setReceiptInvoiceNumber(examCardTender?.slipInvoice || "004921");
+      setReceiptAuthCode(examCardTender?.slipAuth || "AP8812");
       setCardReceiptGeneratedAt(new Date());
 
     } else {
@@ -1136,13 +1164,19 @@ function SimulatorContent() {
     setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
     setBankCardRefNo("");
     if (cardType.toUpperCase() === "GCASH") {
-      setGcashReferenceNumber(generateGcashReferenceNumber());
+      const examGcashTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "GCASH")?.tender
+        : null;
+      setGcashReferenceNumber(examGcashTender?.reference || "GC88492019");
       setMayaTraceNumber("");
       setMayaReferenceNumber("");
       setMayaGeneratedAt(null);
     } else if (cardType.toUpperCase() === "MAYA") {
-      setMayaTraceNumber(generateMayaTraceNumber());
-      setMayaReferenceNumber(generateMayaReferenceNumber());
+      const examMayaTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "MAYA")?.tender
+        : null;
+      setMayaTraceNumber("001249");
+      setMayaReferenceNumber(examMayaTender?.reference || "MY994821");
       setMayaGeneratedAt(new Date());
       setGcashReferenceNumber("");
     } else if (cardType.toUpperCase() === "LNQR SULIT COINS") {
@@ -4753,10 +4787,34 @@ function SimulatorContent() {
                                           }
                                         }}
                                       autoFocus
-                                      placeholder=""
+                                      placeholder={
+                                        selectedBankCardType.toUpperCase() === "GCASH"
+                                          ? (currentGcashRef || "GC88492019")
+                                          : selectedBankCardType.toUpperCase() === "MAYA"
+                                          ? (currentMayaRef || "MY994821")
+                                          : ""
+                                      }
                                       className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                   </div>
+                                  {(selectedBankCardType.toUpperCase() === "GCASH" || selectedBankCardType.toUpperCase() === "MAYA") && (
+                                    <div className="flex justify-end pt-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (selectedBankCardType.toUpperCase() === "GCASH") {
+                                            setBankCardRefNo(currentGcashRef || "GC88492019");
+                                          } else {
+                                            setBankCardRefNo(currentMayaRef || "MY994821");
+                                          }
+                                        }}
+                                        className="cursor-pointer text-[10px] font-mono font-bold text-blue-800 hover:text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded px-2 py-0.5 shadow-2xs transition-colors"
+                                        title="Click to copy reference number from customer device into POS"
+                                      >
+                                        📋 Auto-fill Reference ({selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})
+                                      </button>
+                                    </div>
+                                  )}
                                 </form>
                               ) : bankCardStep === "SWIPE_CARD" ? (
                                 <form
@@ -4850,6 +4908,7 @@ function SimulatorContent() {
                                       type="text"
                                       value={bankCardAuthCode}
                                       maxLength={6}
+                                      placeholder={currentCardAuth || "AP8812"}
                                       onChange={(e) =>
                                         setBankCardAuthCode(
                                           e.target.value
@@ -4868,6 +4927,7 @@ function SimulatorContent() {
                                       value={bankCardSlipNo}
                                       inputMode="numeric"
                                       maxLength={6}
+                                      placeholder={currentCardInvoice || "004921"}
                                       onChange={(e) =>
                                         setBankCardSlipNo(
                                           e.target.value.replace(/\D/g, "").slice(0, 6)
@@ -4875,6 +4935,19 @@ function SimulatorContent() {
                                       }
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                                     />
+                                  </div>
+                                  <div className="flex justify-end pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setBankCardAuthCode(currentCardAuth || "AP8812");
+                                        setBankCardSlipNo(currentCardInvoice || "004921");
+                                      }}
+                                      className="cursor-pointer text-[10px] font-mono font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded px-2 py-0.5 shadow-2xs transition-colors"
+                                      title="Fill Auth Code and Sales Slip No. from the terminal receipt"
+                                    >
+                                      📋 Auto-fill from Slip ({currentCardAuth || "AP8812"} / {currentCardInvoice || "004921"})
+                                    </button>
                                   </div>
                                 </form>
                               )
@@ -5680,6 +5753,7 @@ function SimulatorContent() {
               <GcashTerminalPreview
                 isExternalReceiptShowing={isExternalReceiptShowing}
                 referenceNumber={currentGcashRef}
+                onUseRef={() => setBankCardRefNo(currentGcashRef)}
               />
             ) : activeExternalTerminalType === "MAYA" ? (
               <MayaTerminalReceipt
@@ -5696,6 +5770,10 @@ function SimulatorContent() {
                 authCode={currentCardAuth}
                 generatedAt={cardReceiptGeneratedAt || new Date()}
                 totalAmount={totals.totalAmount || 2990}
+                onUseSlip={() => {
+                  setBankCardAuthCode(currentCardAuth);
+                  setBankCardSlipNo(currentCardInvoice);
+                }}
               />
             )}
           </div>

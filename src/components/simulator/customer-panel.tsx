@@ -95,6 +95,11 @@ export function CustomerPanel({
             Auth: {ev.tender.slipAuth}
           </span>
         )}
+        {ev.tender.slipInvoice && (
+          <span className="text-cyan-300 font-mono text-[9px] sm:text-[10px] shrink-0">
+            Slip #: {ev.tender.slipInvoice}
+          </span>
+        )}
       </div>
     ] : []),
 
