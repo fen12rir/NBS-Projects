@@ -71,7 +71,28 @@ import { recordScenarioAttempt } from "@/lib/progress/progress-store";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles, User, Bell, X, Smartphone, Maximize2, AlertTriangle, RotateCw, ChevronUp, ChevronDown } from "lucide-react";
+import { 
+  ArrowLeft, 
+  ShieldAlert, 
+  Trophy, 
+  CheckCircle, 
+  RotateCcw, 
+  ArrowRight, 
+  Sparkles, 
+  User, 
+  Bell, 
+  X, 
+  Smartphone, 
+  Maximize2, 
+  AlertTriangle, 
+  RotateCw, 
+  ChevronUp, 
+  ChevronDown,
+  Coins,
+  Banknote,
+  CreditCard,
+  ClipboardList
+} from "lucide-react";
 
 export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_INCORRECT" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
 
@@ -149,7 +170,8 @@ const isEwalletCardType = (type: string) => {
   );
 };
 
-function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
+function getInitialTerminalMode(scenario: TrainingScenario | null, isExam = false): POSTerminalMode {
+  if (isExam) return "START_OF_DAY_VERIFY";
   if (!scenario) return "ACTIVE_REGISTER";
   if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2" || scenario.id === "scen-practical-assessment") return "START_OF_DAY_VERIFY";
   if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
@@ -170,6 +192,8 @@ function SimulatorContent() {
   const [examSession, setExamSession] = useState<PracticalExamSession | null>(null);
   const [examCaseIndex, setExamCaseIndex] = useState(0);
   const [examActionLog, setExamActionLog] = useState<TraineeActionLog[]>([]);
+  const examActionLogRef = useRef<TraineeActionLog[]>([]);
+  const isAdvancingCaseRef = useRef(false);
   const [caseResults, setCaseResults] = useState<CaseGradingResult[]>([]);
   const [caseStartTime, setCaseStartTime] = useState<number>(Date.now());
   const [isChangeCheckModalOpen, setIsChangeCheckModalOpen] = useState(false);
@@ -183,7 +207,9 @@ function SimulatorContent() {
   } | null>(null);
 
   const logExamAction = (action: string, data?: any) => {
-    setExamActionLog((prev) => [...prev, { action, data, timestamp: Date.now() }]);
+    const entry = { action, data, timestamp: Date.now() };
+    examActionLogRef.current.push(entry);
+    setExamActionLog((prev) => [...prev, entry]);
   };
 
   // Mobile / Focus Mode States (Forced Landscape)
@@ -395,12 +421,12 @@ function SimulatorContent() {
     : "/dashboard";
   const returnButtonLabel = isLessonSpecific ? "Back to Lesson" : "Back to Module";
   const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
-    getInitialTerminalMode(initialScenario)
+    getInitialTerminalMode(initialScenario, isExamMode)
   );
 
   const [selectedSodButton, setSelectedSodButton] = useState<"YES" | "NO" | null>(null);
-  const [loginUsername, setLoginUsername] = useState("241209");
-  const [loginPassword, setLoginPassword] = useState("******");
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [isLogoutScreenOpen, setIsLogoutScreenOpen] = useState(false);
   const [selectedLogoutButton, setSelectedLogoutButton] = useState<"YES" | "NO" | null>(null);
 
@@ -421,7 +447,9 @@ function SimulatorContent() {
 
   // Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
-  const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
+  const [selectedTenderMethod, setSelectedTenderMethod] = useState<
+    "CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO" | null
+  >("CASH");
   const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("");
   const [isLnqrTenderProcessed, setIsLnqrTenderProcessed] = useState(false);
   const [isFinalTenderStep, setIsFinalTenderStep] = useState(false);
@@ -532,15 +560,16 @@ function SimulatorContent() {
     bankCardStep !== "SELECT_TYPE" &&
     (
       selectedBankCardType === "CREDIT CARD" ||
+      selectedBankCardType === "VISA" ||
+      selectedBankCardType === "MASTERCARD" ||
       (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
-      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
-      (isExamMode && Boolean(examTenderKind))
+      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
     );
 
   const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" =
-    selectedBankCardType === "GCASH" || (isExamMode && examTenderKind === "GCASH")
+    selectedBankCardType === "GCASH"
       ? "GCASH"
-      : selectedBankCardType === "MAYA" || (isExamMode && examTenderKind === "MAYA")
+      : selectedBankCardType === "MAYA"
       ? "MAYA"
       : "BDO";
 
@@ -774,30 +803,35 @@ function SimulatorContent() {
     setSelectedSodButton(null);
     setTerminalMode("START_OF_DAY_CLOSE");
     validateScenarioStep("VERIFY_DATE_YES");
+    if (isExamMode) logExamAction("VERIFY_DATE_YES");
   };
 
   const handleVerifyDateNo = () => {
     setSelectedSodButton("NO");
     validateScenarioStep("VERIFY_DATE_NO");
     setTerminalMode("START_OF_DAY_INCORRECT");
+    if (isExamMode) logExamAction("VERIFY_DATE_NO");
   };
 
   const handleCloseSodWindow = () => {
     setTerminalMode("POS_RELOADER");
     validateScenarioStep("CLOSE_SOD_WINDOW");
+    if (isExamMode) logExamAction("CLOSE_SOD_WINDOW");
   };
 
   const handleReloadToLogin = () => {
     setTerminalMode("USER_LOGIN");
     validateScenarioStep("RELOAD_POS_LOGIN");
+    if (isExamMode) logExamAction("RELOAD_POS_LOGIN");
   };
 
   const handleLoginSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const userToSubmit = loginUsername.trim() || "241209";
     setTerminalMode("ACTIVE_REGISTER");
-    validateScenarioStep("LOGIN_SUBMIT", loginUsername);
+    validateScenarioStep("LOGIN_SUBMIT", userToSubmit);
     if (isExamMode) {
-      logExamAction("LOGIN_SUBMIT", loginUsername);
+      logExamAction("LOGIN_SUBMIT", userToSubmit);
       if (examSession?.cases[examCaseIndex]?.id === "case-open-shift") {
         setTimeout(() => {
           handleAdvanceExamCase();
@@ -888,11 +922,15 @@ function SimulatorContent() {
 
   const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const tenderVal = parseFloat(lnqrCashTenderInput);
-    if (isNaN(tenderVal) || tenderVal <= 0) {
+    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+    const currentCaseTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CASH")?.tender?.amount
+      : null;
+    const rawVal = parseFloat(lnqrCashTenderInput);
+    const tenderVal = !isNaN(rawVal) && rawVal > 0 ? rawVal : (currentCaseTender || netDue);
+    if (!tenderVal || tenderVal <= 0) {
       return;
     }
-    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
     if (tenderVal < netDue) {
       showPosAlert(
         `Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`,
@@ -988,15 +1026,38 @@ function SimulatorContent() {
 
       setTimeout(() => {
         setIsSulitLoading(false);
-        setSelectedTenderMethod("CASH");
-        setSelectedBankCardType("-SELECT-");
-        setBankCardStep("SELECT_TYPE");
-        setIsLnqrCashPaymentOpen(true);
-        setIsLnqrTenderProcessed(false);
-        setIsFinalTenderStep(false);
-        setLnqrCashTenderInput("3000.00");
+        const remainingDue = Math.max(0, totals.totalAmount - redeemedCoins);
+        // If remaining balance exists, allow cashier to select tender method again (Cash or Bank Card)
+        if (remainingDue > 0) {
+          setSelectedTenderMethod(null);
+          setSelectedBankCardType("-SELECT-");
+          setBankCardStep("SELECT_TYPE");
+          setIsLnqrCashPaymentOpen(true);
+          setIsLnqrTenderProcessed(false);
+          setIsFinalTenderStep(false);
+          setLnqrCashTenderInput("");
+        } else {
+          // Exactly paid off by Sulit Coins
+          setSelectedTenderMethod("BANK_CARD");
+          setIsFinalTenderStep(true);
+        }
       }, 800);
       return;
+    }
+
+    // Auto-fallback to terminal receipt details if trainee submits without re-typing
+    if (!bankCardAuthCode.trim() && currentCardAuth) {
+      setBankCardAuthCode(currentCardAuth);
+    }
+    if (!bankCardSlipNo.trim() && currentCardInvoice) {
+      setBankCardSlipNo(currentCardInvoice);
+    }
+    if (!bankCardRefNo.trim()) {
+      if (selectedBankCardType.toUpperCase() === "GCASH" && currentGcashRef) {
+        setBankCardRefNo(currentGcashRef);
+      } else if (selectedBankCardType.toUpperCase() === "MAYA" && currentMayaRef) {
+        setBankCardRefNo(currentMayaRef);
+      }
     }
 
     dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
@@ -1091,14 +1152,24 @@ function SimulatorContent() {
     setBankCardValidUntil("2028-12-31");
     setBankCardAuthCode("");
     setBankCardSlipNo("");
-    setReceiptAuthCode("");
-    setReceiptInvoiceNumber("");
+    const examCardTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender
+      : null;
+    const examGcashTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "GCASH")?.tender
+      : null;
+    const examMayaTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "MAYA")?.tender
+      : null;
+
+    setReceiptAuthCode(examCardTender?.slipAuth || "AP8812");
+    setReceiptInvoiceNumber(examCardTender?.slipInvoice || "004921");
     setCardReceiptGeneratedAt(null);
     setBankCardRefNo("");
     setBankCardAmountInput("");
-    setGcashReferenceNumber("");
-    setMayaTraceNumber("");
-    setMayaReferenceNumber("");
+    setGcashReferenceNumber(examGcashTender?.reference || "GC88492019");
+    setMayaTraceNumber("001249");
+    setMayaReferenceNumber(examMayaTender?.reference || "MY994821");
     setMayaGeneratedAt(null);
     setPendingSodexhoVariance(null);
     setPendingSodexhoNotice(null);
@@ -1116,8 +1187,11 @@ function SimulatorContent() {
     }
 
     if (cardType === "CREDIT CARD") {
-      setReceiptInvoiceNumber(generateInvoiceNumber());
-      setReceiptAuthCode(generateApprovalCode());
+      const examCardTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender
+        : null;
+      setReceiptInvoiceNumber(examCardTender?.slipInvoice || "004921");
+      setReceiptAuthCode(examCardTender?.slipAuth || "AP8812");
       setCardReceiptGeneratedAt(new Date());
 
     } else {
@@ -1135,13 +1209,19 @@ function SimulatorContent() {
     setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
     setBankCardRefNo("");
     if (cardType.toUpperCase() === "GCASH") {
-      setGcashReferenceNumber(generateGcashReferenceNumber());
+      const examGcashTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "GCASH")?.tender
+        : null;
+      setGcashReferenceNumber(examGcashTender?.reference || "GC88492019");
       setMayaTraceNumber("");
       setMayaReferenceNumber("");
       setMayaGeneratedAt(null);
     } else if (cardType.toUpperCase() === "MAYA") {
-      setMayaTraceNumber(generateMayaTraceNumber());
-      setMayaReferenceNumber(generateMayaReferenceNumber());
+      const examMayaTender = isExamMode && examSession
+        ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "MAYA")?.tender
+        : null;
+      setMayaTraceNumber("001249");
+      setMayaReferenceNumber(examMayaTender?.reference || "MY994821");
       setMayaGeneratedAt(new Date());
       setGcashReferenceNumber("");
     } else if (cardType.toUpperCase() === "LNQR SULIT COINS") {
@@ -2261,8 +2341,14 @@ function SimulatorContent() {
 
   const handleAdvanceExamCase = (userChange?: number) => {
     if (!examSession) return;
+    if (isAdvancingCaseRef.current) return;
+    isAdvancingCaseRef.current = true;
+
     const currentCase = examSession.cases[examCaseIndex];
-    if (!currentCase) return;
+    if (!currentCase) {
+      isAdvancingCaseRef.current = false;
+      return;
+    }
 
     const timeSpent = Math.max(1, Math.round((Date.now() - caseStartTime) / 1000));
     const tenderAmountVal = pendingCashTender || totals.totalAmount;
@@ -2271,7 +2357,7 @@ function SimulatorContent() {
     const snapshot: CaseFinalSnapshot = {
       lineItemsCount: state.lineItems.length,
       totalSales: totals.totalAmount,
-      tenderMethod: selectedTenderMethod,
+      tenderMethod: selectedTenderMethod || "CASH",
       tenderAmount: tenderAmountVal,
       changeGiven: userChange ?? computedChange,
       loyaltyType: loyaltyType,
@@ -2280,7 +2366,8 @@ function SimulatorContent() {
       isZeroRated: state.isZeroRated,
     };
 
-    const graded = gradeCase(currentCase, examActionLog, snapshot, userChange, timeSpent);
+    const currentActions = [...examActionLogRef.current];
+    const graded = gradeCase(currentCase, currentActions, snapshot, userChange, timeSpent);
     const updatedCaseResults = [...caseResults, graded];
     setCaseResults(updatedCaseResults);
 
@@ -2303,6 +2390,7 @@ function SimulatorContent() {
     setSulitCoinsEarnedAmount(null);
     setSulitCoinsRefNo("");
     setIsChangeCheckModalOpen(false);
+    examActionLogRef.current = [];
     setExamActionLog([]);
     setCaseStartTime(Date.now());
 
@@ -2323,6 +2411,9 @@ function SimulatorContent() {
       if (nextCase.id === "case-close-shift") {
         setTerminalMode("ACTIVE_REGISTER");
       }
+      setTimeout(() => {
+        isAdvancingCaseRef.current = false;
+      }, 800);
     } else {
       // Completed all cases
       if (isFocusMode) {
@@ -2331,6 +2422,7 @@ function SimulatorContent() {
       const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
       const finalGraded = gradeExamSession(examSession, updatedCaseResults, totalExamTime);
       setIsExamCompleted(true);
+      isAdvancingCaseRef.current = false;
 
       const attemptId = `att-prac-${Date.now()}`;
       recordScenarioAttempt({
@@ -2395,10 +2487,9 @@ function SimulatorContent() {
 
   const validateScenarioStep = (actionId: string, dataVal?: string | number): boolean => {
     if (isExamMode) {
-      setExamActionLog((prev) => [
-        ...prev,
-        { action: actionId, data: dataVal, timestamp: Date.now() },
-      ]);
+      const entry = { action: actionId, data: dataVal, timestamp: Date.now() };
+      examActionLogRef.current.push(entry);
+      setExamActionLog((prev) => [...prev, entry]);
       return true;
     }
     if (!activeScenario || isExamCompleted) return true;
@@ -3009,7 +3100,15 @@ function SimulatorContent() {
     setIsBonusBuyOpen(false);
     setHasBonusBuyBeenPrompted(false);
     setScenarioStartTime(Date.now());
-    setTerminalMode(getInitialTerminalMode(activeScenario));
+    if (isExamMode) {
+      setExamCaseIndex(0);
+      setExamActionLog([]);
+      setCaseResults([]);
+      setCaseStartTime(Date.now());
+      setTerminalMode("START_OF_DAY_VERIFY");
+    } else {
+      setTerminalMode(getInitialTerminalMode(activeScenario));
+    }
   };
 
   const handleResetTerminal = () => {
@@ -3104,53 +3203,56 @@ function SimulatorContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
-      <header className="relative z-50 bg-black text-white px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
-        <div className="flex items-center space-x-2 sm:space-x-3 truncate">
+      <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
           {returnLessonUrl !== "/dashboard" ? (
-            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0 text-[11px]">
               <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden xs:inline">{returnButtonLabel}</span>
               <span className="xs:hidden">Back</span>
             </Link>
           ) : (
-            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0 text-[11px]">
               <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-              <span>Dashboard</span>
+              <span className="hidden xs:inline">Dashboard</span>
             </Link>
           )}
           <span className="text-gray-600 shrink-0">|</span>
-          <span className="font-bold text-red-500 uppercase hidden md:inline truncate">
+          <span className="font-bold text-red-500 uppercase hidden lg:inline truncate text-[11px]">
             NBS Cashier POS Screen Fidelity Simulator
           </span>
-          <span className="font-bold text-red-500 uppercase md:hidden truncate">
+          <span className="font-bold text-red-500 uppercase hidden sm:inline lg:hidden truncate text-[11px]">
+            NBS POS Simulator
+          </span>
+          <span className="font-bold text-red-500 uppercase sm:hidden truncate text-[11px]">
             NBS POS
           </span>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <button
             type="button"
             onClick={toggleFocusMode}
-            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2.5 py-1 text-[11px] sm:text-xs font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-sm shrink-0"
+            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2 py-0.5 sm:px-2.5 sm:py-0.5 text-[10px] sm:text-[11px] font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-xs shrink-0"
           >
             {isFocusMode ? (
               <>
-                <X className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
                 <span>Exit Focus</span>
               </>
             ) : (
               <>
-                <Maximize2 className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
                 <span>Focus Mode</span>
               </>
             )}
           </button>
           {!isExamMode && (
-            <div className="flex items-center space-x-1.5 hidden sm:flex">
-              <span className="text-gray-400 text-[11px] hidden md:inline">POS Screen:</span>
+            <div className="flex items-center space-x-1 hidden sm:flex">
+              <span className="text-gray-400 text-[10px] hidden md:inline">POS Screen:</span>
               <select
                 value={terminalMode}
                 onChange={(e) => setTerminalMode(e.target.value as POSTerminalMode)}
-                className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
+                className="bg-gray-800 text-yellow-300 border border-gray-600 text-[11px] px-1.5 py-0.5 font-mono focus:outline-none rounded max-w-[150px] sm:max-w-none"
               >
                 <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
                 <option value="START_OF_DAY_INCORRECT">1b. Start of Day (Incorrect Date)</option>
@@ -3161,13 +3263,6 @@ function SimulatorContent() {
               </select>
             </div>
           )}
-          <div className="text-gray-400 text-[11px] hidden lg:inline">
-            {isExamMode
-              ? "Unguided Practical Assessment"
-              : activeScenario
-              ? `Guided: ${activeScenario.title}`
-              : "Free Exploration Mode"}
-          </div>
         </div>
       </header>
 
@@ -4501,7 +4596,9 @@ function SimulatorContent() {
                               ? (couponEntryMode === "SELECT" ? "Coupon Type" : "Coupon Details")
                               : selectedTenderMethod === "EPURSE"
                               ? "E-Purse Payment Details"
-                              : "Credit Memo Details"}
+                              : selectedTenderMethod === "CREDIT_MEMO"
+                              ? "Credit Memo Details"
+                              : "Select Tender Method"}
                           </div>
 
                           {/* Details / Input Body */}
@@ -4510,6 +4607,59 @@ function SimulatorContent() {
                               <div className="text-center space-y-2 font-sans select-none flex flex-col items-center">
                                 <div className="text-gray-900 font-bold text-sm tracking-wide">
                                   Please wait...
+                                </div>
+                              </div>
+                            ) : selectedTenderMethod === null ? (
+                              <div className="text-center space-y-3 font-sans select-none flex flex-col items-center p-4">
+                                <div className="text-sm font-bold text-gray-900 flex items-center justify-center space-x-1.5">
+                                  {sulitCoinsRedeemedAmount !== null ? (
+                                    <>
+                                      <Coins className="w-4 h-4 text-amber-600 shrink-0" />
+                                      <span>₱{sulitCoinsRedeemedAmount.toFixed(2)} Sulit Coins Redeemed</span>
+                                    </>
+                                  ) : (
+                                    <span>Select Payment Tender</span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-700 max-w-xs leading-relaxed">
+                                  {sulitCoinsRedeemedAmount !== null ? (
+                                    <span>
+                                      Remaining Due:{" "}
+                                      <strong className="text-blue-900 font-mono text-base font-bold">
+                                        ₱{(Math.max(0, totals.totalAmount - sulitCoinsRedeemedAmount)).toFixed(2)}
+                                      </strong>
+                                      <br />
+                                      Select <strong className="text-gray-900 font-bold">Cash (F2)</strong> or <strong className="text-gray-900 font-bold">Bank Card (F3)</strong> to tender balance.
+                                    </span>
+                                  ) : (
+                                    "Press F2 for Cash or F3 for Bank Card to proceed with payment."
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-3 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTenderMethod("CASH");
+                                      setBankCardStep("SELECT_TYPE");
+                                      validateScenarioStep("PAY_CASH");
+                                    }}
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1.5"
+                                  >
+                                    <Banknote className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                    <span>Cash (F2)</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTenderMethod("BANK_CARD");
+                                      setBankCardStep("SELECT_TYPE");
+                                      validateScenarioStep("PAY_CARD");
+                                    }}
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1.5"
+                                  >
+                                    <CreditCard className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                                    <span>Bank Card (F3)</span>
+                                  </button>
                                 </div>
                               </div>
                             ) : selectedTenderMethod === "CASH" ? (
@@ -4524,7 +4674,7 @@ function SimulatorContent() {
                                     step="0.01"
                                     value={lnqrCashTenderInput}
                                     onChange={(e) => setLnqrCashTenderInput(e.target.value)}
-                                    placeholder=""
+                                    placeholder={(totals.totalAmount - (sulitCoinsRedeemedAmount || 0)).toFixed(2)}
                                     className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     autoFocus
                                   />
@@ -4748,10 +4898,34 @@ function SimulatorContent() {
                                           }
                                         }}
                                       autoFocus
-                                      placeholder=""
+                                      placeholder={
+                                        selectedBankCardType.toUpperCase() === "GCASH"
+                                          ? (currentGcashRef || "GC88492019")
+                                          : selectedBankCardType.toUpperCase() === "MAYA"
+                                          ? (currentMayaRef || "MY994821")
+                                          : ""
+                                      }
                                       className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                   </div>
+                                  {(selectedBankCardType.toUpperCase() === "GCASH" || selectedBankCardType.toUpperCase() === "MAYA") && (
+                                    <div className="flex justify-end pt-0.5">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (selectedBankCardType.toUpperCase() === "GCASH") {
+                                            setBankCardRefNo(currentGcashRef || "GC88492019");
+                                          } else {
+                                            setBankCardRefNo(currentMayaRef || "MY994821");
+                                          }
+                                        }}
+                                        className="cursor-pointer text-[10px] font-mono font-bold text-blue-800 hover:text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
+                                        title="Click to copy reference number from customer device into POS"
+                                      >
+                                        <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill Reference ({selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})
+                                      </button>
+                                    </div>
+                                  )}
                                 </form>
                               ) : bankCardStep === "SWIPE_CARD" ? (
                                 <form
@@ -4845,6 +5019,7 @@ function SimulatorContent() {
                                       type="text"
                                       value={bankCardAuthCode}
                                       maxLength={6}
+                                      placeholder={currentCardAuth || "AP8812"}
                                       onChange={(e) =>
                                         setBankCardAuthCode(
                                           e.target.value
@@ -4863,6 +5038,7 @@ function SimulatorContent() {
                                       value={bankCardSlipNo}
                                       inputMode="numeric"
                                       maxLength={6}
+                                      placeholder={currentCardInvoice || "004921"}
                                       onChange={(e) =>
                                         setBankCardSlipNo(
                                           e.target.value.replace(/\D/g, "").slice(0, 6)
@@ -4870,6 +5046,19 @@ function SimulatorContent() {
                                       }
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                                     />
+                                  </div>
+                                  <div className="flex justify-end pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setBankCardAuthCode(currentCardAuth || "AP8812");
+                                        setBankCardSlipNo(currentCardInvoice || "004921");
+                                      }}
+                                      className="cursor-pointer text-[10px] font-mono font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
+                                      title="Fill Auth Code and Sales Slip No. from the terminal receipt"
+                                    >
+                                      <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill from Slip ({currentCardAuth || "AP8812"} / {currentCardInvoice || "004921"})
+                                    </button>
                                   </div>
                                 </form>
                               )
@@ -5675,6 +5864,7 @@ function SimulatorContent() {
               <GcashTerminalPreview
                 isExternalReceiptShowing={isExternalReceiptShowing}
                 referenceNumber={currentGcashRef}
+                onUseRef={() => setBankCardRefNo(currentGcashRef)}
               />
             ) : activeExternalTerminalType === "MAYA" ? (
               <MayaTerminalReceipt
@@ -5691,6 +5881,10 @@ function SimulatorContent() {
                 authCode={currentCardAuth}
                 generatedAt={cardReceiptGeneratedAt || new Date()}
                 totalAmount={totals.totalAmount || 2990}
+                onUseSlip={() => {
+                  setBankCardAuthCode(currentCardAuth);
+                  setBankCardSlipNo(currentCardInvoice);
+                }}
               />
             )}
           </div>

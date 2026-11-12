@@ -114,86 +114,107 @@ export default function AssessmentResultPage() {
             </div>
 
             {/* Unified 4-Metric Grid: 2x2 on Mobile, 4 columns on Desktop to eliminate empty spaces */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3.5 pt-1">
-              {/* Metric 1: Final Score */}
-              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
-                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
-                  Final Score
-                </div>
-                <div className="my-1">
-                  <span className={`text-2xl sm:text-4xl font-black font-mono ${isPassed ? "text-emerald-600" : "text-[#E4002B]"}`}>
-                    {attempt.score}%
-                  </span>
-                </div>
-                <div className="text-[10px] text-gray-500 truncate">
-                  Pass Mark: 80% {isPracticalExam ? "(≥6/7)" : ""}
-                </div>
-              </div>
+            {(() => {
+              const passedCasesCount = attempt.caseResults
+                ? attempt.caseResults.filter((c) => c.passed).length
+                : attempt.stepsCompleted;
+              const failedCasesCount = Math.max(0, attempt.totalSteps - passedCasesCount);
 
-              {/* Metric 2: Status Classification */}
-              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
-                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
-                  Status
-                </div>
-                <div className="my-1 font-mono font-black text-xs sm:text-base">
-                  {isPassed ? (
-                    <span className="text-emerald-600 flex items-center space-x-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                      <span>QUALIFIED</span>
-                    </span>
-                  ) : (
-                    <span className="text-[#E4002B] flex items-center space-x-1">
-                      <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                      <span>RETAKE REQ.</span>
-                    </span>
-                  )}
-                </div>
-                <div className="text-[10px] truncate">
-                  {isPassed ? (
-                    <span className="text-emerald-600 font-medium">Passed criteria</span>
-                  ) : isPracticalExam && attempt.stepsCompleted < 6 ? (
-                    <span className="text-red-600 font-medium">{attempt.stepsCompleted}/7 served</span>
-                  ) : (
-                    <span className="text-red-600 font-medium">Score below 80%</span>
-                  )}
-                </div>
-              </div>
+              return (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3.5 pt-1">
+                  {/* Metric 1: Final Score */}
+                  <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                    <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                      Final Score
+                    </div>
+                    <div className="my-1">
+                      <span
+                        className={`text-2xl sm:text-4xl font-black font-mono ${
+                          isPassed
+                            ? "text-emerald-600"
+                            : attempt.score >= 80
+                            ? "text-amber-600"
+                            : "text-[#E4002B]"
+                        }`}
+                      >
+                        {attempt.score}%
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-gray-500 truncate">
+                      {isPracticalExam
+                        ? attempt.score >= 80 && !isPassed
+                          ? "Score target met (≥80%)"
+                          : "Pass Mark: 80% (≥6/7)"
+                        : "Pass Mark: 80%"}
+                    </div>
+                  </div>
 
-              {/* Metric 3: Customers / Cases */}
-              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
-                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
-                  {isPracticalExam ? "Customers" : "Steps"}
-                </div>
-                <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
-                  {attempt.stepsCompleted}{" "}
-                  <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
-                </div>
-                <div className="text-[10px] truncate">
-                  {isPracticalExam ? (
-                    attempt.stepsCompleted >= 6 ? (
-                      <span className="text-emerald-600 font-medium">Goal met (≥6/7)</span>
-                    ) : (
-                      <span className="text-red-600 font-medium">{attempt.totalSteps - attempt.stepsCompleted} unserved</span>
-                    )
-                  ) : (
-                    <span className="text-gray-500">Steps completed</span>
-                  )}
-                </div>
-              </div>
+                  {/* Metric 2: Status Classification */}
+                  <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                    <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                      Status
+                    </div>
+                    <div className="my-1 font-mono font-black text-xs sm:text-base">
+                      {isPassed ? (
+                        <span className="text-emerald-600 flex items-center space-x-1">
+                          <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                          <span>QUALIFIED</span>
+                        </span>
+                      ) : (
+                        <span className="text-[#E4002B] flex items-center space-x-1">
+                          <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                          <span>RETAKE REQ.</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[10px] truncate">
+                      {isPassed ? (
+                        <span className="text-emerald-600 font-medium">Passed criteria</span>
+                      ) : isPracticalExam ? (
+                        <span className="text-red-600 font-medium">{passedCasesCount}/7 cases passed (Need ≥6)</span>
+                      ) : (
+                        <span className="text-red-600 font-medium">Score below 80%</span>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Metric 4: Total Time */}
-              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
-                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
-                  Total Time
+                  {/* Metric 3: Cases Passed */}
+                  <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                    <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                      {isPracticalExam ? "Cases Passed" : "Steps"}
+                    </div>
+                    <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
+                      {passedCasesCount}{" "}
+                      <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
+                    </div>
+                    <div className="text-[10px] truncate">
+                      {isPracticalExam ? (
+                        passedCasesCount >= 6 ? (
+                          <span className="text-emerald-600 font-medium">Goal met (≥6/7 passed)</span>
+                        ) : (
+                          <span className="text-red-600 font-medium">{failedCasesCount} failed / need review</span>
+                        )
+                      ) : (
+                        <span className="text-gray-500">Steps completed</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Metric 4: Total Time */}
+                  <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                    <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                      Total Time
+                    </div>
+                    <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
+                      {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
+                    </div>
+                    <div className="text-[10px] text-gray-500 truncate">
+                      15m standard limit
+                    </div>
+                  </div>
                 </div>
-                <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
-                  {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
-                </div>
-                <div className="text-[10px] text-gray-500 truncate">
-                  15m standard limit
-                </div>
-              </div>
-            </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -231,25 +252,38 @@ export default function AssessmentResultPage() {
               </div>
               <div>
                 <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
-                  Official NBS Certification Locked (Passing Mark: 80%)
+                  Official NBS Certification Locked (Requires ≥80% &amp; ≥6/7 Cases Passed)
                 </h3>
                 <div className="text-xs text-red-800 leading-relaxed space-y-1">
-                  {attempt.score >= 80 && attempt.stepsCompleted < 6 ? (
-                    <p>
-                      You achieved a score of <strong>{attempt.score}%</strong> on completed interactions, but only{" "}
-                      <strong>{attempt.stepsCompleted} of {attempt.totalSteps} customers were served</strong> ({attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} unserved or abandoned). To earn official NBS cashier certification, you must handle <strong>all customer cases</strong> during your shift and pass <strong>at least 6 of the 7 cases</strong> with an <strong>80% overall score</strong>.
-                    </p>
-                  ) : attempt.score >= 80 ? (
-                    <p>
-                      You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
-                      <strong>{attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} failed</strong>{" "}
-                      due to critical missed steps or incorrect change. To unlock official certification, you must achieve <strong>80% overall</strong> and pass <strong>at least 6 of the 7 cases</strong> (max 1 failed case).
-                    </p>
-                  ) : (
-                    <p>
-                      Trainee achieved <strong>{attempt.score}%</strong> ({attempt.stepsCompleted} of {attempt.totalSteps} cases passed). To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
-                    </p>
-                  )}
+                  {(() => {
+                    const passedCasesCount = attempt.caseResults
+                      ? attempt.caseResults.filter((c) => c.passed).length
+                      : attempt.stepsCompleted;
+                    const failedCasesCount = Math.max(0, attempt.totalSteps - passedCasesCount);
+
+                    if (attempt.score >= 80 && passedCasesCount < 6) {
+                      return (
+                        <p>
+                          You achieved an overall score of <strong>{attempt.score}%</strong> (meeting the 80% mark), but{" "}
+                          <strong>{passedCasesCount} of {attempt.totalSteps} customer cases were passed</strong> ({failedCasesCount} {failedCasesCount === 1 ? "case" : "cases"} missed critical SOP steps or tendered incorrect change). To earn official NBS certification, you must achieve <strong>both ≥80% overall score</strong> and pass <strong>at least 6 of the 7 customer cases</strong>.
+                        </p>
+                      );
+                    } else if (attempt.score >= 80) {
+                      return (
+                        <p>
+                          You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
+                          <strong>{failedCasesCount} customer {failedCasesCount === 1 ? "case" : "cases"} failed</strong>{" "}
+                          due to critical missed milestones. Certification requires passing at least 6 of the 7 cases (max 1 failed case).
+                        </p>
+                      );
+                    } else {
+                      return (
+                        <p>
+                          Trainee achieved <strong>{attempt.score}%</strong> ({passedCasesCount} of {attempt.totalSteps} cases passed). To unlock official National Book Store Cashier Certification, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
+                        </p>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
             </div>

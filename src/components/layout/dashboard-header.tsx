@@ -20,31 +20,100 @@ import {
 interface DashboardHeaderProps {
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
+  isMobileMenuOpen?: boolean;
 }
 
-export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHeaderProps = {}) {
+export function DashboardHeader({
+  onToggleSidebar,
+  isSidebarOpen,
+  isMobileMenuOpen,
+}: DashboardHeaderProps = {}) {
   const { user, isDemoMode, signOut } = useAuth();
   const router = useRouter();
 
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY <= 40) {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, [isDemoMode]);
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      setIsVisible(true);
+    }
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
+    const handleScroll = (e: Event) => {
+      // On desktop (>= 1024px), navbar must always remain docked and visible
+      if (typeof window !== "undefined" && window.innerWidth >= 1024) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY.current + 8) {
-        setIsVisible(false); // scrolling down -> hide
-      } else if (currentScrollY < lastScrollY.current - 8) {
-        setIsVisible(true); // scrolling up -> show
+        return;
       }
-      lastScrollY.current = currentScrollY;
+
+      // If mobile navigation drawer is open, keep navbar visible and ignore scrolls
+      if (isMobileMenuOpen) {
+        setIsVisible(true);
+        return;
+      }
+
+      const targetEl = e.target instanceof HTMLElement ? e.target : null;
+
+      // NEVER trigger hide/show from scrolling inside side nav drawer or modals
+      if (targetEl && (targetEl.closest("aside") || targetEl.closest("[data-sidebar]"))) {
+        return;
+      }
+
+      // Only handle scrolling of the main content area or full page
+      const isMainOrDoc =
+        !targetEl ||
+        targetEl === document.documentElement ||
+        targetEl === document.body ||
+        Boolean(targetEl.closest("main"));
+
+      if (!isMainOrDoc) return;
+
+      const scrollContainer =
+        targetEl && targetEl !== document.documentElement && targetEl !== document.body
+          ? targetEl
+          : document.documentElement;
+
+      const currentScrollY =
+        targetEl && targetEl !== document.documentElement && targetEl !== document.body
+          ? targetEl.scrollTop
+          : window.scrollY;
+
+      const maxScroll = (scrollContainer.scrollHeight || 0) - (scrollContainer.clientHeight || 0);
+
+      // Prevent bottom overscroll and rubber-band bounce from toggling the navbar
+      if (maxScroll > 0 && currentScrollY >= maxScroll - 50) {
+        lastScrollY.current = Math.max(0, currentScrollY);
+        return;
+      }
+
+      const delta = currentScrollY - lastScrollY.current;
+
+      // Require intentional scroll delta (>= 12px) to prevent micro-jitters / bouncing
+      if (currentScrollY <= 20) {
+        setIsVisible(true);
+      } else if (delta > 12) {
+        // Intentional scroll down in main content -> hide
+        setIsVisible(false);
+      } else if (delta < -12) {
+        // Intentional scroll up in main content -> show
+        setIsVisible(true);
+      }
+      lastScrollY.current = Math.max(0, currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    return () => window.removeEventListener("scroll", handleScroll, { capture: true });
+  }, [isMobileMenuOpen]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -53,8 +122,11 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
 
   return (
     <header
-      className={`bg-white border-b border-gray-200 sticky top-0 z-50 shrink-0 transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
+      ref={headerRef}
+      className={`bg-white z-50 shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+        isVisible
+          ? "max-h-28 opacity-100 border-b border-gray-200"
+          : "max-h-0 opacity-0 pointer-events-none border-b-0"
       }`}
     >
       {/* Demo Warning Banner */}
@@ -89,7 +161,7 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
             </span>
           </Link>
           <div className="h-5 w-px bg-gray-200 hidden sm:block shrink-0"></div>
-          <nav className="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm font-semibold truncate">
+          <nav className="hidden sm:flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm font-semibold truncate">
             <Link
               href="/dashboard"
               className="text-gray-700 hover:text-[#E4002B] px-2 py-1 shrink-0"

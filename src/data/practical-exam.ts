@@ -90,10 +90,10 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
     ],
     milestones: [
-      { id: "m-sod-yes", action: "VERIFY_DATE_YES", label: "Verify Date & Time [Yes]", points: 10, critical: true },
+      { id: "m-sod-yes", action: "VERIFY_DATE_YES", label: "Verify Date & Time [Yes]", points: 10 },
       { id: "m-sod-close", action: "CLOSE_SOD_WINDOW", label: "Close SOD Setup Window", points: 10 },
       { id: "m-pos-reload", action: "RELOAD_POS_LOGIN", label: "Reload POS Reloader", points: 10 },
-      { id: "m-login", action: "LOGIN_SUBMIT", label: "Cashier Sign-In", points: 20, critical: true },
+      { id: "m-login", action: "LOGIN_SUBMIT", label: "Cashier Sign-In", points: 30, critical: true },
     ],
     finalChecks: {},
   },
