@@ -426,7 +426,9 @@ function SimulatorContent() {
 
   // Payment Screen States
   const [isLnqrCashPaymentOpen, setIsLnqrCashPaymentOpen] = useState(false);
-  const [selectedTenderMethod, setSelectedTenderMethod] = useState<"CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO">("CASH");
+  const [selectedTenderMethod, setSelectedTenderMethod] = useState<
+    "CASH" | "BANK_CARD" | "CHECK" | "GIFT_CERT" | "COUPON" | "EPURSE" | "CREDIT_MEMO" | null
+  >("CASH");
   const [lnqrCashTenderInput, setLnqrCashTenderInput] = useState("");
   const [isLnqrTenderProcessed, setIsLnqrTenderProcessed] = useState(false);
   const [isFinalTenderStep, setIsFinalTenderStep] = useState(false);
@@ -899,11 +901,15 @@ function SimulatorContent() {
 
   const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const tenderVal = parseFloat(lnqrCashTenderInput);
-    if (isNaN(tenderVal) || tenderVal <= 0) {
+    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+    const currentCaseTender = isExamMode && examSession
+      ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CASH")?.tender?.amount
+      : null;
+    const rawVal = parseFloat(lnqrCashTenderInput);
+    const tenderVal = !isNaN(rawVal) && rawVal > 0 ? rawVal : (currentCaseTender || netDue);
+    if (!tenderVal || tenderVal <= 0) {
       return;
     }
-    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
     if (tenderVal < netDue) {
       showPosAlert(
         `Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`,
@@ -999,13 +1005,21 @@ function SimulatorContent() {
 
       setTimeout(() => {
         setIsSulitLoading(false);
-        setSelectedTenderMethod("CASH");
-        setSelectedBankCardType("-SELECT-");
-        setBankCardStep("SELECT_TYPE");
-        setIsLnqrCashPaymentOpen(true);
-        setIsLnqrTenderProcessed(false);
-        setIsFinalTenderStep(false);
-        setLnqrCashTenderInput("3000.00");
+        const remainingDue = Math.max(0, totals.totalAmount - redeemedCoins);
+        // If remaining balance exists, allow cashier to select tender method again (Cash or Bank Card)
+        if (remainingDue > 0) {
+          setSelectedTenderMethod(null);
+          setSelectedBankCardType("-SELECT-");
+          setBankCardStep("SELECT_TYPE");
+          setIsLnqrCashPaymentOpen(true);
+          setIsLnqrTenderProcessed(false);
+          setIsFinalTenderStep(false);
+          setLnqrCashTenderInput("");
+        } else {
+          // Exactly paid off by Sulit Coins
+          setSelectedTenderMethod("BANK_CARD");
+          setIsFinalTenderStep(true);
+        }
       }, 800);
       return;
     }
@@ -2322,7 +2336,7 @@ function SimulatorContent() {
     const snapshot: CaseFinalSnapshot = {
       lineItemsCount: state.lineItems.length,
       totalSales: totals.totalAmount,
-      tenderMethod: selectedTenderMethod,
+      tenderMethod: selectedTenderMethod || "CASH",
       tenderAmount: tenderAmountVal,
       changeGiven: userChange ?? computedChange,
       loyaltyType: loyaltyType,
@@ -4171,32 +4185,6 @@ function SimulatorContent() {
 
                             <div className="border-t border-dashed border-gray-400 my-1" />
 
-                            {/* Sulit Coins Prompt Banner for LNQR customers */}
-                            {((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") || loyaltyType === "LNQR") && sulitCoinsRedeemedAmount === null && (
-                              <div className="bg-amber-100 border border-amber-400 p-1.5 rounded my-1 text-[10px] font-sans flex items-center justify-between shadow-2xs">
-                                <div className="text-amber-950 font-bold flex items-center space-x-1">
-                                  <span>🪙</span>
-                                  <span>Redeem ₱29.00 LNQR Sulit Coins</span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedTenderMethod("BANK_CARD");
-                                    setSelectedBankCardType("LNQR Sulit Coins");
-                                    setBankCardAmountInput("29.00");
-                                    setBankCardRefNo(customerQrInput || "20221003LN000004");
-                                    setBankCardStep("EWALLET_DETAILS");
-                                    validateScenarioStep("PAY_CARD");
-                                    validateScenarioStep("SELECT_CARD_TYPE", "LNQR Sulit Coins");
-                                  }}
-                                  className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-0.5 rounded text-[10px] shadow-xs transition-colors shrink-0"
-                                  title="Press F3 Bank Card to redeem ₱29.00 Sulit Coins"
-                                >
-                                  Redeem at F3 &rarr;
-                                </button>
-                              </div>
-                            )}
-
                             <div className="space-y-0.5">
                               <div className="flex justify-between font-bold">
                                 <span>No. of Items</span>
@@ -4587,7 +4575,9 @@ function SimulatorContent() {
                               ? (couponEntryMode === "SELECT" ? "Coupon Type" : "Coupon Details")
                               : selectedTenderMethod === "EPURSE"
                               ? "E-Purse Payment Details"
-                              : "Credit Memo Details"}
+                              : selectedTenderMethod === "CREDIT_MEMO"
+                              ? "Credit Memo Details"
+                              : "Select Tender Method"}
                           </div>
 
                           {/* Details / Input Body */}
@@ -4596,6 +4586,52 @@ function SimulatorContent() {
                               <div className="text-center space-y-2 font-sans select-none flex flex-col items-center">
                                 <div className="text-gray-900 font-bold text-sm tracking-wide">
                                   Please wait...
+                                </div>
+                              </div>
+                            ) : selectedTenderMethod === null ? (
+                              <div className="text-center space-y-3 font-sans select-none flex flex-col items-center p-4">
+                                <div className="text-sm font-bold text-gray-900">
+                                  {sulitCoinsRedeemedAmount !== null
+                                    ? `🪙 ₱${sulitCoinsRedeemedAmount.toFixed(2)} Sulit Coins Redeemed`
+                                    : "Select Payment Tender"}
+                                </div>
+                                <div className="text-xs text-gray-700 max-w-xs leading-relaxed">
+                                  {sulitCoinsRedeemedAmount !== null ? (
+                                    <span>
+                                      Remaining Due:{" "}
+                                      <strong className="text-blue-900 font-mono text-base font-bold">
+                                        ₱{(Math.max(0, totals.totalAmount - sulitCoinsRedeemedAmount)).toFixed(2)}
+                                      </strong>
+                                      <br />
+                                      Select <strong className="text-gray-900 font-bold">Cash (F2)</strong> or <strong className="text-gray-900 font-bold">Bank Card (F3)</strong> to tender balance.
+                                    </span>
+                                  ) : (
+                                    "Press F2 for Cash or F3 for Bank Card to proceed with payment."
+                                  )}
+                                </div>
+                                <div className="flex items-center space-x-3 pt-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTenderMethod("CASH");
+                                      setBankCardStep("SELECT_TYPE");
+                                      validateScenarioStep("PAY_CASH");
+                                    }}
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1"
+                                  >
+                                    <span>💵 Cash (F2)</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedTenderMethod("BANK_CARD");
+                                      setBankCardStep("SELECT_TYPE");
+                                      validateScenarioStep("PAY_CARD");
+                                    }}
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1"
+                                  >
+                                    <span>💳 Bank Card (F3)</span>
+                                  </button>
                                 </div>
                               </div>
                             ) : selectedTenderMethod === "CASH" ? (
@@ -4610,7 +4646,7 @@ function SimulatorContent() {
                                     step="0.01"
                                     value={lnqrCashTenderInput}
                                     onChange={(e) => setLnqrCashTenderInput(e.target.value)}
-                                    placeholder=""
+                                    placeholder={(totals.totalAmount - (sulitCoinsRedeemedAmount || 0)).toFixed(2)}
                                     className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     autoFocus
                                   />
@@ -5254,20 +5290,10 @@ function SimulatorContent() {
                         },
                         {
                           id: "BANK_CARD",
-                          label:
-                            ((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") ||
-                              loyaltyType === "LNQR") &&
-                            sulitCoinsRedeemedAmount === null
-                              ? "Bank Card / Sulit Coins"
-                              : "Bank Card",
+                          label: "Bank Card",
                           shortcut: "F3",
                           method: "BANK_CARD",
-                          variant:
-                            ((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") ||
-                              loyaltyType === "LNQR") &&
-                            sulitCoinsRedeemedAmount === null
-                              ? "yellow"
-                              : "gray",
+                          variant: "gray",
                           onClick: () => {
                             setSelectedTenderMethod("BANK_CARD");
                             setBankCardStep("SELECT_TYPE");
