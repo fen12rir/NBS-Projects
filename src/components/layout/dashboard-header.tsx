@@ -20,9 +20,14 @@ import {
 interface DashboardHeaderProps {
   onToggleSidebar?: () => void;
   isSidebarOpen?: boolean;
+  isMobileMenuOpen?: boolean;
 }
 
-export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHeaderProps = {}) {
+export function DashboardHeader({
+  onToggleSidebar,
+  isSidebarOpen,
+  isMobileMenuOpen,
+}: DashboardHeaderProps = {}) {
   const { user, isDemoMode, signOut } = useAuth();
   const router = useRouter();
 
@@ -38,23 +43,50 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
   }, [isDemoMode]);
 
   useEffect(() => {
+    if (isMobileMenuOpen) {
+      setIsVisible(true);
+    }
+  }, [isMobileMenuOpen]);
+
+  useEffect(() => {
     const handleScroll = (e: Event) => {
-      const target = (e.target as HTMLElement | Document) || document;
+      // If mobile navigation drawer is open, keep navbar visible and ignore scrolls
+      if (isMobileMenuOpen) {
+        setIsVisible(true);
+        return;
+      }
+
+      const targetEl = e.target instanceof HTMLElement ? e.target : null;
+
+      // NEVER trigger hide/show from scrolling inside side nav drawer or modals
+      if (targetEl && (targetEl.closest("aside") || targetEl.closest("[data-sidebar]"))) {
+        return;
+      }
+
+      // Only handle scrolling of the main content area or full page
+      const isMainOrDoc =
+        !targetEl ||
+        targetEl === document.documentElement ||
+        targetEl === document.body ||
+        Boolean(targetEl.closest("main"));
+
+      if (!isMainOrDoc) return;
+
       const currentScrollY =
-        target === document || target === (window as any)
-          ? window.scrollY
-          : (target as HTMLElement).scrollTop ?? window.scrollY;
+        targetEl && targetEl !== document.documentElement && targetEl !== document.body
+          ? targetEl.scrollTop
+          : window.scrollY;
 
       const delta = currentScrollY - lastScrollY.current;
 
-      // Immediate response on scroll direction
-      if (currentScrollY <= 15) {
+      // Require intentional scroll delta (>= 12px) to prevent micro-jitters / bouncing
+      if (currentScrollY <= 20) {
         setIsVisible(true);
-      } else if (delta > 3) {
-        // Scrolling down -> immediate hide
+      } else if (delta > 12) {
+        // Intentional scroll down in main content -> hide
         setIsVisible(false);
-      } else if (delta < -3) {
-        // Scrolling up -> immediate show
+      } else if (delta < -12) {
+        // Intentional scroll up in main content -> show
         setIsVisible(true);
       }
       lastScrollY.current = Math.max(0, currentScrollY);
@@ -62,7 +94,7 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
 
     window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
     return () => window.removeEventListener("scroll", handleScroll, { capture: true });
-  }, []);
+  }, [isMobileMenuOpen]);
 
   const handleSignOut = async () => {
     await signOut();

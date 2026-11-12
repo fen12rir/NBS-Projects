@@ -31,6 +31,7 @@ export function LearningShell({
       <DashboardHeader
         onToggleSidebar={handleToggleSidebar}
         isSidebarOpen={!isSidebarCollapsedDesktop}
+        isMobileMenuOpen={isSidebarOpenMobile}
       />
 
       <div className="flex-1 flex min-h-0 relative overflow-hidden transition-all duration-300 ease-in-out">
