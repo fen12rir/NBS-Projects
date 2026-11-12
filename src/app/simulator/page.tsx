@@ -206,31 +206,46 @@ function SimulatorContent() {
     setPosAlert({ isOpen: true, message, title, type, onClose });
   };
 
-  // Keyboard & Input Zoom tracking
+  // User-selected input zoom tracking (strictly on mobile view when tapped/selected by the user)
   useEffect(() => {
-    const handleFocusIn = (e: FocusEvent) => {
+    let isUserTap = false;
+
+    const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
       if (
         target &&
         (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA")
       ) {
-        setIsInputFocused(true);
-        // Scroll target input smoothly into view
-        setTimeout(() => {
-          try {
-            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-          } catch {}
-        }, 150);
+        isUserTap = true;
+      } else {
+        isUserTap = false;
       }
+    };
+
+    const handleFocusIn = (e: FocusEvent) => {
+      const isMobile =
+        typeof window !== "undefined" &&
+        (window.innerWidth < 768 || window.innerHeight > window.innerWidth);
+
+      // ONLY zoom in on mobile view if the user explicitly clicked/tapped the input field
+      if (isUserTap && isMobile) {
+        setIsInputFocused(true);
+      } else {
+        setIsInputFocused(false);
+      }
+      isUserTap = false;
     };
 
     const handleFocusOut = () => {
       setIsInputFocused(false);
+      isUserTap = false;
     };
 
+    window.addEventListener("pointerdown", handlePointerDown, true);
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
     return () => {
+      window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
     };
@@ -1268,7 +1283,10 @@ function SimulatorContent() {
       !isLnqrTenderProcessed &&
       selectedTenderMethod === "CASH"
     ) {
-      cashTenderInputRef.current?.focus();
+      const isMobileDevice = typeof window !== "undefined" && (window.innerWidth < 768 || "ontouchstart" in window);
+      if (!isMobileDevice) {
+        cashTenderInputRef.current?.focus({ preventScroll: true });
+      }
     }
   }, [state.currentPage, isLnqrCashPaymentOpen, isLnqrTenderProcessed, selectedTenderMethod]);
 
@@ -1303,7 +1321,10 @@ function SimulatorContent() {
       !isBonusBuyOpen &&
       !isLogoutScreenOpen
     ) {
-      barcodeRef.current?.focus();
+      const isMobileDevice = typeof window !== "undefined" && (window.innerWidth < 768 || "ontouchstart" in window);
+      if (!isMobileDevice) {
+        barcodeRef.current?.focus({ preventScroll: true });
+      }
     }
   }, [
     terminalMode,
