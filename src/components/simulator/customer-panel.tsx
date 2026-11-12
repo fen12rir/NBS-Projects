@@ -73,18 +73,36 @@ export function CustomerPanel({
   );
 
   const tenderItems = currentCase.events.flatMap((ev, evIdx) => [
+    ...(currentCase.id === "case-sulit-coins" || currentCase.milestones.some((m) => m.action === "REDEEM_SULIT_COINS") ? [
+      <div
+        key="sulit-coins-action-pill"
+        className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-100 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+      >
+        <span className="text-sm">🪙</span>
+        <span className="font-bold text-yellow-300">Step 1:</span>
+        <span className="font-semibold text-white">Redeem ₱29 Sulit Coins (F3 Bank Card)</span>
+      </div>
+    ] : []),
+
     ...(ev.tender ? [
       <div
         key={`tender-${evIdx}`}
         className="bg-blue-950 border border-blue-600 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-blue-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
         <Banknote className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-        <span className="font-bold text-white">Tender:</span>
+        <span className="font-bold text-white">
+          {currentCase.id === "case-sulit-coins" ? "Step 2 Cash:" : "Tender:"}
+        </span>
         <span className="text-yellow-300 font-bold">
           {ev.tender.kind === "CASH"
             ? `₱${ev.tender.amount?.toFixed(2) || "Exact"} Cash`
             : ev.tender.kind}
         </span>
+        {currentCase.id === "case-sulit-coins" && (
+          <span className="text-emerald-300 font-bold text-[10px] shrink-0">
+            (Change: ₱109.00)
+          </span>
+        )}
         {ev.tender.reference && (
           <span className="text-gray-300 font-mono text-[9px] sm:text-[10px] shrink-0">
             Ref: {ev.tender.reference}

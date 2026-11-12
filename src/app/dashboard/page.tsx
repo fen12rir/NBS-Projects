@@ -75,7 +75,10 @@ export default function DashboardPage() {
     simulatorStatusDetail = `All modules completed • Practical exam passed (${bestAttempt.score}%)`;
   } else {
     simulatorStatus = "Failed";
-    simulatorStatusDetail = `Practical exam failed (${latestAttempt?.score ?? 0}%) • Retake required (80% to pass)`;
+    const passedCasesCount = latestAttempt?.caseResults
+      ? latestAttempt.caseResults.filter((c) => c.passed).length
+      : latestAttempt?.stepsCompleted ?? 0;
+    simulatorStatusDetail = `Practical exam: ${latestAttempt?.score ?? 0}% (${passedCasesCount}/7 cases passed) • Retake required (Requires ≥80% and ≥6 of 7 cases)`;
   }
 
   type CertificationStatusType = "Pending" | "In Progress" | "Certified";
@@ -92,8 +95,11 @@ export default function DashboardPage() {
     if (!allModulesCompleted) {
       certificationDetail = `${completedLessonCount} of ${totalLessons} lessons completed • Assessment pending`;
     } else {
+      const passedCasesCount = latestAttempt?.caseResults
+        ? latestAttempt.caseResults.filter((c) => c.passed).length
+        : latestAttempt?.stepsCompleted ?? 0;
       certificationDetail = hasAttempts
-        ? `Assessment score (${latestAttempt?.score ?? 0}%) • Retake exam to earn certification`
+        ? `Assessment score (${latestAttempt?.score ?? 0}% • ${passedCasesCount}/7 cases passed) • Requires ≥80% and ≥6/7 cases passed`
         : "All modules completed • Complete practical exam to earn certification";
     }
   } else {

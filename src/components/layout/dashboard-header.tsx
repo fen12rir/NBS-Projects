@@ -50,6 +50,12 @@ export function DashboardHeader({
 
   useEffect(() => {
     const handleScroll = (e: Event) => {
+      // On desktop (>= 1024px), navbar must always remain docked and visible
+      if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+        setIsVisible(true);
+        return;
+      }
+
       // If mobile navigation drawer is open, keep navbar visible and ignore scrolls
       if (isMobileMenuOpen) {
         setIsVisible(true);
@@ -72,10 +78,23 @@ export function DashboardHeader({
 
       if (!isMainOrDoc) return;
 
+      const scrollContainer =
+        targetEl && targetEl !== document.documentElement && targetEl !== document.body
+          ? targetEl
+          : document.documentElement;
+
       const currentScrollY =
         targetEl && targetEl !== document.documentElement && targetEl !== document.body
           ? targetEl.scrollTop
           : window.scrollY;
+
+      const maxScroll = (scrollContainer.scrollHeight || 0) - (scrollContainer.clientHeight || 0);
+
+      // Prevent bottom overscroll and rubber-band bounce from toggling the navbar
+      if (maxScroll > 0 && currentScrollY >= maxScroll - 50) {
+        lastScrollY.current = Math.max(0, currentScrollY);
+        return;
+      }
 
       const delta = currentScrollY - lastScrollY.current;
 
@@ -104,11 +123,10 @@ export function DashboardHeader({
   return (
     <header
       ref={headerRef}
-      style={{
-        marginTop: isVisible ? "0px" : `-${headerHeight || 64}px`,
-      }}
-      className={`bg-white border-b border-gray-200 z-50 shrink-0 transition-[margin-top,transform,opacity] duration-300 ease-in-out ${
-        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
+      className={`bg-white z-50 shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+        isVisible
+          ? "max-h-28 opacity-100 border-b border-gray-200"
+          : "max-h-0 opacity-0 pointer-events-none border-b-0"
       }`}
     >
       {/* Demo Warning Banner */}

@@ -149,7 +149,8 @@ const isEwalletCardType = (type: string) => {
   );
 };
 
-function getInitialTerminalMode(scenario: TrainingScenario | null): POSTerminalMode {
+function getInitialTerminalMode(scenario: TrainingScenario | null, isExam = false): POSTerminalMode {
+  if (isExam) return "START_OF_DAY_VERIFY";
   if (!scenario) return "ACTIVE_REGISTER";
   if (scenario.id === "scen-les-2-1" || scenario.id === "scen-mod-2" || scenario.id === "scen-practical-assessment") return "START_OF_DAY_VERIFY";
   if (scenario.id === "scen-les-2-2") return "USER_LOGIN";
@@ -170,6 +171,8 @@ function SimulatorContent() {
   const [examSession, setExamSession] = useState<PracticalExamSession | null>(null);
   const [examCaseIndex, setExamCaseIndex] = useState(0);
   const [examActionLog, setExamActionLog] = useState<TraineeActionLog[]>([]);
+  const examActionLogRef = useRef<TraineeActionLog[]>([]);
+  const isAdvancingCaseRef = useRef(false);
   const [caseResults, setCaseResults] = useState<CaseGradingResult[]>([]);
   const [caseStartTime, setCaseStartTime] = useState<number>(Date.now());
   const [isChangeCheckModalOpen, setIsChangeCheckModalOpen] = useState(false);
@@ -183,7 +186,9 @@ function SimulatorContent() {
   } | null>(null);
 
   const logExamAction = (action: string, data?: any) => {
-    setExamActionLog((prev) => [...prev, { action, data, timestamp: Date.now() }]);
+    const entry = { action, data, timestamp: Date.now() };
+    examActionLogRef.current.push(entry);
+    setExamActionLog((prev) => [...prev, entry]);
   };
 
   // Mobile / Focus Mode States (Forced Landscape)
@@ -395,12 +400,12 @@ function SimulatorContent() {
     : "/dashboard";
   const returnButtonLabel = isLessonSpecific ? "Back to Lesson" : "Back to Module";
   const [terminalMode, setTerminalMode] = useState<POSTerminalMode>(
-    getInitialTerminalMode(initialScenario)
+    getInitialTerminalMode(initialScenario, isExamMode)
   );
 
   const [selectedSodButton, setSelectedSodButton] = useState<"YES" | "NO" | null>(null);
-  const [loginUsername, setLoginUsername] = useState("241209");
-  const [loginPassword, setLoginPassword] = useState("******");
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [isLogoutScreenOpen, setIsLogoutScreenOpen] = useState(false);
   const [selectedLogoutButton, setSelectedLogoutButton] = useState<"YES" | "NO" | null>(null);
 
@@ -775,30 +780,35 @@ function SimulatorContent() {
     setSelectedSodButton(null);
     setTerminalMode("START_OF_DAY_CLOSE");
     validateScenarioStep("VERIFY_DATE_YES");
+    if (isExamMode) logExamAction("VERIFY_DATE_YES");
   };
 
   const handleVerifyDateNo = () => {
     setSelectedSodButton("NO");
     validateScenarioStep("VERIFY_DATE_NO");
     setTerminalMode("START_OF_DAY_INCORRECT");
+    if (isExamMode) logExamAction("VERIFY_DATE_NO");
   };
 
   const handleCloseSodWindow = () => {
     setTerminalMode("POS_RELOADER");
     validateScenarioStep("CLOSE_SOD_WINDOW");
+    if (isExamMode) logExamAction("CLOSE_SOD_WINDOW");
   };
 
   const handleReloadToLogin = () => {
     setTerminalMode("USER_LOGIN");
     validateScenarioStep("RELOAD_POS_LOGIN");
+    if (isExamMode) logExamAction("RELOAD_POS_LOGIN");
   };
 
   const handleLoginSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    const userToSubmit = loginUsername.trim() || "241209";
     setTerminalMode("ACTIVE_REGISTER");
-    validateScenarioStep("LOGIN_SUBMIT", loginUsername);
+    validateScenarioStep("LOGIN_SUBMIT", userToSubmit);
     if (isExamMode) {
-      logExamAction("LOGIN_SUBMIT", loginUsername);
+      logExamAction("LOGIN_SUBMIT", userToSubmit);
       if (examSession?.cases[examCaseIndex]?.id === "case-open-shift") {
         setTimeout(() => {
           handleAdvanceExamCase();
@@ -2296,8 +2306,14 @@ function SimulatorContent() {
 
   const handleAdvanceExamCase = (userChange?: number) => {
     if (!examSession) return;
+    if (isAdvancingCaseRef.current) return;
+    isAdvancingCaseRef.current = true;
+
     const currentCase = examSession.cases[examCaseIndex];
-    if (!currentCase) return;
+    if (!currentCase) {
+      isAdvancingCaseRef.current = false;
+      return;
+    }
 
     const timeSpent = Math.max(1, Math.round((Date.now() - caseStartTime) / 1000));
     const tenderAmountVal = pendingCashTender || totals.totalAmount;
@@ -2315,7 +2331,8 @@ function SimulatorContent() {
       isZeroRated: state.isZeroRated,
     };
 
-    const graded = gradeCase(currentCase, examActionLog, snapshot, userChange, timeSpent);
+    const currentActions = [...examActionLogRef.current];
+    const graded = gradeCase(currentCase, currentActions, snapshot, userChange, timeSpent);
     const updatedCaseResults = [...caseResults, graded];
     setCaseResults(updatedCaseResults);
 
@@ -2338,6 +2355,7 @@ function SimulatorContent() {
     setSulitCoinsEarnedAmount(null);
     setSulitCoinsRefNo("");
     setIsChangeCheckModalOpen(false);
+    examActionLogRef.current = [];
     setExamActionLog([]);
     setCaseStartTime(Date.now());
 
@@ -2358,6 +2376,9 @@ function SimulatorContent() {
       if (nextCase.id === "case-close-shift") {
         setTerminalMode("ACTIVE_REGISTER");
       }
+      setTimeout(() => {
+        isAdvancingCaseRef.current = false;
+      }, 800);
     } else {
       // Completed all cases
       if (isFocusMode) {
@@ -2366,6 +2387,7 @@ function SimulatorContent() {
       const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
       const finalGraded = gradeExamSession(examSession, updatedCaseResults, totalExamTime);
       setIsExamCompleted(true);
+      isAdvancingCaseRef.current = false;
 
       const attemptId = `att-prac-${Date.now()}`;
       recordScenarioAttempt({
@@ -2430,10 +2452,9 @@ function SimulatorContent() {
 
   const validateScenarioStep = (actionId: string, dataVal?: string | number): boolean => {
     if (isExamMode) {
-      setExamActionLog((prev) => [
-        ...prev,
-        { action: actionId, data: dataVal, timestamp: Date.now() },
-      ]);
+      const entry = { action: actionId, data: dataVal, timestamp: Date.now() };
+      examActionLogRef.current.push(entry);
+      setExamActionLog((prev) => [...prev, entry]);
       return true;
     }
     if (!activeScenario || isExamCompleted) return true;
@@ -4150,6 +4171,32 @@ function SimulatorContent() {
 
                             <div className="border-t border-dashed border-gray-400 my-1" />
 
+                            {/* Sulit Coins Prompt Banner for LNQR customers */}
+                            {((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") || loyaltyType === "LNQR") && sulitCoinsRedeemedAmount === null && (
+                              <div className="bg-amber-100 border border-amber-400 p-1.5 rounded my-1 text-[10px] font-sans flex items-center justify-between shadow-2xs">
+                                <div className="text-amber-950 font-bold flex items-center space-x-1">
+                                  <span>🪙</span>
+                                  <span>Redeem ₱29.00 LNQR Sulit Coins</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedTenderMethod("BANK_CARD");
+                                    setSelectedBankCardType("LNQR Sulit Coins");
+                                    setBankCardAmountInput("29.00");
+                                    setBankCardRefNo(customerQrInput || "20221003LN000004");
+                                    setBankCardStep("EWALLET_DETAILS");
+                                    validateScenarioStep("PAY_CARD");
+                                    validateScenarioStep("SELECT_CARD_TYPE", "LNQR Sulit Coins");
+                                  }}
+                                  className="cursor-pointer bg-amber-600 hover:bg-amber-700 text-white font-bold px-2 py-0.5 rounded text-[10px] shadow-xs transition-colors shrink-0"
+                                  title="Press F3 Bank Card to redeem ₱29.00 Sulit Coins"
+                                >
+                                  Redeem at F3 &rarr;
+                                </button>
+                              </div>
+                            )}
+
                             <div className="space-y-0.5">
                               <div className="flex justify-between font-bold">
                                 <span>No. of Items</span>
@@ -5207,10 +5254,20 @@ function SimulatorContent() {
                         },
                         {
                           id: "BANK_CARD",
-                          label: "Bank Card",
+                          label:
+                            ((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") ||
+                              loyaltyType === "LNQR") &&
+                            sulitCoinsRedeemedAmount === null
+                              ? "Bank Card / Sulit Coins"
+                              : "Bank Card",
                           shortcut: "F3",
                           method: "BANK_CARD",
-                          variant: "gray",
+                          variant:
+                            ((isExamMode && examSession?.cases[examCaseIndex]?.id === "case-sulit-coins") ||
+                              loyaltyType === "LNQR") &&
+                            sulitCoinsRedeemedAmount === null
+                              ? "yellow"
+                              : "gray",
                           onClick: () => {
                             setSelectedTenderMethod("BANK_CARD");
                             setBankCardStep("SELECT_TYPE");

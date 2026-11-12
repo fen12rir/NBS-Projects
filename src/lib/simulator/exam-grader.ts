@@ -51,6 +51,23 @@ export interface ExamSessionGradingResult {
 }
 
 /**
+ * Checks if expected action matches logged action, supporting on-screen vs keyboard aliases.
+ */
+function isActionMatch(expectedAction: string, loggedAction: string): boolean {
+  if (expectedAction === loggedAction) return true;
+  // Navigation aliases (e.g. F12 Main Screen vs Page Down)
+  if (expectedAction === "PAGE_DOWN" && (loggedAction === "NAV_MAIN" || loggedAction === "PAGE_DOWN")) return true;
+  if (expectedAction === "NAV_MAIN" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_MAIN")) return true;
+  if (expectedAction === "NAV_SECOND" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_SECOND")) return true;
+  if (expectedAction === "NAV_THIRD" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_THIRD")) return true;
+  if (expectedAction === "NAV_FOURTH" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_FOURTH")) return true;
+  // Tender submission aliases
+  if (expectedAction === "CONFIRM_TENDER" && (loggedAction === "SUBMIT_CASH_TENDER" || loggedAction === "CONFIRM_TENDER")) return true;
+  if (expectedAction === "SUBMIT_CASH_TENDER" && (loggedAction === "CONFIRM_TENDER" || loggedAction === "SUBMIT_CASH_TENDER")) return true;
+  return false;
+}
+
+/**
  * Checks if expected data matches logged data loosely (e.g. "500" vs 500, case-insensitive strings).
  */
 function isDataMatch(expected?: string | number, actual?: string | number): boolean {
@@ -82,7 +99,7 @@ export function gradeCase(
     for (let i = 0; i < actionLog.length; i++) {
       if (!usedIndices.has(i)) {
         const logged = actionLog[i];
-        if (logged.action === milestone.action && isDataMatch(milestone.expectedData, logged.data)) {
+        if (isActionMatch(milestone.action, logged.action) && isDataMatch(milestone.expectedData, logged.data)) {
           matchIndex = i;
           break;
         }
@@ -190,13 +207,20 @@ export function gradeExamSession(
   caseResults: CaseGradingResult[],
   totalTimeSpentSeconds: number
 ): ExamSessionGradingResult {
+  // Deduplicate caseResults by caseId so no case can ever be recorded twice
+  const uniqueResultsMap = new Map<string, CaseGradingResult>();
+  for (const r of caseResults) {
+    uniqueResultsMap.set(r.caseId, r);
+  }
+  const uniqueResults = Array.from(uniqueResultsMap.values());
+
   const casesTotal = session.cases.length;
-  const casesCompleted = caseResults.length;
-  const passedCasesCount = caseResults.filter((r) => r.passed).length;
+  const casesCompleted = uniqueResults.length;
+  const passedCasesCount = uniqueResults.filter((r) => r.passed).length;
   const failedCasesCount = casesTotal - passedCasesCount;
 
   const totalScore = Math.round(
-    caseResults.reduce((acc, r) => acc + r.score, 0) / (casesTotal || 1)
+    uniqueResults.reduce((acc, r) => acc + r.score, 0) / (casesTotal || 1)
   );
 
   // Passing criteria: overall >= 80% AND no more than 1 failed case
@@ -218,7 +242,7 @@ export function gradeExamSession(
     casesTotal,
     passedCasesCount,
     failedCasesCount,
-    caseResults,
+    caseResults: uniqueResults,
     summaryFeedback,
   };
 }
