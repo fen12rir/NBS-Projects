@@ -516,7 +516,7 @@ function SimulatorContent() {
   const [isNonMdseOpen, setIsNonMdseOpen] = useState(false);
   const [journalModalMode, setJournalModalMode] = useState<"TRX_JOURNAL" | "SALES_JOURNAL" | null>(null);
   const [isNonSalesOpen, setIsNonSalesOpen] = useState(false);
-const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null);
+
   const [state, dispatch] = useReducer(
     posReducer,
     createInitialPOSState("Jan Angela")
@@ -647,9 +647,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     { step: number; actionAttempted: string; expected: string; feedback: string }[]
   >([]);
   const [scenarioStartTime, setScenarioStartTime] = useState<number>(Date.now());
-  const [timedOut, setTimedOut] = useState(false);
-  const [isExamCompleted, setIsExamCompleted] = useState(false);
-  const hasRecordedAttemptRef = useRef(false);
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 1000);
@@ -749,10 +746,8 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
       const penalty = mistakes.length * 10;
       const score = timedOut ? 0 : Math.max(0, 100 - penalty);
-      const attemptId = `attempt-${Date.now()}`;
-      setCompletedAttemptId(attemptId);
       recordScenarioAttempt({
-        id: attemptId,
+        id: "attempt-" + Date.now(),
         scenarioId: activeScenario.id,
         scenarioTitle: activeScenario.title,
         timestamp: new Date().toISOString(),
@@ -1203,13 +1198,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       if (bankCardStep === "SWIPE_CARD") {
         validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
         setBankCardStep("DETAILS");
-        if (
-          activeScenario?.id === "scen-les-8-2" ||
-          activeScenario?.id === "scen-mod-8" ||
-          activeScenario?.id === "scen-practical-assessment"
-        ) {
-          validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
-        }
         return;
       }
       if (bankCardStep === "DETAILS" || bankCardStep === "EWALLET_DETAILS") {
@@ -1280,6 +1268,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setIsSulitLoading(false);
     setBankCardStep("SELECT_TYPE");
     setBankCardSwipeNum("");
+    validateScenarioStep("CONFIRM_LNQR_UPDATED");
   };
 
   useEffect(() => {
@@ -1398,6 +1387,7 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setPendingVoidReason(null);
     dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
     validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
+    validateScenarioStep("CONFIRM_ITEM_VOID", pendingVoidReason || "Customer changed mind");
   };
 
   useEffect(() => {
@@ -2961,10 +2951,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     } else if (target === "Refund") {
       setReturnRefundMode("REFUND");
     }
-    else if (target === "Trx Void") {
-      setIsTrxVoidModalOpen(true)
-    }
-    
   };
 
   const handleShowHint = () => {
@@ -3024,8 +3010,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     setHasBonusBuyBeenPrompted(false);
     setScenarioStartTime(Date.now());
     setTerminalMode(getInitialTerminalMode(activeScenario));
-    setScenarioStartTime(Date.now());
-    setTimedOut(false);
   };
 
   const handleResetTerminal = () => {
@@ -3069,10 +3053,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
     hasRecordedAttemptRef.current = false;
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
-    setIsBonusBuyOpen(false);
-    setHasBonusBuyBeenPrompted(false);
-    setScenarioStartTime(Date.now());
-    setTimedOut(false);
   };
 
   if (isLoading) {
@@ -3488,6 +3468,8 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
               Item not found
             </div>
           )}
+
+
 
           {/* Start of Day Verify */}
           {terminalMode === "START_OF_DAY_VERIFY" && (
@@ -4777,13 +4759,6 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
                                     e.preventDefault();
                                     validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
                                     setBankCardStep("DETAILS");
-                                    if (
-                                      activeScenario?.id === "scen-les-8-2" ||
-                                      activeScenario?.id === "scen-mod-8" ||
-                                      activeScenario?.id === "scen-practical-assessment"
-                                    ) {
-                                      validateScenarioStep("SWIPE_CARD", bankCardSwipeNum);
-                                    }
                                   }}
                                   className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
                                 >
@@ -5889,14 +5864,13 @@ const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null
       <ScenarioCompleteModal
         isOpen={isExamCompleted || timedOut}
         timedOut={timedOut}
-        scenario={activeScenario}
         stepsCompleted={currentStepIndex}
+        scenario={activeScenario}
         mistakesCount={mistakes.length}
         isLessonSpecific={isLessonSpecific}
         returnLessonUrl={returnLessonUrl}
         returnButtonLabel={returnButtonLabel}
         onResetExam={handleResetExam}
-        attemptId={completedAttemptId}
       />
 
       {/* POS Green Beveled Alert Modal */}
