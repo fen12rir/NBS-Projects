@@ -68,8 +68,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ["Montserrat", "ui-sans-serif", "system-ui", "sans-serif"],
-        mono: ["Consolas", "Courier New", "monospace"]
+        sans: ["Montserrat", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        mono: ["JetBrains Mono", "Roboto Mono", "Consolas", "Courier New", "monospace"]
       }
     },
   },

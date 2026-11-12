@@ -16,6 +16,7 @@ export function ChangeCheckModal({
   onConfirmChange,
 }: ChangeCheckModalProps) {
   const [inputVal, setInputVal] = useState("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -25,9 +26,10 @@ export function ChangeCheckModal({
     e.preventDefault();
     const val = parseFloat(inputVal.trim());
     if (isNaN(val) || val < 0) {
-      alert("Please enter a valid change amount.");
+      setErrorMsg("Please enter a valid change amount.");
       return;
     }
+    setErrorMsg(null);
     onConfirmChange(val);
     setInputVal("");
   };
@@ -66,6 +68,12 @@ export function ChangeCheckModal({
         <p className="text-xs text-gray-800 mb-2 leading-relaxed font-medium">
           Customer handed cash for this purchase. Enter the exact change you are counting and handing back to the customer:
         </p>
+
+        {errorMsg && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-2 py-1 text-xs font-bold text-center mb-2">
+            {errorMsg}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="flex items-center space-x-2">

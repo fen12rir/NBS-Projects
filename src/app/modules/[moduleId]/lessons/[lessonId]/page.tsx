@@ -24,7 +24,12 @@ import {
   Key, 
   Sparkles,
   Video,
-  FileImage
+  FileImage,
+  Maximize2,
+  X,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw
 } from "lucide-react";
 
 function LessonDetailContent() {
@@ -44,6 +49,8 @@ function LessonDetailContent() {
     scenarioAttempts: [],
   });
   const [justCompleted, setJustCompleted] = useState(false);
+  const [zoomedImage, setZoomedImage] = useState<{ src: string; alt?: string; caption?: string } | null>(null);
+  const [imageScale, setImageScale] = useState(1);
 
   useEffect(() => {
     setProgress(getLocalProgress());
@@ -253,11 +260,24 @@ function LessonDetailContent() {
                             Your browser does not support the video tag.
                           </video>
                         ) : (
-                          <img
-                            src={asset.src}
-                            alt={asset.alt}
-                            className="w-full h-auto object-contain max-h-[500px]"
-                          />
+                          <div
+                            onClick={() => {
+                              setZoomedImage(asset);
+                              setImageScale(1);
+                            }}
+                            className="relative group cursor-zoom-in w-full flex items-center justify-center bg-gray-950"
+                            title="Click to view enlarged image"
+                          >
+                            <img
+                              src={asset.src}
+                              alt={asset.alt}
+                              className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01]"
+                            />
+                            <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <Maximize2 className="w-3 h-3" />
+                              <span>Enlarge</span>
+                            </div>
+                          </div>
                         )}
                       </div>
                       <p className="text-xs text-gray-700 font-sans text-center pt-1 font-semibold">
@@ -286,11 +306,26 @@ function LessonDetailContent() {
                     Your browser does not support the video tag.
                   </video>
                 ) : (
-                  <img
-                    src={currentLesson.visualAsset.src}
-                    alt={currentLesson.visualAsset.alt}
-                    className="w-full h-auto object-contain max-h-[500px]"
-                  />
+                  <div
+                    onClick={() => {
+                      if (currentLesson.visualAsset) {
+                        setZoomedImage(currentLesson.visualAsset);
+                        setImageScale(1);
+                      }
+                    }}
+                    className="relative group cursor-zoom-in w-full flex items-center justify-center bg-gray-950"
+                    title="Click to view enlarged image"
+                  >
+                    <img
+                      src={currentLesson.visualAsset.src}
+                      alt={currentLesson.visualAsset.alt}
+                      className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01]"
+                    />
+                    <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Enlarge</span>
+                    </div>
+                  </div>
                 )}
               </div>
               <p className="text-xs text-gray-500 font-sans text-center pt-1 italic">
@@ -403,6 +438,96 @@ function LessonDetailContent() {
           </div>
         </div>
       </div>
+
+      {/* Fullscreen Image Lightbox Modal */}
+      {zoomedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xs flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-150"
+          onClick={() => setZoomedImage(null)}
+        >
+          {/* Top Bar with Controls */}
+          <div
+            className="w-full max-w-5xl flex items-center justify-between text-white pb-3 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-gray-300">
+              <FileImage className="w-4 h-4 text-[#E4002B]" />
+              <span className="truncate max-w-[200px] sm:max-w-md">{zoomedImage.alt || "Visual Reference"}</span>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center bg-gray-800 rounded px-2 py-1 border border-gray-700 space-x-1">
+                <button
+                  type="button"
+                  onClick={() => setImageScale((s) => Math.max(0.6, Number((s - 0.2).toFixed(1))))}
+                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-xs font-mono font-bold text-gray-300 px-1 min-w-[36px] text-center select-none">
+                  {Math.round(imageScale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setImageScale((s) => Math.min(3, Number((s + 0.2).toFixed(1))))}
+                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                {imageScale !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setImageScale(1)}
+                    className="p-1 hover:bg-gray-700 text-yellow-400 rounded cursor-pointer ml-1"
+                    title="Reset Zoom"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setZoomedImage(null)}
+                className="bg-gray-800 hover:bg-red-600 text-white p-2 rounded-full border border-gray-700 transition-colors cursor-pointer"
+                title="Close (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Centered Zoomable Image Viewport */}
+          <div
+            className="flex-1 w-full max-w-5xl flex items-center justify-center overflow-auto p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={zoomedImage.src}
+              alt={zoomedImage.alt}
+              style={{
+                transform: `scale(${imageScale})`,
+                transformOrigin: "center center",
+                maxHeight: imageScale <= 1 ? "80vh" : undefined,
+                maxWidth: imageScale <= 1 ? "95vw" : undefined,
+              }}
+              className="object-contain transition-transform duration-150 select-none cursor-grab active:cursor-grabbing shadow-2xl rounded"
+            />
+          </div>
+
+          {/* Bottom Caption Bar */}
+          {zoomedImage.caption && (
+            <div
+              className="w-full max-w-3xl text-center bg-gray-900/90 text-gray-200 text-xs sm:text-sm py-2 px-4 rounded border border-gray-800 mt-2 shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {zoomedImage.caption}
+            </div>
+          )}
+        </div>
+      )}
     </LearningShell>
   );
 }

@@ -129,31 +129,31 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Progress Metrics Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="p-5">
+        {/* Progress Metrics Bar: In portrait, Card 1 spans full width, Card 2 & 3 sit side-by-side */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <Card className="col-span-2 sm:col-span-1 p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Course Progress</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">{progressPercent}%</div>
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-400 tracking-wider">Course Progress</div>
+                <div className="text-xl sm:text-2xl font-black text-gray-900 mt-1">{progressPercent}%</div>
               </div>
-              <div className="w-10 h-10 bg-red-50 text-[#E4002B] flex items-center justify-center">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-red-50 text-[#E4002B] flex items-center justify-center rounded">
                 <BookOpen className="w-5 h-5" />
               </div>
             </div>
-            <div className="mt-3 w-full bg-gray-200 h-2">
+            <div className="mt-2.5 sm:mt-3 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
               <div className="bg-[#E4002B] h-2 transition-all duration-300" style={{ width: `${progressPercent}%` }} />
             </div>
-            <div className="mt-2 text-xs text-gray-500">
+            <div className="mt-2 text-[11px] sm:text-xs text-gray-500">
               {completedLessonCount} of {totalLessons} lessons completed
             </div>
           </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
+          <Card className="col-span-1 p-3.5 sm:p-5 flex flex-col justify-between">
+            <div className="flex items-start justify-between">
               <div>
-                <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Simulator Status</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-400 tracking-wider">Simulator</div>
+                <div className="text-lg sm:text-2xl font-black text-gray-900 mt-1">
                   {simulatorStatus === "Passed" ? (
                     <span className="text-emerald-600">Passed</span>
                   ) : simulatorStatus === "Failed" ? (
@@ -163,46 +163,46 @@ export default function DashboardPage() {
                   )}
                 </div>
               </div>
-              <div className="w-10 h-10 bg-red-50 text-[#E4002B] flex items-center justify-center">
-                <Monitor className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0 rounded">
+                <Monitor className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
-            <div className="mt-3 text-xs text-gray-500">
+            <div className="mt-2 text-[10px] sm:text-xs text-gray-500 line-clamp-2">
               {simulatorStatusDetail}
             </div>
           </Card>
 
-          <Card className="p-5">
-            <div className="flex items-center justify-between">
+          <Card className="col-span-1 p-3.5 sm:p-5 flex flex-col justify-between">
+            <div className="flex items-start justify-between">
               <div>
-                <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Certification</div>
-                <div className="text-2xl font-black text-gray-900 mt-1">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-400 tracking-wider">Certification</div>
+                <div className="text-lg sm:text-2xl font-black text-gray-900 mt-1">
                   {isCertified ? (
-                        <Link
-                          href="/certificate"
-                          className="text-emerald-600 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-600"
-                          aria-label="View your certificate"
-                        >
-                          Certified
-                        </Link>
-                      ) : certificationStatus === "In Progress" ? (
-                        <span className="text-red-600">In Progress</span>
-                      ) : (
-                        <span className="text-gray-400">Pending</span>
-                      )}
+                    <Link
+                      href="/certificate"
+                      className="text-emerald-600 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                      aria-label="View your certificate"
+                    >
+                      Certified
+                    </Link>
+                  ) : certificationStatus === "In Progress" ? (
+                    <span className="text-red-600">In Progress</span>
+                  ) : (
+                    <span className="text-gray-400">Pending</span>
+                  )}
                 </div>
               </div>
-              <div className="w-10 h-10 bg-red-50 text-[#E4002B] flex items-center justify-center">
-                <Award className="w-5 h-5" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0 rounded">
+                <Award className="w-4 h-4 sm:w-5 sm:h-5" />
               </div>
             </div>
-            <div className="mt-3 text-xs">
+            <div className="mt-2 text-[10px] sm:text-xs">
               {isCertified ? (
                 <span className="text-emerald-600 font-bold">
-                  All training modules completed • Certificate available
+                  Certificate ready
                 </span>
               ) : (
-                <span className="text-gray-500">{certificationDetail}</span>
+                <span className="text-gray-500 line-clamp-2">{certificationDetail}</span>
               )}
             </div>
           </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -24,6 +24,25 @@ export default function HomePage() {
   const router = useRouter();
   const { user, signInWithGoogle, enterDemoMode } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY <= 40) {
+        setIsNavVisible(true);
+      } else if (currentScrollY > lastScrollY.current + 8) {
+        setIsNavVisible(false);
+      } else if (currentScrollY < lastScrollY.current - 8) {
+        setIsNavVisible(true);
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleDemoEntry = () => {
     enterDemoMode();
@@ -41,33 +60,37 @@ export default function HomePage() {
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Top Brand Notification Bar */}
-      <div className="bg-[#E4002B] text-white py-2 px-4 text-center text-xs sm:text-sm font-semibold tracking-wide">
-        NATIONAL BOOK STORE • EMPLOYEE POS CASHIER TRAINING & SIMULATOR
+      <div className="bg-[#E4002B] text-white py-1.5 px-4 text-center text-[11px] sm:text-xs font-semibold tracking-wide">
+        NATIONAL BOOK STORE • EMPLOYEE POS CASHIER TRAINING &amp; SIMULATOR
       </div>
 
       {/* Main Navigation Header */}
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="bg-[#E4002B] text-white px-3 py-1 font-extrabold text-xl sm:text-2xl tracking-tighter">
+      <header
+        className={`border-b border-gray-200 bg-white sticky top-0 z-50 transition-transform duration-300 ease-in-out ${
+          isNavVisible ? "translate-y-0" : "-translate-y-full"
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
+            <div className="bg-[#E4002B] text-white px-2.5 py-0.5 sm:px-3 sm:py-1 font-extrabold text-lg sm:text-2xl tracking-tighter">
               NBS
             </div>
             <div>
-              <div className="font-bold text-gray-900 tracking-tight text-base sm:text-lg uppercase">
+              <div className="font-bold text-gray-900 tracking-tight text-sm sm:text-lg uppercase">
                 National Book Store
               </div>
-              <div className="text-xs text-gray-500 font-medium">
+              <div className="text-[10px] sm:text-xs text-gray-500 font-medium hidden xs:block">
                 Cashier Academy • POS Simulator
               </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             {user ? (
               <Link href="/dashboard">
-                <Button className="font-bold flex items-center space-x-2">
+                <Button className="font-bold flex items-center space-x-1.5 text-xs sm:text-sm px-3 sm:px-4">
                   <span>Go to Dashboard</span>
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </Button>
               </Link>
             ) : (
@@ -83,10 +106,10 @@ export default function HomePage() {
                 <Button
                   size="sm"
                   onClick={signInWithGoogle}
-                  className="font-bold flex items-center space-x-2"
+                  className="font-bold flex items-center space-x-1.5 text-xs sm:text-sm"
                 >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign in with Google</span>
+                  <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <span>Sign in</span>
                 </Button>
               </div>
             )}
@@ -95,55 +118,60 @@ export default function HomePage() {
       </header>
 
       {/* Safety Alert Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-xs sm:text-sm text-amber-900">
-          <div className="flex items-center space-x-2">
-            
-            <span className="font-medium">
-              <strong>Training Sandbox:</strong> {APP_CONFIG.safetyDisclaimer}
+      <div className="bg-amber-50 border-b border-amber-200 px-3 sm:px-4 py-2 sm:py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] sm:text-sm text-amber-900">
+          <div className="flex items-center space-x-2 truncate">
+            <span className="font-medium truncate">
+              <strong className="hidden sm:inline">Training Sandbox: </strong>
+              {APP_CONFIG.safetyDisclaimer}
             </span>
           </div>
-          <Badge variant="warning" className="hidden md:inline-flex items-center">
+          <Badge variant="warning" className="hidden md:inline-flex items-center shrink-0">
             Safe Environment
           </Badge>
         </div>
       </div>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-12 sm:py-20 border-b border-gray-200">
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white py-8 sm:py-20 border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-12 items-center">
             
             {/* Left Hero Description */}
-            <div className="lg:col-span-6 space-y-6">
-              <Badge variant="default" className="text-xs tracking-wider">
+            <div className="lg:col-span-6 space-y-4 sm:space-y-6">
+              <Badge variant="default" className="text-[10px] sm:text-xs tracking-wider">
                 Official Newbie Cashier Curriculum
               </Badge>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight">
+              <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight">
                 Master the POS. <br />
                 <span className="text-[#E4002B]">Zero Risk.</span> Real Confidence.
               </h1>
-              <p className="text-base sm:text-lg text-gray-600 max-w-2xl leading-relaxed">
-                Step-by-step cashier procedures mirroring the 120-slide NBS Cashier Training Deck. Practice lookup, quantity multipliers, manager overrides, and tenders on a high-fidelity interactive terminal simulator.
+              <p className="text-sm sm:text-lg text-gray-600 max-w-2xl leading-relaxed">
+                <span className="sm:hidden">
+                  Hands-on interactive POS simulator replicating actual NBS cashier workflows, barcode scanning, discounts, and card payments.
+                </span>
+                <span className="hidden sm:inline">
+                  Step-by-step cashier procedures mirroring the 120-slide NBS Cashier Training Deck. Practice lookup, quantity multipliers, manager overrides, and tenders on a high-fidelity interactive terminal simulator.
+                </span>
               </p>
 
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <div className="pt-1 sm:pt-2 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2.5 sm:space-y-0 sm:space-x-4">
                 <Button
                   size="lg"
                   onClick={handleLaunchClick}
-                  className="font-bold text-base px-8 py-4 flex items-center justify-center space-x-2 bg-[#E4002B] hover:bg-[#C10024] shadow-md"
+                  className="font-bold text-sm sm:text-base px-6 sm:px-8 py-3 sm:py-4 flex items-center justify-center space-x-2 bg-[#E4002B] hover:bg-[#C10024] shadow-md"
                 >
                   <span>Launch Training Simulator</span>
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
 
                 <Button
                   variant="outline"
                   size="lg"
                   onClick={signInWithGoogle}
-                  className="border-gray-300 font-bold text-base px-6 py-4 flex items-center justify-center space-x-2"
+                  className="border-gray-300 font-bold text-sm sm:text-base px-5 sm:px-6 py-3 sm:py-4 flex items-center justify-center space-x-2"
                 >
-                  <LogIn className="w-5 h-5 text-gray-700" />
+                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
                   <span>Sign in with Google</span>
                 </Button>
               </div>
@@ -355,45 +383,48 @@ export default function HomePage() {
       </section>
 
       {/* 3 Pillars Section */}
-      <section className="py-16 bg-white border-b border-gray-200">
+      <section className="py-10 sm:py-16 bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12">
-            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
+          <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
+            <h2 className="text-xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">
               Three-Step Employee Mastery Path
             </h2>
-            <p className="mt-2 text-gray-600">
-              Designed specifically for fast onboarding of branch cashiers without risking live inventory or financial records.
+            <p className="mt-1 sm:mt-2 text-xs sm:text-base text-gray-600">
+              Fast onboarding for branch cashiers without risking live inventory or financial records.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="border border-gray-200 p-6 space-y-4 hover:border-[#E4002B] transition-colors">
-              <div className="w-12 h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold">
-                <BookOpen className="w-6 h-6" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8">
+            <div className="border border-gray-200 p-4 sm:p-6 space-y-2 sm:space-y-4 hover:border-[#E4002B] transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold rounded">
+                <BookOpen className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 uppercase">1. Study Lessons</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Learn official procedures from the 120-slide cashier curriculum. Step-by-step instructions, slide references, and exact keyboard callouts.
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 uppercase">1. Study Lessons</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                <span className="sm:hidden">Learn official SOPs from the 120-slide curriculum with exact POS keyboard callouts.</span>
+                <span className="hidden sm:inline">Learn official procedures from the 120-slide cashier curriculum. Step-by-step instructions, slide references, and exact keyboard callouts.</span>
               </p>
             </div>
 
-            <div className="border border-gray-200 p-6 space-y-4 hover:border-[#E4002B] transition-colors">
-              <div className="w-12 h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold">
-                <Monitor className="w-6 h-6" />
+            <div className="border border-gray-200 p-4 sm:p-6 space-y-2 sm:space-y-4 hover:border-[#E4002B] transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold rounded">
+                <Monitor className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 uppercase">2. Practice Simulator</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Interact with the full POS keyboard and on-screen function buttons across Main, 2nd, 3rd, 4th, and Payment screens with synthetic products.
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 uppercase">2. Practice Simulator</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                <span className="sm:hidden">Hands-on terminal practice across all screens with synthetic products and real barcode scans.</span>
+                <span className="hidden sm:inline">Interact with the full POS keyboard and on-screen function buttons across Main, 2nd, 3rd, 4th, and Payment screens with synthetic products.</span>
               </p>
             </div>
 
-            <div className="border border-gray-200 p-6 space-y-4 hover:border-[#E4002B] transition-colors">
-              <div className="w-12 h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold">
-                <GraduationCap className="w-6 h-6" />
+            <div className="border border-gray-200 p-4 sm:p-6 space-y-2 sm:space-y-4 hover:border-[#E4002B] transition-colors">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 text-[#E4002B] flex items-center justify-center font-bold rounded">
+                <GraduationCap className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900 uppercase">3. Practical Assessment</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Complete realistic retail transactions against automated step checks. Track mistakes, view instant feedback, and certify cashier readiness.
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 uppercase">3. Practical Assessment</h3>
+              <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
+                <span className="sm:hidden">Complete realistic retail shifts against automated checks to unlock official NBS certification.</span>
+                <span className="hidden sm:inline">Complete realistic retail transactions against automated step checks. Track mistakes, view instant feedback, and certify cashier readiness.</span>
               </p>
             </div>
           </div>

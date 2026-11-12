@@ -81,90 +81,116 @@ export default function AssessmentResultPage() {
         </div>
 
         {/* Primary Result Summary Card */}
-        <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
+        <div className="bg-white border border-gray-200 shadow-sm overflow-hidden rounded-lg">
           {/* Top Status Strip */}
-          <div className={`h-2.5 ${isPassed ? "bg-emerald-600" : "bg-[#E4002B]"}`} />
+          <div className={`h-2 sm:h-2.5 ${isPassed ? "bg-emerald-600" : "bg-[#E4002B]"}`} />
 
-          <div className="p-6 sm:p-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={isPassed ? "success" : "danger"}>
-                    {isPassed ? "Official Pass" : "Needs Practice"}
-                  </Badge>
-                  <span className="text-xs font-mono font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded">
-                    {attempt.scenarioTitle}
-                  </span>
-                </div>
-
-                <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight uppercase">
-                  {isPracticalExam
-                    ? isPassed
-                      ? "Practical Hands-On Exam Passed!"
-                      : "Practical Hands-On Exam Needs Review"
-                    : isPassed
-                    ? "Module Assessment Passed!"
-                    : "Assessment Needs Review"}
-                </h1>
-
-                <p className="text-xs sm:text-sm text-gray-600 max-w-2xl leading-relaxed">
-                  {isPassed
-                    ? "Outstanding! You demonstrated proficient cashier operations adhering to official National Book Store SOP guidelines. All critical milestones and tender amounts verified."
-                    : "You completed the cashier workflow, but certain validation steps or function key sequences were missed or executed incorrectly. Review the breakdown below and retry."}
-                </p>
-              </div>
-
-              {/* Score Highlight Badge */}
-              <div className="flex md:flex-col items-center md:items-end justify-between md:justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg shrink-0 w-full md:w-44 text-center">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-gray-500">
-                  Final Score
-                </span>
-                <span className={`text-4xl font-black font-mono my-0.5 ${isPassed ? "text-emerald-600" : "text-[#E4002B]"}`}>
-                  {attempt.score}%
-                </span>
-                <span className="text-[10px] font-bold text-gray-400 uppercase">
-                  Passing Mark: 80%
+          <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
+            <div className="space-y-1.5 sm:space-y-2">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <Badge variant={isPassed ? "success" : "danger"} className="text-[10px] sm:text-xs">
+                  {isPassed ? "Official Pass" : "Needs Practice"}
+                </Badge>
+                <span className="text-[10px] sm:text-xs font-mono font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded truncate max-w-full">
+                  {attempt.scenarioTitle}
                 </span>
               </div>
+
+              <h1 className="text-lg sm:text-3xl font-black text-gray-900 tracking-tight uppercase leading-snug">
+                {isPracticalExam
+                  ? isPassed
+                    ? "Practical Hands-On Exam Passed!"
+                    : "Practical Hands-On Exam Needs Review"
+                  : isPassed
+                  ? "Module Assessment Passed!"
+                  : "Assessment Needs Review"}
+              </h1>
+
+              <p className="text-xs sm:text-sm text-gray-600 max-w-2xl leading-relaxed">
+                {isPassed
+                  ? "Outstanding! You demonstrated proficient cashier operations adhering to official National Book Store SOP guidelines. All critical milestones and tender amounts verified."
+                  : "You completed the cashier workflow, but certain validation steps or function key sequences were missed or executed incorrectly. Review the breakdown below and retry."}
+              </p>
             </div>
 
-            {/* 3 Metric Summary Tiles */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
-                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                  {isPracticalExam ? "Cases Passed" : "Steps Completed"}
+            {/* Unified 4-Metric Grid: 2x2 on Mobile, 4 columns on Desktop to eliminate empty spaces */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3.5 pt-1">
+              {/* Metric 1: Final Score */}
+              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                  Final Score
                 </div>
-                <div className="text-xl font-black text-gray-900 mt-1 font-mono">
-                  {attempt.stepsCompleted}{" "}
-                  <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
+                <div className="my-1">
+                  <span className={`text-2xl sm:text-4xl font-black font-mono ${isPassed ? "text-emerald-600" : "text-[#E4002B]"}`}>
+                    {attempt.score}%
+                  </span>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
-                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                  Total Time Elapsed
-                </div>
-                <div className="text-xl font-black text-gray-900 mt-1 font-mono">
-                  {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
+                <div className="text-[10px] text-gray-500 truncate">
+                  Pass Mark: 80% {isPracticalExam ? "(≥6/7)" : ""}
                 </div>
               </div>
 
-              <div className="bg-gray-50 border border-gray-200 p-4 rounded-md">
-                <div className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">
-                  Status Classification
+              {/* Metric 2: Status Classification */}
+              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                  Status
                 </div>
-                <div className="text-xl font-black mt-1 font-mono">
+                <div className="my-1 font-mono font-black text-xs sm:text-base">
                   {isPassed ? (
                     <span className="text-emerald-600 flex items-center space-x-1">
-                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                       <span>QUALIFIED</span>
                     </span>
                   ) : (
                     <span className="text-[#E4002B] flex items-center space-x-1">
-                      <AlertTriangle className="w-4 h-4 shrink-0" />
-                      <span>RETAKE REQUIRED</span>
+                      <AlertTriangle className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                      <span>RETAKE REQ.</span>
                     </span>
                   )}
+                </div>
+                <div className="text-[10px] truncate">
+                  {isPassed ? (
+                    <span className="text-emerald-600 font-medium">Passed criteria</span>
+                  ) : isPracticalExam && attempt.stepsCompleted < 6 ? (
+                    <span className="text-red-600 font-medium">{attempt.stepsCompleted}/7 served</span>
+                  ) : (
+                    <span className="text-red-600 font-medium">Score below 80%</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Metric 3: Customers / Cases */}
+              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                  {isPracticalExam ? "Customers" : "Steps"}
+                </div>
+                <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
+                  {attempt.stepsCompleted}{" "}
+                  <span className="text-xs text-gray-500 font-normal">of {attempt.totalSteps}</span>
+                </div>
+                <div className="text-[10px] truncate">
+                  {isPracticalExam ? (
+                    attempt.stepsCompleted >= 6 ? (
+                      <span className="text-emerald-600 font-medium">Goal met (≥6/7)</span>
+                    ) : (
+                      <span className="text-red-600 font-medium">{attempt.totalSteps - attempt.stepsCompleted} unserved</span>
+                    )
+                  ) : (
+                    <span className="text-gray-500">Steps completed</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Metric 4: Total Time */}
+              <div className="bg-gray-50 border border-gray-200 p-3 sm:p-4 rounded-md flex flex-col justify-between">
+                <div className="text-[10px] sm:text-xs uppercase font-bold text-gray-500 tracking-wider">
+                  Total Time
+                </div>
+                <div className="my-1 text-xl sm:text-2xl font-black text-gray-900 font-mono">
+                  {Math.floor(attempt.timeSpentSeconds / 60)}m {attempt.timeSpentSeconds % 60}s
+                </div>
+                <div className="text-[10px] text-gray-500 truncate">
+                  15m standard limit
                 </div>
               </div>
             </div>
@@ -173,10 +199,10 @@ export default function AssessmentResultPage() {
 
         {/* Certificate Callout Banner: Only if passed and officially certified */}
         {isPassed && isCertified ? (
-          <div className="bg-emerald-50 border-2 border-emerald-400/60 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg shadow-xs">
-            <div className="flex items-center space-x-3.5">
-              <div className="w-11 h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <Award className="w-6 h-6 shrink-0" />
+          <div className="bg-emerald-50 border-2 border-emerald-400/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
+            <div className="flex items-center space-x-3 sm:space-x-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <Award className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               </div>
               <div>
                 <h3 className="font-extrabold text-emerald-950 text-sm sm:text-base">
@@ -190,7 +216,7 @@ export default function AssessmentResultPage() {
             <Link href="/certificate" className="shrink-0 w-full sm:w-auto">
               <Button
                 size="sm"
-                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2.5 shadow-sm"
+                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
               >
                 <Award className="w-4 h-4 shrink-0" />
                 <span>View &amp; Print Certificate</span>
@@ -198,34 +224,39 @@ export default function AssessmentResultPage() {
             </Link>
           </div>
         ) : (
-          <div className="bg-red-50 border-2 border-red-300 p-5 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-lg shadow-xs">
-            <div className="flex items-center space-x-3.5">
-              <div className="w-11 h-11 rounded-full bg-[#E4002B] text-white flex items-center justify-center shrink-0 shadow-sm">
-                <AlertTriangle className="w-6 h-6 shrink-0" />
+          <div className="bg-red-50 border-2 border-red-300 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
+            <div className="flex items-center space-x-3 sm:space-x-3.5">
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#E4002B] text-white flex items-center justify-center shrink-0 shadow-sm">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
               </div>
               <div>
                 <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
                   Official NBS Certification Locked (Passing Mark: 80%)
                 </h3>
-                <p className="text-xs text-red-800 leading-relaxed">
-                  {attempt.score >= 80 ? (
-                    <>
+                <div className="text-xs text-red-800 leading-relaxed space-y-1">
+                  {attempt.score >= 80 && attempt.stepsCompleted < 6 ? (
+                    <p>
+                      You achieved a score of <strong>{attempt.score}%</strong> on completed interactions, but only{" "}
+                      <strong>{attempt.stepsCompleted} of {attempt.totalSteps} customers were served</strong> ({attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} unserved or abandoned). To earn official NBS cashier certification, you must handle <strong>all customer cases</strong> during your shift and pass <strong>at least 6 of the 7 cases</strong> with an <strong>80% overall score</strong>.
+                    </p>
+                  ) : attempt.score >= 80 ? (
+                    <p>
                       You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
                       <strong>{attempt.totalSteps - attempt.stepsCompleted} customer {attempt.totalSteps - attempt.stepsCompleted === 1 ? "case was" : "cases were"} failed</strong>{" "}
                       due to critical missed steps or incorrect change. To unlock official certification, you must achieve <strong>80% overall</strong> and pass <strong>at least 6 of the 7 cases</strong> (max 1 failed case).
-                    </>
+                    </p>
                   ) : (
-                    <>
-                      Trainee achieved <strong>{attempt.score}%</strong>. To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and pass at least 6 of the 7 customer cases.
-                    </>
+                    <p>
+                      Trainee achieved <strong>{attempt.score}%</strong> ({attempt.stepsCompleted} of {attempt.totalSteps} cases passed). To unlock the official National Book Store Cashier Certificate, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
             </div>
             <Link href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"} className="shrink-0 w-full sm:w-auto">
               <Button
                 size="sm"
-                className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2.5 shadow-sm"
+                className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
               >
                 <RotateCcw className="w-4 h-4 shrink-0" />
                 <span>Retake Practical Exam</span>
@@ -236,7 +267,7 @@ export default function AssessmentResultPage() {
 
         {/* Practical Exam Per-Case Score Breakdown */}
         {isPracticalExam && attempt.caseResults && (
-          <div className="bg-white border border-gray-200 p-5 sm:p-6 space-y-4 shadow-sm rounded-lg">
+          <div className="bg-white border border-gray-200 p-3.5 sm:p-6 space-y-3 sm:space-y-4 shadow-sm rounded-lg">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-2">
               <div>
                 <h2 className="text-sm sm:text-base font-extrabold text-gray-900 uppercase tracking-tight flex items-center space-x-2">
@@ -303,7 +334,7 @@ export default function AssessmentResultPage() {
 
         {/* Regular Guided Scenario Mistakes Review Table */}
         {!isPracticalExam && (
-          <div className="bg-white border border-gray-200 p-5 sm:p-6 space-y-4 shadow-sm rounded-lg">
+          <div className="bg-white border border-gray-200 p-3.5 sm:p-6 space-y-3 sm:space-y-4 shadow-sm rounded-lg">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-2">
               <h2 className="text-sm sm:text-base font-extrabold text-gray-900 uppercase tracking-tight flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-[#E4002B]" />

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -26,13 +26,37 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
   const { user, isDemoMode, signOut } = useAuth();
   const router = useRouter();
 
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY <= 40) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY.current + 8) {
+        setIsVisible(false); // scrolling down -> hide
+      } else if (currentScrollY < lastScrollY.current - 8) {
+        setIsVisible(true); // scrolling up -> show
+      }
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   const handleSignOut = async () => {
     await signOut();
     router.push("/");
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shrink-0">
+    <header
+      className={`bg-white border-b border-gray-200 sticky top-0 z-50 shrink-0 transition-transform duration-300 ease-in-out ${
+        isVisible ? "translate-y-0" : "-translate-y-full"
+      }`}
+    >
       {/* Demo Warning Banner */}
       {isDemoMode && (
         <div className="bg-amber-500 text-black py-1.5 px-4 text-xs font-bold text-center tracking-wide flex items-center justify-center space-x-2">

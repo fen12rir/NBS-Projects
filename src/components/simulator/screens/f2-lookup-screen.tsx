@@ -36,6 +36,7 @@ export function F2LookupScreen({
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [page, setPage] = useState(1);
   const itemsPerPage = 12;
+  const [lookupNotice, setLookupNotice] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() =>
     new Date().toLocaleTimeString("en-US", {
       hour: "2-digit",
@@ -217,14 +218,19 @@ export function F2LookupScreen({
       <div className="bg-[#FFF275] border-b border-gray-400 px-3 py-0.5 flex items-center justify-between text-xs font-mono font-bold">
         <button
           type="button"
-          onClick={() => alert("F1 Help: Use F2 for SKU search, F3 for Description search, F4 for Author search. Use Up/Down arrows to select, and Enter or double click to select item.")}
+          onClick={() => setLookupNotice("F1 Help: Use F2 for SKU search, F3 for Description, F4 for Author. Arrow keys to navigate, Enter to select.")}
           className="text-[#1D4ED8] hover:underline cursor-pointer"
         >
           [ F1 ] Help
         </button>
+        {lookupNotice && (
+          <span className="text-gray-900 font-sans text-[11px] font-semibold bg-white/80 px-2 py-0.2 border border-gray-400">
+            {lookupNotice}
+          </span>
+        )}
         <button
           type="button"
-          onClick={() => alert("F5 On-Hand Inventory: Real-time store inventory count is active.")}
+          onClick={() => setLookupNotice("F5 On-Hand Inventory: Real-time store inventory count is active (50 units available).")}
           className="text-[#1D4ED8] hover:underline cursor-pointer"
         >
           [ F5 ] On-Hand
