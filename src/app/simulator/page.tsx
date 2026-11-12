@@ -3113,53 +3113,56 @@ function SimulatorContent() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
-      <header className="relative z-50 bg-black text-white px-3 sm:px-4 py-1.5 flex items-center justify-between text-xs font-mono border-b border-gray-800">
-        <div className="flex items-center space-x-2 sm:space-x-3 truncate">
+      <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
           {returnLessonUrl !== "/dashboard" ? (
-            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+            <Link href={returnLessonUrl} className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0 text-[11px]">
               <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
               <span className="hidden xs:inline">{returnButtonLabel}</span>
               <span className="xs:hidden">Back</span>
             </Link>
           ) : (
-            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0">
+            <Link href="/dashboard" className="flex items-center space-x-1 text-gray-400 hover:text-white shrink-0 text-[11px]">
               <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
-              <span>Dashboard</span>
+              <span className="hidden xs:inline">Dashboard</span>
             </Link>
           )}
           <span className="text-gray-600 shrink-0">|</span>
-          <span className="font-bold text-red-500 uppercase hidden md:inline truncate">
+          <span className="font-bold text-red-500 uppercase hidden lg:inline truncate text-[11px]">
             NBS Cashier POS Screen Fidelity Simulator
           </span>
-          <span className="font-bold text-red-500 uppercase md:hidden truncate">
+          <span className="font-bold text-red-500 uppercase hidden sm:inline lg:hidden truncate text-[11px]">
+            NBS POS Simulator
+          </span>
+          <span className="font-bold text-red-500 uppercase sm:hidden truncate text-[11px]">
             NBS POS
           </span>
         </div>
-        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           <button
             type="button"
             onClick={toggleFocusMode}
-            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2.5 py-1 text-[11px] sm:text-xs font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-sm shrink-0"
+            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2 py-0.5 sm:px-2.5 sm:py-0.5 text-[10px] sm:text-[11px] font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-xs shrink-0"
           >
             {isFocusMode ? (
               <>
-                <X className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
                 <span>Exit Focus</span>
               </>
             ) : (
               <>
-                <Maximize2 className="w-3.5 h-3.5 mr-1 shrink-0" />
+                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
                 <span>Focus Mode</span>
               </>
             )}
           </button>
           {!isExamMode && (
-            <div className="flex items-center space-x-1.5 hidden sm:flex">
-              <span className="text-gray-400 text-[11px] hidden md:inline">POS Screen:</span>
+            <div className="flex items-center space-x-1 hidden sm:flex">
+              <span className="text-gray-400 text-[10px] hidden md:inline">POS Screen:</span>
               <select
                 value={terminalMode}
                 onChange={(e) => setTerminalMode(e.target.value as POSTerminalMode)}
-                className="bg-gray-800 text-yellow-300 border border-gray-600 text-xs px-2 py-0.5 font-mono focus:outline-none"
+                className="bg-gray-800 text-yellow-300 border border-gray-600 text-[11px] px-1.5 py-0.5 font-mono focus:outline-none rounded max-w-[150px] sm:max-w-none"
               >
                 <option value="START_OF_DAY_VERIFY">1. Start of Day (Date/Time)</option>
                 <option value="START_OF_DAY_INCORRECT">1b. Start of Day (Incorrect Date)</option>
@@ -3170,13 +3173,6 @@ function SimulatorContent() {
               </select>
             </div>
           )}
-          <div className="text-gray-400 text-[11px] hidden lg:inline">
-            {isExamMode
-              ? "Unguided Practical Assessment"
-              : activeScenario
-              ? `Guided: ${activeScenario.title}`
-              : "Free Exploration Mode"}
-          </div>
         </div>
       </header>
 
