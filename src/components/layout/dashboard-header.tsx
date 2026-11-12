@@ -26,8 +26,16 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
   const { user, isDemoMode, signOut } = useAuth();
   const router = useRouter();
 
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState(64);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, [isDemoMode]);
 
   useEffect(() => {
     const handleScroll = (e: Event) => {
@@ -63,8 +71,12 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
 
   return (
     <header
-      className={`bg-white border-b border-gray-200 sticky top-0 z-50 shrink-0 transition-transform duration-300 ease-in-out ${
-        isVisible ? "translate-y-0" : "-translate-y-full"
+      ref={headerRef}
+      style={{
+        marginTop: isVisible ? "0px" : `-${headerHeight || 64}px`,
+      }}
+      className={`bg-white border-b border-gray-200 z-50 shrink-0 transition-[margin-top,transform,opacity] duration-300 ease-in-out ${
+        isVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0 pointer-events-none"
       }`}
     >
       {/* Demo Warning Banner */}
