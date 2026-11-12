@@ -1,4 +1,5 @@
 import React from "react";
+import { ClipboardList } from "lucide-react";
 
 interface BdoCardTerminalProps {
   isExternalReceiptShowing: boolean;
@@ -30,10 +31,10 @@ export function BdoCardTerminal({
           <button
             type="button"
             onClick={onUseSlip}
-            className="cursor-pointer rounded bg-emerald-700 hover:bg-emerald-600 px-2 py-0.5 text-[9px] font-mono font-bold text-white shadow-xs transition-colors"
+            className="cursor-pointer rounded bg-emerald-700 hover:bg-emerald-600 px-2 py-0.5 text-[9px] font-mono font-bold text-white shadow-xs transition-colors flex items-center"
             title="Click to copy Auth Code & Slip No. into POS fields"
           >
-            📋 Use Slip Info
+            <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Use Slip Info
           </button>
         )}
       </div>

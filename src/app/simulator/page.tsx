@@ -71,7 +71,28 @@ import { recordScenarioAttempt } from "@/lib/progress/progress-store";
 import { formatCurrency } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, ShieldAlert, Trophy, CheckCircle, RotateCcw, ArrowRight, Sparkles, User, Bell, X, Smartphone, Maximize2, AlertTriangle, RotateCw, ChevronUp, ChevronDown } from "lucide-react";
+import { 
+  ArrowLeft, 
+  ShieldAlert, 
+  Trophy, 
+  CheckCircle, 
+  RotateCcw, 
+  ArrowRight, 
+  Sparkles, 
+  User, 
+  Bell, 
+  X, 
+  Smartphone, 
+  Maximize2, 
+  AlertTriangle, 
+  RotateCw, 
+  ChevronUp, 
+  ChevronDown,
+  Coins,
+  Banknote,
+  CreditCard,
+  ClipboardList
+} from "lucide-react";
 
 export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_INCORRECT" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
 
@@ -4590,10 +4611,15 @@ function SimulatorContent() {
                               </div>
                             ) : selectedTenderMethod === null ? (
                               <div className="text-center space-y-3 font-sans select-none flex flex-col items-center p-4">
-                                <div className="text-sm font-bold text-gray-900">
-                                  {sulitCoinsRedeemedAmount !== null
-                                    ? `🪙 ₱${sulitCoinsRedeemedAmount.toFixed(2)} Sulit Coins Redeemed`
-                                    : "Select Payment Tender"}
+                                <div className="text-sm font-bold text-gray-900 flex items-center justify-center space-x-1.5">
+                                  {sulitCoinsRedeemedAmount !== null ? (
+                                    <>
+                                      <Coins className="w-4 h-4 text-amber-600 shrink-0" />
+                                      <span>₱{sulitCoinsRedeemedAmount.toFixed(2)} Sulit Coins Redeemed</span>
+                                    </>
+                                  ) : (
+                                    <span>Select Payment Tender</span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-700 max-w-xs leading-relaxed">
                                   {sulitCoinsRedeemedAmount !== null ? (
@@ -4617,9 +4643,10 @@ function SimulatorContent() {
                                       setBankCardStep("SELECT_TYPE");
                                       validateScenarioStep("PAY_CASH");
                                     }}
-                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1"
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1.5"
                                   >
-                                    <span>💵 Cash (F2)</span>
+                                    <Banknote className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                                    <span>Cash (F2)</span>
                                   </button>
                                   <button
                                     type="button"
@@ -4628,9 +4655,10 @@ function SimulatorContent() {
                                       setBankCardStep("SELECT_TYPE");
                                       validateScenarioStep("PAY_CARD");
                                     }}
-                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1"
+                                    className="px-4 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow cursor-pointer flex items-center space-x-1.5"
                                   >
-                                    <span>💳 Bank Card (F3)</span>
+                                    <CreditCard className="w-3.5 h-3.5 text-blue-700 shrink-0" />
+                                    <span>Bank Card (F3)</span>
                                   </button>
                                 </div>
                               </div>
@@ -4891,10 +4919,10 @@ function SimulatorContent() {
                                             setBankCardRefNo(currentMayaRef || "MY994821");
                                           }
                                         }}
-                                        className="cursor-pointer text-[10px] font-mono font-bold text-blue-800 hover:text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded px-2 py-0.5 shadow-2xs transition-colors"
+                                        className="cursor-pointer text-[10px] font-mono font-bold text-blue-800 hover:text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
                                         title="Click to copy reference number from customer device into POS"
                                       >
-                                        📋 Auto-fill Reference ({selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})
+                                        <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill Reference ({selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})
                                       </button>
                                     </div>
                                   )}
@@ -5026,10 +5054,10 @@ function SimulatorContent() {
                                         setBankCardAuthCode(currentCardAuth || "AP8812");
                                         setBankCardSlipNo(currentCardInvoice || "004921");
                                       }}
-                                      className="cursor-pointer text-[10px] font-mono font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded px-2 py-0.5 shadow-2xs transition-colors"
+                                      className="cursor-pointer text-[10px] font-mono font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-400 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
                                       title="Fill Auth Code and Sales Slip No. from the terminal receipt"
                                     >
-                                      📋 Auto-fill from Slip ({currentCardAuth || "AP8812"} / {currentCardInvoice || "004921"})
+                                      <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill from Slip ({currentCardAuth || "AP8812"} / {currentCardInvoice || "004921"})
                                     </button>
                                   </div>
                                 </form>

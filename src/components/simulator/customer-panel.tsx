@@ -13,7 +13,8 @@ import {
   Maximize2,
   Receipt,
   CheckCircle2,
-  Info
+  Info,
+  Coins
 } from "lucide-react";
 
 interface CustomerPanelProps {
@@ -76,30 +77,15 @@ export function CustomerPanel({
     currentCase.id === "case-sulit-coins" ||
     currentCase.milestones.some((m) => m.action === "REDEEM_SULIT_COINS");
 
-  const isEarningCoins =
-    !isRedeemingCoins &&
-    (currentCase.id === "case-loyalty-lnqr" ||
-      currentCase.events.some((e) => e.shows === "LNQR_QR") ||
-      currentCase.milestones.some((m) => m.action === "CHOOSE_LNQR_OPTION" || m.action === "SUBMIT_LNQR"));
-
   const tenderItems = currentCase.events.flatMap((ev, evIdx) => [
     ...(isRedeemingCoins ? [
       <div
         key="sulit-coins-action-pill"
         className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-100 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
-        <span className="text-sm">🪙</span>
+        <Coins className="w-3.5 h-3.5 text-amber-300 shrink-0" />
         <span className="font-bold text-yellow-300">Redeem Coins:</span>
         <span className="font-semibold text-white">Payment &rarr; F3 Bank Card &rarr; &apos;LNQR Sulit Coins&apos; (₱29)</span>
-      </div>
-    ] : isEarningCoins ? [
-      <div
-        key="sulit-coins-earn-pill"
-        className="bg-emerald-950 border border-emerald-500 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
-      >
-        <span className="text-sm">🪙</span>
-        <span className="font-bold text-emerald-300">Earn Sulit Coins:</span>
-        <span className="font-semibold text-white">Choose Option &rarr; Press 3 (LNQR) to scan</span>
       </div>
     ] : []),
 
@@ -117,11 +103,15 @@ export function CustomerPanel({
             ? `₱${ev.tender.amount?.toFixed(2) || "Exact"} Cash`
             : ev.tender.kind}
         </span>
-        {isRedeemingCoins && (
+        {isRedeemingCoins ? (
           <span className="text-emerald-300 font-bold text-[10px] shrink-0">
             (Remaining Due: ₱391.00 | Change: ₱109.00)
           </span>
-        )}
+        ) : currentCase.finalChecks?.expectedChange !== undefined ? (
+          <span className="text-emerald-300 font-bold text-[10px] shrink-0">
+            (Change: ₱{currentCase.finalChecks.expectedChange.toFixed(2)})
+          </span>
+        ) : null}
         {ev.tender.reference && (
           <span className="text-gray-300 font-mono text-[9px] sm:text-[10px] shrink-0">
             Ref: {ev.tender.reference}
@@ -153,11 +143,11 @@ export function CustomerPanel({
         <span className="font-bold text-yellow-300">Presents:</span>
         <span className="font-medium text-white">
           {ev.shows === "LNC_CARD"
-            ? "LNC Card"
+            ? "LNC Card (Earn Sulit Coins: Choose Option 2)"
             : ev.shows === "LNQR_QR"
             ? isRedeemingCoins
               ? "LNQR (Redeem ₱29 Coins)"
-              : "LNQR (Earn Sulit Coins)"
+              : "LNQR Barcode (Earn Sulit Coins: Choose Option 3)"
             : ev.shows === "PWD_ID"
             ? "PWD ID"
             : ev.shows === "SENIOR_ID"

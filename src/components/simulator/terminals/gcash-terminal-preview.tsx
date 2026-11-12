@@ -1,4 +1,5 @@
 import React from "react";
+import { ClipboardList } from "lucide-react";
 
 interface GcashTerminalPreviewProps {
   isExternalReceiptShowing: boolean;
@@ -22,10 +23,10 @@ export function GcashTerminalPreview({
           <button
             type="button"
             onClick={onUseRef}
-            className="cursor-pointer rounded bg-blue-600 hover:bg-blue-500 px-2 py-0.5 text-[9px] font-mono font-bold text-white shadow-xs transition-colors"
+            className="cursor-pointer rounded bg-blue-600 hover:bg-blue-500 px-2 py-0.5 text-[9px] font-mono font-bold text-white shadow-xs transition-colors flex items-center"
             title="Click to copy GCash Ref into POS"
           >
-            📋 Use Ref
+            <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Use Ref
           </button>
         )}
       </div>
