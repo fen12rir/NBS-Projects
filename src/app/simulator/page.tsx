@@ -532,15 +532,16 @@ function SimulatorContent() {
     bankCardStep !== "SELECT_TYPE" &&
     (
       selectedBankCardType === "CREDIT CARD" ||
+      selectedBankCardType === "VISA" ||
+      selectedBankCardType === "MASTERCARD" ||
       (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
-      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
-      (isExamMode && Boolean(examTenderKind))
+      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
     );
 
   const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" =
-    selectedBankCardType === "GCASH" || (isExamMode && examTenderKind === "GCASH")
+    selectedBankCardType === "GCASH"
       ? "GCASH"
-      : selectedBankCardType === "MAYA" || (isExamMode && examTenderKind === "MAYA")
+      : selectedBankCardType === "MAYA"
       ? "MAYA"
       : "BDO";
 
@@ -3009,7 +3010,15 @@ function SimulatorContent() {
     setIsBonusBuyOpen(false);
     setHasBonusBuyBeenPrompted(false);
     setScenarioStartTime(Date.now());
-    setTerminalMode(getInitialTerminalMode(activeScenario));
+    if (isExamMode) {
+      setExamCaseIndex(0);
+      setExamActionLog([]);
+      setCaseResults([]);
+      setCaseStartTime(Date.now());
+      setTerminalMode("START_OF_DAY_VERIFY");
+    } else {
+      setTerminalMode(getInitialTerminalMode(activeScenario));
+    }
   };
 
   const handleResetTerminal = () => {

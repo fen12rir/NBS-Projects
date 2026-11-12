@@ -44,14 +44,14 @@ export function CustomerPanel({
 
   const isTimeCritical = remainingSeconds !== null && remainingSeconds < 120;
 
-  const renderedItems = currentCase.events.flatMap((ev, evIdx) => [
-    ...(ev.hands || []).map((item, itIdx) => (
+  const handedItems = currentCase.events.flatMap((ev, evIdx) =>
+    (ev.hands || []).map((item, itIdx) => (
       <div
         key={`item-${evIdx}-${itIdx}`}
-        className="bg-gray-800 border border-gray-600 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-gray-200 shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+        className="bg-gray-800 border border-emerald-500/80 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-gray-200 shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
-        <ShoppingBag className="w-3.5 h-3.5 text-yellow-400 shrink-0" />
-        <span className="text-yellow-400 font-mono font-bold">
+        <ShoppingBag className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+        <span className="text-emerald-300 font-mono font-bold">
           {item.qty}×
         </span>
         <span className="font-semibold text-white max-w-[140px] sm:max-w-none truncate">{item.label}</span>
@@ -61,7 +61,7 @@ export function CustomerPanel({
             <span>F2 Lookup</span>
           </span>
         ) : (
-          <span className="bg-gray-700 text-gray-300 font-mono text-[9px] sm:text-[10px] px-1 py-0.2 rounded shrink-0">
+          <span className="bg-gray-700 text-yellow-300 font-mono text-[9px] sm:text-[10px] px-1.5 py-0.2 rounded font-bold shrink-0">
             SKU: {item.sku}
           </span>
         )}
@@ -69,8 +69,10 @@ export function CustomerPanel({
           ₱{item.unitPrice.toFixed(2)}
         </span>
       </div>
-    )),
+    ))
+  );
 
+  const tenderItems = currentCase.events.flatMap((ev, evIdx) => [
     ...(ev.tender ? [
       <div
         key={`tender-${evIdx}`}
@@ -180,31 +182,43 @@ export function CustomerPanel({
       </div>
 
       {/* Customer Action Items / Handed Items Tray */}
-      <div className="bg-[#111827] border-t border-gray-700 py-1 px-2.5 sm:px-4 text-xs font-sans">
-        <div className="max-w-[1080px] mx-auto flex items-center space-x-2 overflow-x-auto scrollbar-none py-0.5">
-          <span className="text-gray-400 font-bold uppercase tracking-wider text-[9px] sm:text-[10px] shrink-0">
-            {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? "Action Required:" : "Customer Hands You:"}
-          </span>
-
-          <div className="flex items-center space-x-2 shrink-0">
-            {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
-              <div className="bg-amber-950/90 border border-amber-500 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs animate-pulse">
-                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-bold text-white">Customer Returned:</span>
-                <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
-              </div>
-            ) : renderedItems.length > 0 ? (
-              renderedItems
-            ) : (
-              <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs">
-                <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="font-bold text-white">Cashier Briefing:</span>
-                <span>
-                  {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
+      <div className="bg-[#111827] border-t border-gray-700 py-1.5 px-2.5 sm:px-4 text-xs font-sans">
+        <div className="max-w-[1080px] mx-auto flex items-center space-x-3 overflow-x-auto scrollbar-none py-0.5">
+          {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
+            <div className="bg-amber-950/90 border border-amber-500 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs animate-pulse">
+              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="font-bold text-white">Customer Returned:</span>
+              <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
+            </div>
+          ) : handedItems.length > 0 ? (
+            <div className="flex items-center space-x-3 shrink-0">
+              {/* 1. Items to Scan */}
+              <div className="flex items-center space-x-1.5 shrink-0">
+                <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                  Scan Items:
                 </span>
+                <div className="flex items-center space-x-1.5">{handedItems}</div>
               </div>
-            )}
-          </div>
+
+              {/* 2. Payment Method */}
+              {tenderItems.length > 0 && (
+                <div className="flex items-center space-x-1.5 shrink-0 pl-2 border-l border-gray-700">
+                  <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
+                    Tender at F4:
+                  </span>
+                  <div className="flex items-center space-x-1.5">{tenderItems}</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs">
+              <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="font-bold text-white">Cashier Briefing:</span>
+              <span>
+                {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

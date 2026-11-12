@@ -30,20 +30,30 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      if (currentScrollY <= 40) {
+    const handleScroll = (e: Event) => {
+      const target = (e.target as HTMLElement | Document) || document;
+      const currentScrollY =
+        target === document || target === (window as any)
+          ? window.scrollY
+          : (target as HTMLElement).scrollTop ?? window.scrollY;
+
+      const delta = currentScrollY - lastScrollY.current;
+
+      // Immediate response on scroll direction
+      if (currentScrollY <= 15) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY.current + 8) {
-        setIsVisible(false); // scrolling down -> hide
-      } else if (currentScrollY < lastScrollY.current - 8) {
-        setIsVisible(true); // scrolling up -> show
+      } else if (delta > 3) {
+        // Scrolling down -> immediate hide
+        setIsVisible(false);
+      } else if (delta < -3) {
+        // Scrolling up -> immediate show
+        setIsVisible(true);
       }
-      lastScrollY.current = currentScrollY;
+      lastScrollY.current = Math.max(0, currentScrollY);
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { capture: true, passive: true });
+    return () => window.removeEventListener("scroll", handleScroll, { capture: true });
   }, []);
 
   const handleSignOut = async () => {
@@ -89,7 +99,7 @@ export function DashboardHeader({ onToggleSidebar, isSidebarOpen }: DashboardHea
             </span>
           </Link>
           <div className="h-5 w-px bg-gray-200 hidden sm:block shrink-0"></div>
-          <nav className="flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm font-semibold truncate">
+          <nav className="hidden sm:flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm font-semibold truncate">
             <Link
               href="/dashboard"
               className="text-gray-700 hover:text-[#E4002B] px-2 py-1 shrink-0"

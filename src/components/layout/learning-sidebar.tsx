@@ -18,7 +18,8 @@ import {
   PanelLeftClose, 
   X,
   FileCheck2,
-  Sparkles
+  Sparkles,
+  Monitor
 } from "lucide-react";
 
 interface LearningSidebarProps {
@@ -163,7 +164,7 @@ export function LearningSidebar({
         </div>
 
         {/* Navigation List */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-300">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-300">
           {/* Main Dashboard Link */}
           <Link
             href="/dashboard"
@@ -175,11 +176,25 @@ export function LearningSidebar({
             }`}
           >
             <LayoutDashboard className={`w-4 h-4 shrink-0 ${pathname === "/dashboard" ? "text-[#E4002B]" : "text-gray-500"}`} />
-            <span>Training Dashboard</span>
+            <span>Curriculum Modules</span>
           </Link>
 
-          <div className="pt-3 pb-1 px-2 text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
-            <span>Course Modules</span>
+          {/* POS Simulator Link (Available in Side Nav for Mobile) */}
+          <Link
+            href="/simulator"
+            onClick={onCloseMobile}
+            className={`flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+              pathname === "/simulator"
+                ? "bg-[#006633] text-white shadow-xs"
+                : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
+            }`}
+          >
+            <Monitor className={`w-4 h-4 shrink-0 ${pathname === "/simulator" ? "text-white" : "text-emerald-700"}`} />
+            <span>Launch POS Simulator</span>
+          </Link>
+
+          <div className="pt-2 pb-1 px-2 text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
+            <span>Module Lessons</span>
             <span className="text-[9px] font-mono font-normal text-gray-500">
               {completedModulesCount} / {TRAINING_MODULES.length} Done
             </span>

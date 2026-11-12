@@ -70,25 +70,27 @@ export function gradeCase(
   timeSpentSeconds: number = 0
 ): CaseGradingResult {
   const feedback: string[] = [];
-  let logPointer = 0;
+  const usedIndices = new Set<number>();
   let earnedMilestonePoints = 0;
   const totalPossibleMilestonePoints = examCase.milestones.reduce((acc, m) => acc + m.points, 0) || 1;
   let missedCritical: string | undefined = undefined;
   let milestonesPassed = 0;
 
-  // 1. Milestone ordered subsequence evaluation (60% weight)
+  // 1. Milestone evaluation: credit every action logged by trainee without early pointer truncation (60% weight)
   for (const milestone of examCase.milestones) {
-    let matched = false;
-    while (logPointer < actionLog.length) {
-      const logged = actionLog[logPointer];
-      logPointer++;
-      if (logged.action === milestone.action && isDataMatch(milestone.expectedData, logged.data)) {
-        matched = true;
-        break;
+    let matchIndex = -1;
+    for (let i = 0; i < actionLog.length; i++) {
+      if (!usedIndices.has(i)) {
+        const logged = actionLog[i];
+        if (logged.action === milestone.action && isDataMatch(milestone.expectedData, logged.data)) {
+          matchIndex = i;
+          break;
+        }
       }
     }
 
-    if (matched) {
+    if (matchIndex !== -1) {
+      usedIndices.add(matchIndex);
       earnedMilestonePoints += milestone.points;
       milestonesPassed++;
     } else {
