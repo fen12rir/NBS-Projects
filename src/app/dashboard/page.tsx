@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
 import { TRAINING_SCENARIOS } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
+import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
 import { 
   BookOpen, 
   Monitor, 
@@ -33,6 +35,7 @@ export default function DashboardPage() {
     completedModules: [],
     scenarioAttempts: [],
   });
+  const { lang, setLang } = useModuleLanguage();
 
   useEffect(() => {
     setProgress(getLocalProgress());
@@ -216,7 +219,7 @@ export default function DashboardPage() {
 
         {/* Learning Modules Grid */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between border-b pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b pb-2">
             <div>
               <h2 className="text-xl font-bold text-gray-900 uppercase tracking-tight">
                 POS Cashier Curriculum
@@ -225,10 +228,12 @@ export default function DashboardPage() {
                 9 Modules based on the 120-slide NBS Cashier Newbie Training Deck
               </p>
             </div>
+            <ModuleLanguageToggle lang={lang} onChange={setLang} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {TRAINING_MODULES.map((mod) => {
+            {TRAINING_MODULES.map((rawMod) => {
+              const mod = getLocalizedModule(rawMod, lang);
               const modLessonIds = mod.lessons.map((l) => l.id);
               const completedInMod = modLessonIds.filter((id) =>
                 progress.completedLessons.includes(id)

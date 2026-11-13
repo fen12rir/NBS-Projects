@@ -11,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
 import { getScenarioForLesson, getScenarioForModule } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { getLocalizedLesson, getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
+import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -32,6 +34,7 @@ export default function ModuleDetailPage() {
     completedModules: [],
     scenarioAttempts: [],
   });
+  const { lang, setLang } = useModuleLanguage();
 
   useEffect(() => {
     setProgress(getLocalProgress());
@@ -66,47 +69,50 @@ export default function ModuleDetailPage() {
   const isAllComplete = completedInMod === currentModule.lessons.length;
   const moduleAssessment = getScenarioForModule(currentModule.id);
 
+  const localizedModule = getLocalizedModule(currentModule, lang);
+
   return (
     <LearningShell currentModuleId={moduleId}>
       <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb */}
-        <div>
+        {/* Navigation Breadcrumb & Language Toggle */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
             href="/dashboard"
             className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Dashboard</span>
+            <span>{lang === "tl" ? "Bumalik sa Dashboard" : "Back to Dashboard"}</span>
           </Link>
+          <ModuleLanguageToggle lang={lang} onChange={setLang} />
         </div>
 
         {/* Module Header Card */}
         <div className="bg-white border border-gray-200 p-6 sm:p-8 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Badge variant="default">Module {currentModule.number}</Badge>
+            <Badge variant="default">Module {localizedModule.number}</Badge>
             <span className="text-xs font-mono text-gray-500">
-              Source: {currentModule.deckPages}
+              Source: {localizedModule.deckPages}
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            {currentModule.title}
+            {localizedModule.title}
           </h1>
 
           <p className="text-sm text-gray-600 leading-relaxed max-w-3xl">
-            {currentModule.shortDesc}
+            {localizedModule.shortDesc}
           </p>
 
           <div className="pt-2 flex items-center space-x-4 text-xs font-medium text-gray-500">
-            <span>{currentModule.lessons.length} Lessons</span>
+            <span>{localizedModule.lessons.length} Lessons</span>
             <span>•</span>
             <span>
               Status:{" "}
               {isAllComplete ? (
-                <strong className="text-emerald-600">All Completed</strong>
+                <strong className="text-emerald-600">{lang === "tl" ? "Kumpleto Na" : "All Completed"}</strong>
               ) : (
                 <strong className="text-amber-600">
-                  {completedInMod}/{currentModule.lessons.length} Done
+                  {completedInMod}/{localizedModule.lessons.length} {lang === "tl" ? "Tapos" : "Done"}
                 </strong>
               )}
             </span>
@@ -116,11 +122,12 @@ export default function ModuleDetailPage() {
         {/* Lessons List */}
         <div className="space-y-4">
           <h2 className="text-lg font-bold text-gray-900 uppercase tracking-tight">
-            Module Lessons
+            {lang === "tl" ? "Mga Aralin sa Module" : "Module Lessons"}
           </h2>
 
           <div className="space-y-3">
-            {currentModule.lessons.map((lesson, idx) => {
+            {localizedModule.lessons.map((rawLesson, idx) => {
+              const lesson = getLocalizedLesson(rawLesson, lang);
               const isCompleted = progress.completedLessons.includes(lesson.id);
               const lessonScenario = getScenarioForLesson(lesson.id);
               const simulatorUrl = lessonScenario

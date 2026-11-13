@@ -15,6 +15,9 @@ import {
   markLessonAsCompleted, 
   UserProgress 
 } from "@/lib/progress/progress-store";
+import { getLocalizedLesson, getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
+import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
+import { useSpeech } from "@/lib/speech/use-speech";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -29,7 +32,9 @@ import {
   X,
   ZoomIn,
   ZoomOut,
-  RotateCcw
+  RotateCcw,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 function LessonDetailContent() {
@@ -51,10 +56,16 @@ function LessonDetailContent() {
   const [justCompleted, setJustCompleted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt?: string; caption?: string } | null>(null);
   const [imageScale, setImageScale] = useState(1);
+  const { lang, setLang } = useModuleLanguage();
+  const { speechSupported, isSpeaking, speak, stop } = useSpeech();
 
   useEffect(() => {
     setProgress(getLocalProgress());
   }, []);
+
+  useEffect(() => {
+    stop();
+  }, [lang, lessonId, stop]);
 
   const currentModuleIndex = TRAINING_MODULES.findIndex((m) => m.id === moduleId);
   const currentModule = currentModuleIndex !== -1 ? TRAINING_MODULES[currentModuleIndex] : undefined;
@@ -111,22 +122,58 @@ function LessonDetailContent() {
     setJustCompleted(true);
   };
 
+  const localizedModule = getLocalizedModule(currentModule, lang);
+  const localizedLesson = getLocalizedLesson(currentLesson, lang);
+
+  const handleReadLesson = () => {
+    if (!speechSupported) return;
+    if (isSpeaking) {
+      stop();
+      return;
+    }
+    const text = [
+      localizedLesson.title,
+      localizedLesson.objective,
+      ...localizedLesson.instructions.map((step, i) => `${lang === "tl" ? "Hakbang" : "Step"} ${i + 1}: ${step}`),
+    ].join(". ");
+    speak(text, lang === "tl" ? "fil-PH" : "en-US");
+  };
+
   return (
     <LearningShell currentModuleId={moduleId} currentLessonId={lessonId}>
       <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center justify-between">
+        {/* Navigation Breadcrumb & Language / Speech Controls */}
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <Link
             href={`/modules/${currentModule.id}`}
             className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to {currentModule.title}</span>
+            <span>{lang === "tl" ? `Bumalik sa ${localizedModule.title}` : `Back to ${localizedModule.title}`}</span>
           </Link>
 
-          <span className="text-xs font-mono text-gray-400">
-            Source: {currentLesson.deckSlideRef}
-          </span>
+          <div className="flex items-center gap-2">
+            {speechSupported && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleReadLesson}
+                className={`text-xs h-7 px-2.5 flex items-center gap-1 ${
+                  isSpeaking
+                    ? "bg-red-50 border-red-400 text-red-700 hover:bg-red-100"
+                    : "bg-emerald-50 border-emerald-400 text-emerald-800 hover:bg-emerald-100"
+                }`}
+              >
+                {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                <span>{isSpeaking ? (lang === "tl" ? "Ihinto" : "Stop") : (lang === "tl" ? "Basahin" : "Read Lesson")}</span>
+              </Button>
+            )}
+            <ModuleLanguageToggle lang={lang} onChange={setLang} />
+            <span className="text-xs font-mono text-gray-400 hidden sm:inline">
+              Source: {localizedLesson.deckSlideRef}
+            </span>
+          </div>
         </div>
 
         {/* Returned from Practice Callout Banner */}
@@ -166,31 +213,31 @@ function LessonDetailContent() {
         {/* Lesson Title & Objective Card */}
         <div className="bg-white border border-gray-200 p-6 sm:p-8 space-y-4">
           <div className="flex items-center space-x-2">
-            <Badge variant="default">Module {currentModule.number}</Badge>
-            <Badge variant="secondary">Lesson Procedure</Badge>
+            <Badge variant="default">Module {localizedModule.number}</Badge>
+            <Badge variant="secondary">{lang === "tl" ? "Pamamaraan ng Aralin" : "Lesson Procedure"}</Badge>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
-            {currentLesson.title}
+            {localizedLesson.title}
           </h1>
 
           <div className="bg-red-50/60 border-l-4 border-[#E4002B] p-4 text-sm text-gray-800">
             <strong className="text-[#E4002B] font-bold block mb-1">
-              Learning Objective:
+              {lang === "tl" ? "Layunin ng Aralin:" : "Learning Objective:"}
             </strong>
-            {currentLesson.objective}
+            {localizedLesson.objective}
           </div>
         </div>
 
         {/* Function Key Callouts */}
-        {currentLesson.keyCallouts && currentLesson.keyCallouts.length > 0 && (
+        {localizedLesson.keyCallouts && localizedLesson.keyCallouts.length > 0 && (
           <div className="bg-[#0B192C] text-white p-5 border border-gray-800 space-y-2">
             <div className="flex items-center space-x-2 text-blue-300 font-bold text-xs uppercase tracking-wider">
               <Key className="w-4 h-4" />
-              <span>Key POS Function Callouts For This Lesson</span>
+              <span>{lang === "tl" ? "Mga Mahalagang POS Function Key sa Araling Ito" : "Key POS Function Callouts For This Lesson"}</span>
             </div>
             <div className="flex flex-wrap gap-2 pt-1">
-              {currentLesson.keyCallouts.map((keyStr, idx) => (
+              {localizedLesson.keyCallouts.map((keyStr, idx) => (
                 <span
                   key={idx}
                   className="bg-blue-900/80 border border-blue-600 px-3 py-1 font-mono text-xs font-bold text-blue-200"
@@ -205,11 +252,11 @@ function LessonDetailContent() {
         {/* Ordered Step-by-Step Instructions */}
         <div className="bg-white border border-gray-200 p-6 sm:p-8 space-y-6">
           <h2 className="text-lg font-bold text-gray-900 uppercase tracking-tight border-b pb-2">
-            Standard Cashier Operating Procedure
+            {lang === "tl" ? "Pamantayang Hakbang ng Cashier (SOP)" : "Standard Cashier Operating Procedure"}
           </h2>
 
           <div className="space-y-4">
-            {currentLesson.instructions.map((step, idx) => (
+            {localizedLesson.instructions.map((step, idx) => (
               <div key={idx} className="flex items-start space-x-4">
                 <div className="w-7 h-7 bg-[#E4002B] text-white font-black text-xs flex items-center justify-center flex-shrink-0">
                   {idx + 1}
@@ -222,14 +269,14 @@ function LessonDetailContent() {
           </div>
 
           {/* Training Deck Slide Visual */}
-          {(currentLesson.visualAssets && currentLesson.visualAssets.length > 0) ? (
+          {(localizedLesson.visualAssets && localizedLesson.visualAssets.length > 0) ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between text-xs font-mono font-bold text-gray-600 border-b border-gray-200 pb-2">
-                <span className="uppercase text-[#E4002B]">Official Deck Visual References & Demonstrations</span>
-                <span>{currentLesson.deckSlideRef}</span>
+                <span className="uppercase text-[#E4002B]">{lang === "tl" ? "Opisyal na Gabay at Demonstrasyon" : "Official Deck Visual References & Demonstrations"}</span>
+                <span>{localizedLesson.deckSlideRef}</span>
               </div>
               <div className="space-y-4">
-                {currentLesson.visualAssets.map((asset, idx) => {
+                {localizedLesson.visualAssets.map((asset, idx) => {
                   const isVideo = asset.src.endsWith(".mp4");
                   return (
                     <div key={idx} className="border border-gray-300 bg-white p-3 space-y-2 shadow-sm">
