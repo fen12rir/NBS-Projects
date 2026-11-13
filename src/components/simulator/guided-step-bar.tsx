@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { TrainingScenario, TRAINING_SCENARIOS } from "@/data/scenarios";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import {
   ArrowRight, 
   Award,
   Clock,
-  Lightbulb
+  Lightbulb,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -52,6 +54,38 @@ export function GuidedStepBar({
   onFillBarcode,
   remainingSeconds
 }: GuidedStepBarProps) {
+  const currentInstruction = scenario?.steps[currentStepIndex]?.instruction;
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  useEffect(() => {
+    setSpeechSupported("speechSynthesis" in window);
+  }, []);
+
+  useEffect(() => {
+    setIsSpeaking(false);
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, [currentInstruction]);
+
+  const handleReadInstruction = () => {
+    if (!speechSupported || !currentInstruction) return;
+
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(currentInstruction);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  };
+
   // Free Exploration Sandbox
   if (!scenario) {
     return (
@@ -179,7 +213,7 @@ export function GuidedStepBar({
               </div>
             ) : (
               <span className="text-yellow-200">
-                {currentStep?.instruction}
+                {currentInstruction}
               </span>
             )}
           </div>
@@ -194,6 +228,31 @@ export function GuidedStepBar({
         <div className="flex items-center space-x-1 shrink-0">
           {!isFinished ? (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReadInstruction}
+                disabled={!speechSupported || !currentInstruction}
+                className="text-[10px] sm:text-xs bg-purple-950 border-purple-600 text-purple-200 hover:bg-purple-900 disabled:opacity-50 h-6 px-1.5 sm:px-2"
+                title={
+                  speechSupported
+                    ? isSpeaking
+                      ? "Stop reading instruction"
+                      : "Read instruction aloud"
+                    : "Text-to-speech is not supported in this browser"
+                }
+                aria-label={
+                  isSpeaking ? "Stop reading instruction" : "Read instruction aloud"
+                }
+              >
+                {isSpeaking ? (
+                  <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
+                ) : (
+                  <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
+                )}
+                <span>{isSpeaking ? "Stop" : "Read"}</span>
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
