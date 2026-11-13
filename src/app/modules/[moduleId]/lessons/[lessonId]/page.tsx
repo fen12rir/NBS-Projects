@@ -57,7 +57,7 @@ function LessonDetailContent() {
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt?: string; caption?: string } | null>(null);
   const [imageScale, setImageScale] = useState(1);
   const { lang, setLang } = useModuleLanguage();
-  const { speechSupported, isSpeaking, speak, stop } = useSpeech();
+  const { speechSupported, hasFilipinoVoice, isSpeaking, speak, stop } = useSpeech();
 
   useEffect(() => {
     setProgress(getLocalProgress());
@@ -153,7 +153,7 @@ function LessonDetailContent() {
           </Link>
 
           <div className="flex items-center gap-2">
-            {speechSupported && (
+            {speechSupported && (lang === "en" || hasFilipinoVoice) && (
               <Button
                 type="button"
                 variant="outline"
