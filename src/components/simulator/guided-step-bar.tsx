@@ -58,9 +58,9 @@ export function GuidedStepBar({
   if (!scenario) {
     return (
       <div className="relative z-30 bg-gray-900 border-b border-emerald-500/70 text-white px-2 py-1 sm:px-3 sm:py-1.5 shadow-md shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-2">
+        <div className="flex items-center justify-between gap-1.5 sm:gap-2">
           {/* Left: Mode Badge & Scenario Selector & Clear */}
-          <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0 shrink-0">
+          <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0 flex-1 sm:flex-initial">
             <span className="bg-emerald-600 text-white px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold rounded flex items-center space-x-1 shrink-0 shadow-xs">
               <Compass className="w-3 h-3 shrink-0" />
               <span className="hidden sm:inline">FREE EXPLORATION</span>
@@ -70,7 +70,7 @@ export function GuidedStepBar({
             <select
               value=""
               onChange={(e) => onSelectScenario(e.target.value || null)}
-              className="bg-gray-800 border border-gray-600 text-white text-[11px] px-1.5 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans flex-1 min-w-0 sm:flex-none sm:max-w-[200px] truncate"
+              className="bg-gray-800 border border-gray-600 text-white text-[11px] px-1.5 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 font-sans min-w-0 flex-1 sm:flex-none sm:max-w-[200px] truncate"
               title="Switch to Guided Scenario"
             >
               <option value="">Switch to Guided Scenario...</option>
@@ -93,24 +93,27 @@ export function GuidedStepBar({
             </Button>
           </div>
 
-          {/* Right: Quick Barcodes - wraps cleanly on mobile so all barcodes are visible */}
-          <div className="flex items-center flex-wrap sm:flex-nowrap gap-1 sm:overflow-x-auto scrollbar-none text-[10px] font-mono min-w-0 py-0.5 sm:ml-auto">
-            <span className="text-gray-400 flex items-center mr-0.5 shrink-0 text-[10px]">
-              <Barcode className="w-3 h-3 mr-0.5 text-gray-400 shrink-0" />
-              <span className="hidden lg:inline">Quick:</span>
-            </span>
-            {SAMPLE_BARCODES.map((item) => (
-              <button
-                key={item.code}
-                type="button"
-                onClick={() => onFillBarcode(item.code)}
-                className="bg-gray-800 hover:bg-emerald-950 border border-gray-700 hover:border-emerald-500 text-gray-200 px-1.5 py-0.5 rounded text-[10px] transition-colors flex items-center space-x-1 shrink-0 whitespace-nowrap active:scale-95 cursor-pointer"
-                title={`Scan ${item.code} (${item.name} - ${item.price})`}
-              >
-                <strong className="text-emerald-400 font-bold">{item.code}</strong>
-                <span className="text-gray-400 hidden xl:inline">({item.name})</span>
-              </button>
-            ))}
+          {/* Right: Quick Barcode Dropdown */}
+          <div className="flex items-center space-x-1 shrink-0 ml-auto">
+            <Barcode className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            <select
+              value=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  onFillBarcode(e.target.value);
+                }
+              }}
+              aria-label="Quick Barcode"
+              className="bg-gray-800 border border-gray-600 hover:border-emerald-500 text-emerald-300 text-[11px] font-mono px-1.5 py-0.5 rounded focus:outline-none focus:ring-1 focus:ring-emerald-500 max-w-[130px] sm:max-w-[220px] truncate cursor-pointer"
+              title="Select a sample barcode to scan"
+            >
+              <option value="">Quick Barcode...</option>
+              {SAMPLE_BARCODES.map((item) => (
+                <option key={item.code} value={item.code} className="text-white bg-gray-900">
+                  {item.code} - {item.name} ({item.price})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
