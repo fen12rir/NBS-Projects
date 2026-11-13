@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { TrainingScenario, TRAINING_SCENARIOS } from "@/data/scenarios";
 import { Button } from "@/components/ui/button";
+import { useSpeech } from "@/lib/speech/use-speech";
 import { 
   HelpCircle, 
   CheckCircle, 
@@ -16,7 +17,9 @@ import {
   Clock,
   Lightbulb,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -57,6 +60,24 @@ export function GuidedStepBar({
   pageNudge
 }: GuidedStepBarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const currentInstruction = scenario?.steps[currentStepIndex]?.instruction;
+  const { speechSupported, isSpeaking, speak, stop } = useSpeech();
+
+  useEffect(() => {
+    stop();
+  }, [currentInstruction, stop]);
+
+  const handleReadInstruction = () => {
+    if (!speechSupported || !currentInstruction) return;
+    if (isSpeaking) {
+      stop();
+      return;
+    }
+    const parts = [currentInstruction];
+    if (pageNudge) parts.push(pageNudge);
+    if (activeHint) parts.push(`Hint: ${activeHint}`);
+    speak(parts.join(". "), "en-US");
+  };
 
   // Free Exploration Sandbox
   if (!scenario) {
@@ -150,15 +171,43 @@ export function GuidedStepBar({
           </button>
           <div className="flex items-center space-x-1 shrink-0">
             {!isFinished && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onShowHint}
-                className="text-[10px] bg-blue-950 border-blue-600 text-blue-200 hover:bg-blue-900 h-5 px-1.5"
-              >
-                <HelpCircle className="w-3 h-3 mr-0.5 shrink-0" />
-                <span>Hint</span>
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReadInstruction}
+                  disabled={!speechSupported || !currentInstruction}
+                  className={`text-[10px] h-5 px-1.5 ${
+                    isSpeaking
+                      ? "bg-red-950 border-red-600 text-red-200 hover:bg-red-900"
+                      : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                  } disabled:opacity-50`}
+                  title={
+                    speechSupported
+                      ? isSpeaking
+                        ? "Stop reading instruction"
+                        : "Read instruction aloud"
+                      : "Text-to-speech is not supported in this browser"
+                  }
+                  aria-label={isSpeaking ? "Stop reading instruction" : "Read instruction aloud"}
+                >
+                  {isSpeaking ? (
+                    <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
+                  ) : (
+                    <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
+                  )}
+                  <span>{isSpeaking ? "Stop" : "Read"}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onShowHint}
+                  className="text-[10px] bg-blue-950 border-blue-600 text-blue-200 hover:bg-blue-900 h-5 px-1.5"
+                >
+                  <HelpCircle className="w-3 h-3 mr-0.5 shrink-0" />
+                  <span>Hint</span>
+                </Button>
+              </>
             )}
             <Button
               variant="outline"
@@ -242,7 +291,7 @@ export function GuidedStepBar({
               </div>
             ) : (
               <span className="text-yellow-200">
-                {currentStep?.instruction}
+                {currentInstruction}
               </span>
             )}
           </div>
@@ -262,6 +311,35 @@ export function GuidedStepBar({
         <div className="flex items-center space-x-1 shrink-0 self-end sm:self-center">
           {!isFinished ? (
             <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReadInstruction}
+                disabled={!speechSupported || !currentInstruction}
+                className={`text-[10px] sm:text-xs h-6 px-1.5 sm:px-2 disabled:opacity-50 ${
+                  isSpeaking
+                    ? "bg-red-950 border-red-600 text-red-200 hover:bg-red-900"
+                    : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                }`}
+                title={
+                  speechSupported
+                    ? isSpeaking
+                      ? "Stop reading instruction"
+                      : "Read instruction aloud"
+                    : "Text-to-speech is not supported in this browser"
+                }
+                aria-label={
+                  isSpeaking ? "Stop reading instruction" : "Read instruction aloud"
+                }
+              >
+                {isSpeaking ? (
+                  <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
+                ) : (
+                  <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
+                )}
+                <span>{isSpeaking ? "Stop" : "Read"}</span>
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"

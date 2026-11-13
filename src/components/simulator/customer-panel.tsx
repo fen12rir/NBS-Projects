@@ -49,7 +49,7 @@ export function CustomerPanel({
     (ev.hands || []).map((item, itIdx) => (
       <div
         key={`item-${evIdx}-${itIdx}`}
-        className="bg-gray-800 border border-emerald-500/80 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-gray-200 shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+        className="bg-gray-800 border border-emerald-500/80 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-gray-200 shadow-sm max-w-full text-[11px] sm:text-xs"
       >
         <ShoppingBag className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
         <span className="text-emerald-300 font-mono font-bold">
@@ -81,18 +81,18 @@ export function CustomerPanel({
     ...(isRedeemingCoins ? [
       <div
         key="sulit-coins-action-pill"
-        className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-100 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+        className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-100 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
       >
         <Coins className="w-3.5 h-3.5 text-amber-300 shrink-0" />
         <span className="font-bold text-yellow-300">Redeem Coins:</span>
-        <span className="font-semibold text-white">Payment &rarr; F3 Bank Card &rarr; &apos;LNQR Sulit Coins&apos; (₱29)</span>
+        <span className="font-semibold text-white break-words">Payment &rarr; F3 Bank Card &rarr; &apos;LNQR Sulit Coins&apos; (₱29)</span>
       </div>
     ] : []),
 
     ...(ev.tender ? [
       <div
         key={`tender-${evIdx}`}
-        className="bg-blue-950 border border-blue-600 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-blue-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+        className="bg-blue-950 border border-blue-600 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-blue-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
       >
         <Banknote className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
         <span className="font-bold text-white">
@@ -104,11 +104,11 @@ export function CustomerPanel({
             : ev.tender.kind}
         </span>
         {isRedeemingCoins ? (
-          <span className="text-emerald-300 font-bold text-[10px] shrink-0">
+          <span className="text-emerald-300 font-bold text-[10px]">
             (Remaining Due: ₱391.00 | Change: ₱109.00)
           </span>
         ) : currentCase.finalChecks?.expectedChange !== undefined ? (
-          <span className="text-emerald-300 font-bold text-[10px] shrink-0">
+          <span className="text-emerald-300 font-bold text-[10px]">
             (Change: ₱{currentCase.finalChecks.expectedChange.toFixed(2)})
           </span>
         ) : null}
@@ -133,7 +133,7 @@ export function CustomerPanel({
     ...(ev.shows ? [
       <div
         key={`shows-${evIdx}`}
-        className="bg-amber-950 border border-amber-600 rounded px-2 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
+        className="bg-amber-950 border border-amber-600 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
       >
         {ev.shows === "LNQR_QR" ? (
           <QrCode className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
@@ -141,7 +141,7 @@ export function CustomerPanel({
           <CreditCard className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
         )}
         <span className="font-bold text-yellow-300">Presents:</span>
-        <span className="font-medium text-white">
+        <span className="font-medium text-white break-words">
           {ev.shows === "LNC_CARD"
             ? "LNC Card (Earn Sulit Coins: Choose Option 2)"
             : ev.shows === "LNQR_QR"
@@ -217,35 +217,35 @@ export function CustomerPanel({
 
       {/* Customer Action Items / Handed Items Tray */}
       <div className="bg-[#111827] border-t border-gray-700 py-1.5 px-2.5 sm:px-4 text-xs font-sans">
-        <div className="max-w-[1080px] mx-auto flex items-center space-x-3 overflow-x-auto scrollbar-none py-0.5">
+        <div className="max-h-24 sm:max-h-32 max-w-[1080px] mx-auto flex flex-wrap items-start gap-x-3 gap-y-2 overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-none py-0.5">
           {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
-            <div className="bg-amber-950/90 border border-amber-500 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs animate-pulse">
+            <div className="bg-amber-950/90 border border-amber-500 rounded px-2.5 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs animate-pulse">
               <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="font-bold text-white">Customer Returned:</span>
               <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
             </div>
           ) : handedItems.length > 0 ? (
-            <div className="flex items-center space-x-3 shrink-0">
+            <div className="flex flex-wrap items-start gap-x-3 gap-y-2 min-w-0 max-w-full">
               {/* 1. Items to Scan */}
-              <div className="flex items-center space-x-1.5 shrink-0">
+              <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
                 <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
                   Scan Items:
                 </span>
-                <div className="flex items-center space-x-1.5">{handedItems}</div>
+                <div className="flex flex-wrap items-center gap-1.5 min-w-0">{handedItems}</div>
               </div>
 
               {/* 2. Payment Method */}
               {tenderItems.length > 0 && (
-                <div className="flex items-center space-x-1.5 shrink-0 pl-2 border-l border-gray-700">
+                <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full pl-2 border-l border-gray-700">
                   <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
                     Tender at F4:
                   </span>
-                  <div className="flex items-center space-x-1.5">{tenderItems}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 min-w-0">{tenderItems}</div>
                 </div>
               )}
             </div>
           ) : (
-            <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2.5 py-0.5 sm:py-1 flex items-center space-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs">
+            <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2.5 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs">
               <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span className="font-bold text-white">Cashier Briefing:</span>
               <span>

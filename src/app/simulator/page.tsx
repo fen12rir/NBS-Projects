@@ -765,6 +765,7 @@ function SimulatorContent() {
 
   const [timedOut, setTimedOut] = useState(false);
   const [isExamCompleted, setIsExamCompleted] = useState(false);
+  const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null);
   const hasRecordedAttemptRef = useRef(false);
 
   // Auto-quit Focus Mode when practice scenario or assessment completes
@@ -856,8 +857,10 @@ function SimulatorContent() {
       const timeSpent = Math.max(1, Math.round((Date.now() - scenarioStartTime) / 1000));
       const penalty = mistakes.length * 10;
       const score = timedOut ? 0 : Math.max(0, 100 - penalty);
+      const attemptId = `attempt-${Date.now()}`;
+      setCompletedAttemptId(attemptId);
       recordScenarioAttempt({
-        id: "attempt-" + Date.now(),
+        id: attemptId,
         scenarioId: activeScenario.id,
         scenarioTitle: activeScenario.title,
         timestamp: new Date().toISOString(),
@@ -3178,6 +3181,7 @@ function SimulatorContent() {
     setActiveHint(null);
     setIsExamCompleted(false);
     setTimedOut(false);
+    setCompletedAttemptId(null);
     hasRecordedAttemptRef.current = false;
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
@@ -3261,6 +3265,7 @@ function SimulatorContent() {
     setActiveHint(null);
     setIsExamCompleted(false);
     setTimedOut(false);
+    setCompletedAttemptId(null);
     setScenarioStartTime(Date.now());
     hasRecordedAttemptRef.current = false;
     setSelectedSodButton(null);
@@ -6198,6 +6203,7 @@ function SimulatorContent() {
         returnLessonUrl={returnLessonUrl}
         returnButtonLabel={returnButtonLabel}
         onResetExam={handleResetExam}
+        attemptId={completedAttemptId}
       />
 
       {/* POS Green Beveled Alert Modal */}

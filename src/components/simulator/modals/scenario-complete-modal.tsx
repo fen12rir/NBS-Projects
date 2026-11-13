@@ -13,6 +13,8 @@ interface ScenarioCompleteModalProps {
   returnButtonLabel: string;
   onResetExam: () => void;
   timedOut: boolean;
+  attemptId: string | null
+
 
 }
 
@@ -26,7 +28,10 @@ export function ScenarioCompleteModal({
   returnButtonLabel,
   onResetExam,
   timedOut,
-}: ScenarioCompleteModalProps) {
+  attemptId,
+}: ScenarioCompleteModalProps)  {
+
+  
   if (!isOpen || !scenario) return null;
 
   const finalScore = timedOut ? 0 : Math.max(0, 100 - mistakesCount * 10);
@@ -103,6 +108,15 @@ export function ScenarioCompleteModal({
                 </div>
               </div>
             </div>
+
+            {mistakesCount > 0 && attemptId && (
+            <Link
+              href={`/results/${encodeURIComponent(attemptId)}`}
+              className="block border-2 border-blue-700 bg-blue-950 px-4 py-2 text-center text-xs font-bold text-white hover:bg-blue-900"
+            >
+              Review Mistakes
+            </Link>
+          )}
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-stretch gap-2.5 pt-2">
