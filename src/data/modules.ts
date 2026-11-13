@@ -280,7 +280,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "When a customer buys multiples of the same item, press F3 (Quantity).",
           "Type the number of pieces (e.g. 5) and press ENTER.",
           "Scan the barcode or enter the item SKU. The line item will immediately record with the entered quantity.",
-          "For non-merchandise service fees or plastic/paper bags, press F6 (Non Mdse), select the service item, enter the quantity, and press Alt+Enter (or click OK) to add it and return to the Main Screen."
+          "When a customer does not fully consume a coupon or voucher, press F6 (Non Mdse) to record the unused coupon balance/variance and generate a new coupon as change for the used coupon, enter the quantity, and press Alt+Enter (or click OK) to add it and return to the Main Screen."
         ],
         keyCallouts: ["F3: Quantity Entry", "F6: Non Mdse", "ENTER / Alt+Enter: Confirm"]
       },

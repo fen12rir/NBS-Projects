@@ -525,7 +525,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   {
     id: "scen-les-4-1",
     title: "Lesson 4-1 Practice: Quantity Multiplier & Non-Merchandise Entry",
-    description: "Practice using F3 (Quantity) to set an item multiplier before scanning a barcode, and F6 (Non Mdse) to add a Non-Merchandise service/variance charge.",
+    description: "Practice using F3 (Quantity) to set an item multiplier before scanning a barcode, and F6 (Non Mdse) to record unused coupon balance/variance and issue a new coupon as change.",
     moduleRef: "mod-4",
     lessonRef: "les-4-1",
     passingScore: 70,
@@ -555,17 +555,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: The customer also requests gift wrapping / non-merchandise service. Press F6 (NON MDSE) on the Main Screen.",
+        instruction: "Step 4: The customer did not fully consume their coupon and needs a new coupon issued for the unused balance. Press F6 (NON MDSE) on the Main Screen.",
         expectedAction: "NON_MDSE",
         hint: "Click F6 Non Mdse on the right function column or press F6.",
         errorFeedback: "Press F6 (NON MDSE) on the Main Screen."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Non-Merchandise screen, select a charge/service, verify the price, and click [Ok] (or press ENTER) to add it and return to the Main Screen.",
+        instruction: "Step 5: On the Non-Merchandise screen, select the coupon variance/change item, verify the amount, and click [Ok] (or press ENTER) to generate the new coupon and return to the Main Screen.",
         expectedAction: "CONFIRM_NON_MDSE",
-        hint: "Select the Non-Merchandise charge and click [Ok] or press Enter.",
-        errorFeedback: "Confirm the Non-Merchandise charge by clicking [Ok] or pressing Enter."
+        hint: "Select the coupon variance item and click [Ok] or press Enter.",
+        errorFeedback: "Confirm the Non-Merchandise coupon variance by clicking [Ok] or pressing Enter."
       }
     ]
   },
@@ -657,7 +657,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   {
     id: "scen-cash-sale-basic",
     title: "Module 4 Assessment: Quantity Multiplier, Non-Merchandise & Cash Checkout",
-    description: "End-of-module practical assessment: apply the F3 quantity multiplier, scan gel pens, add an F6 Non-Merchandise service fee, proceed through Bonus Buy and loyalty selection, and complete a full cash checkout.",
+    description: "End-of-module practical assessment: apply the F3 quantity multiplier, scan gel pens, issue a new coupon for unused coupon balance via F6 Non-Merchandise, proceed through Bonus Buy and loyalty selection, and complete a full cash checkout.",
     moduleRef: "mod-4",
     passingScore: 70,
     timeLimitSeconds: 4 * 60,
@@ -687,17 +687,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: The customer also requests a Non-Merchandise gift-wrapping service. Press F6 (NON MDSE) on the Main Screen.",
+        instruction: "Step 4: The customer did not fully consume their coupon and needs a new coupon for the remaining change. Press F6 (NON MDSE) on the Main Screen.",
         expectedAction: "NON_MDSE",
         hint: "Press F6 on your keyboard or click F6 Non Mdse on the right column.",
         errorFeedback: "Press F6 (NON MDSE) on the Main Screen."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Non-Merchandise screen, select the service charge and click [Ok] (or press ENTER) to add it and return to the Main Screen.",
+        instruction: "Step 5: On the Non-Merchandise screen, select the coupon variance/change item and click [Ok] (or press ENTER) to issue the new coupon and return to the Main Screen.",
         expectedAction: "CONFIRM_NON_MDSE",
-        hint: "Select the Non-Merchandise service and click [Ok] or press Enter.",
-        errorFeedback: "Confirm the Non-Merchandise charge by clicking [Ok] or pressing Enter."
+        hint: "Select the coupon variance item and click [Ok] or press Enter.",
+        errorFeedback: "Confirm the Non-Merchandise coupon variance by clicking [Ok] or pressing Enter."
       },
       {
         stepNumber: 6,

@@ -217,6 +217,8 @@ function SimulatorContent() {
   const [terminalScale, setTerminalScale] = useState(1);
   const [userZoomLevel, setUserZoomLevel] = useState(1);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const isInputFocusedRef = useRef(false);
+  const [keyboardInset, setKeyboardInset] = useState(0);
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
   const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(false);
@@ -232,48 +234,93 @@ function SimulatorContent() {
     setPosAlert({ isOpen: true, message, title, type, onClose });
   };
 
-  // User-selected input zoom tracking (strictly on mobile view when tapped/selected by the user)
+  // User-selected input zoom & mobile keyboard visibility tracking
   useEffect(() => {
     let isUserTap = false;
+    let blurTimer: ReturnType<typeof setTimeout> | null = null;
+    let scrollTimer1: ReturnType<typeof setTimeout> | null = null;
+    let scrollTimer2: ReturnType<typeof setTimeout> | null = null;
+
+    const isEditableElement = (el: HTMLElement | null) =>
+      Boolean(
+        el &&
+          (el.tagName === "INPUT" ||
+            el.tagName === "SELECT" ||
+            el.tagName === "TEXTAREA")
+      );
 
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "TEXTAREA")
-      ) {
-        isUserTap = true;
-      } else {
-        isUserTap = false;
-      }
+      isUserTap = isEditableElement(target);
     };
 
     const handleFocusIn = (e: FocusEvent) => {
+      if (blurTimer) {
+        clearTimeout(blurTimer);
+        blurTimer = null;
+      }
+
+      const target = e.target as HTMLElement | null;
       const isMobile =
         typeof window !== "undefined" &&
-        (window.innerWidth < 768 || window.innerHeight > window.innerWidth);
+        (window.innerWidth < 768 ||
+          window.innerHeight > window.innerWidth ||
+          "ontouchstart" in window);
 
-      // ONLY zoom in on mobile view if the user explicitly clicked/tapped the input field
-      if (isUserTap && isMobile) {
+      // Keep zoom & keyboard-safe layout active on mobile when tapped or tabbing between fields
+      if (isMobile && isEditableElement(target) && (isUserTap || isInputFocusedRef.current)) {
+        isInputFocusedRef.current = true;
         setIsInputFocused(true);
-      } else {
+
+        if (target && typeof target.scrollIntoView === "function") {
+          if (scrollTimer1) clearTimeout(scrollTimer1);
+          if (scrollTimer2) clearTimeout(scrollTimer2);
+          scrollTimer1 = setTimeout(() => {
+            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+          }, 150);
+          scrollTimer2 = setTimeout(() => {
+            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+          }, 350);
+        }
+      } else if (!isEditableElement(target)) {
+        isInputFocusedRef.current = false;
         setIsInputFocused(false);
+        setKeyboardInset(0);
       }
       isUserTap = false;
     };
 
     const handleFocusOut = () => {
-      setIsInputFocused(false);
+      if (blurTimer) clearTimeout(blurTimer);
+      blurTimer = setTimeout(() => {
+        const active = document.activeElement as HTMLElement | null;
+        if (!isEditableElement(active)) {
+          isInputFocusedRef.current = false;
+          setIsInputFocused(false);
+          setKeyboardInset(0);
+        }
+      }, 60);
       isUserTap = false;
+    };
+
+    const handleVisualViewportResize = () => {
+      if (!isInputFocusedRef.current || !window.visualViewport) return;
+      const diff = Math.round(window.innerHeight - window.visualViewport.height);
+      setKeyboardInset(diff > 80 ? diff : 220);
     };
 
     window.addEventListener("pointerdown", handlePointerDown, true);
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
+    window.visualViewport?.addEventListener("resize", handleVisualViewportResize);
     return () => {
+      if (blurTimer) clearTimeout(blurTimer);
+      if (scrollTimer1) clearTimeout(scrollTimer1);
+      if (scrollTimer2) clearTimeout(scrollTimer2);
       window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
+      window.visualViewport?.removeEventListener("resize", handleVisualViewportResize);
     };
   }, []);
 
@@ -340,15 +387,29 @@ function SimulatorContent() {
     }
   };
 
-  // Mobile Hardware / Browser Back button handling in Focus Mode
+  // Mobile Hardware / Browser Back button & ESC Fullscreen exit handling in Focus Mode
   useEffect(() => {
     const handlePopState = () => {
       if (isFocusMode) {
         exitFocusMode(false);
       }
     };
+    const handleFullscreenChange = () => {
+      const isFs = Boolean(
+        document.fullscreenElement || (document as any).webkitFullscreenElement
+      );
+      if (!isFs && isFocusMode) {
+        exitFocusMode(true);
+      }
+    };
     window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
   }, [isFocusMode]);
 
   // Initialize Practical Exam Session
@@ -604,8 +665,8 @@ function SimulatorContent() {
 
   const checkViewport = () => {
     if (typeof window === "undefined") return;
-    // When virtual keyboard opens on mobile, prevent crushing scale
-    if (isInputFocused) return;
+    // When virtual keyboard opens on mobile/iOS, prevent crushing scale or reverting forced landscape
+    if (isInputFocusedRef.current) return;
 
     const portrait = window.innerHeight > window.innerWidth;
     setIsPortrait(portrait);
@@ -3201,7 +3262,7 @@ function SimulatorContent() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
       <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
         <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
@@ -3502,13 +3563,18 @@ function SimulatorContent() {
         )}
 
         <div
-          className={`flex-1 flex flex-col items-center justify-center min-h-0 w-full transition-all duration-200 ${
-            isFocusMode
-              ? userZoomLevel > 1 || isInputFocused
-                ? "overflow-auto touch-pan-x touch-pan-y py-1 px-1"
-                : "overflow-hidden py-0 px-1"
-              : "overflow-hidden p-2"
+          className={`flex-1 flex flex-col min-h-0 w-full transition-all duration-200 ${
+            userZoomLevel > 1 || isInputFocused
+              ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
+              : isFocusMode
+              ? "items-center justify-center overflow-hidden py-0 px-1"
+              : "items-center justify-center overflow-hidden p-2"
           }`}
+          style={
+            isInputFocused
+              ? { paddingBottom: `${Math.max(keyboardInset, 220)}px` }
+              : undefined
+          }
         >
           {(() => {
             const currentZoom = isInputFocused ? Math.max(userZoomLevel, 1.2) : userZoomLevel;
@@ -3520,14 +3586,14 @@ function SimulatorContent() {
                   height: `${Math.round(600 * finalScale)}px`,
                   position: "relative",
                 }}
-                className="shrink-0 flex items-start justify-start"
+                className="shrink-0 mx-auto flex items-start justify-start"
               >
                 <div
                   style={{
                     width: isExternalReceiptShowing ? "1360px" : "1080px",
                     height: "600px",
                     transform: finalScale < 1 || currentZoom > 1 ? `scale(${finalScale})` : undefined,
-                    transformOrigin: isInputFocused ? "top center" : "top left",
+                    transformOrigin: "top left",
                   }}
                   className="flex items-center justify-center gap-4 shrink-0 transition-transform duration-200 ease-out"
                 >
