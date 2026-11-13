@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { TrainingScenario, TRAINING_SCENARIOS } from "@/data/scenarios";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import {
   ArrowRight, 
   Award,
   Clock,
-  Lightbulb
+  Lightbulb,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -54,6 +56,8 @@ export function GuidedStepBar({
   remainingSeconds,
   pageNudge
 }: GuidedStepBarProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   // Free Exploration Sandbox
   if (!scenario) {
     return (
@@ -126,9 +130,53 @@ export function GuidedStepBar({
   const isFinished = currentStepIndex >= totalSteps;
   const isLessonPractice = Boolean(scenario.lessonRef);
 
+  if (isCollapsed) {
+    return (
+      <div className="relative z-30 bg-gray-900 border-b border-yellow-500/80 text-white px-2 py-0.5 shadow-sm shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(false)}
+            className="flex items-center gap-1.5 min-w-0 flex-1 text-left cursor-pointer py-0.5"
+            title="Expand step instructions"
+          >
+            <ChevronDown className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
+            <span className="text-[10px] font-mono font-bold text-yellow-300 shrink-0">
+              {isFinished ? "DONE" : `Step ${Math.min(currentStepIndex + 1, totalSteps)}/${totalSteps}`}
+            </span>
+            <span className="text-[11px] text-gray-200 truncate">
+              {isFinished ? "All steps complete" : currentStep?.instruction}
+            </span>
+          </button>
+          <div className="flex items-center space-x-1 shrink-0">
+            {!isFinished && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onShowHint}
+                className="text-[10px] bg-blue-950 border-blue-600 text-blue-200 hover:bg-blue-900 h-5 px-1.5"
+              >
+                <HelpCircle className="w-3 h-3 mr-0.5 shrink-0" />
+                <span>Hint</span>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsCollapsed(false)}
+              className="text-[10px] bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 h-5 px-1.5"
+            >
+              <span>Expand</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="relative z-30 bg-gray-900 border-b-2 border-yellow-500/80 text-white px-2 py-1 sm:px-3 sm:py-1.5 space-y-1 shadow-md shrink-0">
-      <div className="flex items-center justify-between gap-1.5 border-b border-gray-800 pb-1">
+    <div className="relative z-30 bg-gray-900 border-b-2 border-yellow-500/80 text-white px-2 py-0.5 sm:px-3 sm:py-1 space-y-0.5 shadow-md shrink-0">
+      <div className="flex items-center justify-between gap-1.5 border-b border-gray-800 pb-0.5">
         <div className="flex items-center space-x-1.5 min-w-0">
           <span className="text-[11px] font-mono font-bold uppercase text-yellow-300 flex items-center space-x-1 shrink-0">
             {isLessonPractice ? (
@@ -168,6 +216,16 @@ export function GuidedStepBar({
             <Compass className="w-2.5 h-2.5 mr-0.5 text-emerald-400 shrink-0" />
             <span className="hidden sm:inline">Free Mode</span>
             <span className="sm:hidden">Free</span>
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsCollapsed(true)}
+            className="text-[9px] sm:text-[10px] bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800 h-5 px-1 shrink-0"
+            title="Minimize guide bar for larger POS view"
+            aria-label="Minimize guide bar"
+          >
+            <ChevronUp className="w-3 h-3" />
           </Button>
         </div>
       </div>

@@ -231,6 +231,16 @@ function SimulatorContent() {
         (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
       setIsIOS(ios);
     }
+    if (typeof document !== "undefined") {
+      const prevHtmlBg = document.documentElement.style.backgroundColor;
+      const prevBodyBg = document.body.style.backgroundColor;
+      document.documentElement.style.backgroundColor = "#111827";
+      document.body.style.backgroundColor = "#111827";
+      return () => {
+        document.documentElement.style.backgroundColor = prevHtmlBg;
+        document.body.style.backgroundColor = prevBodyBg;
+      };
+    }
   }, []);
 
   // POS Green & Silver Alert Modal state
@@ -684,7 +694,7 @@ function SimulatorContent() {
     const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
       ? window.innerHeight
       : window.innerWidth;
-    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 160 : 70) : 65;
+    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 110 : 38) : 56;
     const effectiveHeight = isFocusMode && portrait && forceRotatePortrait
       ? window.innerWidth - overhead
       : window.innerHeight - overhead;
@@ -3445,10 +3455,10 @@ function SimulatorContent() {
         )
       )}
 
-      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode; pauses CSS rotation on iOS while editing an input) */}
+      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode; keeps orientation locked while typing on iOS) */}
       {(() => {
         const shouldCssRotate =
-          isFocusMode && isPortrait && forceRotatePortrait && !(isIOS && isInputFocused);
+          isFocusMode && isPortrait && forceRotatePortrait;
         return (
       <div
         className={`${
@@ -3468,17 +3478,6 @@ function SimulatorContent() {
                 left: "100%",
                 transform: "rotate(90deg)",
                 transformOrigin: "top left",
-                paddingTop: "env(safe-area-inset-left)",
-                paddingBottom: "env(safe-area-inset-right)",
-                paddingLeft: "env(safe-area-inset-top)",
-                paddingRight: "env(safe-area-inset-bottom)",
-              }
-            : isFocusMode
-            ? {
-                paddingTop: "env(safe-area-inset-top)",
-                paddingBottom: "env(safe-area-inset-bottom)",
-                paddingLeft: "env(safe-area-inset-left)",
-                paddingRight: "env(safe-area-inset-right)",
               }
             : undefined
         }
@@ -3623,8 +3622,10 @@ function SimulatorContent() {
 
         <div
           className={`flex-1 flex flex-col min-h-0 w-full transition-all duration-200 ${
-            userZoomLevel > 1 || isInputFocused
+            userZoomLevel > 1
               ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
+              : isInputFocused
+              ? "items-center justify-start overflow-y-auto overflow-x-hidden touch-pan-y py-1 px-1"
               : isFocusMode
               ? "items-center justify-center overflow-hidden py-0 px-1"
               : "items-center justify-center overflow-hidden p-2"
@@ -3636,7 +3637,7 @@ function SimulatorContent() {
           }
         >
           {(() => {
-            const currentZoom = isInputFocused ? Math.max(userZoomLevel, 1.2) : userZoomLevel;
+            const currentZoom = userZoomLevel;
             const finalScale = terminalScale * currentZoom;
             return (
               <div
@@ -5662,9 +5663,16 @@ function SimulatorContent() {
                         </div>
                       )}
                     </div>
-                    <form onSubmit={handleBarcodeSubmit}>
+                    <form onSubmit={handleBarcodeSubmit} autoComplete="off">
                       <input
                         ref={barcodeRef}
+                        type="text"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                        data-form-type="other"
                         value={barcodeInput}
                         onChange={(e) => setBarcodeInput(e.target.value)}
                         placeholder={
@@ -6021,11 +6029,9 @@ function SimulatorContent() {
       })()}
       </div>
 
-        {/* Touch Key Strip Footer - Consumes the whole width below the terminal */}
+        {/* Left-Side Toggleable Shortcut Keys Drawer (ENTER, ESC, TAB, Alt+B, Alt+Enter, Cancel) */}
         {(isFocusMode || terminalScale < 1) && (
-          <div className="w-full shrink-0 z-30">
-            <MobileKeyStrip onKeyPress={handleSyntheticKeyPress} />
-          </div>
+          <MobileKeyStrip onKeyPress={handleSyntheticKeyPress} />
         )}
       </div>
         );

@@ -103,6 +103,7 @@ export function TransactionCommentScreen({
       <div className="flex-1 bg-[#BDC3C7] flex items-center justify-center p-4 min-h-0 overflow-y-auto">
         <form
           onSubmit={handleSubmit}
+          autoComplete="off"
           className="w-[390px] bg-[#D4D0C8] border-4 border-[#2E7D32] shadow-2xl font-sans"
         >
           {/* Green Header */}
@@ -120,6 +121,12 @@ export function TransactionCommentScreen({
               <input
                 ref={nameInputRef}
                 type="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="CUSTOMER NAME"
@@ -127,6 +134,12 @@ export function TransactionCommentScreen({
               />
               <input
                 type="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 value={tin}
                 onChange={(e) => setTin(e.target.value)}
                 placeholder="TIN (000-000-000)"
@@ -134,6 +147,12 @@ export function TransactionCommentScreen({
               />
               <input
                 type="text"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="ADDRESS"

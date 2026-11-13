@@ -82,7 +82,14 @@ export function PriceChangeModal({
                   Supervisor / Manager PIN:
                 </label>
                 <input
-                  type="password"
+                  type="text"
+                  style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
                   value={supervisorPass}
                   onChange={(e) => setSupervisorPass(e.target.value)}
                   placeholder="Enter 9999 or 1234"

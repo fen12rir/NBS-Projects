@@ -51,7 +51,14 @@ export function UserLoginScreen({
 
             <div>
               <input
-                type="password"
+                type="text"
+                style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
+                data-lpignore="true"
+                data-form-type="other"
                 value={loginPassword}
                 onChange={(e) => onPasswordChange(e.target.value)}
                 placeholder="Password (e.g. ******)"

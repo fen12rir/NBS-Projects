@@ -212,7 +212,14 @@ export function ReturnRefundScreen({
                 </div>
                 <div className="flex flex-col items-center">
                   <input
-                    type="password"
+                    type="text"
+                    style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-lpignore="true"
+                    data-form-type="other"
                     value={managerPassword}
                     onChange={(e) => {
                       setManagerPassword(e.target.value);

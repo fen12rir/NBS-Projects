@@ -113,7 +113,14 @@ export function ManagerOverrideScreen({
 
               <div className="flex flex-col items-center">
                 <input
-                  type="password"
+                  type="text"
+                  style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-lpignore="true"
+                  data-form-type="other"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   onFocus={() => setFocusedField("PASSWORD")}
