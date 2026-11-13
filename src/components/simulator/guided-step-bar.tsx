@@ -29,6 +29,7 @@ interface GuidedStepBarProps {
   onSelectScenario: (scenarioId: string | null) => void;
   onFillBarcode: (code: string) => void;
   remainingSeconds?: number | null;
+  pageNudge?: string | null;
 }
 
 const SAMPLE_BARCODES = [
@@ -50,7 +51,8 @@ export function GuidedStepBar({
   activeHint,
   onSelectScenario,
   onFillBarcode,
-  remainingSeconds
+  remainingSeconds,
+  pageNudge
 }: GuidedStepBarProps) {
   // Free Exploration Sandbox
   if (!scenario) {
@@ -133,7 +135,7 @@ export function GuidedStepBar({
             )}
             <span>{isLessonPractice ? "PRACTICE" : "ASSESSMENT"}:</span>
           </span>
-          <span className="text-[11px] text-gray-200 truncate font-semibold">
+          <span className="text-[11px] text-gray-200 line-clamp-1 sm:line-clamp-none font-semibold">
             {scenario.title}
           </span>
         </div>
@@ -167,9 +169,9 @@ export function GuidedStepBar({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2 pt-0.5">
-        <div className="min-w-0 flex-1">
-          <div className="text-[11px] sm:text-xs font-semibold text-gray-200 truncate">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 pt-0.5">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="text-[11px] sm:text-xs font-semibold text-gray-200 whitespace-normal break-words leading-snug">
             {isFinished ? (
               <div className="text-emerald-400 font-bold flex items-center space-x-1 text-xs">
                 <CheckCircle className="w-3.5 h-3.5 shrink-0" />
@@ -183,15 +185,20 @@ export function GuidedStepBar({
               </span>
             )}
           </div>
+          {pageNudge && !isFinished && (
+            <div className="text-[10px] sm:text-[11px] bg-amber-950/90 border border-amber-500/80 text-amber-200 px-2 py-0.5 font-mono whitespace-normal break-words leading-snug rounded">
+              {pageNudge}
+            </div>
+          )}
           {activeHint && !isFinished && (
-            <div className="text-[10px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-1.5 py-0.5 font-mono flex items-center space-x-1 mt-0.5 rounded">
-              <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0" />
-              <span className="truncate"><strong>Hint:</strong> {activeHint}</span>
+            <div className="text-[10px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-1.5 py-0.5 font-mono flex items-start space-x-1 mt-0.5 rounded">
+              <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0 mt-0.5" />
+              <span className="whitespace-normal break-words leading-snug"><strong>Hint:</strong> {activeHint}</span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center space-x-1 shrink-0">
+        <div className="flex items-center space-x-1 shrink-0 self-end sm:self-center">
           {!isFinished ? (
             <>
               <Button

@@ -222,6 +222,16 @@ function SimulatorContent() {
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
   const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      const ios =
+        /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      setIsIOS(ios);
+    }
+  }, []);
 
   // POS Green & Silver Alert Modal state
   const [posAlert, setPosAlert] = useState<PosAlertState | null>(null);
@@ -2298,67 +2308,89 @@ function SimulatorContent() {
     return actionMatches && dataMatches;
   };
 
+  const NAV_ACTIONS = new Set([
+    "NAV_SECOND",
+    "NAV_THIRD",
+    "NAV_FOURTH",
+    "NAV_MAIN",
+    "PAGE_UP",
+    "PAGE_DOWN",
+  ]);
+
+  const SCREEN_OF_ACTION: Record<string, "MAIN" | "SECOND" | "THIRD" | "FOURTH"> = {
+    ADD_ITEM: "MAIN",
+    SET_QTY: "MAIN",
+    SET_QTY_MODE: "MAIN",
+    CONFIRM_QTY: "MAIN",
+    GO_PAYMENT: "MAIN",
+    NON_MDSE: "MAIN",
+    ITEM_VOID: "MAIN",
+    TRX_VOID: "MAIN",
+    SUSPEND: "MAIN",
+    LOOKUP: "MAIN",
+    CSA_TOGGLE: "MAIN",
+    PRICE_CHANGE: "SECOND",
+    TRX_DISC: "SECOND",
+    DISCOUNT: "SECOND",
+    RECALL: "SECOND",
+    LOGOUT: "SECOND",
+    TRIGGER_LOGOUT: "SECOND",
+    NO_SALE: "SECOND",
+    ON_OFF_DISCOUNT: "SECOND",
+    TOGGLE_DISC: "SECOND",
+    REPRINT: "SECOND",
+    TRX_JOURNAL: "THIRD",
+    SALES_JOURNAL: "THIRD",
+    READING_Y: "THIRD",
+    READING_Z: "THIRD",
+    SDV: "THIRD",
+    SDV_CHECK: "THIRD",
+    POST_VOID: "THIRD",
+    TRX_COMMENT: "FOURTH",
+    NON_SALES: "FOURTH",
+    ZERO_RATED: "FOURTH",
+    RETURN: "FOURTH",
+    RETURN_EXCHANGE: "FOURTH",
+    REFUND: "FOURTH",
+    BONUS_BUY: "FOURTH",
+    BEST_BUY: "FOURTH",
+  };
+
+  const SCREEN_LABEL: Record<"MAIN" | "SECOND" | "THIRD" | "FOURTH", string> = {
+    MAIN: "Main Screen",
+    SECOND: "2nd Screen",
+    THIRD: "3rd Screen",
+    FOURTH: "4th Screen",
+  };
+
+  const activePageNudge = (() => {
+    if (!activeScenario || isExamCompleted || isExamMode) return null;
+    const step = activeScenario.steps[currentStepIndex];
+    if (!step) return null;
+    const targetScreen = SCREEN_OF_ACTION[step.expectedAction];
+    if (!targetScreen || state.currentPage === targetScreen) return null;
+    const currentLabel = SCREEN_LABEL[state.currentPage as keyof typeof SCREEN_LABEL] || state.currentPage;
+    const targetLabel = SCREEN_LABEL[targetScreen];
+    if (targetScreen === "MAIN") {
+      return `You are on the ${currentLabel}. Press F12 (or Page Down) to return to the Main Screen.`;
+    }
+    return `You are on the ${currentLabel}. Use F5 (Page Down) or F12 (Main) to navigate to the ${targetLabel}.`;
+  })();
+
   const isActionAllowedInScenario = (actionId: string, dataVal?: string | number): boolean => {
     if (isStepMatch(actionId, dataVal)) return true;
     if (!activeScenario || isExamCompleted) return true;
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return true;
 
-    // Target Screen Navigation
-    const SCREEN_OF_ACTION: Record<string, "MAIN" | "SECOND" | "THIRD" | "FOURTH"> = {
-      SET_QTY: "MAIN",
-      SET_QTY_MODE: "MAIN",
-      GO_PAYMENT: "MAIN",
-      NON_MDSE: "MAIN",
-      ITEM_VOID: "MAIN",
-      TRX_VOID: "MAIN",
-      SUSPEND: "MAIN",
-      LOOKUP: "MAIN",
-      CSA_TOGGLE: "MAIN",
-      PRICE_CHANGE: "SECOND",
-      TRX_DISC: "SECOND",
-      DISCOUNT: "SECOND",
-      RECALL: "SECOND",
-      LOGOUT: "SECOND",
-      TRIGGER_LOGOUT: "SECOND",
-      NO_SALE: "SECOND",
-      ON_OFF_DISCOUNT: "SECOND",
-      TOGGLE_DISC: "SECOND",
-      REPRINT: "SECOND",
-      TRX_JOURNAL: "THIRD",
-      SALES_JOURNAL: "THIRD",
-      READING_Y: "THIRD",
-      READING_Z: "THIRD",
-      SDV: "THIRD",
-      SDV_CHECK: "THIRD",
-      POST_VOID: "THIRD",
-      TRX_COMMENT: "FOURTH",
-      NON_SALES: "FOURTH",
-      ZERO_RATED: "FOURTH",
-      RETURN: "FOURTH",
-      RETURN_EXCHANGE: "FOURTH",
-      REFUND: "FOURTH",
-      BONUS_BUY: "FOURTH",
-      BEST_BUY: "FOURTH",
-    };
+    // Allow non-destructive page navigation (F5 / F12 / Page Up / Page Down) without penalty
+    if (NAV_ACTIONS.has(actionId)) {
+      return true;
+    }
 
-    const targetScreen = SCREEN_OF_ACTION[currentStep.expectedAction];
-    if (targetScreen) {
-      if (actionId === "NAV_SECOND" && state.currentPage === "MAIN" && targetScreen !== "MAIN") {
-        return true;
-      }
-      if (actionId === "NAV_THIRD" && state.currentPage === "SECOND" && (targetScreen === "THIRD" || targetScreen === "FOURTH")) {
-        return true;
-      }
-      if (actionId === "NAV_FOURTH" && state.currentPage === "THIRD" && targetScreen === "FOURTH") {
-        return true;
-      }
-      if ((actionId === "PAGE_DOWN" || actionId === "NAV_MAIN") && targetScreen === "MAIN") {
-        return true;
-      }
-      if (actionId === "PAGE_UP" || actionId === "PAGE_DOWN") {
-        return true;
-      }
+    // In Lesson Practice mode, allow backing out of sub-screens without penalty
+    if (activeScenario.lessonRef && (actionId === "PAY_BACK" || actionId === "CLOSE_LOOKUP")) {
+      return true;
     }
 
     return false;
@@ -2628,6 +2660,16 @@ function SimulatorContent() {
     }
 
     // Strict navigation validation per target screen
+
+    // Allow switching between POS function-key pages without recording a mistake
+    if (NAV_ACTIONS.has(actionId)) {
+      return true;
+    }
+
+    // In Lesson Practice mode, allow backing out of sub-screens without recording a mistake
+    if (activeScenario.lessonRef && (actionId === "PAY_BACK" || actionId === "CLOSE_LOOKUP")) {
+      return true;
+    }
 
     // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
     if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
@@ -3398,36 +3440,52 @@ function SimulatorContent() {
             onSelectScenario={handleSelectScenario}
             onFillBarcode={handleFillBarcode}
             remainingSeconds={remainingSeconds}
+            pageNudge={activePageNudge}
           />
         )
       )}
 
-      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode) */}
+      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode; pauses CSS rotation on iOS while editing an input) */}
+      {(() => {
+        const shouldCssRotate =
+          isFocusMode && isPortrait && forceRotatePortrait && !(isIOS && isInputFocused);
+        return (
       <div
         className={`${
           isFocusMode
-            ? isPortrait && forceRotatePortrait
+            ? shouldCssRotate
               ? "fixed z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
               : "fixed inset-0 z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
             : "flex-1 p-2 sm:p-4 flex flex-col items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0"
         }`}
         style={
-          isFocusMode && isPortrait && forceRotatePortrait
+          shouldCssRotate
             ? {
-                width: "100vh",
-                height: "100vw",
+                width: "100dvh",
+                height: "100dvw",
                 position: "fixed",
                 top: 0,
                 left: "100%",
                 transform: "rotate(90deg)",
                 transformOrigin: "top left",
+                paddingTop: "env(safe-area-inset-left)",
+                paddingBottom: "env(safe-area-inset-right)",
+                paddingLeft: "env(safe-area-inset-top)",
+                paddingRight: "env(safe-area-inset-bottom)",
+              }
+            : isFocusMode
+            ? {
+                paddingTop: "env(safe-area-inset-top)",
+                paddingBottom: "env(safe-area-inset-bottom)",
+                paddingLeft: "env(safe-area-inset-left)",
+                paddingRight: "env(safe-area-inset-right)",
               }
             : undefined
         }
       >
         {isFocusMode && (
-          <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-20 shrink-0">
-            <div className="flex items-center space-x-2 min-w-0">
+          <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-20 shrink-0 gap-2">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
               <span className="font-bold text-red-500 uppercase tracking-wider text-[11px] shrink-0">
                 NBS POS FOCUS MODE
               </span>
@@ -3435,17 +3493,17 @@ function SimulatorContent() {
                 <button
                   type="button"
                   onClick={() => setIsFocusHeaderExpanded(true)}
-                  className="hidden xs:flex items-center space-x-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] px-2 py-0.5 rounded cursor-pointer truncate border border-gray-700 text-left"
+                  className="flex items-center space-x-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] px-2 py-0.5 rounded cursor-pointer min-w-0 border border-gray-700 text-left"
                   title="Click to view full instructions"
                 >
-                  <span className="truncate max-w-[160px] sm:max-w-xs text-emerald-400 font-medium">
+                  <span className="line-clamp-1 text-emerald-400 font-medium">
                     {isExamMode && examSession
                       ? `Customer #${examCaseIndex + 1}/${examSession.cases.length}: ${examSession.cases[examCaseIndex]?.customerName || "Customer"}`
                       : activeScenario
                       ? `${activeScenario.title} (Step ${currentStepIndex + 1}/${activeScenario.steps.length})`
                       : "Free Exploration Sandbox"}
                   </span>
-                  <span className="text-gray-400 text-[9px] shrink-0 font-mono">(Hidden)</span>
+                  <span className="text-gray-400 text-[9px] shrink-0 font-mono">(Guide)</span>
                 </button>
               )}
             </div>
@@ -3557,6 +3615,7 @@ function SimulatorContent() {
                 onSelectScenario={handleSelectScenario}
                 onFillBarcode={handleFillBarcode}
                 remainingSeconds={remainingSeconds}
+                pageNudge={activePageNudge}
               />
             )}
           </div>
@@ -5969,6 +6028,8 @@ function SimulatorContent() {
           </div>
         )}
       </div>
+        );
+      })()}
 
       {/* CHANGE CHECK EXAM MODAL */}
       <ChangeCheckModal

@@ -43,6 +43,14 @@
   body {
     @apply bg-gray-50 text-gray-900 antialiased font-sans;
   }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
 }
 
 @layer components {
