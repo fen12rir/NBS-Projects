@@ -501,6 +501,9 @@ function SimulatorContent() {
         (screen as any).lockOrientation("landscape");
       }
     } catch {}
+
+    setTimeout(checkViewport, 100);
+    setTimeout(checkViewport, 350);
   };
 
   const exitFocusMode = async (triggerHistoryBack = true) => {
@@ -845,9 +848,13 @@ function SimulatorContent() {
     checkViewport();
     window.addEventListener("resize", checkViewport);
     window.addEventListener("orientationchange", checkViewport);
+    document.addEventListener("fullscreenchange", checkViewport);
+    document.addEventListener("webkitfullscreenchange", checkViewport);
     return () => {
       window.removeEventListener("resize", checkViewport);
       window.removeEventListener("orientationchange", checkViewport);
+      document.removeEventListener("fullscreenchange", checkViewport);
+      document.removeEventListener("webkitfullscreenchange", checkViewport);
     };
   }, [isFocusMode, forceRotatePortrait, isFocusHeaderExpanded, isExternalReceiptShowing]);
 
@@ -3637,15 +3644,21 @@ function SimulatorContent() {
         style={
           shouldCssRotate
             ? {
-                width: lockedScreenSize.height ? `${lockedScreenSize.height}px` : "100lvh",
-                height: lockedScreenSize.width ? `${lockedScreenSize.width}px` : "100vw",
+                width:
+                  isIOS && isInputFocused && lockedScreenSize.height
+                    ? `${lockedScreenSize.height}px`
+                    : "100dvh",
+                height:
+                  isIOS && isInputFocused && lockedScreenSize.width
+                    ? `${lockedScreenSize.width}px`
+                    : "100dvw",
                 position: "fixed",
-                top: `${vvOffsetTop}px`,
+                top: isIOS && isInputFocused ? `${vvOffsetTop}px` : 0,
                 left: "100%",
                 transform: "rotate(90deg)",
                 transformOrigin: "top left",
               }
-            : isFocusMode && vvOffsetTop > 0
+            : isFocusMode && isIOS && isInputFocused && vvOffsetTop > 0
             ? {
                 top: `${vvOffsetTop}px`,
               }
