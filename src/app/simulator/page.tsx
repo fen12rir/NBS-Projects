@@ -218,6 +218,7 @@ function SimulatorContent() {
   const [userZoomLevel, setUserZoomLevel] = useState(1);
   const [isInputFocused, setIsInputFocused] = useState(false);
   const isInputFocusedRef = useRef(false);
+  const isExamCompletedRef = useRef(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [keyboardShiftY, setKeyboardShiftY] = useState(0);
   const keyboardShiftRef = useRef(0);
@@ -358,6 +359,28 @@ function SimulatorContent() {
           window.innerHeight < 520 ||
           window.innerHeight > window.innerWidth ||
           "ontouchstart" in window);
+
+      const isTouchMobile =
+        typeof window !== "undefined" &&
+        (window.innerWidth < 900 ||
+          window.innerHeight < 520 ||
+          Boolean(window.matchMedia?.("(pointer: coarse)").matches));
+
+      // Never allow an input to focus or trigger the keyboard when the completion modal is open,
+      // or on mobile touch devices when autoFocus fires from a button/screen transition instead of a user tap.
+      if (
+        isEditableElement(target) &&
+        (isExamCompletedRef.current || (isTouchMobile && !isUserTap && !isInputFocusedRef.current))
+      ) {
+        target?.blur();
+        isInputFocusedRef.current = false;
+        setIsInputFocused(false);
+        setKeyboardInset(0);
+        keyboardShiftRef.current = 0;
+        setKeyboardShiftY(0);
+        isUserTap = false;
+        return;
+      }
 
       // Keep keyboard-safe layout active on mobile when tapped or tabbing between fields
       if (isMobile && isEditableElement(target) && (isUserTap || isInputFocusedRef.current)) {
@@ -838,10 +861,34 @@ function SimulatorContent() {
   const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null);
   const hasRecordedAttemptRef = useRef(false);
 
-  // Auto-quit Focus Mode when practice scenario or assessment completes
+  const completeScenario = () => {
+    isExamCompletedRef.current = true;
+    setIsExamCompleted(true);
+    isInputFocusedRef.current = false;
+    setIsInputFocused(false);
+    setKeyboardInset(0);
+    keyboardShiftRef.current = 0;
+    setKeyboardShiftY(0);
+    if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
+  // Auto-quit Focus Mode and blur any active input when practice scenario or assessment completes
   useEffect(() => {
-    if ((isExamCompleted || timedOut) && isFocusMode) {
-      exitFocusMode();
+    isExamCompletedRef.current = isExamCompleted || timedOut;
+    if (isExamCompleted || timedOut) {
+      isInputFocusedRef.current = false;
+      setIsInputFocused(false);
+      setKeyboardInset(0);
+      keyboardShiftRef.current = 0;
+      setKeyboardShiftY(0);
+      if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+      if (isFocusMode) {
+        exitFocusMode();
+      }
     }
   }, [isExamCompleted, timedOut, isFocusMode]);
 
@@ -974,8 +1021,8 @@ function SimulatorContent() {
   };
 
   const handleReloadToLogin = () => {
-    setTerminalMode("USER_LOGIN");
     validateScenarioStep("RELOAD_POS_LOGIN");
+    setTerminalMode("USER_LOGIN");
     if (isExamMode) logExamAction("RELOAD_POS_LOGIN");
   };
 
@@ -2486,7 +2533,7 @@ function SimulatorContent() {
     }
     const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
     const finalGraded = gradeExamSession(examSession, caseResults, totalExamTime);
-    setIsExamCompleted(true);
+    completeScenario();
 
     const attemptId = `att-prac-${Date.now()}`;
     recordScenarioAttempt({
@@ -2597,7 +2644,7 @@ function SimulatorContent() {
       }
       const totalExamTime = Math.round((Date.now() - scenarioStartTime) / 1000);
       const finalGraded = gradeExamSession(examSession, updatedCaseResults, totalExamTime);
-      setIsExamCompleted(true);
+      completeScenario();
       isAdvancingCaseRef.current = false;
 
       const attemptId = `att-prac-${Date.now()}`;
@@ -2686,7 +2733,7 @@ function SimulatorContent() {
           const finishedIndex = nextIndex + 1;
           setCurrentStepIndex(finishedIndex);
           if (finishedIndex >= activeScenario.steps.length) {
-            setIsExamCompleted(true);
+            completeScenario();
           }
           return true;
         }
@@ -2719,7 +2766,7 @@ function SimulatorContent() {
       }
       setCurrentStepIndex(nextIndex);
       if (nextIndex >= activeScenario.steps.length) {
-        setIsExamCompleted(true);
+        completeScenario();
       } else {
         const nextExpected = activeScenario.steps[nextIndex]?.expectedAction;
         const isFinishingPayment =
@@ -2782,7 +2829,7 @@ function SimulatorContent() {
       const nextIndex = nextStep?.expectedAction === "CLOSE_LOOKUP" ? currentStepIndex + 2 : currentStepIndex + 1;
       setCurrentStepIndex(nextIndex);
       if (nextIndex >= activeScenario.steps.length) {
-        setIsExamCompleted(true);
+        completeScenario();
       }
       return true;
     }
@@ -3249,6 +3296,7 @@ function SimulatorContent() {
     setMistakes([]);
     setHintsUsed(0);
     setActiveHint(null);
+    isExamCompletedRef.current = false;
     setIsExamCompleted(false);
     setTimedOut(false);
     setCompletedAttemptId(null);
@@ -3335,6 +3383,7 @@ function SimulatorContent() {
     setMistakes([]);
     setHintsUsed(0);
     setActiveHint(null);
+    isExamCompletedRef.current = false;
     setIsExamCompleted(false);
     setTimedOut(false);
     setCompletedAttemptId(null);
@@ -3818,6 +3867,11 @@ function SimulatorContent() {
                 setLoginUsername("");
                 setLoginPassword("");
               }}
+              autoFocus={
+                !isExamCompleted &&
+                !timedOut &&
+                !(activeScenario && currentStepIndex >= activeScenario.steps.length)
+              }
             />
           )}
 

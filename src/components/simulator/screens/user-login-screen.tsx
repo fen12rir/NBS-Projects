@@ -7,6 +7,7 @@ interface UserLoginScreenProps {
   onPasswordChange: (val: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   onCancel: () => void;
+  autoFocus?: boolean;
 }
 
 export function UserLoginScreen({
@@ -16,6 +17,7 @@ export function UserLoginScreen({
   onPasswordChange,
   onSubmit,
   onCancel,
+  autoFocus = true,
 }: UserLoginScreenProps) {
   return (
     <div className="flex-1 h-full min-h-0 bg-white flex flex-col select-none relative">
@@ -42,7 +44,7 @@ export function UserLoginScreen({
                 onChange={(e) => onUsernameChange(e.target.value)}
                 placeholder="UserName (e.g. 241209)"
                 className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
-                autoFocus
+                autoFocus={autoFocus}
               />
               <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
                 UserName (Default: 241209)
