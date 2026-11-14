@@ -33,6 +33,11 @@ import { CustomerPanel } from "@/components/simulator/customer-panel";
 import { ChangeCheckModal } from "@/components/simulator/modals/change-check-modal";
 import { PosAlertModal, PosAlertState } from "@/components/simulator/modals/pos-alert-modal";
 import { MobileKeyStrip } from "@/components/simulator/mobile-key-strip";
+import {
+  OnScreenKeyboard,
+  type OnScreenKeyboardHandle,
+  isTextEditable,
+} from "@/components/simulator/on-screen-keyboard";
 import { LogoutScreen } from "@/components/simulator/screens/logout-screen";
 import { LnqrUpdatedModal } from "@/components/simulator/modals/lnqr-updated-modal";
 import { ScenarioCompleteModal } from "@/components/simulator/modals/scenario-complete-modal";
@@ -233,6 +238,95 @@ function SimulatorContent() {
   const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(true);
   const [isIOS, setIsIOS] = useState(false);
 
+  // In-app on-screen keyboard (touch devices): always matches the POS orientation (even with
+  // iPhone Rotation Lock), never resizes the viewport, and hides the iOS AutoFill bar.
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [preferAppKeyboard, setPreferAppKeyboard] = useState(true);
+  const [oskFocusedField, setOskFocusedField] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const [oskShiftY, setOskShiftY] = useState(0);
+  const oskShiftRef = useRef(0);
+  const oskEnabledRef = useRef(false);
+  const oskLayerRef = useRef<HTMLDivElement>(null);
+  const oskRef = useRef<OnScreenKeyboardHandle>(null);
+  const oskEnabled = isTouchDevice && preferAppKeyboard;
+  oskEnabledRef.current = oskEnabled;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const touch =
+      Boolean(window.matchMedia?.("(pointer: coarse)").matches) ||
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100);
+    setIsTouchDevice(touch);
+    try {
+      if (window.localStorage.getItem("nbs-pos-keyboard") === "device") {
+        setPreferAppKeyboard(false);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    const stamp = (el: Element) => {
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+      const isTextField = isTextEditable(el as Element) || el.readOnly || el.disabled;
+      if (!isTextField) return;
+      if (!el.hasAttribute("data-osk-orig-inputmode")) {
+        el.setAttribute("data-osk-orig-inputmode", el.getAttribute("inputmode") ?? "");
+      }
+      el.setAttribute("inputmode", "none");
+    };
+    const restoreAll = () => {
+      document.querySelectorAll("[data-osk-orig-inputmode]").forEach((el) => {
+        const orig = el.getAttribute("data-osk-orig-inputmode");
+        if (orig) el.setAttribute("inputmode", orig);
+        else el.removeAttribute("inputmode");
+        el.removeAttribute("data-osk-orig-inputmode");
+      });
+    };
+
+    if (!oskEnabled) {
+      restoreAll();
+      return;
+    }
+
+    document.querySelectorAll("input, textarea").forEach(stamp);
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+          stamp(node);
+          node.querySelectorAll?.("input, textarea").forEach(stamp);
+        });
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const syncFocused = () => {
+      const active = document.activeElement;
+      setOskFocusedField(isTextEditable(active) ? active : null);
+    };
+    const handleFocusIn = (e: FocusEvent) => {
+      if (e.target instanceof Element) stamp(e.target);
+      syncFocused();
+    };
+    let outTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleFocusOut = () => {
+      if (outTimer) clearTimeout(outTimer);
+      outTimer = setTimeout(syncFocused, 60);
+    };
+    window.addEventListener("focusin", handleFocusIn, true);
+    window.addEventListener("focusout", handleFocusOut, true);
+    syncFocused();
+
+    return () => {
+      observer.disconnect();
+      if (outTimer) clearTimeout(outTimer);
+      window.removeEventListener("focusin", handleFocusIn, true);
+      window.removeEventListener("focusout", handleFocusOut, true);
+      setOskFocusedField(null);
+    };
+  }, [oskEnabled]);
+
   useEffect(() => {
     if (typeof navigator !== "undefined") {
       const ios =
@@ -321,6 +415,17 @@ function SimulatorContent() {
       if (typeof window === "undefined") return;
       if (window.scrollY !== 0 || window.scrollX !== 0) {
         window.scrollTo(0, 0);
+      }
+
+      // In-app keyboard: no native keyboard -> no viewport resize, so skip native keyboard compensation
+      if (oskEnabledRef.current) {
+        wasKeyboardOpen = false;
+        if (keyboardShiftRef.current !== 0) {
+          keyboardShiftRef.current = 0;
+          setKeyboardShiftY(0);
+        }
+        setVvOffsetTop(0);
+        return;
       }
 
       const vv = window.visualViewport;
@@ -870,6 +975,78 @@ function SimulatorContent() {
       document.removeEventListener("webkitfullscreenchange", checkViewport);
     };
   }, [isFocusMode, forceRotatePortrait, isFocusHeaderExpanded, isExternalReceiptShowing]);
+
+  const isCssRotated = isFocusMode && isPortrait && forceRotatePortrait;
+  const showOsk = oskEnabled && oskFocusedField !== null;
+
+  // Keep the focused POS field just above the in-app keyboard (computed in the app's own,
+  // possibly CSS-rotated, coordinate space so it works the same with Rotation Lock on).
+  useEffect(() => {
+    if (!showOsk || !oskFocusedField) {
+      if (oskShiftRef.current !== 0) {
+        oskShiftRef.current = 0;
+        setOskShiftY(0);
+      }
+      return;
+    }
+    const raf = requestAnimationFrame(() => {
+      const layer = oskLayerRef.current;
+      const kbHeight = oskRef.current?.getHeight() ?? 0;
+      const field = oskFocusedField;
+      if (!layer || !kbHeight || !field.isConnected) return;
+      if (!posViewportRef.current?.contains(field)) {
+        if (oskShiftRef.current !== 0) {
+          oskShiftRef.current = 0;
+          setOskShiftY(0);
+        }
+        return;
+      }
+      const layerRect = layer.getBoundingClientRect();
+      const r = field.getBoundingClientRect();
+      // rotate(90deg): local "top" is the screen's right edge
+      const localTop = isCssRotated ? layerRect.right - r.right : r.top - layerRect.top;
+      const localBottom = isCssRotated ? layerRect.right - r.left : r.bottom - layerRect.top;
+      const current = oskShiftRef.current;
+      const unshiftedTop = localTop - current;
+      const unshiftedBottom = localBottom - current;
+      const kbTop = layer.offsetHeight - kbHeight - 8;
+      let next = 0;
+      if (unshiftedBottom > kbTop) {
+        next = Math.round(kbTop - unshiftedBottom);
+        // never push the field above the top edge
+        next = Math.max(next, Math.round(4 - unshiftedTop));
+      }
+      if (next !== current) {
+        oskShiftRef.current = next;
+        setOskShiftY(next);
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [showOsk, oskFocusedField, isCssRotated, terminalScale, isFocusMode, isPortrait]);
+
+  const hideOnScreenKeyboard = () => {
+    const active = document.activeElement as HTMLElement | null;
+    active?.blur();
+    setOskFocusedField(null);
+  };
+
+  const switchToDeviceKeyboard = () => {
+    try {
+      window.localStorage.setItem("nbs-pos-keyboard", "device");
+    } catch {}
+    const active = document.activeElement as HTMLElement | null;
+    active?.blur();
+    setPreferAppKeyboard(false);
+  };
+
+  const toggleKeyboardMode = () => {
+    const nextApp = !preferAppKeyboard;
+    try {
+      window.localStorage.setItem("nbs-pos-keyboard", nextApp ? "app" : "device");
+    } catch {}
+    (document.activeElement as HTMLElement | null)?.blur();
+    setPreferAppKeyboard(nextApp);
+  };
 
   const [showItemNotFound, setShowItemNotFound] = useState(false);
 
@@ -3847,7 +4024,9 @@ function SimulatorContent() {
                   height: `${Math.round(600 * finalScale)}px`,
                   position: "relative",
                   transform:
-                    isInputFocused && keyboardShiftY !== 0
+                    oskShiftY !== 0
+                      ? `translateY(${oskShiftY}px)`
+                      : isInputFocused && keyboardShiftY !== 0
                       ? shouldCssRotate
                         ? `translateX(${keyboardShiftY}px)`
                         : `translateY(${keyboardShiftY}px)`
@@ -6243,11 +6422,44 @@ function SimulatorContent() {
 
         {/* Left-Side Toggleable Shortcut Keys Drawer (ENTER, ESC, TAB, Alt+B, Alt+Enter, Cancel) */}
         {(isFocusMode || terminalScale < 1) && (
-          <MobileKeyStrip onKeyPress={handleSyntheticKeyPress} />
+          <MobileKeyStrip
+            onKeyPress={handleSyntheticKeyPress}
+            keyboardMode={isTouchDevice ? (preferAppKeyboard ? "app" : "device") : undefined}
+            onToggleKeyboardMode={isTouchDevice ? toggleKeyboardMode : undefined}
+          />
         )}
       </div>
         );
       })()}
+
+      {/* In-app on-screen keyboard layer (rotated together with the POS when CSS-forced landscape) */}
+      {showOsk && (
+        <div
+          ref={oskLayerRef}
+          className="fixed z-[400] pointer-events-none flex flex-col justify-end"
+          style={
+            isCssRotated
+              ? {
+                  width: "100dvh",
+                  height: "100dvw",
+                  top: 0,
+                  left: "100%",
+                  transform: "rotate(90deg)",
+                  transformOrigin: "top left",
+                }
+              : { top: 0, left: 0, right: 0, bottom: 0 }
+          }
+        >
+          <div className="pointer-events-auto">
+            <OnScreenKeyboard
+              ref={oskRef}
+              compact={isCssRotated || !isPortrait}
+              onHide={hideOnScreenKeyboard}
+              onUseDeviceKeyboard={switchToDeviceKeyboard}
+            />
+          </div>
+        </div>
+      )}
 
       {/* CHANGE CHECK EXAM MODAL */}
       <ChangeCheckModal

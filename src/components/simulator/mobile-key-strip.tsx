@@ -5,9 +5,11 @@ import { ChevronLeft, ChevronRight, Keyboard } from "lucide-react";
 
 interface MobileKeyStripProps {
   onKeyPress: (key: string, altKey?: boolean, ctrlKey?: boolean) => void;
+  keyboardMode?: "app" | "device";
+  onToggleKeyboardMode?: () => void;
 }
 
-export function MobileKeyStrip({ onKeyPress }: MobileKeyStripProps) {
+export function MobileKeyStrip({ onKeyPress, keyboardMode, onToggleKeyboardMode }: MobileKeyStripProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const commonKeys = [
@@ -57,6 +59,16 @@ export function MobileKeyStrip({ onKeyPress }: MobileKeyStripProps) {
               {k.label}
             </button>
           ))}
+          {keyboardMode && onToggleKeyboardMode && (
+            <button
+              type="button"
+              onClick={onToggleKeyboardMode}
+              title="Switch between the in-app POS keyboard and the phone keyboard"
+              className="h-8 px-2 py-1 text-[10px] font-mono font-bold rounded border border-emerald-700 bg-emerald-950/80 text-emerald-300 active:scale-95 transition-transform cursor-pointer whitespace-nowrap"
+            >
+              Kbd: {keyboardMode === "app" ? "POS" : "Phone"}
+            </button>
+          )}
         </div>
       ) : (
         <button
