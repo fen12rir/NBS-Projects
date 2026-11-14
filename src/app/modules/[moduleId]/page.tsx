@@ -75,15 +75,17 @@ export default function ModuleDetailPage() {
     <LearningShell currentModuleId={moduleId}>
       <div className="max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Navigation Breadcrumb & Language Toggle */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2">
           <Link
             href="/dashboard"
-            className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B]"
+            className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B] min-w-0 flex-1"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{lang === "tl" ? "Bumalik sa Dashboard" : "Back to Dashboard"}</span>
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">{lang === "tl" ? "Bumalik sa Dashboard" : "Back to Dashboard"}</span>
           </Link>
-          <ModuleLanguageToggle lang={lang} onChange={setLang} />
+          <div className="shrink-0">
+            <ModuleLanguageToggle lang={lang} onChange={setLang} />
+          </div>
         </div>
 
         {/* Module Header Card */}

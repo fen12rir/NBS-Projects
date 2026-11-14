@@ -35,7 +35,9 @@ import {
   ZoomOut,
   RotateCcw,
   Volume2,
-  VolumeX
+  VolumeX,
+  Settings,
+  Globe
 } from "lucide-react";
 
 function LessonDetailContent() {
@@ -69,6 +71,19 @@ function LessonDetailContent() {
 
   const { lang, setLang } = useModuleLanguage();
   const { speechSupported, hasFilipinoVoice, isSpeaking, speak, stop } = useSpeech();
+  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
+  const optionsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOptionsOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (optionsRef.current && !optionsRef.current.contains(e.target as Node)) {
+        setIsOptionsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOptionsOpen]);
 
   useLockBodyScroll(Boolean(zoomedImage));
 
@@ -192,37 +207,111 @@ function LessonDetailContent() {
   return (
     <LearningShell currentModuleId={moduleId} currentLessonId={lessonId}>
       <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb & Language / Speech Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        {/* Navigation Breadcrumb & Settings Gear Dropdown (Single Row, Opposite Sides) */}
+        <div className="flex items-center justify-between gap-2">
           <Link
             href={`/modules/${currentModule.id}`}
-            className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B]"
+            className="inline-flex items-center space-x-1 text-xs font-semibold text-gray-500 hover:text-[#E4002B] min-w-0 flex-1"
           >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{lang === "tl" ? `Bumalik sa ${localizedModule.title}` : `Back to ${localizedModule.title}`}</span>
+            <ArrowLeft className="w-3.5 h-3.5 shrink-0" />
+            <span className="truncate">
+              {lang === "tl" ? `Bumalik sa ${localizedModule.title}` : `Back to ${localizedModule.title}`}
+            </span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            {speechSupported && (lang === "en" || hasFilipinoVoice) && (
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-xs font-mono text-gray-400 hidden sm:inline">
+              Source: {localizedLesson.deckSlideRef}
+            </span>
+
+            <div ref={optionsRef} className="relative shrink-0">
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={handleReadLesson}
-                className={`text-xs h-7 px-2.5 flex items-center gap-1 ${
-                  isSpeaking
-                    ? "bg-red-50 border-red-400 text-red-700 hover:bg-red-100"
-                    : "bg-emerald-50 border-emerald-400 text-emerald-800 hover:bg-emerald-100"
-                }`}
+                onClick={() => setIsOptionsOpen((prev) => !prev)}
+                className="text-xs h-7 px-2.5 flex items-center gap-1.5 border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                title="Lesson Options (Read Lesson & Language)"
+                aria-label="Lesson Settings"
+                aria-expanded={isOptionsOpen}
               >
-                {isSpeaking ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
-                <span>{isSpeaking ? (lang === "tl" ? "Ihinto" : "Stop") : (lang === "tl" ? "Basahin" : "Read Lesson")}</span>
+                <Settings className="w-3.5 h-3.5 text-[#E4002B] shrink-0" />
+                <span className="hidden xs:inline">{lang === "tl" ? "Opsyon" : "Options"}</span>
               </Button>
-            )}
-            <ModuleLanguageToggle lang={lang} onChange={setLang} />
-            <span className="text-xs font-mono text-gray-400 hidden sm:inline">
-              Source: {localizedLesson.deckSlideRef}
-            </span>
+
+              {isOptionsOpen && (
+                <div className="absolute right-0 top-full mt-1.5 z-50 w-52 bg-white border border-gray-200 rounded-md shadow-xl p-2 flex flex-col gap-2 font-sans text-xs">
+                  {speechSupported && (lang === "en" || hasFilipinoVoice) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleReadLesson();
+                        setIsOptionsOpen(false);
+                      }}
+                      className={`w-full px-2.5 py-2 rounded font-bold flex items-center justify-between transition-colors cursor-pointer ${
+                        isSpeaking
+                          ? "bg-red-50 border border-red-300 text-red-700 hover:bg-red-100"
+                          : "bg-emerald-50 border border-emerald-300 text-emerald-800 hover:bg-emerald-100"
+                      }`}
+                    >
+                      <span className="flex items-center gap-1.5">
+                        {isSpeaking ? (
+                          <VolumeX className="w-3.5 h-3.5 shrink-0" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5 shrink-0" />
+                        )}
+                        <span>
+                          {isSpeaking
+                            ? lang === "tl"
+                              ? "Ihinto ang Pagbasa"
+                              : "Stop Reading"
+                            : lang === "tl"
+                            ? "Basahin ang Aralin"
+                            : "Read Lesson"}
+                        </span>
+                      </span>
+                    </button>
+                  )}
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-500 px-1">
+                      <Globe className="w-3 h-3 text-[#E4002B] shrink-0" />
+                      <span>{lang === "tl" ? "Wika / Language" : "Language"}</span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 bg-gray-100 p-1 rounded border border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("en");
+                          setIsOptionsOpen(false);
+                        }}
+                        className={`py-1 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                          lang === "en"
+                            ? "bg-[#E4002B] text-white shadow-xs"
+                            : "text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        English
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setLang("tl");
+                          setIsOptionsOpen(false);
+                        }}
+                        className={`py-1 px-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                          lang === "tl"
+                            ? "bg-[#E4002B] text-white shadow-xs"
+                            : "text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        Tagalog
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
