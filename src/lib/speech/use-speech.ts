@@ -16,11 +16,72 @@ export function normalizePosSpeechText(raw: string): string {
 }
 
 function findFilipinoVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
-  return voices.find(
-    (v) =>
-      /^(fil|tl)\b/i.test(v.lang) ||
-      /filipino|tagalog/i.test(v.name)
-  );
+  return pickBestVoice(voices, "fil-PH");
+}
+
+// Robotic / novelty voices (mostly Apple "Eloquence" & effect voices) that should never be used
+const ROBOTIC_VOICE_RE =
+  /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|junior|organ|pipe organ|ralph|superstar|trinoids|whisper|wobble|zarvox|fred|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley|espeak)\b/i;
+
+// One consistent "character" across platforms: a warm US-English female voice
+// (Edge: Aria/Jenny Natural, Apple: Ava/Zoe/Samantha, Chrome: Google US English, Android: Google en-US).
+const PREFERRED_EN_NAMES = [
+  "aria",
+  "jenny",
+  "ava",
+  "zoe",
+  "allison",
+  "samantha",
+  "susan",
+  "emma",
+  "michelle",
+  "google us english",
+];
+const PREFERRED_FIL_NAMES = ["blessica", "rosa", "angelo"];
+const MALE_NAME_RE = /\b(guy|davis|tony|jason|christopher|eric|roger|steffan|brian|andrew|aaron|evan|nathan|tom|alex|daniel|fred|ralph|male)\b/i;
+
+function scoreVoice(v: SpeechSynthesisVoice, lang: "en-US" | "fil-PH"): number {
+  const name = v.name.toLowerCase();
+  const vLang = (v.lang || "").replace("_", "-").toLowerCase();
+  if (ROBOTIC_VOICE_RE.test(name)) return -1000;
+
+  let score = 0;
+  if (lang === "fil-PH") {
+    if (/^(fil|tl)\b/.test(vLang) || /filipino|tagalog/.test(name)) score += 200;
+    else return -1000;
+    PREFERRED_FIL_NAMES.forEach((n, i) => {
+      if (name.includes(n)) score += 40 - i * 5;
+    });
+  } else {
+    if (vLang === "en-us") score += 40;
+    else if (vLang.startsWith("en")) score += 10;
+    else return -1000;
+    PREFERRED_EN_NAMES.forEach((n, i) => {
+      if (name.includes(n)) score += 60 - i * 4;
+    });
+    if (MALE_NAME_RE.test(name)) score -= 30;
+  }
+
+  // Natural-sounding (neural / premium / cloud) voices first
+  if (/natural|neural|premium|wavenet|studio/.test(name)) score += 120;
+  if (/enhanced|online|network/.test(name)) score += 70;
+  if (/google/.test(name)) score += 50;
+  if (v.localService === false) score += 30;
+  if (/compact|legacy/.test(name)) score -= 40;
+  return score;
+}
+
+function pickBestVoice(voices: SpeechSynthesisVoice[], lang: "en-US" | "fil-PH"): SpeechSynthesisVoice | undefined {
+  let best: SpeechSynthesisVoice | undefined;
+  let bestScore = -Infinity;
+  for (const v of voices) {
+    const s = scoreVoice(v, lang);
+    if (s > bestScore) {
+      best = v;
+      bestScore = s;
+    }
+  }
+  return bestScore > -1000 ? best : undefined;
 }
 
 // Keep active utterance and timer at module scope so Chrome/Safari never garbage-collects it
@@ -104,11 +165,18 @@ export function useSpeech() {
         if (lang === "fil-PH" && filVoice) {
           utterance.voice = filVoice;
           utterance.lang = filVoice.lang;
-          utterance.rate = 0.9;
+          utterance.rate = 0.95;
         } else {
-          utterance.lang = "en-US";
-          utterance.rate = 0.98;
+          const enVoice = pickBestVoice(window.speechSynthesis.getVoices?.() || [], "en-US");
+          if (enVoice) {
+            utterance.voice = enVoice;
+            utterance.lang = enVoice.lang;
+          } else {
+            utterance.lang = "en-US";
+          }
+          utterance.rate = 1;
         }
+        utterance.pitch = 1;
 
         utterance.onend = () => {
           if (activeGlobalUtterance === utterance) {
