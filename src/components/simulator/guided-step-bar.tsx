@@ -408,17 +408,21 @@ export function GuidedStepBar({
                 {pageNudge}
               </span>
             )}
-            {activeHint && (
-              <span className="text-[10px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-1.5 py-0.2 font-mono inline-flex items-center space-x-1 rounded shrink-0">
-                <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0" />
-                <span>
-                  <strong>Hint:</strong> {activeHint}
-                </span>
-              </span>
-            )}
           </>
         )}
       </div>
+
+      {/* NEXT ROW: Active Hint (shown on its own row when requested) */}
+      {!isFinished && activeHint && (
+        <div className="w-full overflow-x-auto whitespace-nowrap touch-pan-x pt-0.5 border-t border-gray-800/80 flex items-center [scrollbar-width:thin]">
+          <span className="text-[10px] sm:text-[11px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-2 py-0.5 font-mono inline-flex items-center space-x-1.5 rounded shrink-0">
+            <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0" />
+            <span>
+              <strong>Hint:</strong> {activeHint}
+            </span>
+          </span>
+        </div>
+      )}
     </div>
   );
 }
