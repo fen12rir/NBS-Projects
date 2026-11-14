@@ -219,6 +219,8 @@ function SimulatorContent() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const isInputFocusedRef = useRef(false);
   const [keyboardInset, setKeyboardInset] = useState(0);
+  const [keyboardShiftY, setKeyboardShiftY] = useState(0);
+  const keyboardShiftRef = useRef(0);
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
   const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(false);
@@ -254,12 +256,13 @@ function SimulatorContent() {
     setPosAlert({ isOpen: true, message, title, type, onClose });
   };
 
-  // User-selected input zoom & mobile keyboard visibility tracking
+  // User-selected input zoom & mobile keyboard / iOS accessory bar visibility tracking
   useEffect(() => {
     let isUserTap = false;
     let blurTimer: ReturnType<typeof setTimeout> | null = null;
     let scrollTimer1: ReturnType<typeof setTimeout> | null = null;
     let scrollTimer2: ReturnType<typeof setTimeout> | null = null;
+    let scrollTimer3: ReturnType<typeof setTimeout> | null = null;
 
     const isEditableElement = (el: HTMLElement | null) =>
       Boolean(
@@ -269,9 +272,63 @@ function SimulatorContent() {
             el.tagName === "TEXTAREA")
       );
 
+    const stampNoAutofill = (el: HTMLElement | null) => {
+      if (!el || !isEditableElement(el)) return;
+      el.setAttribute("autocomplete", "off");
+      el.setAttribute("autocorrect", "off");
+      el.setAttribute("autocapitalize", "off");
+      el.setAttribute("spellcheck", "false");
+      el.setAttribute("data-lpignore", "true");
+      el.setAttribute("data-1p-ignore", "true");
+      el.setAttribute("data-bwignore", "true");
+      el.setAttribute("data-form-type", "other");
+      el.setAttribute("aria-autocomplete", "none");
+      const form = el.closest("form");
+      if (form) {
+        form.setAttribute("autocomplete", "off");
+      }
+    };
+
+    const alignFocusedInputAboveKeyboard = () => {
+      if (!isInputFocusedRef.current || typeof window === "undefined") return;
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !isEditableElement(active)) return;
+
+      const vv = window.visualViewport;
+      const vvTop = vv ? vv.offsetTop : 0;
+      const vvHeight = vv ? vv.height : window.innerHeight;
+      const diff = Math.max(0, Math.round(window.innerHeight - vvHeight));
+      setKeyboardInset(diff > 80 ? diff : 240);
+
+      // Reserve 88px above the keyboard top for iPhone Chrome/Safari floating password/card/location bar
+      const safeTop = vvTop + 14;
+      const safeBottom = vvTop + Math.max(68, vvHeight - 88);
+
+      const rect = active.getBoundingClientRect();
+      const currentShift = keyboardShiftRef.current;
+      const unshiftedTop = rect.top - currentShift;
+      const unshiftedBottom = rect.bottom - currentShift;
+
+      if (unshiftedBottom > safeBottom || vvHeight < 450) {
+        const nextShift = Math.round(safeTop - unshiftedTop);
+        keyboardShiftRef.current = nextShift;
+        setKeyboardShiftY(nextShift);
+      } else if (unshiftedTop < safeTop) {
+        const nextShift = Math.round(safeTop - unshiftedTop);
+        keyboardShiftRef.current = nextShift;
+        setKeyboardShiftY(nextShift);
+      } else {
+        keyboardShiftRef.current = 0;
+        setKeyboardShiftY(0);
+      }
+    };
+
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
       isUserTap = isEditableElement(target);
+      if (isUserTap) {
+        stampNoAutofill(target);
+      }
     };
 
     const handleFocusIn = (e: FocusEvent) => {
@@ -281,31 +338,32 @@ function SimulatorContent() {
       }
 
       const target = e.target as HTMLElement | null;
+      stampNoAutofill(target);
+
       const isMobile =
         typeof window !== "undefined" &&
-        (window.innerWidth < 768 ||
+        (window.innerWidth < 900 ||
+          window.innerHeight < 520 ||
           window.innerHeight > window.innerWidth ||
           "ontouchstart" in window);
 
-      // Keep zoom & keyboard-safe layout active on mobile when tapped or tabbing between fields
+      // Keep keyboard-safe layout active on mobile when tapped or tabbing between fields
       if (isMobile && isEditableElement(target) && (isUserTap || isInputFocusedRef.current)) {
         isInputFocusedRef.current = true;
         setIsInputFocused(true);
 
-        if (target && typeof target.scrollIntoView === "function") {
-          if (scrollTimer1) clearTimeout(scrollTimer1);
-          if (scrollTimer2) clearTimeout(scrollTimer2);
-          scrollTimer1 = setTimeout(() => {
-            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-          }, 150);
-          scrollTimer2 = setTimeout(() => {
-            target.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-          }, 350);
-        }
+        if (scrollTimer1) clearTimeout(scrollTimer1);
+        if (scrollTimer2) clearTimeout(scrollTimer2);
+        if (scrollTimer3) clearTimeout(scrollTimer3);
+        scrollTimer1 = setTimeout(alignFocusedInputAboveKeyboard, 60);
+        scrollTimer2 = setTimeout(alignFocusedInputAboveKeyboard, 200);
+        scrollTimer3 = setTimeout(alignFocusedInputAboveKeyboard, 400);
       } else if (!isEditableElement(target)) {
         isInputFocusedRef.current = false;
         setIsInputFocused(false);
         setKeyboardInset(0);
+        keyboardShiftRef.current = 0;
+        setKeyboardShiftY(0);
       }
       isUserTap = false;
     };
@@ -318,29 +376,28 @@ function SimulatorContent() {
           isInputFocusedRef.current = false;
           setIsInputFocused(false);
           setKeyboardInset(0);
+          keyboardShiftRef.current = 0;
+          setKeyboardShiftY(0);
         }
-      }, 60);
+      }, 80);
       isUserTap = false;
-    };
-
-    const handleVisualViewportResize = () => {
-      if (!isInputFocusedRef.current || !window.visualViewport) return;
-      const diff = Math.round(window.innerHeight - window.visualViewport.height);
-      setKeyboardInset(diff > 80 ? diff : 220);
     };
 
     window.addEventListener("pointerdown", handlePointerDown, true);
     window.addEventListener("focusin", handleFocusIn);
     window.addEventListener("focusout", handleFocusOut);
-    window.visualViewport?.addEventListener("resize", handleVisualViewportResize);
+    window.visualViewport?.addEventListener("resize", alignFocusedInputAboveKeyboard);
+    window.visualViewport?.addEventListener("scroll", alignFocusedInputAboveKeyboard);
     return () => {
       if (blurTimer) clearTimeout(blurTimer);
       if (scrollTimer1) clearTimeout(scrollTimer1);
       if (scrollTimer2) clearTimeout(scrollTimer2);
+      if (scrollTimer3) clearTimeout(scrollTimer3);
       window.removeEventListener("pointerdown", handlePointerDown, true);
       window.removeEventListener("focusin", handleFocusIn);
       window.removeEventListener("focusout", handleFocusOut);
-      window.visualViewport?.removeEventListener("resize", handleVisualViewportResize);
+      window.visualViewport?.removeEventListener("resize", alignFocusedInputAboveKeyboard);
+      window.visualViewport?.removeEventListener("scroll", alignFocusedInputAboveKeyboard);
     };
   }, []);
 
@@ -3320,7 +3377,8 @@ function SimulatorContent() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
-      {/* Top Trainer Navigation Bar */}
+      {/* Top Trainer Navigation Bar (auto-hidden on mobile while typing so input stays above keyboard/accessory bar) */}
+      {!isInputFocused && (
       <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
         <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
           {returnLessonUrl !== "/dashboard" ? (
@@ -3383,9 +3441,10 @@ function SimulatorContent() {
           )}
         </div>
       </header>
+      )}
 
       {/* Portrait Mode Quick Landscape / Focus Tip Strip */}
-      {isPortrait && !isFocusMode && (
+      {isPortrait && !isFocusMode && !isInputFocused && (
         <div className="w-full bg-[#005A36] text-white px-3 py-1 flex items-center justify-between text-[11px] font-medium border-b border-[#004D26] shadow-inner sm:hidden">
           <div className="flex items-center space-x-1.5 truncate">
             <Smartphone className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
@@ -3433,7 +3492,7 @@ function SimulatorContent() {
       )}
 
       {/* Guided Instruction Bar OR Customer Interaction Panel (when not in Focus Mode) */}
-      {!isFocusMode && (
+      {!isFocusMode && !isInputFocused && (
         isExamMode && examSession ? (
           <CustomerPanel
             currentCase={examSession.cases[examCaseIndex]}
@@ -3487,7 +3546,7 @@ function SimulatorContent() {
             : undefined
         }
       >
-        {isFocusMode && (
+        {isFocusMode && !isInputFocused && (
           <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-20 shrink-0 gap-2">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <span className="font-bold text-red-500 uppercase tracking-wider text-[11px] shrink-0">
@@ -3596,7 +3655,7 @@ function SimulatorContent() {
         )}
 
         {/* In Focus Mode: Guided Instruction Bar OR Customer Interaction Panel */}
-        {isFocusMode && isFocusHeaderExpanded && (
+        {isFocusMode && isFocusHeaderExpanded && !isInputFocused && (
           <div className="w-full shrink-0 z-20 overflow-y-auto max-h-36 sm:max-h-48 border-b border-gray-700 bg-gray-900 shadow-md">
             {isExamMode && examSession ? (
               <CustomerPanel
@@ -3650,8 +3709,14 @@ function SimulatorContent() {
                   width: `${Math.round((isExternalReceiptShowing ? 1360 : 1080) * finalScale)}px`,
                   height: `${Math.round(600 * finalScale)}px`,
                   position: "relative",
+                  transform:
+                    isInputFocused && keyboardShiftY !== 0
+                      ? shouldCssRotate
+                        ? `translateX(${keyboardShiftY}px)`
+                        : `translateY(${keyboardShiftY}px)`
+                      : undefined,
                 }}
-                className="shrink-0 mx-auto flex items-start justify-start"
+                className="shrink-0 mx-auto flex items-start justify-start transition-transform duration-150 ease-out"
               >
                 <div
                   style={{
