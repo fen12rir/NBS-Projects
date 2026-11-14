@@ -19,7 +19,8 @@ import {
   ChevronUp,
   ChevronDown,
   Volume2,
-  VolumeX
+  VolumeX,
+  Repeat
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -60,23 +61,52 @@ export function GuidedStepBar({
   pageNudge
 }: GuidedStepBarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isTtsEnabled, setIsTtsEnabled] = useState(true);
   const currentInstruction = scenario?.steps[currentStepIndex]?.instruction;
+  const isStepFinished = scenario ? currentStepIndex >= scenario.steps.length : false;
   const { speechSupported, isSpeaking, speak, stop } = useSpeech();
 
   useEffect(() => {
-    stop();
-  }, [currentInstruction, stop]);
+    try {
+      const saved = localStorage.getItem("nbs_guide_tts_enabled");
+      if (saved === "false") {
+        setIsTtsEnabled(false);
+      }
+    } catch {}
+  }, []);
 
-  const handleReadInstruction = () => {
+  const speakCurrentInstruction = () => {
     if (!speechSupported || !currentInstruction) return;
-    if (isSpeaking) {
-      stop();
-      return;
-    }
     const parts = [currentInstruction];
     if (pageNudge) parts.push(pageNudge);
     if (activeHint) parts.push(`Hint: ${activeHint}`);
     speak(parts.join(". "), "en-US");
+  };
+
+  useEffect(() => {
+    if (!speechSupported || !currentInstruction || isStepFinished || !isTtsEnabled) {
+      stop();
+      return;
+    }
+    speak(currentInstruction, "en-US");
+  }, [currentInstruction, isStepFinished, isTtsEnabled, speechSupported, speak, stop]);
+
+  const handleToggleTts = () => {
+    const next = !isTtsEnabled;
+    setIsTtsEnabled(next);
+    try {
+      localStorage.setItem("nbs_guide_tts_enabled", String(next));
+    } catch {}
+    if (!next) {
+      stop();
+    } else if (currentInstruction && !isStepFinished) {
+      speakCurrentInstruction();
+    }
+  };
+
+  const handleRepeatInstruction = () => {
+    if (!speechSupported || !currentInstruction) return;
+    speakCurrentInstruction();
   };
 
   // Free Exploration Sandbox
@@ -175,28 +205,45 @@ export function GuidedStepBar({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleReadInstruction}
-                  disabled={!speechSupported || !currentInstruction}
+                  onClick={handleToggleTts}
+                  disabled={!speechSupported}
                   className={`text-[10px] h-5 px-1.5 ${
-                    isSpeaking
-                      ? "bg-red-950 border-red-600 text-red-200 hover:bg-red-900"
-                      : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                    isTtsEnabled
+                      ? "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                      : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700"
                   } disabled:opacity-50`}
                   title={
                     speechSupported
-                      ? isSpeaking
-                        ? "Stop reading instruction"
-                        : "Read instruction aloud"
+                      ? isTtsEnabled
+                        ? "Turn auto-voice OFF"
+                        : "Turn auto-voice ON"
                       : "Text-to-speech is not supported in this browser"
                   }
-                  aria-label={isSpeaking ? "Stop reading instruction" : "Read instruction aloud"}
+                  aria-pressed={isTtsEnabled}
+                  aria-label={isTtsEnabled ? "Turn auto-voice OFF" : "Turn auto-voice ON"}
                 >
-                  {isSpeaking ? (
-                    <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
-                  ) : (
+                  {isTtsEnabled ? (
                     <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
+                  ) : (
+                    <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
                   )}
-                  <span>{isSpeaking ? "Stop" : "Read"}</span>
+                  <span>{isTtsEnabled ? "On" : "Off"}</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRepeatInstruction}
+                  disabled={!speechSupported || !currentInstruction}
+                  className={`text-[10px] h-5 px-1.5 ${
+                    isSpeaking
+                      ? "bg-emerald-800 border-emerald-400 text-white"
+                      : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                  } disabled:opacity-50`}
+                  title={speechSupported ? "Repeat instruction aloud" : "Text-to-speech is not supported in this browser"}
+                  aria-label="Repeat instruction aloud"
+                >
+                  <Repeat className="w-3 h-3 mr-0.5 shrink-0" />
+                  <span>Repeat</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -314,30 +361,50 @@ export function GuidedStepBar({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleReadInstruction}
+                onClick={handleToggleTts}
+                disabled={!speechSupported}
+                className={`text-[10px] sm:text-xs h-6 px-1.5 sm:px-2 disabled:opacity-50 ${
+                  isTtsEnabled
+                    ? "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
+                    : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700"
+                }`}
+                title={
+                  speechSupported
+                    ? isTtsEnabled
+                      ? "Turn auto-voice OFF"
+                      : "Turn auto-voice ON"
+                    : "Text-to-speech is not supported in this browser"
+                }
+                aria-pressed={isTtsEnabled}
+                aria-label={isTtsEnabled ? "Turn auto-voice OFF" : "Turn auto-voice ON"}
+              >
+                {isTtsEnabled ? (
+                  <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
+                ) : (
+                  <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
+                )}
+                <span>{isTtsEnabled ? "Voice On" : "Voice Off"}</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRepeatInstruction}
                 disabled={!speechSupported || !currentInstruction}
                 className={`text-[10px] sm:text-xs h-6 px-1.5 sm:px-2 disabled:opacity-50 ${
                   isSpeaking
-                    ? "bg-red-950 border-red-600 text-red-200 hover:bg-red-900"
+                    ? "bg-emerald-800 border-emerald-400 text-white"
                     : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
                 }`}
                 title={
                   speechSupported
-                    ? isSpeaking
-                      ? "Stop reading instruction"
-                      : "Read instruction aloud"
+                    ? "Repeat instruction aloud"
                     : "Text-to-speech is not supported in this browser"
                 }
-                aria-label={
-                  isSpeaking ? "Stop reading instruction" : "Read instruction aloud"
-                }
+                aria-label="Repeat instruction aloud"
               >
-                {isSpeaking ? (
-                  <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
-                ) : (
-                  <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
-                )}
-                <span>{isSpeaking ? "Stop" : "Read"}</span>
+                <Repeat className="w-3 h-3 mr-0.5 shrink-0" />
+                <span>Repeat</span>
               </Button>
 
               <Button
