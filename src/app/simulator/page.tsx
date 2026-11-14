@@ -243,8 +243,18 @@ function SimulatorContent() {
     if (typeof document !== "undefined") {
       const prevHtmlBg = document.documentElement.style.backgroundColor;
       const prevBodyBg = document.body.style.backgroundColor;
-      document.documentElement.style.backgroundColor = "#111827";
-      document.body.style.backgroundColor = "#111827";
+      document.documentElement.style.backgroundColor = "#000000";
+      document.body.style.backgroundColor = "#000000";
+
+      let themeMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+      const prevThemeColor = themeMeta?.getAttribute("content") || null;
+      if (!themeMeta) {
+        themeMeta = document.createElement("meta");
+        themeMeta.name = "theme-color";
+        document.head.appendChild(themeMeta);
+      }
+      themeMeta.setAttribute("content", "#000000");
+
       return () => {
         resetGuidedSpeechMemory();
         if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -252,6 +262,9 @@ function SimulatorContent() {
         }
         document.documentElement.style.backgroundColor = prevHtmlBg;
         document.body.style.backgroundColor = prevBodyBg;
+        if (themeMeta && prevThemeColor) {
+          themeMeta.setAttribute("content", prevThemeColor);
+        }
       };
     }
     return () => {
@@ -486,7 +499,7 @@ function SimulatorContent() {
     // 1. Fullscreen API
     try {
       if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
+        await document.documentElement.requestFullscreen({ navigationUI: "hide" });
       } else if ((document.documentElement as any).webkitRequestFullscreen) {
         await (document.documentElement as any).webkitRequestFullscreen();
       }
@@ -3657,10 +3670,17 @@ function SimulatorContent() {
                 left: "100%",
                 transform: "rotate(90deg)",
                 transformOrigin: "top left",
+                boxShadow: "0 0 0 100vmax #000000",
               }
-            : isFocusMode && isIOS && isInputFocused && vvOffsetTop > 0
+            : isFocusMode
             ? {
-                top: `${vvOffsetTop}px`,
+                top: isIOS && isInputFocused && vvOffsetTop > 0 ? `${vvOffsetTop}px` : 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                width: "100vw",
+                height: "100dvh",
+                boxShadow: "0 0 0 100vmax #000000",
               }
             : undefined
         }
