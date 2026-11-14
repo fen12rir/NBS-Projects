@@ -222,6 +222,11 @@ function SimulatorContent() {
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [keyboardShiftY, setKeyboardShiftY] = useState(0);
   const keyboardShiftRef = useRef(0);
+  const [vvOffsetTop, setVvOffsetTop] = useState(0);
+  const [lockedScreenSize, setLockedScreenSize] = useState<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
   const posViewportRef = useRef<HTMLDivElement>(null);
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
@@ -268,6 +273,7 @@ function SimulatorContent() {
   // User-selected input zoom & mobile keyboard / iOS accessory bar visibility tracking
   useEffect(() => {
     let isUserTap = false;
+    let wasKeyboardOpen = false;
     let blurTimer: ReturnType<typeof setTimeout> | null = null;
     let scrollTimer1: ReturnType<typeof setTimeout> | null = null;
     let scrollTimer2: ReturnType<typeof setTimeout> | null = null;
@@ -299,7 +305,37 @@ function SimulatorContent() {
     };
 
     const alignFocusedInputAboveKeyboard = () => {
-      if (!isInputFocusedRef.current || typeof window === "undefined") return;
+      if (typeof window === "undefined") return;
+      if (window.scrollY !== 0 || window.scrollX !== 0) {
+        window.scrollTo(0, 0);
+      }
+
+      const vv = window.visualViewport;
+      const vvTop = vv ? Math.max(0, Math.round(vv.offsetTop)) : 0;
+      const vvHeight = vv ? vv.height : window.innerHeight;
+      const diff = Math.max(0, Math.round(window.innerHeight - vvHeight));
+
+      setVvOffsetTop(vvTop);
+
+      // Detect iOS keyboard dismiss button (closes keyboard without firing blur on input)
+      if (diff > 80) {
+        wasKeyboardOpen = true;
+      } else if (wasKeyboardOpen && diff < 50) {
+        wasKeyboardOpen = false;
+        isInputFocusedRef.current = false;
+        setIsInputFocused(false);
+        setKeyboardInset(0);
+        keyboardShiftRef.current = 0;
+        setKeyboardShiftY(0);
+        setVvOffsetTop(0);
+        const activeEl = document.activeElement as HTMLElement | null;
+        if (activeEl && isEditableElement(activeEl)) {
+          activeEl.blur();
+        }
+        return;
+      }
+
+      if (!isInputFocusedRef.current) return;
       const active = document.activeElement as HTMLElement | null;
       if (!active || !isEditableElement(active)) return;
 
@@ -308,10 +344,6 @@ function SimulatorContent() {
         posViewportRef.current.scrollLeft = 0;
       }
 
-      const vv = window.visualViewport;
-      const vvTop = vv ? vv.offsetTop : 0;
-      const vvHeight = vv ? vv.height : window.innerHeight;
-      const diff = Math.max(0, Math.round(window.innerHeight - vvHeight));
       setKeyboardInset(diff > 80 ? diff : 240);
 
       // Keep focused input below the 2-row guide bar and above the iOS password/card/location bar
@@ -394,11 +426,13 @@ function SimulatorContent() {
         scrollTimer2 = setTimeout(alignFocusedInputAboveKeyboard, 200);
         scrollTimer3 = setTimeout(alignFocusedInputAboveKeyboard, 400);
       } else if (!isEditableElement(target)) {
+        wasKeyboardOpen = false;
         isInputFocusedRef.current = false;
         setIsInputFocused(false);
         setKeyboardInset(0);
         keyboardShiftRef.current = 0;
         setKeyboardShiftY(0);
+        setVvOffsetTop(0);
       }
       isUserTap = false;
     };
@@ -408,11 +442,16 @@ function SimulatorContent() {
       blurTimer = setTimeout(() => {
         const active = document.activeElement as HTMLElement | null;
         if (!isEditableElement(active)) {
+          wasKeyboardOpen = false;
           isInputFocusedRef.current = false;
           setIsInputFocused(false);
           setKeyboardInset(0);
           keyboardShiftRef.current = 0;
           setKeyboardShiftY(0);
+          setVvOffsetTop(0);
+          if (typeof window !== "undefined") {
+            window.scrollTo(0, 0);
+          }
         }
       }, 80);
       isUserTap = false;
@@ -783,6 +822,7 @@ function SimulatorContent() {
 
     const portrait = window.innerHeight > window.innerWidth;
     setIsPortrait(portrait);
+    setLockedScreenSize({ width: window.innerWidth, height: window.innerHeight });
 
     const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
       ? window.innerHeight
@@ -3441,8 +3481,7 @@ function SimulatorContent() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
-      {/* Top Trainer Navigation Bar (auto-hidden on mobile while typing so input stays above keyboard/accessory bar) */}
-      {!isInputFocused && (
+      {/* Top Trainer Navigation Bar */}
       <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
         <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
           {returnLessonUrl !== "/dashboard" ? (
@@ -3505,10 +3544,9 @@ function SimulatorContent() {
           )}
         </div>
       </header>
-      )}
 
       {/* Portrait Mode Quick Landscape / Focus Tip Strip */}
-      {isPortrait && !isFocusMode && !isInputFocused && (
+      {isPortrait && !isFocusMode && (
         <div className="w-full bg-[#005A36] text-white px-3 py-1 flex items-center justify-between text-[11px] font-medium border-b border-[#004D26] shadow-inner sm:hidden">
           <div className="flex items-center space-x-1.5 truncate">
             <Smartphone className="w-3.5 h-3.5 text-emerald-200 shrink-0" />
@@ -3599,19 +3637,23 @@ function SimulatorContent() {
         style={
           shouldCssRotate
             ? {
-                width: "100dvh",
-                height: "100dvw",
+                width: lockedScreenSize.height ? `${lockedScreenSize.height}px` : "100lvh",
+                height: lockedScreenSize.width ? `${lockedScreenSize.width}px` : "100vw",
                 position: "fixed",
-                top: 0,
+                top: `${vvOffsetTop}px`,
                 left: "100%",
                 transform: "rotate(90deg)",
                 transformOrigin: "top left",
               }
+            : isFocusMode && vvOffsetTop > 0
+            ? {
+                top: `${vvOffsetTop}px`,
+              }
             : undefined
         }
       >
-        {isFocusMode && !isInputFocused && (
-          <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-20 shrink-0 gap-2">
+        {isFocusMode && (
+          <div className="w-full bg-gray-900 border-b border-gray-800 px-3 py-1 flex items-center justify-between text-xs text-white z-30 shrink-0 gap-2">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <span className="font-bold text-red-500 uppercase tracking-wider text-[11px] shrink-0">
                 NBS POS FOCUS MODE
