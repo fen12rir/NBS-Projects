@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 interface QuantityModalProps {
   initialQuantity?: number;
@@ -14,6 +15,8 @@ export function QuantityModal({
   onCancel,
 }: QuantityModalProps) {
   const [qtyInput, setQtyInput] = useState(initialQuantity.toString());
+
+  useLockBodyScroll(true);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,13 +50,13 @@ export function QuantityModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/40 transition-opacity"
+        className="fixed inset-0 z-40 bg-black/40 transition-opacity overscroll-none touch-none"
         onClick={onCancel}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <form
           onSubmit={handleSubmit}
-          className="w-[380px] bg-[#ECE9D8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto"
+          className="w-full max-w-[380px] max-h-[90dvh] overflow-y-auto bg-[#ECE9D8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto"
         >
           <div className="bg-[#0A246A] text-white px-2 py-1 font-bold text-xs flex items-center justify-between">
             <span>The page at http://localhost says:</span>

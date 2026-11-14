@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 export type CardTenderType =
   | "Credit Card"
@@ -37,6 +38,8 @@ export function ElectronicPaymentModal({
   const [voucherSerial, setVoucherSerial] = useState("GC-2026-88410");
   const [tenderAmount, setTenderAmount] = useState(totalDue.toFixed(2));
   const [coinsRedeem, setCoinsRedeem] = useState(Math.min(totalDue, 150).toFixed(2));
+
+  useLockBodyScroll(true);
 
   useEffect(() => {
     setTenderAmount(totalDue.toFixed(2));
@@ -87,13 +90,13 @@ export function ElectronicPaymentModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity overscroll-none touch-none"
         onClick={onCancel}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
         <form
           onSubmit={handleSubmit}
-          className="w-[460px] bg-[#D4D0C8] border-4 border-[#2563EB] shadow-2xl font-sans pointer-events-auto"
+          className="w-full max-w-[460px] max-h-[92dvh] overflow-y-auto bg-[#D4D0C8] border-4 border-[#2563EB] shadow-2xl font-sans pointer-events-auto"
         >
           <div className="bg-[#2563EB] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
             Card Payment Details

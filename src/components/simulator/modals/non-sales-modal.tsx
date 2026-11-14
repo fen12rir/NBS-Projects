@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 interface NonSalesModalProps {
   onConfirm: (data: { category: string; amount: number; referenceNo: string; customerName: string }) => void;
@@ -12,6 +13,8 @@ export function NonSalesModal({ onConfirm, onCancel }: NonSalesModalProps) {
   const [amount, setAmount] = useState("500.00");
   const [referenceNo, setReferenceNo] = useState("NS-2026-0812");
   const [customerName, setCustomerName] = useState("Walk-in Customer");
+
+  useLockBodyScroll(true);
 
   const CATEGORIES = [
     { label: "Down Payment / Book Reservation", defaultAmount: "500.00" },
@@ -35,11 +38,11 @@ export function NonSalesModal({ onConfirm, onCancel }: NonSalesModalProps) {
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity overscroll-none touch-none"
         onClick={onCancel}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-        <div className="w-[450px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
+        <div className="w-full max-w-[450px] max-h-[92dvh] overflow-y-auto bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
           {/* Green Title Bar */}
           <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
             NON-SALES TRANSACTION (F4)

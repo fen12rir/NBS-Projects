@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TRAINING_MODULES } from "@/data/modules";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -42,6 +43,8 @@ export function LearningSidebar({
   const pathname = usePathname();
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
+
+  useLockBodyScroll(Boolean(isOpenMobile));
 
   useEffect(() => {
     const updateProgress = () => {
@@ -109,7 +112,7 @@ export function LearningSidebar({
       {isOpenMobile && (
         <div
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs transition-opacity animate-in fade-in"
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-xs transition-opacity animate-in fade-in overscroll-none touch-none"
         />
       )}
 

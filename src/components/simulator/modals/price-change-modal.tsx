@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { POSLineItem } from "@/lib/simulator/pos-state-machine";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 interface PriceChangeModalProps {
   items: POSLineItem[];
@@ -25,6 +26,8 @@ export function PriceChangeModal({
   const [supervisorPass, setSupervisorPass] = useState("");
   const [isSupervisorOverridden, setIsSupervisorOverridden] = useState(false);
   const [authError, setAuthError] = useState("");
+
+  useLockBodyScroll(true);
 
   const currentItem = activeItems.find((i) => i.id === selectedItemId) || defaultItem;
 
@@ -61,11 +64,11 @@ export function PriceChangeModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity overscroll-none touch-none"
         onClick={onCancel}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-        <div className="w-[440px] bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
+        <div className="w-full max-w-[440px] max-h-[92dvh] overflow-y-auto bg-[#D4D0C8] border-4 border-[#228B22] shadow-2xl font-sans pointer-events-auto">
           {/* Green Title Bar */}
           <div className="bg-[#228B22] text-white py-1.5 px-3 text-center font-bold text-sm uppercase tracking-wide">
             PRICE CHANGE (F3)

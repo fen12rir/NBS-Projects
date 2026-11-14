@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { APP_CONFIG } from "@/lib/constants";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { 
   BookOpen, 
   Monitor, 
@@ -26,6 +27,8 @@ export default function HomePage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
   const lastScrollY = useRef(0);
+
+  useLockBodyScroll(showAuthModal);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -446,8 +449,8 @@ export default function HomePage() {
 
       {/* Cashier Authentication Required Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full border-4 border-gray-900 p-6 space-y-5 shadow-2xl">
+        <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 overscroll-none touch-none">
+          <div className="bg-white max-w-md w-full max-h-[90dvh] overflow-y-auto border-4 border-gray-900 p-6 space-y-5 shadow-2xl">
             <div className="flex items-center space-x-3 text-[#E4002B]">
               <Lock className="w-6 h-6 flex-shrink-0" />
               <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">

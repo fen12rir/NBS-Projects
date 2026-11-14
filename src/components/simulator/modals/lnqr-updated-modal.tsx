@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 interface LnqrUpdatedModalProps {
   isOpen: boolean;
@@ -20,6 +21,8 @@ export function LnqrUpdatedModal({
   previousBalance = 0.90,
   currentBalance = 30.60,
 }: LnqrUpdatedModalProps) {
+  useLockBodyScroll(isOpen);
+
   if (!isOpen) return null;
 
   const earnedCoins = sulitCoinsEarnedAmount ?? 29.70;
@@ -29,11 +32,11 @@ export function LnqrUpdatedModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity overscroll-none touch-none"
         onClick={onConfirm}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-        <div className="w-[380px] bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto">
+        <div className="w-full max-w-[380px] max-h-[90dvh] overflow-y-auto bg-[#D6D3CE] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans pointer-events-auto">
           {/* Window Title Bar */}
           <div className="bg-[#1C4158] text-white px-2 py-1 flex items-center justify-between text-xs font-semibold select-none">
             <div className="flex items-center space-x-1 truncate">

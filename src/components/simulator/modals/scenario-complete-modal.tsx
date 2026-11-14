@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { Trophy, CheckCircle, RotateCcw, ArrowRight } from "lucide-react";
 import { TrainingScenario } from "@/data/scenarios";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 interface ScenarioCompleteModalProps {
   isOpen: boolean;
@@ -32,6 +33,8 @@ export function ScenarioCompleteModal({
 }: ScenarioCompleteModalProps)  {
 
   
+  useLockBodyScroll(Boolean(isOpen && scenario));
+
   if (!isOpen || !scenario) return null;
 
   const finalScore = timedOut ? 0 : Math.max(0, 100 - mistakesCount * 10);
@@ -41,9 +44,9 @@ export function ScenarioCompleteModal({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity" />
+      <div className="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm transition-opacity overscroll-none touch-none" />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none animate-in fade-in duration-200 pointer-events-none">
-        <div className={`bg-[#D4D0C8] border-4 ${timedOut ? "border-red-700" : "border-[#228B22]"} shadow-2xl max-w-md w-full overflow-hidden font-sans pointer-events-auto`}>
+        <div className={`bg-[#D4D0C8] border-4 ${timedOut ? "border-red-700" : "border-[#228B22]"} shadow-2xl max-w-md w-full max-h-[92dvh] overflow-y-auto font-sans pointer-events-auto`}>
           {/* Retro Green Header */}
           <div className={`${timedOut ? "bg-red-700" : "bg-[#228B22]"} text-white px-4 py-2 font-bold text-sm flex items-center justify-between uppercase tracking-wide`}>
             <div className="flex items-center space-x-2">

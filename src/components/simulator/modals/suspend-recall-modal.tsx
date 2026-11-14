@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 
 export interface SuspendedTransactionItem {
   id: string;
@@ -31,6 +32,8 @@ export function RecallModal({
   onCancel,
 }: RecallModalProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+
+  useLockBodyScroll(true);
 
   const mockSuspendedList: SuspendedTransactionItem[] = useMemo(
     () => [
@@ -93,11 +96,11 @@ export function RecallModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-opacity overscroll-none touch-none"
         onClick={onCancel}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 select-none pointer-events-none">
-        <div className="w-[780px] h-[520px] bg-white border-4 border-gray-600 shadow-2xl font-sans flex flex-col pointer-events-auto overflow-hidden">
+        <div className="w-full max-w-[780px] h-[520px] max-h-[92dvh] bg-white border-4 border-gray-600 shadow-2xl font-sans flex flex-col pointer-events-auto overflow-hidden">
           {/* Header */}
           <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
             <span>

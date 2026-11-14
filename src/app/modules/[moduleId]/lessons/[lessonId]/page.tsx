@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { DashboardHeader } from "@/components/layout/dashboard-header";
@@ -18,6 +18,7 @@ import {
 import { getLocalizedLesson, getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
 import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
 import { useSpeech } from "@/lib/speech/use-speech";
+import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { 
   ArrowLeft, 
   CheckCircle2, 
@@ -56,8 +57,57 @@ function LessonDetailContent() {
   const [justCompleted, setJustCompleted] = useState(false);
   const [zoomedImage, setZoomedImage] = useState<{ src: string; alt?: string; caption?: string } | null>(null);
   const [imageScale, setImageScale] = useState(1);
+  const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const dragOriginRef = useRef<{ x: number; y: number } | null>(null);
+  const pinchStateRef = useRef<{
+    initialDistance: number;
+    initialScale: number;
+    initialMidpoint: { x: number; y: number };
+    initialPan: { x: number; y: number };
+  } | null>(null);
+
   const { lang, setLang } = useModuleLanguage();
   const { speechSupported, hasFilipinoVoice, isSpeaking, speak, stop } = useSpeech();
+
+  useLockBodyScroll(Boolean(zoomedImage));
+
+  const openLightbox = (asset: { src: string; alt?: string; caption?: string }) => {
+    setZoomedImage(asset);
+    setImageScale(1);
+    setImagePan({ x: 0, y: 0 });
+    setIsDraggingImage(false);
+    dragOriginRef.current = null;
+    pinchStateRef.current = null;
+  };
+
+  const closeLightbox = () => {
+    setZoomedImage(null);
+    setImageScale(1);
+    setImagePan({ x: 0, y: 0 });
+    setIsDraggingImage(false);
+    dragOriginRef.current = null;
+    pinchStateRef.current = null;
+  };
+
+  const updateZoomScale = (nextScale: number) => {
+    const clamped = Math.min(4, Math.max(0.6, Number(nextScale.toFixed(2))));
+    setImageScale(clamped);
+    if (clamped <= 1) {
+      setImagePan({ x: 0, y: 0 });
+    }
+  };
+
+  useEffect(() => {
+    if (!zoomedImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        closeLightbox();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [zoomedImage]);
 
   useEffect(() => {
     setProgress(getLocalProgress());
@@ -308,17 +358,16 @@ function LessonDetailContent() {
                           </video>
                         ) : (
                           <div
-                            onClick={() => {
-                              setZoomedImage(asset);
-                              setImageScale(1);
-                            }}
+                            onClick={() => openLightbox(asset)}
                             className="relative group cursor-zoom-in w-full flex items-center justify-center bg-gray-950"
                             title="Click to view enlarged image"
                           >
                             <img
                               src={asset.src}
                               alt={asset.alt}
-                              className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01]"
+                              draggable={false}
+                              onDragStart={(e) => e.preventDefault()}
+                              className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01] select-none"
                             />
                             <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition-opacity">
                               <Maximize2 className="w-3 h-3" />
@@ -356,8 +405,7 @@ function LessonDetailContent() {
                   <div
                     onClick={() => {
                       if (currentLesson.visualAsset) {
-                        setZoomedImage(currentLesson.visualAsset);
-                        setImageScale(1);
+                        openLightbox(currentLesson.visualAsset);
                       }
                     }}
                     className="relative group cursor-zoom-in w-full flex items-center justify-center bg-gray-950"
@@ -366,7 +414,9 @@ function LessonDetailContent() {
                     <img
                       src={currentLesson.visualAsset.src}
                       alt={currentLesson.visualAsset.alt}
-                      className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01]"
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
+                      className="w-full h-auto object-contain max-h-[500px] transition-transform duration-200 group-hover:scale-[1.01] select-none"
                     />
                     <div className="absolute top-2 right-2 bg-black/70 text-white text-[10px] font-bold px-2 py-1 rounded flex items-center space-x-1 opacity-80 group-hover:opacity-100 transition-opacity">
                       <Maximize2 className="w-3 h-3" />
@@ -489,85 +539,200 @@ function LessonDetailContent() {
       {/* Fullscreen Image Lightbox Modal */}
       {zoomedImage && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xs flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-150"
-          onClick={() => setZoomedImage(null)}
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xs flex flex-col items-center justify-between p-3 sm:p-6 animate-in fade-in duration-150 overscroll-none touch-none select-none"
+          onClick={closeLightbox}
         >
           {/* Top Bar with Controls */}
           <div
-            className="w-full max-w-5xl flex items-center justify-between text-white pb-3 shrink-0"
+            className="w-full max-w-5xl flex items-center justify-between gap-2 text-white pb-2 sm:pb-3 shrink-0 z-20"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center space-x-2 text-xs font-mono font-bold text-gray-300">
-              <FileImage className="w-4 h-4 text-[#E4002B]" />
-              <span className="truncate max-w-[200px] sm:max-w-md">{zoomedImage.alt || "Visual Reference"}</span>
+            <div className="flex items-center space-x-1.5 sm:space-x-2 text-xs font-mono font-bold text-gray-300 min-w-0 flex-1">
+              <FileImage className="w-4 h-4 text-[#E4002B] shrink-0" />
+              <span className="truncate">{zoomedImage.alt || "Visual Reference"}</span>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center bg-gray-800 rounded px-2 py-1 border border-gray-700 space-x-1">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+              <div className="flex items-center bg-gray-800 rounded px-1.5 sm:px-2 py-1 border border-gray-700 space-x-0.5 sm:space-x-1 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setImageScale((s) => Math.max(0.6, Number((s - 0.2).toFixed(1))))}
-                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  onClick={() => updateZoomScale(imageScale - 0.25)}
+                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer shrink-0"
                   title="Zoom Out"
+                  aria-label="Zoom Out"
                 >
-                  <ZoomOut className="w-4 h-4" />
+                  <ZoomOut className="w-4 h-4 shrink-0" />
                 </button>
-                <span className="text-xs font-mono font-bold text-gray-300 px-1 min-w-[36px] text-center select-none">
+                <span className="text-[11px] sm:text-xs font-mono font-bold text-gray-300 px-1 min-w-[38px] text-center select-none">
                   {Math.round(imageScale * 100)}%
                 </span>
                 <button
                   type="button"
-                  onClick={() => setImageScale((s) => Math.min(3, Number((s + 0.2).toFixed(1))))}
-                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer"
+                  onClick={() => updateZoomScale(imageScale + 0.25)}
+                  className="p-1 hover:bg-gray-700 text-gray-200 rounded cursor-pointer shrink-0"
                   title="Zoom In"
+                  aria-label="Zoom In"
                 >
-                  <ZoomIn className="w-4 h-4" />
+                  <ZoomIn className="w-4 h-4 shrink-0" />
                 </button>
-                {imageScale !== 1 && (
+                {(imageScale !== 1 || imagePan.x !== 0 || imagePan.y !== 0) && (
                   <button
                     type="button"
-                    onClick={() => setImageScale(1)}
-                    className="p-1 hover:bg-gray-700 text-yellow-400 rounded cursor-pointer ml-1"
+                    onClick={() => {
+                      setImageScale(1);
+                      setImagePan({ x: 0, y: 0 });
+                    }}
+                    className="p-1 hover:bg-gray-700 text-yellow-400 rounded cursor-pointer ml-0.5 shrink-0"
                     title="Reset Zoom"
+                    aria-label="Reset Zoom"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-3.5 h-3.5 shrink-0" />
                   </button>
                 )}
               </div>
 
               <button
                 type="button"
-                onClick={() => setZoomedImage(null)}
-                className="bg-gray-800 hover:bg-red-600 text-white p-2 rounded-full border border-gray-700 transition-colors cursor-pointer"
+                onClick={closeLightbox}
+                className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 bg-gray-800 hover:bg-red-600 active:bg-red-700 text-white rounded-full border border-gray-600 flex items-center justify-center transition-colors cursor-pointer shadow-lg"
                 title="Close (Esc)"
+                aria-label="Close enlarged image"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 shrink-0" />
               </button>
             </div>
           </div>
 
-          {/* Centered Zoomable Image Viewport */}
+          {/* Centered Pinch-Zoomable & Pannable Image Viewport */}
           <div
-            className="flex-1 w-full max-w-5xl flex items-center justify-center overflow-auto p-2"
+            className={`flex-1 w-full max-w-5xl flex items-center justify-center overflow-hidden p-2 relative touch-none ${
+              imageScale > 1
+                ? isDraggingImage
+                  ? "cursor-grabbing"
+                  : "cursor-grab"
+                : "cursor-default"
+            }`}
             onClick={(e) => e.stopPropagation()}
+            onWheel={(e) => {
+              e.preventDefault();
+              const delta = e.deltaY < 0 ? 0.2 : -0.2;
+              updateZoomScale(imageScale + delta);
+            }}
+            onMouseDown={(e) => {
+              if (e.button !== 0 || imageScale <= 1) return;
+              e.preventDefault();
+              setIsDraggingImage(true);
+              dragOriginRef.current = {
+                x: e.clientX - imagePan.x,
+                y: e.clientY - imagePan.y,
+              };
+            }}
+            onMouseMove={(e) => {
+              if (!isDraggingImage || !dragOriginRef.current || imageScale <= 1) return;
+              e.preventDefault();
+              setImagePan({
+                x: e.clientX - dragOriginRef.current.x,
+                y: e.clientY - dragOriginRef.current.y,
+              });
+            }}
+            onMouseUp={() => {
+              setIsDraggingImage(false);
+              dragOriginRef.current = null;
+            }}
+            onMouseLeave={() => {
+              setIsDraggingImage(false);
+              dragOriginRef.current = null;
+            }}
+            onTouchStart={(e) => {
+              if (e.touches.length === 2) {
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+                const midX = (t1.clientX + t2.clientX) / 2;
+                const midY = (t1.clientY + t2.clientY) / 2;
+                pinchStateRef.current = {
+                  initialDistance: Math.max(1, dist),
+                  initialScale: imageScale,
+                  initialMidpoint: { x: midX, y: midY },
+                  initialPan: { ...imagePan },
+                };
+                dragOriginRef.current = null;
+                setIsDraggingImage(true);
+              } else if (e.touches.length === 1 && imageScale > 1) {
+                const t1 = e.touches[0];
+                dragOriginRef.current = {
+                  x: t1.clientX - imagePan.x,
+                  y: t1.clientY - imagePan.y,
+                };
+                setIsDraggingImage(true);
+              }
+            }}
+            onTouchMove={(e) => {
+              if (e.touches.length === 2 && pinchStateRef.current) {
+                const t1 = e.touches[0];
+                const t2 = e.touches[1];
+                const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+                const midX = (t1.clientX + t2.clientX) / 2;
+                const midY = (t1.clientY + t2.clientY) / 2;
+                const ratio = dist / pinchStateRef.current.initialDistance;
+                const nextScale = Math.min(
+                  4,
+                  Math.max(0.6, Number((pinchStateRef.current.initialScale * ratio).toFixed(2)))
+                );
+                setImageScale(nextScale);
+                if (nextScale > 1) {
+                  setImagePan({
+                    x: pinchStateRef.current.initialPan.x + (midX - pinchStateRef.current.initialMidpoint.x),
+                    y: pinchStateRef.current.initialPan.y + (midY - pinchStateRef.current.initialMidpoint.y),
+                  });
+                } else {
+                  setImagePan({ x: 0, y: 0 });
+                }
+              } else if (e.touches.length === 1 && dragOriginRef.current && imageScale > 1) {
+                const t1 = e.touches[0];
+                setImagePan({
+                  x: t1.clientX - dragOriginRef.current.x,
+                  y: t1.clientY - dragOriginRef.current.y,
+                });
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (e.touches.length < 2) {
+                pinchStateRef.current = null;
+              }
+              if (e.touches.length === 1 && imageScale > 1) {
+                const t1 = e.touches[0];
+                dragOriginRef.current = {
+                  x: t1.clientX - imagePan.x,
+                  y: t1.clientY - imagePan.y,
+                };
+              } else if (e.touches.length === 0) {
+                dragOriginRef.current = null;
+                setIsDraggingImage(false);
+              }
+            }}
           >
             <img
               src={zoomedImage.src}
               alt={zoomedImage.alt}
+              draggable={false}
+              onDragStart={(e) => e.preventDefault()}
               style={{
-                transform: `scale(${imageScale})`,
+                transform: `translate3d(${imagePan.x}px, ${imagePan.y}px, 0) scale(${imageScale})`,
                 transformOrigin: "center center",
-                maxHeight: imageScale <= 1 ? "80vh" : undefined,
-                maxWidth: imageScale <= 1 ? "95vw" : undefined,
+                maxHeight: "78vh",
+                maxWidth: "94vw",
               }}
-              className="object-contain transition-transform duration-150 select-none cursor-grab active:cursor-grabbing shadow-2xl rounded"
+              className={`object-contain select-none pointer-events-none shadow-2xl rounded ${
+                isDraggingImage ? "" : "transition-transform duration-150 ease-out"
+              }`}
             />
           </div>
 
           {/* Bottom Caption Bar */}
           {zoomedImage.caption && (
             <div
-              className="w-full max-w-3xl text-center bg-gray-900/90 text-gray-200 text-xs sm:text-sm py-2 px-4 rounded border border-gray-800 mt-2 shrink-0"
+              className="w-full max-w-3xl text-center bg-gray-900/90 text-gray-200 text-xs sm:text-sm py-2 px-4 rounded border border-gray-800 mt-2 shrink-0 z-20"
               onClick={(e) => e.stopPropagation()}
             >
               {zoomedImage.caption}
