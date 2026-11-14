@@ -1,26 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { TrainingScenario, TRAINING_SCENARIOS } from "@/data/scenarios";
 import { Button } from "@/components/ui/button";
 import { useSpeech } from "@/lib/speech/use-speech";
-import { 
-  HelpCircle, 
-  CheckCircle, 
-  RotateCcw, 
-  Compass, 
-  BookOpen, 
-  Barcode, 
-  ArrowRight, 
+import {
+  HelpCircle,
+  CheckCircle,
+  RotateCcw,
+  Compass,
+  BookOpen,
+  Barcode,
+  ArrowRight,
   Award,
   Clock,
   Lightbulb,
-  ChevronUp,
-  ChevronDown,
   Volume2,
   VolumeX,
-  Repeat
+  Repeat,
+  Settings,
 } from "lucide-react";
 
 interface GuidedStepBarProps {
@@ -46,10 +45,13 @@ const SAMPLE_BARCODES = [
   { code: "NBS-CAL-005", name: "Sci Calculator", price: "₱420.00" },
 ];
 
+// Track last auto-spoken step key so input focus/blur or Focus Mode toggles
+// never restart the same step's speech from the beginning.
+let lastAutoSpokenStepKey: string | null = null;
+
 export function GuidedStepBar({
   scenario,
   currentStepIndex,
-  hintsUsed,
   mistakesCount,
   onShowHint,
   onResetScenario,
@@ -58,12 +60,15 @@ export function GuidedStepBar({
   onSelectScenario,
   onFillBarcode,
   remainingSeconds,
-  pageNudge
+  pageNudge,
 }: GuidedStepBarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isTtsEnabled, setIsTtsEnabled] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
   const currentInstruction = scenario?.steps[currentStepIndex]?.instruction;
   const isStepFinished = scenario ? currentStepIndex >= scenario.steps.length : false;
+  const stepKey = scenario && !isStepFinished ? `${scenario.id}:${currentStepIndex}` : null;
   const { speechSupported, isSpeaking, speak, stop } = useSpeech();
 
   useEffect(() => {
@@ -75,6 +80,17 @@ export function GuidedStepBar({
     } catch {}
   }, []);
 
+  useEffect(() => {
+    if (!isSettingsOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSettingsOpen]);
+
   const speakCurrentInstruction = () => {
     if (!speechSupported || !currentInstruction) return;
     const parts = [currentInstruction];
@@ -84,12 +100,21 @@ export function GuidedStepBar({
   };
 
   useEffect(() => {
-    if (!speechSupported || !currentInstruction || isStepFinished || !isTtsEnabled) {
+    if (!scenario || isStepFinished || !currentInstruction) {
+      lastAutoSpokenStepKey = null;
       stop();
       return;
     }
-    speak(currentInstruction, "en-US");
-  }, [currentInstruction, isStepFinished, isTtsEnabled, speechSupported, speak, stop]);
+    if (!isTtsEnabled) {
+      stop();
+      return;
+    }
+    // Only auto-speak when advancing to a new step (not on input focus/blur or layout toggles)
+    if (stepKey && lastAutoSpokenStepKey !== stepKey) {
+      lastAutoSpokenStepKey = stepKey;
+      speak(currentInstruction, "en-US");
+    }
+  }, [scenario, stepKey, currentInstruction, isStepFinished, isTtsEnabled, speak, stop]);
 
   const handleToggleTts = () => {
     const next = !isTtsEnabled;
@@ -100,13 +125,16 @@ export function GuidedStepBar({
     if (!next) {
       stop();
     } else if (currentInstruction && !isStepFinished) {
+      lastAutoSpokenStepKey = stepKey;
       speakCurrentInstruction();
     }
   };
 
   const handleRepeatInstruction = () => {
     if (!speechSupported || !currentInstruction) return;
+    lastAutoSpokenStepKey = stepKey;
     speakCurrentInstruction();
+    setIsSettingsOpen(false);
   };
 
   // Free Exploration Sandbox
@@ -175,103 +203,14 @@ export function GuidedStepBar({
     );
   }
 
-  // Lesson Practice or Module Practical Assessment Mode
-  const currentStep = scenario.steps[currentStepIndex];
+  // Lesson Practice or Module Practical Assessment Mode (Strictly 2 Rows)
   const totalSteps = scenario.steps.length;
   const isFinished = currentStepIndex >= totalSteps;
   const isLessonPractice = Boolean(scenario.lessonRef);
 
-  if (isCollapsed) {
-    return (
-      <div className="relative z-30 bg-gray-900 border-b border-yellow-500/80 text-white px-2 py-0.5 shadow-sm shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          <button
-            type="button"
-            onClick={() => setIsCollapsed(false)}
-            className="flex items-center gap-1.5 min-w-0 flex-1 text-left cursor-pointer py-0.5"
-            title="Expand step instructions"
-          >
-            <ChevronDown className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
-            <span className="text-[10px] font-mono font-bold text-yellow-300 shrink-0">
-              {isFinished ? "DONE" : `Step ${Math.min(currentStepIndex + 1, totalSteps)}/${totalSteps}`}
-            </span>
-            <span className="text-[11px] text-gray-200 truncate">
-              {isFinished ? "All steps complete" : currentStep?.instruction}
-            </span>
-          </button>
-          <div className="flex items-center space-x-1 shrink-0">
-            {!isFinished && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleToggleTts}
-                  disabled={!speechSupported}
-                  className={`text-[10px] h-5 px-1.5 ${
-                    isTtsEnabled
-                      ? "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
-                      : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700"
-                  } disabled:opacity-50`}
-                  title={
-                    speechSupported
-                      ? isTtsEnabled
-                        ? "Turn auto-voice OFF"
-                        : "Turn auto-voice ON"
-                      : "Text-to-speech is not supported in this browser"
-                  }
-                  aria-pressed={isTtsEnabled}
-                  aria-label={isTtsEnabled ? "Turn auto-voice OFF" : "Turn auto-voice ON"}
-                >
-                  {isTtsEnabled ? (
-                    <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
-                  ) : (
-                    <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
-                  )}
-                  <span>{isTtsEnabled ? "On" : "Off"}</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRepeatInstruction}
-                  disabled={!speechSupported || !currentInstruction}
-                  className={`text-[10px] h-5 px-1.5 ${
-                    isSpeaking
-                      ? "bg-emerald-800 border-emerald-400 text-white"
-                      : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
-                  } disabled:opacity-50`}
-                  title={speechSupported ? "Repeat instruction aloud" : "Text-to-speech is not supported in this browser"}
-                  aria-label="Repeat instruction aloud"
-                >
-                  <Repeat className="w-3 h-3 mr-0.5 shrink-0" />
-                  <span>Repeat</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onShowHint}
-                  className="text-[10px] bg-blue-950 border-blue-600 text-blue-200 hover:bg-blue-900 h-5 px-1.5"
-                >
-                  <HelpCircle className="w-3 h-3 mr-0.5 shrink-0" />
-                  <span>Hint</span>
-                </Button>
-              </>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsCollapsed(false)}
-              className="text-[10px] bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700 h-5 px-1.5"
-            >
-              <span>Expand</span>
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative z-30 bg-gray-900 border-b-2 border-yellow-500/80 text-white px-2 py-0.5 sm:px-3 sm:py-1 space-y-0.5 shadow-md shrink-0">
+      {/* ROW 1: Scenario Title, Step/Mistakes Counter, Free Mode & Settings Gear Dropdown */}
       <div className="flex items-center justify-between gap-1.5 border-b border-gray-800 pb-0.5">
         <div className="flex items-center space-x-1.5 min-w-0">
           <span className="text-[11px] font-mono font-bold uppercase text-yellow-300 flex items-center space-x-1 shrink-0">
@@ -282,10 +221,11 @@ export function GuidedStepBar({
             )}
             <span>{isLessonPractice ? "PRACTICE" : "ASSESSMENT"}:</span>
           </span>
-          <span className="text-[11px] text-gray-200 line-clamp-1 sm:line-clamp-none font-semibold">
+          <span className="text-[11px] text-gray-200 truncate font-semibold">
             {scenario.title}
           </span>
         </div>
+
         <div className="flex items-center space-x-1.5 text-[10px] sm:text-[11px] font-mono shrink-0 ml-auto">
           {remainingSeconds != null && (
             <span className={`font-bold shrink-0 flex items-center ${remainingSeconds <= 60 ? "text-red-400" : "text-yellow-300"}`}>
@@ -313,135 +253,105 @@ export function GuidedStepBar({
             <span className="hidden sm:inline">Free Mode</span>
             <span className="sm:hidden">Free</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsCollapsed(true)}
-            className="text-[9px] sm:text-[10px] bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800 h-5 px-1 shrink-0"
-            title="Minimize guide bar for larger POS view"
-            aria-label="Minimize guide bar"
-          >
-            <ChevronUp className="w-3 h-3" />
-          </Button>
-        </div>
-      </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 pt-0.5">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="text-[11px] sm:text-xs font-semibold text-gray-200 whitespace-normal break-words leading-snug">
-            {isFinished ? (
-              <div className="text-emerald-400 font-bold flex items-center space-x-1 text-xs">
-                <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                <span>
-                  {isLessonPractice ? "Practice Complete!" : "Assessment Complete!"} Finished all steps.
-                </span>
-              </div>
-            ) : (
-              <span className="text-yellow-200">
-                {currentInstruction}
-              </span>
-            )}
-          </div>
-          {pageNudge && !isFinished && (
-            <div className="text-[10px] sm:text-[11px] bg-amber-950/90 border border-amber-500/80 text-amber-200 px-2 py-0.5 font-mono whitespace-normal break-words leading-snug rounded">
-              {pageNudge}
-            </div>
-          )}
-          {activeHint && !isFinished && (
-            <div className="text-[10px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-1.5 py-0.5 font-mono flex items-start space-x-1 mt-0.5 rounded">
-              <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0 mt-0.5" />
-              <span className="whitespace-normal break-words leading-snug"><strong>Hint:</strong> {activeHint}</span>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-1 shrink-0 self-end sm:self-center">
           {!isFinished ? (
-            <>
+            <div ref={settingsRef} className="relative shrink-0">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={handleToggleTts}
-                disabled={!speechSupported}
-                className={`text-[10px] sm:text-xs h-6 px-1.5 sm:px-2 disabled:opacity-50 ${
-                  isTtsEnabled
-                    ? "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
-                    : "bg-gray-800 border-gray-600 text-gray-400 hover:bg-gray-700"
-                }`}
-                title={
-                  speechSupported
-                    ? isTtsEnabled
-                      ? "Turn auto-voice OFF"
-                      : "Turn auto-voice ON"
-                    : "Text-to-speech is not supported in this browser"
-                }
-                aria-pressed={isTtsEnabled}
-                aria-label={isTtsEnabled ? "Turn auto-voice OFF" : "Turn auto-voice ON"}
+                onClick={() => setIsSettingsOpen((prev) => !prev)}
+                className="text-[10px] bg-gray-800 border-gray-600 text-gray-200 hover:bg-gray-700 h-5 px-1.5 flex items-center gap-1"
+                title="Guide Options (Voice, Repeat, Hint, Reset)"
+                aria-label="Guide Settings"
+                aria-expanded={isSettingsOpen}
               >
-                {isTtsEnabled ? (
-                  <Volume2 className="w-3 h-3 mr-0.5 shrink-0" />
-                ) : (
-                  <VolumeX className="w-3 h-3 mr-0.5 shrink-0" />
-                )}
-                <span>{isTtsEnabled ? "Voice On" : "Voice Off"}</span>
+                <Settings className="w-3 h-3 text-emerald-400 shrink-0" />
+                <span className="hidden sm:inline">Options</span>
               </Button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRepeatInstruction}
-                disabled={!speechSupported || !currentInstruction}
-                className={`text-[10px] sm:text-xs h-6 px-1.5 sm:px-2 disabled:opacity-50 ${
-                  isSpeaking
-                    ? "bg-emerald-800 border-emerald-400 text-white"
-                    : "bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900"
-                }`}
-                title={
-                  speechSupported
-                    ? "Repeat instruction aloud"
-                    : "Text-to-speech is not supported in this browser"
-                }
-                aria-label="Repeat instruction aloud"
-              >
-                <Repeat className="w-3 h-3 mr-0.5 shrink-0" />
-                <span>Repeat</span>
-              </Button>
+              {isSettingsOpen && (
+                <div className="absolute right-0 top-full mt-1 z-50 w-44 bg-gray-900 border border-gray-700 rounded-md shadow-2xl p-1 flex flex-col gap-1 font-sans text-xs">
+                  <button
+                    type="button"
+                    onClick={handleToggleTts}
+                    disabled={!speechSupported}
+                    className="w-full px-2 py-1.5 rounded text-left flex items-center justify-between hover:bg-gray-800 text-gray-200 disabled:opacity-50 cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5">
+                      {isTtsEnabled ? (
+                        <Volume2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      ) : (
+                        <VolumeX className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                      )}
+                      <span>Voice Guide</span>
+                    </span>
+                    <span
+                      className={`text-[10px] font-mono font-bold px-1.5 py-0.2 rounded ${
+                        isTtsEnabled
+                          ? "bg-emerald-900/80 text-emerald-300 border border-emerald-600"
+                          : "bg-gray-800 text-gray-400 border border-gray-600"
+                      }`}
+                    >
+                      {isTtsEnabled ? "ON" : "OFF"}
+                    </span>
+                  </button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onShowHint}
-                className="text-[10px] sm:text-xs bg-blue-950 border-blue-600 text-blue-200 hover:bg-blue-900 h-6 px-1.5 sm:px-2"
-              >
-                <HelpCircle className="w-3 h-3 mr-0.5 shrink-0" />
-                <span>Hint</span>
-              </Button>
+                  <button
+                    type="button"
+                    onClick={handleRepeatInstruction}
+                    disabled={!speechSupported || !currentInstruction}
+                    className="w-full px-2 py-1.5 rounded text-left flex items-center gap-1.5 hover:bg-gray-800 text-emerald-300 disabled:opacity-50 cursor-pointer"
+                  >
+                    <Repeat className={`w-3.5 h-3.5 shrink-0 ${isSpeaking ? "animate-spin" : ""}`} />
+                    <span>Repeat Audio</span>
+                  </button>
 
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onResetScenario}
-                className="text-[10px] sm:text-xs bg-gray-900 border-gray-700 text-gray-300 hover:bg-gray-800 h-6 px-1.5 sm:px-2"
-              >
-                <RotateCcw className="w-3 h-3 mr-0.5 shrink-0" />
-                <span>Reset</span>
-              </Button>
-            </>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onShowHint();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full px-2 py-1.5 rounded text-left flex items-center gap-1.5 hover:bg-gray-800 text-blue-300 cursor-pointer"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Show Hint</span>
+                  </button>
+
+                  <div className="h-px bg-gray-800 my-0.5" />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      lastAutoSpokenStepKey = null;
+                      onResetScenario();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="w-full px-2 py-1.5 rounded text-left flex items-center gap-1.5 hover:bg-gray-800 text-red-300 cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                    <span>Reset Scenario</span>
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
-            <div className="flex items-center space-x-1 sm:space-x-1.5">
+            <div className="flex items-center space-x-1">
               <Button
                 variant="outline"
                 size="sm"
-                onClick={onResetScenario}
-                className="text-[10px] sm:text-xs bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900 font-bold h-6 px-1.5 sm:px-2"
+                onClick={() => {
+                  lastAutoSpokenStepKey = null;
+                  onResetScenario();
+                }}
+                className="text-[10px] bg-emerald-950 border-emerald-600 text-emerald-200 hover:bg-emerald-900 font-bold h-5 px-1.5"
               >
                 <RotateCcw className="w-3 h-3 mr-0.5 shrink-0" />
                 <span>Retry</span>
               </Button>
-
               {scenario.moduleRef && (
                 <Link href={`/modules/${scenario.moduleRef}`}>
-                  <Button size="sm" className="text-[10px] sm:text-xs bg-[#E4002B] hover:bg-[#C10024] text-white font-bold h-6 px-1.5 sm:px-2">
+                  <Button size="sm" className="text-[10px] bg-[#E4002B] hover:bg-[#C10024] text-white font-bold h-5 px-1.5">
                     <span>Module</span>
                     <ArrowRight className="w-3 h-3 ml-0.5 shrink-0" />
                   </Button>
@@ -450,6 +360,37 @@ export function GuidedStepBar({
             </div>
           )}
         </div>
+      </div>
+
+      {/* ROW 2: Single Horizontal-Scrolling Instruction Line (Scrolls Left & Right on Overflow) */}
+      <div className="w-full overflow-x-auto whitespace-nowrap touch-pan-x py-0.5 flex items-center gap-2 [scrollbar-width:thin]">
+        {isFinished ? (
+          <div className="text-emerald-400 font-bold flex items-center space-x-1 text-xs shrink-0">
+            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {isLessonPractice ? "Practice Complete!" : "Assessment Complete!"} Finished all steps.
+            </span>
+          </div>
+        ) : (
+          <>
+            <span className="text-[11px] sm:text-xs font-semibold text-yellow-200 shrink-0">
+              {currentInstruction}
+            </span>
+            {pageNudge && (
+              <span className="text-[10px] sm:text-[11px] bg-amber-950/90 border border-amber-500/80 text-amber-200 px-2 py-0.2 font-mono rounded shrink-0">
+                {pageNudge}
+              </span>
+            )}
+            {activeHint && (
+              <span className="text-[10px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-1.5 py-0.2 font-mono inline-flex items-center space-x-1 rounded shrink-0">
+                <Lightbulb className="w-3 h-3 text-yellow-300 shrink-0" />
+                <span>
+                  <strong>Hint:</strong> {activeHint}
+                </span>
+              </span>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

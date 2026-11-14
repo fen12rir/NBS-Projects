@@ -221,9 +221,10 @@ function SimulatorContent() {
   const [keyboardInset, setKeyboardInset] = useState(0);
   const [keyboardShiftY, setKeyboardShiftY] = useState(0);
   const keyboardShiftRef = useRef(0);
+  const posViewportRef = useRef<HTMLDivElement>(null);
   const [isPortrait, setIsPortrait] = useState(false);
   const [forceRotatePortrait, setForceRotatePortrait] = useState(true);
-  const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(false);
+  const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(true);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
@@ -294,26 +295,30 @@ function SimulatorContent() {
       const active = document.activeElement as HTMLElement | null;
       if (!active || !isEditableElement(active)) return;
 
+      if (posViewportRef.current) {
+        posViewportRef.current.scrollTop = 0;
+        posViewportRef.current.scrollLeft = 0;
+      }
+
       const vv = window.visualViewport;
       const vvTop = vv ? vv.offsetTop : 0;
       const vvHeight = vv ? vv.height : window.innerHeight;
       const diff = Math.max(0, Math.round(window.innerHeight - vvHeight));
       setKeyboardInset(diff > 80 ? diff : 240);
 
-      // Reserve 88px above the keyboard top for iPhone Chrome/Safari floating password/card/location bar
-      const safeTop = vvTop + 14;
-      const safeBottom = vvTop + Math.max(68, vvHeight - 88);
+      // Keep focused input below the 2-row guide bar and above the iOS password/card/location bar
+      const viewportRect = posViewportRef.current?.getBoundingClientRect();
+      const safeTop = viewportRect
+        ? Math.max(vvTop + 6, Math.round(viewportRect.top) + 4)
+        : vvTop + 14;
+      const safeBottom = vvTop + Math.max(safeTop + 32, vvHeight - 88);
 
       const rect = active.getBoundingClientRect();
       const currentShift = keyboardShiftRef.current;
       const unshiftedTop = rect.top - currentShift;
       const unshiftedBottom = rect.bottom - currentShift;
 
-      if (unshiftedBottom > safeBottom || vvHeight < 450) {
-        const nextShift = Math.round(safeTop - unshiftedTop);
-        keyboardShiftRef.current = nextShift;
-        setKeyboardShiftY(nextShift);
-      } else if (unshiftedTop < safeTop) {
+      if (unshiftedBottom > safeBottom || unshiftedTop < safeTop || vvHeight < 450) {
         const nextShift = Math.round(safeTop - unshiftedTop);
         keyboardShiftRef.current = nextShift;
         setKeyboardShiftY(nextShift);
@@ -403,6 +408,7 @@ function SimulatorContent() {
 
   const enterFocusMode = async () => {
     setIsFocusMode(true);
+    setIsFocusHeaderExpanded(true);
     // Push history state so mobile back gesture exits focus mode without leaving simulator
     try {
       window.history.pushState({ posFocusMode: true }, "");
@@ -751,7 +757,7 @@ function SimulatorContent() {
     const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
       ? window.innerHeight
       : window.innerWidth;
-    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 110 : 38) : 56;
+    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 84 : 38) : 56;
     const effectiveHeight = isFocusMode && portrait && forceRotatePortrait
       ? window.innerWidth - overhead
       : window.innerHeight - overhead;
@@ -3492,7 +3498,7 @@ function SimulatorContent() {
       )}
 
       {/* Guided Instruction Bar OR Customer Interaction Panel (when not in Focus Mode) */}
-      {!isFocusMode && !isInputFocused && (
+      {!isFocusMode && (
         isExamMode && examSession ? (
           <CustomerPanel
             currentCase={examSession.cases[examCaseIndex]}
@@ -3655,8 +3661,12 @@ function SimulatorContent() {
         )}
 
         {/* In Focus Mode: Guided Instruction Bar OR Customer Interaction Panel */}
-        {isFocusMode && isFocusHeaderExpanded && !isInputFocused && (
-          <div className="w-full shrink-0 z-20 overflow-y-auto max-h-36 sm:max-h-48 border-b border-gray-700 bg-gray-900 shadow-md">
+        {isFocusMode && isFocusHeaderExpanded && (
+          <div
+            className={`w-full shrink-0 z-30 border-b border-gray-700 bg-gray-900 shadow-md ${
+              isExamMode ? "overflow-y-auto max-h-36 sm:max-h-48" : "overflow-visible"
+            }`}
+          >
             {isExamMode && examSession ? (
               <CustomerPanel
                 currentCase={examSession.cases[examCaseIndex]}
@@ -3685,20 +3695,14 @@ function SimulatorContent() {
         )}
 
         <div
+          ref={posViewportRef}
           className={`flex-1 flex flex-col min-h-0 w-full transition-all duration-200 ${
             userZoomLevel > 1
               ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
-              : isInputFocused
-              ? "items-center justify-start overflow-y-auto overflow-x-hidden touch-pan-y py-1 px-1"
               : isFocusMode
               ? "items-center justify-center overflow-hidden py-0 px-1"
               : "items-center justify-center overflow-hidden p-2"
           }`}
-          style={
-            isInputFocused
-              ? { paddingBottom: `${Math.max(keyboardInset, 220)}px` }
-              : undefined
-          }
         >
           {(() => {
             const currentZoom = userZoomLevel;

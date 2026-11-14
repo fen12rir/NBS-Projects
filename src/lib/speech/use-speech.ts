@@ -23,11 +23,14 @@ function findFilipinoVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice
   );
 }
 
+// Keep active utterance at module scope so Chrome/Safari never garbage-collects it
+// and input focus / layout transitions do not prematurely cancel ongoing speech.
+let activeGlobalUtterance: SpeechSynthesisUtterance | null = null;
+
 export function useSpeech() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [hasFilipinoVoice, setHasFilipinoVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const speakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -50,8 +53,6 @@ export function useSpeech() {
     return () => {
       window.speechSynthesis.removeEventListener?.("voiceschanged", refreshVoices);
       if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
-      window.speechSynthesis.cancel();
-      utteranceRef.current = null;
     };
   }, []);
 
@@ -63,13 +64,20 @@ export function useSpeech() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
     }
-    utteranceRef.current = null;
+    activeGlobalUtterance = null;
     setIsSpeaking(false);
   }, []);
 
   const speak = useCallback(
     (text: string, lang: "en-US" | "fil-PH" = "en-US") => {
-      if (!speechSupported || !text.trim()) return;
+      if (
+        typeof window === "undefined" ||
+        !("speechSynthesis" in window) ||
+        typeof SpeechSynthesisUtterance === "undefined" ||
+        !text.trim()
+      ) {
+        return;
+      }
 
       const normalized = normalizePosSpeechText(text);
       if (!normalized) return;
@@ -77,7 +85,6 @@ export function useSpeech() {
       const voices = window.speechSynthesis.getVoices?.() || [];
       const filVoice = lang === "fil-PH" ? findFilipinoVoice(voices) : undefined;
       if (lang === "fil-PH" && !filVoice) {
-        // Avoid garbled English-accented Tagalog when no Filipino voice is installed
         return;
       }
 
@@ -88,7 +95,6 @@ export function useSpeech() {
 
       window.speechSynthesis.cancel();
 
-      // Defer speak slightly after cancel() to avoid iOS Safari / mobile Chrome dropping the utterance
       speakTimerRef.current = setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(normalized);
 
@@ -102,20 +108,24 @@ export function useSpeech() {
         }
 
         utterance.onend = () => {
-          utteranceRef.current = null;
+          if (activeGlobalUtterance === utterance) {
+            activeGlobalUtterance = null;
+          }
           setIsSpeaking(false);
         };
         utterance.onerror = () => {
-          utteranceRef.current = null;
+          if (activeGlobalUtterance === utterance) {
+            activeGlobalUtterance = null;
+          }
           setIsSpeaking(false);
         };
 
-        utteranceRef.current = utterance;
+        activeGlobalUtterance = utterance;
         setIsSpeaking(true);
         window.speechSynthesis.speak(utterance);
       }, 30);
     },
-    [speechSupported]
+    []
   );
 
   return { speechSupported, hasFilipinoVoice, isSpeaking, speak, stop };
