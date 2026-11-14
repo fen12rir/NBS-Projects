@@ -4,7 +4,7 @@ import React, { useReducer, useState, useEffect, useRef, Suspense } from "react"
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
-import { GuidedStepBar } from "@/components/simulator/guided-step-bar";
+import { GuidedStepBar, resetGuidedSpeechMemory } from "@/components/simulator/guided-step-bar";
 import { F2LookupScreen } from "@/components/simulator/screens/f2-lookup-screen";
 import { ManagerOverrideScreen } from "@/components/simulator/screens/manager-override-screen";
 import { ItemVoidScreen } from "@/components/simulator/screens/item-void-screen";
@@ -240,10 +240,17 @@ function SimulatorContent() {
       document.documentElement.style.backgroundColor = "#111827";
       document.body.style.backgroundColor = "#111827";
       return () => {
+        resetGuidedSpeechMemory();
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+        }
         document.documentElement.style.backgroundColor = prevHtmlBg;
         document.body.style.backgroundColor = prevBodyBg;
       };
     }
+    return () => {
+      resetGuidedSpeechMemory();
+    };
   }, []);
 
   // POS Green & Silver Alert Modal state
@@ -3246,6 +3253,7 @@ function SimulatorContent() {
     setTimedOut(false);
     setCompletedAttemptId(null);
     hasRecordedAttemptRef.current = false;
+    resetGuidedSpeechMemory();
     setSelectedSodButton(null);
     setSelectedLogoutButton(null);
     setIsLoyaltyOptionOpen(false);
@@ -3314,6 +3322,7 @@ function SimulatorContent() {
   };
 
   const handleSelectScenario = (scenarioId: string | null) => {
+    resetGuidedSpeechMemory();
     if (!scenarioId) {
       setActiveScenario(null);
       setTerminalMode("ACTIVE_REGISTER");

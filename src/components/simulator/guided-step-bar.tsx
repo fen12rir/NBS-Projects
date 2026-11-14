@@ -46,8 +46,15 @@ const SAMPLE_BARCODES = [
 ];
 
 // Track last auto-spoken step key so input focus/blur or Focus Mode toggles
-// never restart the same step's speech from the beginning.
+// inside the simulator never restart the same step's speech from the beginning,
+// while leaving/re-entering the simulator resets it so speech starts fresh.
 let lastAutoSpokenStepKey: string | null = null;
+let mountedGuidedBarCount = 0;
+let unmountResetTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function resetGuidedSpeechMemory() {
+  lastAutoSpokenStepKey = null;
+}
 
 export function GuidedStepBar({
   scenario,
@@ -72,13 +79,29 @@ export function GuidedStepBar({
   const { speechSupported, isSpeaking, speak, stop } = useSpeech();
 
   useEffect(() => {
+    mountedGuidedBarCount += 1;
+    if (unmountResetTimer) {
+      clearTimeout(unmountResetTimer);
+      unmountResetTimer = null;
+    }
     try {
       const saved = localStorage.getItem("nbs_guide_tts_enabled");
       if (saved === "false") {
         setIsTtsEnabled(false);
       }
     } catch {}
-  }, []);
+    return () => {
+      mountedGuidedBarCount = Math.max(0, mountedGuidedBarCount - 1);
+      if (mountedGuidedBarCount === 0) {
+        unmountResetTimer = setTimeout(() => {
+          if (mountedGuidedBarCount === 0) {
+            lastAutoSpokenStepKey = null;
+            stop();
+          }
+        }, 40);
+      }
+    };
+  }, [stop]);
 
   useEffect(() => {
     if (!isSettingsOpen) return;
@@ -326,6 +349,10 @@ export function GuidedStepBar({
                       lastAutoSpokenStepKey = null;
                       onResetScenario();
                       setIsSettingsOpen(false);
+                      if (isTtsEnabled && scenario?.steps[0]?.instruction) {
+                        lastAutoSpokenStepKey = `${scenario.id}:0`;
+                        speak(scenario.steps[0].instruction, "en-US");
+                      }
                     }}
                     className="w-full px-2 py-1.5 rounded text-left flex items-center gap-1.5 hover:bg-gray-800 text-red-300 cursor-pointer"
                   >

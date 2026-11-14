@@ -23,15 +23,15 @@ function findFilipinoVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice
   );
 }
 
-// Keep active utterance at module scope so Chrome/Safari never garbage-collects it
+// Keep active utterance and timer at module scope so Chrome/Safari never garbage-collects it
 // and input focus / layout transitions do not prematurely cancel ongoing speech.
 let activeGlobalUtterance: SpeechSynthesisUtterance | null = null;
+let globalSpeakTimer: ReturnType<typeof setTimeout> | null = null;
 
 export function useSpeech() {
   const [speechSupported, setSpeechSupported] = useState(false);
   const [hasFilipinoVoice, setHasFilipinoVoice] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const speakTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const supported =
@@ -52,14 +52,13 @@ export function useSpeech() {
 
     return () => {
       window.speechSynthesis.removeEventListener?.("voiceschanged", refreshVoices);
-      if (speakTimerRef.current) clearTimeout(speakTimerRef.current);
     };
   }, []);
 
   const stop = useCallback(() => {
-    if (speakTimerRef.current) {
-      clearTimeout(speakTimerRef.current);
-      speakTimerRef.current = null;
+    if (globalSpeakTimer) {
+      clearTimeout(globalSpeakTimer);
+      globalSpeakTimer = null;
     }
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
@@ -88,14 +87,18 @@ export function useSpeech() {
         return;
       }
 
-      if (speakTimerRef.current) {
-        clearTimeout(speakTimerRef.current);
-        speakTimerRef.current = null;
+      if (globalSpeakTimer) {
+        clearTimeout(globalSpeakTimer);
+        globalSpeakTimer = null;
       }
 
       window.speechSynthesis.cancel();
 
-      speakTimerRef.current = setTimeout(() => {
+      globalSpeakTimer = setTimeout(() => {
+        globalSpeakTimer = null;
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        }
         const utterance = new SpeechSynthesisUtterance(normalized);
 
         if (lang === "fil-PH" && filVoice) {
