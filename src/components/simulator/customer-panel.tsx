@@ -25,6 +25,7 @@ interface CustomerPanelProps {
   onFinishCase?: () => void;
   canFinishCase?: boolean;
   hasSuspendedTrx?: boolean;
+  isKeyboardOpen?: boolean;
 }
 
 export function CustomerPanel({
@@ -33,6 +34,7 @@ export function CustomerPanel({
   totalCases,
   remainingSeconds,
   hasSuspendedTrx,
+  isKeyboardOpen = false,
 }: CustomerPanelProps) {
   const [showFullQuoteMobile, setShowFullQuoteMobile] = useState(false);
 
@@ -49,13 +51,13 @@ export function CustomerPanel({
     (ev.hands || []).map((item, itIdx) => (
       <div
         key={`item-${evIdx}-${itIdx}`}
-        className="bg-gray-800 border border-emerald-500/80 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-gray-200 shadow-sm max-w-full text-[11px] sm:text-xs"
+        className="bg-gray-800 border border-emerald-500/80 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-gray-200 shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
         <ShoppingBag className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-        <span className="text-emerald-300 font-mono font-bold">
+        <span className="text-emerald-300 font-mono font-bold shrink-0">
           {item.qty}×
         </span>
-        <span className="font-semibold text-white max-w-[140px] sm:max-w-none truncate">{item.label}</span>
+        <span className="font-semibold text-white max-w-[160px] sm:max-w-none truncate">{item.label}</span>
         {item.noBarcode ? (
           <span className="bg-red-900 text-red-200 text-[9px] sm:text-[10px] px-1 py-0.2 rounded font-bold flex items-center space-x-1 shrink-0">
             <AlertTriangle className="w-3 h-3 text-red-300 shrink-0" />
@@ -81,18 +83,18 @@ export function CustomerPanel({
     ...(isRedeemingCoins ? [
       <div
         key="sulit-coins-action-pill"
-        className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-100 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
+        className="bg-amber-900 border border-amber-400 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-100 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
         <Coins className="w-3.5 h-3.5 text-amber-300 shrink-0" />
         <span className="font-bold text-yellow-300">Redeem Coins:</span>
-        <span className="font-semibold text-white break-words">Payment &rarr; F3 Bank Card &rarr; &apos;LNQR Sulit Coins&apos; (₱29)</span>
+        <span className="font-semibold text-white">Payment &rarr; F3 Bank Card &rarr; &apos;LNQR Sulit Coins&apos; (₱29)</span>
       </div>
     ] : []),
 
     ...(ev.tender ? [
       <div
         key={`tender-${evIdx}`}
-        className="bg-blue-950 border border-blue-600 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-blue-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
+        className="bg-blue-950 border border-blue-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-blue-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
         <Banknote className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
         <span className="font-bold text-white">
@@ -133,7 +135,7 @@ export function CustomerPanel({
     ...(ev.shows ? [
       <div
         key={`shows-${evIdx}`}
-        className="bg-amber-950 border border-amber-600 rounded px-2 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs"
+        className="bg-amber-950 border border-amber-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 whitespace-nowrap text-[11px] sm:text-xs"
       >
         {ev.shows === "LNQR_QR" ? (
           <QrCode className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
@@ -141,7 +143,7 @@ export function CustomerPanel({
           <CreditCard className="w-3.5 h-3.5 text-yellow-300 shrink-0" />
         )}
         <span className="font-bold text-yellow-300">Presents:</span>
-        <span className="font-medium text-white break-words">
+        <span className="font-medium text-white">
           {ev.shows === "LNC_CARD"
             ? "LNC Card (Earn Sulit Coins: Choose Option 2)"
             : ev.shows === "LNQR_QR"
@@ -162,99 +164,86 @@ export function CustomerPanel({
 
   return (
     <div className="w-full bg-[#1F2937] text-white border-b-2 border-yellow-500 shadow-md select-none">
-      {/* Top Banner: Customer Identity & Exam Timer */}
-      <div className="max-w-[1080px] mx-auto px-2.5 sm:px-4 py-1.5 sm:py-2 flex items-center justify-between gap-2">
-        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-yellow-400 text-gray-900 flex items-center justify-center font-bold shadow-inner shrink-0">
-            <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-900 shrink-0" />
+      {/* Row 1: Customer Identity, Scrollable Quote & Exam Timer */}
+      <div className="max-w-[1080px] mx-auto px-2.5 sm:px-4 py-1 flex items-center justify-between gap-2">
+        <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-x-auto scrollbar-none whitespace-nowrap">
+          <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-400 text-gray-900 flex items-center justify-center font-bold shadow-inner shrink-0">
+            <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-gray-900 shrink-0" />
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center space-x-1.5 sm:space-x-2 truncate">
-              <span className="font-extrabold text-xs sm:text-base text-yellow-300 truncate">
-                {currentCase.customerName}
-              </span>
-              <span className="text-[9px] sm:text-[11px] bg-gray-700 text-gray-300 px-1.5 sm:px-2 py-0.2 sm:py-0.5 rounded-full font-mono shrink-0">
-                #{caseIndex + 1}/{totalCases}
-              </span>
-            </div>
+          <span className="font-extrabold text-xs sm:text-sm text-yellow-300 shrink-0">
+            {currentCase.customerName}
+          </span>
+          <span className="text-[9px] sm:text-[10px] bg-gray-700 text-gray-300 px-1.5 py-0.2 rounded-full font-mono shrink-0">
+            #{caseIndex + 1}/{totalCases}
+          </span>
 
-            {/* Quote: Collapsible on mobile to save vertical space */}
-            <div className="text-[11px] sm:text-xs text-gray-300 italic flex items-center space-x-1">
-              <p className={`truncate sm:line-clamp-2 ${showFullQuoteMobile ? "whitespace-normal line-clamp-none" : ""}`}>
-                &ldquo;
-                {currentCase.id === "case-suspend-recall" && hasSuspendedTrx
-                  ? "I'm back with the eraser! Please recall my transaction: Press F5 (2nd Screen) -> F9 (Recall) -> Select and Confirm Transaction."
-                  : currentCase.customerQuote}
-                &rdquo;
-              </p>
-              {currentCase.customerQuote.length > 50 && (
-                <button
-                  type="button"
-                  onClick={() => setShowFullQuoteMobile((prev) => !prev)}
-                  className="sm:hidden text-yellow-400 hover:text-yellow-300 shrink-0 ml-1 text-[10px] font-bold underline"
-                >
-                  {showFullQuoteMobile ? "Less" : "More"}
-                </button>
-              )}
-            </div>
-          </div>
+          {/* Single-line horizontally scrollable quote */}
+          <span className="text-[11px] sm:text-xs text-gray-300 italic shrink-0">
+            &ldquo;
+            {currentCase.id === "case-suspend-recall" && hasSuspendedTrx
+              ? "I'm back with the eraser! Please recall my transaction: Press F5 (2nd Screen) -> F9 (Recall) -> Select and Confirm Transaction."
+              : currentCase.customerQuote}
+            &rdquo;
+          </span>
         </div>
 
         {/* Action Controls & Timer */}
         <div className="flex items-center space-x-2 shrink-0">
           <div
-            className={`flex items-center space-x-1 sm:space-x-1.5 px-2 sm:px-3 py-0.5 sm:py-1 rounded font-mono text-[11px] sm:text-xs font-bold ${
+            className={`flex items-center space-x-1 px-2 py-0.5 rounded font-mono text-[11px] sm:text-xs font-bold ${
               isTimeCritical
                 ? "bg-red-700 text-white animate-pulse"
                 : "bg-gray-800 text-yellow-400 border border-gray-600"
             }`}
           >
-            <Clock className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-yellow-400 shrink-0" />
+            <Clock className="w-3 h-3 text-yellow-400 shrink-0" />
             <span>{formatTime(remainingSeconds)}</span>
           </div>
         </div>
       </div>
 
-      {/* Customer Action Items / Handed Items Tray */}
-      <div className="bg-[#111827] border-t border-gray-700 py-1.5 px-2.5 sm:px-4 text-xs font-sans">
-        <div className="max-h-24 sm:max-h-32 max-w-[1080px] mx-auto flex flex-wrap items-start gap-x-3 gap-y-2 overflow-y-auto overflow-x-hidden overscroll-contain scrollbar-none py-0.5">
-          {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
-            <div className="bg-amber-950/90 border border-amber-500 rounded px-2.5 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-amber-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs animate-pulse">
-              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span className="font-bold text-white">Customer Returned:</span>
-              <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
-            </div>
-          ) : handedItems.length > 0 ? (
-            <div className="flex flex-wrap items-start gap-x-3 gap-y-2 min-w-0 max-w-full">
-              {/* 1. Items to Scan */}
-              <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full">
-                <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                  Scan Items:
-                </span>
-                <div className="flex flex-wrap items-center gap-1.5 min-w-0">{handedItems}</div>
+      {/* Row 2: Compact Horizontally Scrollable Action Items / Briefing Tray (Auto-hidden while typing on mobile keyboard) */}
+      {!isKeyboardOpen && (
+        <div className="bg-[#111827] border-t border-gray-700 py-1 px-2.5 sm:px-4 text-xs font-sans">
+          <div className="max-w-[1080px] mx-auto flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-contain scrollbar-none">
+            {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
+              <div className="bg-amber-950/90 border border-amber-500 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs animate-pulse">
+                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                <span className="font-bold text-white">Customer Returned:</span>
+                <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
               </div>
-
-              {/* 2. Payment Method */}
-              {tenderItems.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 min-w-0 max-w-full pl-2 border-l border-gray-700">
-                  <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded">
-                    Tender at F4:
+            ) : handedItems.length > 0 ? (
+              <div className="flex items-center gap-2 shrink-0">
+                {/* 1. Items to Scan */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
+                    Scan Items:
                   </span>
-                  <div className="flex flex-wrap items-center gap-1.5 min-w-0">{tenderItems}</div>
+                  <div className="flex items-center gap-1.5 shrink-0">{handedItems}</div>
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2.5 py-0.5 sm:py-1 flex flex-wrap items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm max-w-full text-[11px] sm:text-xs">
-              <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="font-bold text-white">Cashier Briefing:</span>
-              <span>
-                {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
-              </span>
-            </div>
-          )}
+
+                {/* 2. Payment Method */}
+                {tenderItems.length > 0 && (
+                  <div className="flex items-center gap-1.5 shrink-0 pl-2 border-l border-gray-700">
+                    <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
+                      Tender at F4:
+                    </span>
+                    <div className="flex items-center gap-1.5 shrink-0">{tenderItems}</div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs">
+                <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="font-bold text-white">Cashier Briefing:</span>
+                <span>
+                  {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -241,14 +241,13 @@ function SimulatorContent() {
   // In-app on-screen keyboard (touch devices): always matches the POS orientation (even with
   // iPhone Rotation Lock), never resizes the viewport, and hides the iOS AutoFill bar.
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const [preferAppKeyboard, setPreferAppKeyboard] = useState(true);
   const [oskFocusedField, setOskFocusedField] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [oskShiftY, setOskShiftY] = useState(0);
   const oskShiftRef = useRef(0);
   const oskEnabledRef = useRef(false);
   const oskLayerRef = useRef<HTMLDivElement>(null);
   const oskRef = useRef<OnScreenKeyboardHandle>(null);
-  const oskEnabled = isTouchDevice && preferAppKeyboard;
+  const oskEnabled = isTouchDevice;
   oskEnabledRef.current = oskEnabled;
 
   useEffect(() => {
@@ -258,9 +257,8 @@ function SimulatorContent() {
       (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100);
     setIsTouchDevice(touch);
     try {
-      if (window.sessionStorage.getItem("nbs-pos-keyboard") === "device") {
-        setPreferAppKeyboard(false);
-      }
+      window.localStorage.removeItem("nbs-pos-keyboard");
+      window.sessionStorage.removeItem("nbs-pos-keyboard");
     } catch {}
   }, []);
 
@@ -337,8 +335,16 @@ function SimulatorContent() {
     if (typeof document !== "undefined") {
       const prevHtmlBg = document.documentElement.style.backgroundColor;
       const prevBodyBg = document.body.style.backgroundColor;
+      const prevHtmlOverscroll = document.documentElement.style.overscrollBehavior;
+      const prevBodyOverscroll = document.body.style.overscrollBehavior;
+      const prevHtmlOverflow = document.documentElement.style.overflow;
+      const prevBodyOverflow = document.body.style.overflow;
       document.documentElement.style.backgroundColor = "#000000";
       document.body.style.backgroundColor = "#000000";
+      document.documentElement.style.overscrollBehavior = "none";
+      document.body.style.overscrollBehavior = "none";
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
 
       let themeMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
       const prevThemeColor = themeMeta?.getAttribute("content") || null;
@@ -356,6 +362,10 @@ function SimulatorContent() {
         }
         document.documentElement.style.backgroundColor = prevHtmlBg;
         document.body.style.backgroundColor = prevBodyBg;
+        document.documentElement.style.overscrollBehavior = prevHtmlOverscroll;
+        document.body.style.overscrollBehavior = prevBodyOverscroll;
+        document.documentElement.style.overflow = prevHtmlOverflow;
+        document.body.style.overflow = prevBodyOverflow;
         if (themeMeta && prevThemeColor) {
           themeMeta.setAttribute("content", prevThemeColor);
         }
@@ -1021,19 +1031,28 @@ function SimulatorContent() {
         return;
       }
       const layerRect = layer.getBoundingClientRect();
+      const vpRect = posViewportRef.current.getBoundingClientRect();
       const r = field.getBoundingClientRect();
       // rotate(90deg): local "top" is the screen's right edge
       const localTop = isCssRotated ? layerRect.right - r.right : r.top - layerRect.top;
       const localBottom = isCssRotated ? layerRect.right - r.left : r.bottom - layerRect.top;
+      const vpLocalTop = isCssRotated ? layerRect.right - vpRect.right : vpRect.top - layerRect.top;
       const current = oskShiftRef.current;
       const unshiftedTop = localTop - current;
       const unshiftedBottom = localBottom - current;
-      const kbTop = layer.offsetHeight - kbHeight - 8;
+      const safeTop = Math.max(4, Math.round(vpLocalTop + 6));
+      const safeBottom = Math.round(layer.offsetHeight - kbHeight - 8);
       let next = 0;
-      if (unshiftedBottom > kbTop) {
-        next = Math.round(kbTop - unshiftedBottom);
-        // never push the field above the top edge
-        next = Math.max(next, Math.round(4 - unshiftedTop));
+      if (unshiftedBottom > safeBottom || unshiftedTop < safeTop) {
+        const targetMid = (safeTop + safeBottom) / 2;
+        const fieldMid = (unshiftedTop + unshiftedBottom) / 2;
+        next = Math.round(targetMid - fieldMid);
+        if (unshiftedBottom + next > safeBottom) {
+          next = Math.round(safeBottom - unshiftedBottom);
+        }
+        if (unshiftedTop + next < safeTop) {
+          next = Math.round(safeTop - unshiftedTop);
+        }
       }
       if (next !== current) {
         oskShiftRef.current = next;
@@ -1042,10 +1061,12 @@ function SimulatorContent() {
     };
     // measure after layout, then again once header compaction / transforms have settled
     const raf = requestAnimationFrame(measure);
-    const settle = setTimeout(measure, 260);
+    const settle1 = setTimeout(measure, 90);
+    const settle2 = setTimeout(measure, 240);
     return () => {
       cancelAnimationFrame(raf);
-      clearTimeout(settle);
+      clearTimeout(settle1);
+      clearTimeout(settle2);
     };
   }, [showOsk, oskFocusedField, isCssRotated, terminalScale, isFocusMode, isPortrait]);
 
@@ -1053,24 +1074,6 @@ function SimulatorContent() {
     const active = document.activeElement as HTMLElement | null;
     active?.blur();
     setOskFocusedField(null);
-  };
-
-  const switchToDeviceKeyboard = () => {
-    try {
-      window.sessionStorage.setItem("nbs-pos-keyboard", "device");
-    } catch {}
-    const active = document.activeElement as HTMLElement | null;
-    active?.blur();
-    setPreferAppKeyboard(false);
-  };
-
-  const toggleKeyboardMode = () => {
-    const nextApp = !preferAppKeyboard;
-    try {
-      window.sessionStorage.setItem("nbs-pos-keyboard", nextApp ? "app" : "device");
-    } catch {}
-    (document.activeElement as HTMLElement | null)?.blur();
-    setPreferAppKeyboard(nextApp);
   };
 
   const [showItemNotFound, setShowItemNotFound] = useState(false);
@@ -3702,7 +3705,7 @@ function SimulatorContent() {
 
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
+    <div className="h-[100dvh] w-full max-w-full overflow-hidden overscroll-none flex flex-col bg-gray-900 text-gray-900 font-sans select-none">
       {/* Top Trainer Navigation Bar */}
       <header className="relative z-50 bg-black text-white px-2 sm:px-3 py-1 flex items-center justify-between text-xs font-mono border-b border-gray-800 shrink-0">
         <div className="flex items-center space-x-1.5 sm:space-x-2 min-w-0">
@@ -3824,6 +3827,7 @@ function SimulatorContent() {
             totalCases={examSession.cases.length}
             remainingSeconds={remainingSeconds}
             hasSuspendedTrx={state.suspendedTransactions.length > 0}
+            isKeyboardOpen={showOsk}
           />
         ) : (
           <GuidedStepBar
@@ -3852,9 +3856,9 @@ function SimulatorContent() {
         className={`${
           isFocusMode
             ? shouldCssRotate
-              ? "fixed z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
-              : "fixed inset-0 z-50 bg-black flex flex-col justify-start p-0 overflow-hidden"
-            : "flex-1 p-2 sm:p-4 flex flex-col items-center justify-center relative overflow-y-auto overflow-x-hidden min-h-0"
+              ? "fixed z-50 bg-black flex flex-col justify-start p-0 overflow-hidden overscroll-none"
+              : "fixed inset-0 z-50 bg-black flex flex-col justify-start p-0 overflow-hidden overscroll-none"
+            : "flex-1 p-2 sm:p-4 flex flex-col items-center justify-center relative overflow-hidden overscroll-none min-h-0"
         }`}
         style={
           shouldCssRotate
@@ -3997,11 +4001,7 @@ function SimulatorContent() {
 
         {/* In Focus Mode: Guided Instruction Bar OR Customer Interaction Panel */}
         {isFocusMode && isFocusHeaderExpanded && (
-          <div
-            className={`w-full shrink-0 z-30 border-b border-gray-700 bg-gray-900 shadow-md ${
-              isExamMode ? (showOsk ? "overflow-y-auto max-h-[46px]" : "overflow-y-auto max-h-36 sm:max-h-48 [@media(max-height:520px)]:!max-h-[92px]") : "overflow-visible"
-            }`}
-          >
+          <div className="w-full shrink-0 z-30 border-b border-gray-700 bg-gray-900 shadow-md overflow-visible">
             {isExamMode && examSession ? (
               <CustomerPanel
                 currentCase={examSession.cases[examCaseIndex]}
@@ -4009,6 +4009,7 @@ function SimulatorContent() {
                 totalCases={examSession.cases.length}
                 remainingSeconds={remainingSeconds}
                 hasSuspendedTrx={state.suspendedTransactions.length > 0}
+                isKeyboardOpen={showOsk}
               />
             ) : (
               <GuidedStepBar
@@ -4031,9 +4032,7 @@ function SimulatorContent() {
 
         <div
           ref={posViewportRef}
-          className={`flex-1 flex flex-col min-h-0 w-full transition-all duration-200 ${
-            oskShiftY !== 0 ? "relative z-40 !overflow-visible" : ""
-          } ${
+          className={`flex-1 flex flex-col min-h-0 w-full overscroll-none transition-all duration-200 ${
             userZoomLevel > 1
               ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
               : isFocusMode
@@ -6451,8 +6450,7 @@ function SimulatorContent() {
         {(isFocusMode || terminalScale < 1) && (
           <MobileKeyStrip
             onKeyPress={handleSyntheticKeyPress}
-            keyboardMode={isTouchDevice ? (preferAppKeyboard ? "app" : "device") : undefined}
-            onToggleKeyboardMode={isTouchDevice ? toggleKeyboardMode : undefined}
+            isKeyboardOpen={showOsk}
           />
         )}
       </div>
@@ -6481,8 +6479,8 @@ function SimulatorContent() {
             <OnScreenKeyboard
               ref={oskRef}
               compact={isCssRotated || !isPortrait}
+              activeField={oskFocusedField}
               onHide={hideOnScreenKeyboard}
-              onUseDeviceKeyboard={switchToDeviceKeyboard}
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { ArrowBigUp, ArrowBigUpDash, ChevronDown, CornerDownLeft, Delete, Smartphone } from "lucide-react";
+import { ArrowBigUp, ArrowBigUpDash, ChevronDown, CornerDownLeft, Delete } from "lucide-react";
 
 /**
  * In-app on-screen keyboard used on touch devices.
@@ -144,25 +144,59 @@ const SYMBOL_ROWS = ["1234567890", "@#₱&*()-+/", ".,:;'\"!?_=", "%$<>[]"];
 
 export interface OnScreenKeyboardProps {
   compact?: boolean;
+  activeField?: HTMLInputElement | HTMLTextAreaElement | null;
   onHide: () => void;
-  onUseDeviceKeyboard: () => void;
 }
 
 export interface OnScreenKeyboardHandle {
   getHeight: () => number;
 }
 
+function getFieldLabel(el: HTMLInputElement | HTMLTextAreaElement | null | undefined): string {
+  if (!el) return "Input";
+  const ph = el.getAttribute("placeholder");
+  if (ph) {
+    return ph.replace(/\s*\(.*?\)\s*/g, "").trim() || "Input";
+  }
+  const aria = el.getAttribute("aria-label");
+  if (aria) return aria;
+  return "Input";
+}
+
 export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeyboardProps>(function OnScreenKeyboard(
-  { compact = false, onHide, onUseDeviceKeyboard },
+  { compact = false, activeField = null, onHide },
   ref
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [layer, setLayer] = useState<"letters" | "symbols">("letters");
   const [shift, setShift] = useState<"off" | "on" | "lock">("off");
+  const [previewValue, setPreviewValue] = useState("");
   const shiftRef = useRef(shift);
   shiftRef.current = shift;
-  const actionsRef = useRef({ onHide, onUseDeviceKeyboard });
-  actionsRef.current = { onHide, onUseDeviceKeyboard };
+  const actionsRef = useRef({ onHide });
+  actionsRef.current = { onHide };
+
+  useEffect(() => {
+    const syncVal = () => {
+      const el = activeField || getActiveEditable();
+      if (!el) {
+        setPreviewValue("");
+        return;
+      }
+      if (el instanceof HTMLInputElement && el.type === "password") {
+        setPreviewValue("•".repeat(el.value.length));
+      } else {
+        setPreviewValue(el.value);
+      }
+    };
+    syncVal();
+    window.addEventListener("input", syncVal, true);
+    window.addEventListener("focusin", syncVal, true);
+    return () => {
+      window.removeEventListener("input", syncVal, true);
+      window.removeEventListener("focusin", syncVal, true);
+    };
+  }, [activeField]);
 
   useImperativeHandle(ref, () => ({
     getHeight: () => rootRef.current?.offsetHeight ?? 0,
@@ -203,9 +237,6 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
           return;
         case "__hide":
           actionsRef.current.onHide();
-          return;
-        case "__device":
-          actionsRef.current.onUseDeviceKeyboard();
           return;
         default: {
           const upper = shiftRef.current !== "off";
@@ -268,30 +299,33 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
       role="group"
       aria-label="On-screen keyboard"
       className={`w-full bg-[#14171c] border-t border-emerald-800/70 shadow-[0_-6px_18px_rgba(0,0,0,0.6)] select-none touch-none ${
-        compact ? "px-1.5 pt-1 pb-1" : "px-1 pt-1.5 pb-[max(6px,env(safe-area-inset-bottom))]"
+        compact ? "px-2 pt-1 pb-1" : "px-1.5 pt-1.5 pb-[max(6px,env(safe-area-inset-bottom))]"
       }`}
       style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
     >
-      <div className={`mx-auto flex flex-col ${compact ? "gap-[3px] max-w-[760px]" : "gap-1.5 max-w-[640px]"}`}>
-        {/* Toolbar */}
+      <div className={`mx-auto flex flex-col w-full ${compact ? "gap-[3px] max-w-full" : "gap-1.5 max-w-[640px]"}`}>
+        {/* Toolbar with Live Active Input Preview */}
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-gray-400">
-          <div className="flex items-center gap-1.5">
-            <button type="button" data-osk-key="__tab" className="px-2 py-0.5 rounded bg-[#23272e] text-gray-200 font-bold">
-              TAB
-            </button>
-            <button
-              type="button"
-              data-osk-key="__device"
-              className="px-2 py-0.5 rounded bg-[#23272e] text-gray-300 flex items-center gap-1"
-              title="Use the phone's own keyboard instead"
-            >
-              <Smartphone className="w-3 h-3" /> Phone keyboard
-            </button>
+          <button
+            type="button"
+            data-osk-key="__tab"
+            className="px-2.5 py-0.5 rounded bg-[#23272e] text-gray-200 font-bold shrink-0"
+          >
+            TAB ⇥
+          </button>
+          <div className="flex items-center gap-1.5 min-w-0 flex-1 justify-center bg-[#0b0d10] border border-emerald-700/70 rounded px-2.5 py-0.5 text-[11px] font-mono">
+            <span className="text-emerald-400 font-bold shrink-0">
+              {getFieldLabel(activeField)}:
+            </span>
+            <span className="text-white font-bold truncate">
+              {previewValue || <span className="text-gray-500 italic font-normal">(empty)</span>}
+            </span>
+            <span className="w-1.5 h-3.5 bg-emerald-400 animate-pulse shrink-0" />
           </div>
           <button
             type="button"
             data-osk-key="__hide"
-            className="px-2 py-0.5 rounded bg-[#23272e] text-gray-200 flex items-center gap-1 font-bold"
+            className="px-2.5 py-0.5 rounded bg-[#23272e] text-gray-200 flex items-center gap-1 font-bold shrink-0"
             aria-label="Hide keyboard"
           >
             Hide <ChevronDown className="w-3.5 h-3.5" />

@@ -47,7 +47,9 @@
   html:fullscreen,
   body:fullscreen,
   html:-webkit-full-screen,
-  body:-webkit-full-screen {
+  body:-webkit-full-screen,
+  :fullscreen::backdrop,
+  :-webkit-full-screen::backdrop {
     background-color: #000000 !important;
   }
 
