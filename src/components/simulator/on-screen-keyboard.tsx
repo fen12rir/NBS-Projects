@@ -3,16 +3,7 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { ArrowBigUp, ArrowBigUpDash, ChevronDown, CornerDownLeft, Delete } from "lucide-react";
 
-/**
- * In-app on-screen keyboard used on touch devices.
- *
- * Why: iPhones with Rotation Lock keep the native keyboard in portrait even when the
- * POS is CSS-rotated to landscape (web pages cannot override the OS orientation lock),
- * the native keyboard resizes the viewport (shrink/jump/cut-off) and iOS always shows
- * the AutoFill (password / card / location) bar. This keyboard renders inside the
- * (rotated) app layer, so it is always landscape when the POS is landscape, never
- * resizes the viewport, and never shows the AutoFill bar (inputs get inputmode="none").
- */
+// In-App On-Screen Keyboard
 
 type EditableEl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -57,7 +48,7 @@ function setNativeValue(el: EditableEl, value: string) {
   } else {
     el.value = value;
   }
-  // React listens to the native "input" event for onChange
+  // Dispatch Input Event
   el.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
@@ -76,11 +67,11 @@ function setCaret(el: EditableEl, pos: number) {
   try {
     el.setSelectionRange(pos, pos);
   } catch {
-    /* type=number etc. do not support selection */
+    // Selection Fallback
   }
 }
 
-/** Fires a cancelable keydown on the element (bubbles to React + window handlers like a real key). */
+// Keydown Event Dispatcher
 function fireKeyDown(el: Element, key: string): boolean {
   const evt = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
   el.dispatchEvent(evt);
@@ -119,7 +110,7 @@ function pressEnter() {
     insertText("\n");
     return;
   }
-  // Mimic native implicit form submission
+  // Form Submission
   const form = el.form;
   if (form) {
     if (typeof form.requestSubmit === "function") form.requestSubmit();
@@ -246,7 +237,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
       }
     };
 
-    // Native listeners so we can preventDefault: keeps focus (and caret) in the POS input
+    // Pointer Down Handler
     const handlePointerDown = (e: PointerEvent) => {
       e.preventDefault();
       const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-osk-key]");
@@ -304,7 +295,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
       style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
     >
       <div className={`mx-auto flex flex-col w-full ${compact ? "gap-[3px] max-w-full" : "gap-1.5 max-w-[640px]"}`}>
-        {/* Toolbar with Live Active Input Preview */}
+        {/* Toolbar */}
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-gray-400">
           <button
             type="button"

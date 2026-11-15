@@ -113,7 +113,7 @@ export default function AssessmentResultPage() {
               </p>
             </div>
 
-            {/* Unified 4-Metric Grid: 2x2 on Mobile, 4 columns on Desktop to eliminate empty spaces */}
+            {/* Summary Metrics Grid */}
             {(() => {
               const passedCasesCount = attempt.caseResults
                 ? attempt.caseResults.filter((c) => c.passed).length
@@ -218,7 +218,7 @@ export default function AssessmentResultPage() {
           </div>
         </div>
 
-        {/* Certificate Callout Banner: Only if passed and officially certified */}
+        {/* Certificate Callout Banner */}
         {isPassed && isCertified ? (
           <div className="bg-emerald-50 border-2 border-emerald-400/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
             <div className="flex items-center space-x-3 sm:space-x-3.5">

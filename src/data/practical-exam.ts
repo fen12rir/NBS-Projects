@@ -591,28 +591,23 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   },
 ];
 
-/**
- * Creates a randomized exam session:
- * - Case 1: Start of Day (opening shift)
- * - Cases 2-6: 4 to 5 randomly picked scenarios balancing cash, cards, corrections, loyalty
- * - Final Case: End of Day Readings & Logout
- */
+// Practical Exam Session Generator
 export function generatePracticalExamSession(seed?: string): PracticalExamSession {
   const openingCase = PRACTICAL_CASE_POOL.find((c) => c.id === "case-open-shift")!;
   const closingCase = PRACTICAL_CASE_POOL.find((c) => c.id === "case-close-shift")!;
 
-  // Eligible middle cases
+  // Middle Case Pool
   const middlePool = PRACTICAL_CASE_POOL.filter(
     (c) => c.id !== "case-open-shift" && c.id !== "case-close-shift"
   );
 
-  // Categorize for representative sampling
+  // Case Categories
   const cashCases = middlePool.filter((c) => ["case-simple-cash", "case-qty-pens", "case-lookup-calc"].includes(c.id));
   const loyaltyCases = middlePool.filter((c) => ["case-loyalty-lnc", "case-loyalty-lnqr", "case-sulit-coins"].includes(c.id));
   const cardCases = middlePool.filter((c) => ["case-pay-gcash", "case-pay-credit-card"].includes(c.id));
   const overrideCases = middlePool.filter((c) => ["case-item-void", "case-trx-void", "case-discount-pwd", "case-trx-comment-tin"].includes(c.id));
 
-  // Deterministic or pseudo-random picker
+  // Random Case Picker
   const pickRandom = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
   const selectedMiddle: PracticalExamCase[] = [
@@ -622,7 +617,7 @@ export function generatePracticalExamSession(seed?: string): PracticalExamSessio
     pickRandom(overrideCases),
   ];
 
-  // Pick 1 more from the remaining middle pool without duplicates
+  // Additional Random Case
   const alreadyChosenIds = new Set(selectedMiddle.map((c) => c.id));
   const remaining = middlePool.filter((c) => !alreadyChosenIds.has(c.id));
   if (remaining.length > 0) {
@@ -636,7 +631,7 @@ export function generatePracticalExamSession(seed?: string): PracticalExamSessio
 
   return {
     sessionId: `exam-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`,
-    totalTimeLimitSeconds: 15 * 60, // 15 minutes overall
+    totalTimeLimitSeconds: 15 * 60, // 15-Minute Time Limit
     passingScore: 80,
     cases: allCases,
   };

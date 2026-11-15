@@ -45,9 +45,7 @@ const SAMPLE_BARCODES = [
   { code: "NBS-CAL-005", name: "Sci Calculator", price: "₱420.00" },
 ];
 
-// Track last auto-spoken step key so input focus/blur or Focus Mode toggles
-// inside the simulator never restart the same step's speech from the beginning,
-// while leaving/re-entering the simulator resets it so speech starts fresh.
+// Auto-Spoken Step State
 let lastAutoSpokenStepKey: string | null = null;
 let mountedGuidedBarCount = 0;
 let unmountResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -132,7 +130,7 @@ export function GuidedStepBar({
       stop();
       return;
     }
-    // Only auto-speak when advancing to a new step (not on input focus/blur or layout toggles)
+    // Auto-Speak Step Instruction
     if (stepKey && lastAutoSpokenStepKey !== stepKey) {
       lastAutoSpokenStepKey = stepKey;
       speak(currentInstruction, "en-US");
@@ -226,14 +224,14 @@ export function GuidedStepBar({
     );
   }
 
-  // Lesson Practice or Module Practical Assessment Mode (Strictly 2 Rows)
+  // Guided Step Bar
   const totalSteps = scenario.steps.length;
   const isFinished = currentStepIndex >= totalSteps;
   const isLessonPractice = Boolean(scenario.lessonRef);
 
   return (
     <div className="relative z-30 bg-gray-900 border-b-2 border-yellow-500/80 text-white px-2 py-0.5 sm:px-3 sm:py-1 space-y-0.5 shadow-md shrink-0">
-      {/* ROW 1: Scenario Title, Step/Mistakes Counter, Free Mode & Settings Gear Dropdown */}
+      {/* Row 1: Header & Controls */}
       <div className="flex items-center justify-between gap-1.5 border-b border-gray-800 pb-0.5">
         <div className="flex items-center space-x-1.5 min-w-0">
           <span className="text-[11px] font-mono font-bold uppercase text-yellow-300 flex items-center space-x-1 shrink-0">
@@ -389,7 +387,7 @@ export function GuidedStepBar({
         </div>
       </div>
 
-      {/* ROW 2: Single Horizontal-Scrolling Instruction Line (Scrolls Left & Right on Overflow) */}
+      {/* Row 2: Step Instruction */}
       <div className="w-full overflow-x-auto whitespace-nowrap touch-pan-x py-0.5 flex items-center gap-2 [scrollbar-width:thin]">
         {isFinished ? (
           <div className="text-emerald-400 font-bold flex items-center space-x-1 text-xs shrink-0">
@@ -412,7 +410,7 @@ export function GuidedStepBar({
         )}
       </div>
 
-      {/* NEXT ROW: Active Hint (shown on its own row when requested) */}
+      {/* Row 3: Active Hint */}
       {!isFinished && activeHint && (
         <div className="w-full overflow-x-auto whitespace-nowrap touch-pan-x pt-0.5 border-t border-gray-800/80 flex items-center [scrollbar-width:thin]">
           <span className="text-[10px] sm:text-[11px] bg-yellow-950/80 border border-yellow-600 text-yellow-200 px-2 py-0.5 font-mono inline-flex items-center space-x-1.5 rounded shrink-0">

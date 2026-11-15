@@ -112,7 +112,7 @@ async function syncToMariaDb(progress: UserProgress, newAttempt?: AttemptRecord)
       }),
     });
   } catch {
-    // Non-blocking background sync to allow full offline/local resilience
+    // Background Sync Fallback
   }
 }
 
@@ -129,7 +129,7 @@ export async function fetchProgressFromMariaDb(): Promise<UserProgress | null> {
       return data as UserProgress;
     }
   } catch {
-    // Return null on failure to allow local fallback
+    // Local Storage Fallback
   }
   return null;
 }
@@ -165,7 +165,7 @@ export function saveLocalProgress(progress: UserProgress, newAttempt?: AttemptRe
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
     window.dispatchEvent(new Event("nbs_progress_updated"));
-    // Asynchronously push to MariaDB
+    // MariaDB Background Sync
     syncToMariaDb(progress, newAttempt);
   } catch (err) {
     console.error("Failed to save progress to storage", err);

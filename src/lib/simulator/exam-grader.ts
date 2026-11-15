@@ -50,35 +50,29 @@ export interface ExamSessionGradingResult {
   summaryFeedback: string;
 }
 
-/**
- * Checks if expected action matches logged action, supporting on-screen vs keyboard aliases.
- */
+// Action Alias Matcher
 function isActionMatch(expectedAction: string, loggedAction: string): boolean {
   if (expectedAction === loggedAction) return true;
-  // Navigation aliases (e.g. F12 Main Screen vs Page Down)
+  // Navigation Aliases
   if (expectedAction === "PAGE_DOWN" && (loggedAction === "NAV_MAIN" || loggedAction === "PAGE_DOWN")) return true;
   if (expectedAction === "NAV_MAIN" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_MAIN")) return true;
   if (expectedAction === "NAV_SECOND" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_SECOND")) return true;
   if (expectedAction === "NAV_THIRD" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_THIRD")) return true;
   if (expectedAction === "NAV_FOURTH" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_FOURTH")) return true;
-  // Tender submission aliases
+  // Tender Aliases
   if (expectedAction === "CONFIRM_TENDER" && (loggedAction === "SUBMIT_CASH_TENDER" || loggedAction === "CONFIRM_TENDER")) return true;
   if (expectedAction === "SUBMIT_CASH_TENDER" && (loggedAction === "CONFIRM_TENDER" || loggedAction === "SUBMIT_CASH_TENDER")) return true;
   return false;
 }
 
-/**
- * Checks if expected data matches logged data loosely (e.g. "500" vs 500, case-insensitive strings).
- */
+// Action Data Matcher
 function isDataMatch(expected?: string | number, actual?: string | number): boolean {
   if (expected === undefined) return true;
   if (actual === undefined) return false;
   return String(expected).trim().toLowerCase() === String(actual).trim().toLowerCase();
 }
 
-/**
- * Grades an individual practical case based on the trainee's raw action log and end state.
- */
+// Individual Case Grader
 export function gradeCase(
   examCase: PracticalExamCase,
   actionLog: TraineeActionLog[],
@@ -93,7 +87,7 @@ export function gradeCase(
   let missedCritical: string | undefined = undefined;
   let milestonesPassed = 0;
 
-  // 1. Milestone evaluation: credit every action logged by trainee without early pointer truncation (60% weight)
+  // 1. Milestone Evaluation (60% Weight)
   for (const milestone of examCase.milestones) {
     let matchIndex = -1;
     for (let i = 0; i < actionLog.length; i++) {
@@ -120,7 +114,7 @@ export function gradeCase(
 
   const milestonesScore = (earnedMilestonePoints / totalPossibleMilestonePoints) * 60;
 
-  // 2. Final state fidelity check (25% weight)
+  // 2. Final State Check (25% Weight)
   let finalStatePoints = 25;
   const checks = examCase.finalChecks;
 
@@ -151,7 +145,7 @@ export function gradeCase(
 
   const finalStateScore = Math.max(0, finalStatePoints);
 
-  // 3. Change computation check (10% weight)
+  // 3. Change Computation Check (10% Weight)
   let changeScore = 10;
   if (checks.expectedChange !== undefined) {
     const given = userGivenChange ?? finalSnapshot.changeGiven;
@@ -164,7 +158,7 @@ export function gradeCase(
     }
   }
 
-  // 4. Efficiency & pace (5% weight)
+  // 4. Efficiency & Pace (5% Weight)
   let efficiencyScore = 5;
   if (examCase.targetSeconds && timeSpentSeconds > examCase.targetSeconds * 2) {
     efficiencyScore = Math.max(1, efficiencyScore - 3);
@@ -199,15 +193,13 @@ export function gradeCase(
   };
 }
 
-/**
- * Aggregates all case results to compute overall exam session score and certification eligibility.
- */
+// Exam Session Grader
 export function gradeExamSession(
   session: PracticalExamSession,
   caseResults: CaseGradingResult[],
   totalTimeSpentSeconds: number
 ): ExamSessionGradingResult {
-  // Deduplicate caseResults by caseId so no case can ever be recorded twice
+  // Case Results Deduplication
   const uniqueResultsMap = new Map<string, CaseGradingResult>();
   for (const r of caseResults) {
     uniqueResultsMap.set(r.caseId, r);
@@ -223,7 +215,7 @@ export function gradeExamSession(
     uniqueResults.reduce((acc, r) => acc + r.score, 0) / (casesTotal || 1)
   );
 
-  // Passing criteria: overall >= 80% AND no more than 1 failed case
+  // Passing Criteria
   const passed = totalScore >= session.passingScore && failedCasesCount <= 1;
 
   let summaryFeedback = "";

@@ -1,6 +1,6 @@
 import mysql from "mysql2/promise";
 
-// Global cache for connection pool across Next.js hot reloads in development
+// Global Connection Pool Cache
 const globalForDb = globalThis as unknown as { pool: mysql.Pool | undefined };
 
 export const dbPool =

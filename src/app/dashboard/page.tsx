@@ -138,7 +138,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Progress Metrics Bar: In portrait, Card 1 spans full width, Card 2 & 3 sit side-by-side */}
+        {/* Progress Metrics Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           <Card className="col-span-2 sm:col-span-1 p-4 sm:p-5">
             <div className="flex items-center justify-between">

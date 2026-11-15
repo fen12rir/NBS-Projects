@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isDemoMode, setIsDemoMode] = useState(false);
 
   useEffect(() => {
-    // Check if user previously logged in or active in demo mode
+    // Stored Session Check
     const storedUser = typeof window !== "undefined" ? localStorage.getItem("nbs_user_profile") : null;
     if (storedUser) {
       try {
@@ -37,11 +37,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setIsLoading(false);
         return;
       } catch {
-        // Fallback to default
+        // Default User Fallback
       }
     }
 
-    // Default to active demo user for instant access in training sandbox
+    // Default Demo User
     if (typeof window !== "undefined") {
       localStorage.setItem("nbs_demo_active", "true");
     }

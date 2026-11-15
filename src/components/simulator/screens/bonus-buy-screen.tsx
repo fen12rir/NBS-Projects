@@ -53,7 +53,7 @@ export function BonusBuyScreen({
   onConfirm,
   onCancel,
 }: BonusBuyScreenProps) {
-  // If transaction total >= 500, row 0 (Free bag) is eligible; otherwise row 1 (10 PHP bag) is eligible.
+  // Free Bag Eligibility
   const isEligibleForFree = transactionTotal >= 500;
   const initialRow = isEligibleForFree ? 0 : 1;
 
@@ -65,26 +65,26 @@ export function BonusBuyScreen({
   const [checkedRow, setCheckedRow] = useState<number | null>(null);
   const [lookForText, setLookForText] = useState("");
 
-  // Confirmation dialog state: "OK" or "CANCEL" or null (closed)
+  // Confirmation Dialog State
   const [confirmDialogAction, setConfirmDialogAction] = useState<"OK" | "CANCEL" | null>(null);
   const [confirmSelectedBtn, setConfirmSelectedBtn] = useState<"YES" | "NO">("YES");
 
-  // Focusable elements refs for keyboard Tab cycling
+  // Input Focus Refs
   const lookForRef = useRef<HTMLInputElement>(null);
   const qty0Ref = useRef<HTMLInputElement>(null);
   const chk0Ref = useRef<HTMLInputElement>(null);
   const qty1Ref = useRef<HTMLInputElement>(null);
   const chk1Ref = useRef<HTMLInputElement>(null);
 
-  // Initial focus on mount is on the "Look for:" input field
+  // Initial Input Focus
   useEffect(() => {
     lookForRef.current?.focus();
   }, []);
 
-  // Handle global keyboard shortcuts inside Bonus Buy Screen
+  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 1. When confirmation dialog is open
+      // 1. Confirmation Dialog Shortcuts
       if (confirmDialogAction !== null) {
         if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Tab") {
           e.preventDefault();
@@ -102,7 +102,7 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 2. Alt+Enter -> Trigger OK confirmation (only when a bonus item checkbox is checked)
+      // 2. OK Confirmation Shortcut
       if (e.altKey && e.key === "Enter") {
         e.preventDefault();
         if (checkedRow === null) return;
@@ -111,7 +111,7 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 3. Alt+B or Escape -> Trigger CANCEL confirmation
+      // 3. Cancel Confirmation Shortcut
       if ((e.altKey && (e.key === "b" || e.key === "B")) || e.key === "Escape") {
         e.preventDefault();
         setConfirmSelectedBtn("YES");
@@ -119,7 +119,7 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 4. F11 or ArrowUp -> Select Row 0
+      // 4. Select Row 0
       if (e.key === "F11" || e.key === "ArrowUp") {
         e.preventDefault();
         setSelectedRow(0);
@@ -127,7 +127,7 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 5. F12 or ArrowDown -> Select Row 1
+      // 5. Select Row 1
       if (e.key === "F12" || e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedRow(1);
@@ -135,7 +135,7 @@ export function BonusBuyScreen({
         return;
       }
 
-      // 6. Spacebar toggles checkbox of currently selected row if not typing in text/number input
+      // 6. Toggle Checkbox Shortcut
       if (e.key === " " && document.activeElement?.tagName !== "INPUT") {
         e.preventDefault();
         handleToggleCheckbox(selectedRow);
@@ -214,7 +214,7 @@ export function BonusBuyScreen({
     }
   };
 
-  // Format today's date (e.g. 2026-Oct-23)
+  // Current Date String
   const todayStr = (() => {
     const d = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -223,7 +223,7 @@ export function BonusBuyScreen({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-white min-h-0 overflow-hidden select-none relative">
-      {/* 1. TOP HEADER BAR */}
+      {/* 1. Top Header Bar */}
       <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
         <span><span className="font-bold">Trx.:</span> {trxNumber}</span>
         <span><span className="font-bold">Clerk:</span> {clerkName}</span>
@@ -232,15 +232,15 @@ export function BonusBuyScreen({
         <span className="font-bold">{todayStr}</span>
       </div>
 
-      {/* 2. YELLOW BANNER: BONUS BUY LIST */}
+      {/* 2. Yellow Banner */}
       <div className="bg-[#FFEE55] border-b border-gray-400 py-1.5 text-center font-bold text-sm text-gray-900 uppercase tracking-wider font-sans flex-shrink-0">
         BONUS BUY LIST
       </div>
 
-      {/* 3. TOOLBAR: F11, F12 Large Beveled Buttons & Look for Input */}
+      {/* 3. Toolbar */}
       <div className="bg-[#CCD2D8] border-b border-gray-400 px-3 py-2 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center space-x-1">
-          {/* F11 Up Button (Beveled WinXP button with green up arrow) */}
+          {/* F11 Up Button */}
           <button
             type="button"
             onClick={() => {
@@ -253,7 +253,7 @@ export function BonusBuyScreen({
             <span className="text-[10px] font-bold text-gray-900 leading-none">F11</span>
           </button>
 
-          {/* F12 Down Button (Beveled WinXP button with green down arrow) */}
+          {/* F12 Down Button */}
           <button
             type="button"
             onClick={() => {
@@ -267,7 +267,7 @@ export function BonusBuyScreen({
           </button>
         </div>
 
-        {/* Look for: input (first focused on page entry, Tab moves to quantity) */}
+        {/* Look For Input */}
         <div className="flex items-center space-x-3 text-sm font-bold text-gray-900">
           <span>Look for:</span>
           <input
@@ -291,7 +291,7 @@ export function BonusBuyScreen({
         </div>
       </div>
 
-      {/* 4. TABLE HEADERS */}
+      {/* 4. Table Headers */}
       <div className="bg-[#CCD2D8] border-b border-gray-400 grid grid-cols-12 text-xs font-bold text-gray-900 uppercase tracking-tight">
         <div className="col-span-2 px-3 py-1 border-t border-l border-white border-r border-b border-gray-400">
           PROMO CODE
@@ -310,7 +310,7 @@ export function BonusBuyScreen({
         </div>
       </div>
 
-      {/* 5. TABLE BODY */}
+      {/* 5. Table Body */}
       <div className="flex-1 bg-white overflow-y-auto min-h-0">
         <table className="w-full text-left font-sans text-xs border-collapse">
           <tbody>
@@ -320,7 +320,7 @@ export function BonusBuyScreen({
               const qtyRef = idx === 0 ? qty0Ref : qty1Ref;
               const chkRef = idx === 0 ? chk0Ref : chk1Ref;
 
-              // The highlighted row is dynamically whichever row is selectedRow!
+              // Active Row Highlight
               const rowBg = isSelected ? "bg-[#8CD028]" : "bg-white";
 
               return (
@@ -414,13 +414,13 @@ export function BonusBuyScreen({
         </table>
       </div>
 
-      {/* 6. BOTTOM GREEN BAR: Centered OK / CANCEL & Page: 1 / 0 + Clock on far right */}
+      {/* 6. Bottom Action Bar */}
       <div className="bg-[#22A838] border-t border-green-700 px-4 py-1 flex items-center justify-between text-xs font-sans h-11 flex-shrink-0">
         <div className="w-1/4" />
 
-        {/* Center: OK Alt-Enter & CANCEL Alt-B */}
+        {/* Action Buttons */}
         <div className="flex items-center justify-center space-x-6 flex-1">
-          {/* OK Alt-Enter */}
+          {/* OK Button */}
           <button
             type="button"
             disabled={checkedRow === null}
@@ -439,7 +439,7 @@ export function BonusBuyScreen({
             <span className="text-[9px] text-gray-900 leading-tight">Alt-Enter</span>
           </button>
 
-          {/* CANCEL Alt-B */}
+          {/* Cancel Button */}
           <button
             type="button"
             onClick={() => {
@@ -453,13 +453,13 @@ export function BonusBuyScreen({
           </button>
         </div>
 
-        {/* Far Right: Page: 1 / 0 */}
+        {/* Page Counter */}
         <div className="w-1/4 text-right font-sans font-bold text-xs text-gray-900 pr-2">
           Page: 1 / 0
         </div>
       </div>
 
-      {/* 7. CONFIRMATION POPUP MODAL ("Do you want to continue?") */}
+      {/* 7. Confirmation Modal */}
       {confirmDialogAction !== null && (
         <div className="absolute inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
           <div className="w-80 bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl p-4 flex flex-col items-center space-y-4 font-sans">

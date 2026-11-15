@@ -78,7 +78,7 @@ export function F2LookupScreen({
     setPage(1);
   }, [initialSearch]);
 
-  // Filter products based on active mode & submitted search term (empty on first visit)
+  // Filtered Products
   const filteredProducts = SYNTHETIC_PRODUCTS.filter((item) => {
     if (!submittedSearch || !submittedSearch.trim()) return false;
 

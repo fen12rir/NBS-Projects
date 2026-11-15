@@ -175,7 +175,7 @@ function LessonDetailContent() {
 
   const isCompleted = progress.completedLessons.includes(currentLesson.id) || justCompleted;
 
-  // Find a scenario specific to this lesson; fall back to the module-level scenario
+  // Lesson Practice Scenario
   const lessonScenario = getScenarioForLesson(currentLesson.id);
   const simulatorUrl = lessonScenario
     ? `/simulator?scenario=${lessonScenario.id}&lesson=${currentLesson.id}&module=${currentModule.id}`
@@ -207,7 +207,7 @@ function LessonDetailContent() {
   return (
     <LearningShell currentModuleId={moduleId} currentLessonId={lessonId}>
       <div className="max-w-4xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        {/* Navigation Breadcrumb & Settings Gear Dropdown (Single Row, Opposite Sides) */}
+        {/* Navigation Breadcrumb & Settings */}
         <div className="flex items-center justify-between gap-2">
           <Link
             href={`/modules/${currentModule.id}`}
@@ -692,7 +692,7 @@ function LessonDetailContent() {
             </div>
           </div>
 
-          {/* Centered Pinch-Zoomable & Pannable Image Viewport */}
+          {/* Zoomable Image Viewport */}
           <div
             className={`flex-1 w-full max-w-5xl flex items-center justify-center overflow-hidden p-2 relative touch-none ${
               imageScale > 1

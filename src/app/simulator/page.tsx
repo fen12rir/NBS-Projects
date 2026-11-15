@@ -217,7 +217,7 @@ function SimulatorContent() {
     setExamActionLog((prev) => [...prev, entry]);
   };
 
-  // Mobile / Focus Mode States (Forced Landscape)
+  // Mobile & Focus Mode States
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [terminalScale, setTerminalScale] = useState(1);
   const [userZoomLevel, setUserZoomLevel] = useState(1);
@@ -238,8 +238,7 @@ function SimulatorContent() {
   const [isFocusHeaderExpanded, setIsFocusHeaderExpanded] = useState(true);
   const [isIOS, setIsIOS] = useState(false);
 
-  // In-app on-screen keyboard (touch devices): always matches the POS orientation (even with
-  // iPhone Rotation Lock), never resizes the viewport, and hides the iOS AutoFill bar.
+  // In-App On-Screen Keyboard States
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [oskFocusedField, setOskFocusedField] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [oskShiftY, setOskShiftY] = useState(0);
@@ -376,7 +375,7 @@ function SimulatorContent() {
     };
   }, []);
 
-  // POS Green & Silver Alert Modal state
+  // POS Alert Modal State
   const [posAlert, setPosAlert] = useState<PosAlertState | null>(null);
   const showPosAlert = (
     message: string,
@@ -387,7 +386,7 @@ function SimulatorContent() {
     setPosAlert({ isOpen: true, message, title, type, onClose });
   };
 
-  // User-selected input zoom & mobile keyboard / iOS accessory bar visibility tracking
+  // Mobile Input Focus & Keyboard Tracking
   useEffect(() => {
     let isUserTap = false;
     let lastTapTarget: HTMLElement | null = null;
@@ -429,7 +428,7 @@ function SimulatorContent() {
         window.scrollTo(0, 0);
       }
 
-      // In-app keyboard: no native keyboard -> no viewport resize, so skip native keyboard compensation
+      // In-App Keyboard Mode
       if (oskEnabledRef.current) {
         wasKeyboardOpen = false;
         if (keyboardShiftRef.current !== 0) {
@@ -447,7 +446,7 @@ function SimulatorContent() {
 
       setVvOffsetTop(vvTop);
 
-      // Detect iOS keyboard dismiss button (closes keyboard without firing blur on input)
+      // iOS Keyboard Dismiss Detection
       if (diff > 80) {
         wasKeyboardOpen = true;
       } else if (wasKeyboardOpen && diff < 50) {
@@ -476,7 +475,7 @@ function SimulatorContent() {
 
       setKeyboardInset(diff > 80 ? diff : 240);
 
-      // Keep focused input below the 2-row guide bar and above the iOS password/card/location bar
+      // Focused Input Alignment
       const viewportRect = posViewportRef.current?.getBoundingClientRect();
       const safeTop = viewportRect
         ? Math.max(vvTop + 6, Math.round(viewportRect.top) + 4)
@@ -508,9 +507,7 @@ function SimulatorContent() {
       }
     };
 
-    // A focus counts as user-initiated if it follows a recent tap on that field (or on its label /
-    // wrapper). Using the tap target + time instead of a flag means a focusout from a previously
-    // focused button can no longer swallow the first tap (which forced users to tap twice).
+    // User Tap Verification
     const wasTappedByUser = (target: HTMLElement | null) => {
       if (!target || !lastTapTarget) return false;
       if (Date.now() - lastTapTime > 1500) return false;
@@ -543,8 +540,7 @@ function SimulatorContent() {
           window.innerHeight < 520 ||
           Boolean(window.matchMedia?.("(pointer: coarse)").matches));
 
-      // Never allow an input to focus or trigger the keyboard when the completion modal is open,
-      // or on mobile touch devices when autoFocus fires from a button/screen transition instead of a user tap.
+      // Block Unintended Auto-Focus
       if (
         isEditableElement(target) &&
         (isExamCompletedRef.current || (isTouchMobile && !isUserTap && !isInputFocusedRef.current))
@@ -559,7 +555,7 @@ function SimulatorContent() {
         return;
       }
 
-      // Keep keyboard-safe layout active on mobile when tapped or tabbing between fields
+      // Activate Mobile Keyboard Layout
       if (isMobile && isEditableElement(target) && (isUserTap || isInputFocusedRef.current)) {
         isInputFocusedRef.current = true;
         setIsInputFocused(true);
@@ -580,7 +576,7 @@ function SimulatorContent() {
         setVvOffsetTop(0);
       }
       if (isEditableElement(target)) {
-        lastTapTarget = null; // consume the tap so later programmatic autoFocus is not treated as a tap
+        lastTapTarget = null;
       }
       isUserTap = false;
     };
@@ -625,7 +621,7 @@ function SimulatorContent() {
   const enterFocusMode = async () => {
     setIsFocusMode(true);
     setIsFocusHeaderExpanded(true);
-    // Push history state so mobile back gesture exits focus mode without leaving simulator
+    // Focus Mode History State
     try {
       window.history.pushState({ posFocusMode: true }, "");
     } catch {}
@@ -639,7 +635,7 @@ function SimulatorContent() {
       }
     } catch {}
 
-    // 2. Lock to landscape where API is supported
+    // 2. Landscape Orientation Lock
     try {
       const orientation = (screen as any).orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
       if (orientation && typeof orientation.lock === "function") {
@@ -659,7 +655,7 @@ function SimulatorContent() {
     if (triggerHistoryBack && typeof window !== "undefined" && window.history.state?.posFocusMode) {
       window.history.back();
     }
-    // 1. Unlock screen orientation
+    // 1. Unlock Screen Orientation
     try {
       const orientation = (screen as any).orientation || (screen as any).mozOrientation || (screen as any).msOrientation;
       if (orientation && typeof orientation.unlock === "function") {
@@ -669,7 +665,7 @@ function SimulatorContent() {
       }
     } catch {}
 
-    // 2. Exit fullscreen
+    // 2. Exit Fullscreen
     try {
       if (document.fullscreenElement || (document as any).webkitFullscreenElement) {
         if (document.exitFullscreen) {
@@ -689,7 +685,7 @@ function SimulatorContent() {
     }
   };
 
-  // Mobile Hardware / Browser Back button & ESC Fullscreen exit handling in Focus Mode
+  // Focus Mode Back & Fullscreen Listeners
   useEffect(() => {
     const handlePopState = () => {
       if (isFocusMode) {
@@ -729,7 +725,7 @@ function SimulatorContent() {
     }
   }, [isExamMode, examSession]);
 
-  // Synchronize payment terminal slip data whenever practical exam case changes
+  // Practical Exam Terminal Slip Sync
   useEffect(() => {
     if (!isExamMode || !examSession) return;
     const currentCase = examSession.cases[examCaseIndex];
@@ -832,7 +828,7 @@ function SimulatorContent() {
   const [isBonusBuyOpen, setIsBonusBuyOpen] = useState(false);
   const [hasBonusBuyBeenPrompted, setHasBonusBuyBeenPrompted] = useState(false);
 
-  // Bank Card In-Screen Flow (Credit Card & E-Wallets like GCash / Maya & Sodexho)
+  // Bank Card In-Screen Flow States
   const [bankCardStep, setBankCardStep] = useState<"SELECT_TYPE" | "SWIPE_CARD" | "DETAILS" | "EWALLET_DETAILS" | "SODEXHO_SERIES" | "SODEXHO_DETAILS" | "FINAL_TEAROFF">("SELECT_TYPE");
   const [sodexhoSeriesType, setSodexhoSeriesType] = useState("-SELECT-");
   const [sodexhoNumber, setSodexhoNumber] = useState("1");
@@ -967,7 +963,7 @@ function SimulatorContent() {
 
   const checkViewport = () => {
     if (typeof window === "undefined") return;
-    // When virtual keyboard opens on mobile/iOS, prevent crushing scale or reverting forced landscape
+    // Skip Resize While Input Focused
     if (isInputFocusedRef.current) return;
 
     const portrait = window.innerHeight > window.innerWidth;
@@ -1008,8 +1004,7 @@ function SimulatorContent() {
   const isCssRotated = isFocusMode && isPortrait && forceRotatePortrait;
   const showOsk = oskEnabled && oskFocusedField !== null;
 
-  // Keep the focused POS field just above the in-app keyboard (computed in the app's own,
-  // possibly CSS-rotated, coordinate space so it works the same with Rotation Lock on).
+  // Focused Field Position Alignment
   useEffect(() => {
     if (!showOsk || !oskFocusedField) {
       if (oskShiftRef.current !== 0) {
@@ -1033,7 +1028,7 @@ function SimulatorContent() {
       const layerRect = layer.getBoundingClientRect();
       const vpRect = posViewportRef.current.getBoundingClientRect();
       const r = field.getBoundingClientRect();
-      // rotate(90deg): local "top" is the screen's right edge
+      // Local Coordinate Bounds
       const localTop = isCssRotated ? layerRect.right - r.right : r.top - layerRect.top;
       const localBottom = isCssRotated ? layerRect.right - r.left : r.bottom - layerRect.top;
       const vpLocalTop = isCssRotated ? layerRect.right - vpRect.right : vpRect.top - layerRect.top;
@@ -1059,7 +1054,7 @@ function SimulatorContent() {
         setOskShiftY(next);
       }
     };
-    // measure after layout, then again once header compaction / transforms have settled
+    // Layout Measurement Schedule
     const raf = requestAnimationFrame(measure);
     const settle1 = setTimeout(measure, 90);
     const settle2 = setTimeout(measure, 240);
@@ -1139,7 +1134,7 @@ function SimulatorContent() {
     }
   };
 
-  // Auto-quit Focus Mode and blur any active input when practice scenario or assessment completes
+  // Scenario Completion Handler
   useEffect(() => {
     isExamCompletedRef.current = isExamCompleted || timedOut;
     if (isExamCompleted || timedOut) {
@@ -1336,7 +1331,7 @@ function SimulatorContent() {
     setLnqrCashTenderInput("");
 
     if (optionNum === 1) {
-      // 1. None: Directly navigate to Payment screen
+      // 1. None
       setLoyaltyType("NONE");
       setIsLoyaltyOptionOpen(false);
       setSelectedTenderMethod("CASH");
@@ -1345,13 +1340,13 @@ function SimulatorContent() {
       dispatch({ type: "OPEN_PAYMENT" });
       validateScenarioStep("CHOOSE_LNQR_OPTION", 1);
     } else if (optionNum === 2) {
-      // 2. Laking National Card: Intermediate card input screen
+      // 2. Laking National Card
       setIsLoyaltyOptionOpen(false);
       setIsLncCardScreenOpen(true);
       setSelectedLncButton(null);
       validateScenarioStep("CHOOSE_LNQR_OPTION", 2);
     } else if (optionNum === 3) {
-      // 3. LNQR / LNQR PLUS: Intermediate QR scan screen
+      // 3. LNQR / LNQR PLUS
       setIsLoyaltyOptionOpen(false);
       setIsLnqrScanScreenOpen(true);
       setSelectedLnqrButton(null);
@@ -1493,7 +1488,7 @@ function SimulatorContent() {
       setTimeout(() => {
         setIsSulitLoading(false);
         const remainingDue = Math.max(0, totals.totalAmount - redeemedCoins);
-        // If remaining balance exists, allow cashier to select tender method again (Cash or Bank Card)
+        // Remaining Balance Tender
         if (remainingDue > 0) {
           setSelectedTenderMethod(null);
           setSelectedBankCardType("-SELECT-");
@@ -1503,7 +1498,7 @@ function SimulatorContent() {
           setIsFinalTenderStep(false);
           setLnqrCashTenderInput("");
         } else {
-          // Exactly paid off by Sulit Coins
+          // Full Sulit Coins Payment
           setSelectedTenderMethod("BANK_CARD");
           setIsFinalTenderStep(true);
         }
@@ -1511,7 +1506,7 @@ function SimulatorContent() {
       return;
     }
 
-    // Auto-fallback to terminal receipt details if trainee submits without re-typing
+    // Terminal Receipt Fallback
     if (!bankCardAuthCode.trim() && currentCardAuth) {
       setBankCardAuthCode(currentCardAuth);
     }
@@ -1938,7 +1933,7 @@ function SimulatorContent() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Do not intercept keystrokes when ChangeCheckModal is active
+      // Change Check Modal Guard
       if (isChangeCheckModalOpen) {
         return;
       }
@@ -2079,7 +2074,7 @@ function SimulatorContent() {
         return;
       }
 
-      // 1. If in START_OF_DAY_VERIFY mode
+      // 1. Start of Day Verify Mode
       if (terminalMode === "START_OF_DAY_VERIFY") {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -2100,7 +2095,7 @@ function SimulatorContent() {
         }
       }
 
-      // 1b. If in START_OF_DAY_INCORRECT mode
+      // 1b. Start of Day Incorrect Mode
       if (terminalMode === "START_OF_DAY_INCORRECT") {
         if (e.key === "Escape" || e.key === "Enter" || e.key === "Backspace") {
           e.preventDefault();
@@ -2111,7 +2106,7 @@ function SimulatorContent() {
         }
       }
 
-      // 2. If in START_OF_DAY_CLOSE mode (Ctrl+Alt+C closes setup window to POS Reloader)
+      // 2. Start of Day Close Mode
       if (terminalMode === "START_OF_DAY_CLOSE") {
         if (e.ctrlKey && e.altKey && (e.key === "c" || e.key === "C")) {
           e.preventDefault();
@@ -2120,7 +2115,7 @@ function SimulatorContent() {
         }
       }
 
-      // 2b. If in POS_RELOADER mode 
+      // 2b. POS Reloader Mode
       if (terminalMode === "POS_RELOADER") {
         if (e.key === "F5") {
           e.preventDefault();
@@ -2129,7 +2124,7 @@ function SimulatorContent() {
         }
       }
 
-      // 3. If in USER_LOGIN mode
+      // 3. User Login Mode
       if (terminalMode === "USER_LOGIN") {
         if (e.key === "Enter") {
           e.preventDefault();
@@ -2138,7 +2133,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4. If in LOGOUT confirmation modal
+      // 4. Logout Confirmation Modal
       if (isLogoutScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -2164,7 +2159,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4b. Loyalty Option modal (1, 2, 3, Escape)
+      // 4b. Loyalty Option Modal
       if (isLoyaltyOptionOpen) {
         if (e.key === "1") {
           e.preventDefault();
@@ -2188,7 +2183,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4c-1. LNC Card Input Screen 
+      // 4c-1. LNC Card Input Screen
       if (isLncCardScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -2211,7 +2206,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4c-2. LNQR Scan Input Screen 
+      // 4c-2. LNQR Scan Input Screen
       if (isLnqrScanScreenOpen) {
         if (e.key === "Tab") {
           e.preventDefault();
@@ -2234,7 +2229,7 @@ function SimulatorContent() {
         }
       }
 
-      // 4d. LNQR Updated Confirmation Modal (Enter or Escape confirms)
+      // 4d. LNQR Updated Confirmation Modal
       if (isLnqrUpdatedModalOpen) {
         if (e.key === "Enter" || e.key === "Escape") {
           e.preventDefault();
@@ -2247,7 +2242,7 @@ function SimulatorContent() {
       if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
         if (isLnqrTenderProcessed || isFinalTenderStep) {
           if (!isFinalTenderStep) {
-            // Block all keys during "Dont press any key.. Please wait..."
+            // Processing Lock
             e.preventDefault();
             return;
           }
@@ -2387,7 +2382,7 @@ function SimulatorContent() {
         }
       }
 
-      // 5. In ACTIVE_REGISTER mode: handle physical F-keys
+      // 5. Active Register F-Key Handler
       if (terminalMode === "ACTIVE_REGISTER") {
         if (e.key.startsWith("F") && !isNaN(Number(e.key.substring(1)))) {
           e.preventDefault();
@@ -2778,12 +2773,12 @@ function SimulatorContent() {
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return true;
 
-    // Allow non-destructive page navigation (F5 / F12 / Page Up / Page Down) without penalty
+    // Non-Destructive Page Navigation
     if (NAV_ACTIONS.has(actionId)) {
       return true;
     }
 
-    // In Lesson Practice mode, allow backing out of sub-screens without penalty
+    // Sub-Screen Back Navigation
     if (activeScenario.lessonRef && (actionId === "PAY_BACK" || actionId === "CLOSE_LOOKUP")) {
       return true;
     }
@@ -2859,7 +2854,7 @@ function SimulatorContent() {
     const updatedCaseResults = [...caseResults, graded];
     setCaseResults(updatedCaseResults);
 
-    // Reset simulator transaction state for next customer
+    // Reset Transaction State
     dispatch({ type: "CLOSE_PAYMENT" });
     dispatch({ type: "RESET_TRANSACTION" });
     setIsLnqrCashPaymentOpen(false);
@@ -2942,13 +2937,13 @@ function SimulatorContent() {
 
   const handleSyntheticKeyPress = (key: string, altKey = false, ctrlKey = false) => {
     if (key === "Enter") {
-      // 1. If yellow barcode input on MAIN page has content, trigger barcode scan directly
+      // 1. Main Barcode Input Submit
       if (state.currentPage === "MAIN" && barcodeInput.trim()) {
         handleBarcodeSubmit({ preventDefault: () => {} } as React.FormEvent);
         return;
       }
 
-      // 2. If a form input is currently focused in the DOM, submit its form
+      // 2. Active Form Input Submit
       const activeEl = document.activeElement as HTMLElement | null;
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "SELECT")) {
         const form = (activeEl as HTMLInputElement).form;
@@ -2984,7 +2979,7 @@ function SimulatorContent() {
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return true;
 
-    // Auto-advance if trainee tenders cash while at PAY_CASH step
+    // Cash Tender Auto-Advance
     if (
       currentStep.expectedAction === "PAY_CASH" &&
       (actionId === "CONFIRM_TENDER" || actionId === "SUBMIT_CASH_TENDER")
@@ -3007,7 +3002,7 @@ function SimulatorContent() {
       return true;
     }
 
-    // Auto-advance if trainee tenders while at CHOOSE_LNQR_OPTION
+    // Loyalty Option Auto-Advance
     if (
       currentStep.expectedAction === "CHOOSE_LNQR_OPTION" &&
       (actionId === "PAY_CASH" || actionId === "PAY_CARD")
@@ -3054,39 +3049,37 @@ function SimulatorContent() {
       return true;
     }
 
-    // Strict navigation validation per target screen
-
-    // Allow switching between POS function-key pages without recording a mistake
+    // Navigation Validation Rules
     if (NAV_ACTIONS.has(actionId)) {
       return true;
     }
 
-    // In Lesson Practice mode, allow backing out of sub-screens without recording a mistake
+    // Sub-Screen Back Navigation
     if (activeScenario.lessonRef && (actionId === "PAY_BACK" || actionId === "CLOSE_LOOKUP")) {
       return true;
     }
 
-    // If choosing loyalty option (1. None or 2. LNC) in non-loyalty scenario, do not record mistake:
+    // Loyalty Option Selection
     if (actionId === "CHOOSE_LNQR_OPTION" && currentStep.expectedAction !== "CHOOSE_LNQR_OPTION") {
       return true;
     }
 
-    // If trainee presses F2 (PAY_CASH) while at CONFIRM_TENDER step, do not record mistake:
+    // Cash Tender Key Repeat
     if (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "PAY_CASH") {
       return true;
     }
 
-    // If trainee switches lookup search mode (F2/F3/F4) while at LOOKUP_QUERY step, allow without mistake:
+    // Lookup Search Mode Switch
     if (currentStep.expectedAction === "LOOKUP_QUERY" && actionId === "LOOKUP_SEARCH") {
       return true;
     }
 
-    // If trainee toggles Bonus Buy checkbox while at CONFIRM_BEST_BUY step, allow without mistake:
+    // Bonus Buy Checkbox Toggle
     if (currentStep.expectedAction === "CONFIRM_BEST_BUY" && actionId === "CHECK_BONUS_BUY") {
       return true;
     }
 
-    // In Lookup, if step expects LOOKUP_QUERY and trainee selects/double-clicks an item directly:
+    // Direct Lookup Item Selection
     if ((currentStep.expectedAction === "LOOKUP_SEARCH" || currentStep.expectedAction === "LOOKUP_QUERY") && actionId === "ADD_ITEM") {
       setErrorNotice(null);
       setActiveHint(null);
@@ -3113,7 +3106,7 @@ function SimulatorContent() {
   };
 
   const handleAction = (actionId: string) => {
-    // In guided scenario, validate action before execution
+    // Guided Action Validation
     if (activeScenario && !isExamCompleted && !isExamMode) {
       const currentStep = activeScenario.steps[currentStepIndex];
       if (actionId === "HELP") {
@@ -3121,7 +3114,7 @@ function SimulatorContent() {
         return;
       }
       if (isVoidSkuMode && (actionId === "PAGE_DOWN" || actionId === "PAGE_UP")) {
-        // Allowed for navigating items
+        // Item Navigation
       } else if (!isActionAllowedInScenario(actionId)) {
         const feedbackMsg =
           state.currentPage === "FOURTH" && (actionId === "CUSTOMER" || actionId === "NAV_FOURTH")
@@ -3137,7 +3130,7 @@ function SimulatorContent() {
             feedback: feedbackMsg,
           },
         ]);
-        return; // Block execution and prevent page transition!
+        return;
       }
     }
 
@@ -3788,7 +3781,7 @@ function SimulatorContent() {
         </div>
       )}
 
-      {/* New Customer Arrival Notification Toast (POS Green & Silver Theme) */}
+      {/* Customer Arrival Notification Toast */}
       {customerNotice && (
         <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 bg-[#D4D0C8] text-gray-900 border-4 border-[#006633] px-3.5 py-2.5 rounded shadow-2xl flex items-center space-x-3 max-w-lg w-[92%] sm:w-auto animate-in slide-in-from-top-4 fade-in duration-300 border-t-white border-l-white border-r-[#404040] border-b-[#404040]">
           <div className="w-9 h-9 rounded-full bg-[#006633] text-white flex items-center justify-center font-bold text-lg shrink-0 shadow-inner border border-emerald-400">
@@ -3818,7 +3811,7 @@ function SimulatorContent() {
         </div>
       )}
 
-      {/* Guided Instruction Bar OR Customer Interaction Panel (when not in Focus Mode) */}
+      {/* Guided Instruction Bar / Customer Panel */}
       {!isFocusMode && (
         isExamMode && examSession ? (
           <CustomerPanel
@@ -3847,7 +3840,7 @@ function SimulatorContent() {
         )
       )}
 
-      {/* POS Terminal Wrapper (Forced Landscape in Focus Mode; keeps orientation locked while typing on iOS) */}
+      {/* POS Terminal Wrapper */}
       {(() => {
         const shouldCssRotate =
           isFocusMode && isPortrait && forceRotatePortrait;
@@ -6446,7 +6439,7 @@ function SimulatorContent() {
       })()}
       </div>
 
-        {/* Left-Side Toggleable Shortcut Keys Drawer (ENTER, ESC, TAB, Alt+B, Alt+Enter, Cancel) */}
+        {/* Shortcut Keys Drawer */}
         {(isFocusMode || terminalScale < 1) && (
           <MobileKeyStrip
             onKeyPress={handleSyntheticKeyPress}
@@ -6457,7 +6450,7 @@ function SimulatorContent() {
         );
       })()}
 
-      {/* In-app on-screen keyboard layer (rotated together with the POS when CSS-forced landscape) */}
+      {/* In-App On-Screen Keyboard Layer */}
       {showOsk && (
         <div
           ref={oskLayerRef}

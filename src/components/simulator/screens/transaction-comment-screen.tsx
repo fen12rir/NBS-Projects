@@ -96,10 +96,10 @@ export function TransactionCommentScreen({
         <span className="font-bold">{dateStr || "2026-Feb-16"}</span>
       </div>
 
-      {/* 2. Yellow Bar across the top */}
+      {/* 2. Top Yellow Banner */}
       <div className="bg-[#FFF275] border-b border-gray-400 h-8 flex-shrink-0" />
 
-      {/* 3. Center Page Area: Light Grey with Green-framed Dialog */}
+      {/* 3. Transaction Comment Form */}
       <div className="flex-1 bg-[#BDC3C7] flex items-center justify-center p-4 min-h-0 overflow-y-auto">
         <form
           onSubmit={handleSubmit}
@@ -186,5 +186,5 @@ export function TransactionCommentScreen({
   );
 }
 
-// Re-export for compatibility
+// Modal Alias
 export const TransactionCommentModal = TransactionCommentScreen;

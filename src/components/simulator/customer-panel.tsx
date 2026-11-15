@@ -164,7 +164,7 @@ export function CustomerPanel({
 
   return (
     <div className="w-full bg-[#1F2937] text-white border-b-2 border-yellow-500 shadow-md select-none">
-      {/* Row 1: Customer Identity, Scrollable Quote & Exam Timer */}
+      {/* Row 1: Customer Identity & Timer */}
       <div className="max-w-[1080px] mx-auto px-2.5 sm:px-4 py-1 flex items-center justify-between gap-2">
         <div className="flex items-center space-x-2 min-w-0 flex-1 overflow-x-auto scrollbar-none whitespace-nowrap">
           <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-400 text-gray-900 flex items-center justify-center font-bold shadow-inner shrink-0">
@@ -177,7 +177,7 @@ export function CustomerPanel({
             #{caseIndex + 1}/{totalCases}
           </span>
 
-          {/* Single-line horizontally scrollable quote */}
+          {/* Customer Quote */}
           <span className="text-[11px] sm:text-xs text-gray-300 italic shrink-0">
             &ldquo;
             {currentCase.id === "case-suspend-recall" && hasSuspendedTrx
@@ -202,7 +202,7 @@ export function CustomerPanel({
         </div>
       </div>
 
-      {/* Row 2: Compact Horizontally Scrollable Action Items / Briefing Tray (Auto-hidden while typing on mobile keyboard) */}
+      {/* Row 2: Action Items & Briefing Tray */}
       {!isKeyboardOpen && (
         <div className="bg-[#111827] border-t border-gray-700 py-1 px-2.5 sm:px-4 text-xs font-sans">
           <div className="max-w-[1080px] mx-auto flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-contain scrollbar-none">

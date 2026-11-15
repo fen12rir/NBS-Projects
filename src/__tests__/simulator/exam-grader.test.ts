@@ -9,12 +9,12 @@ describe("Practical Hands-On Exam Engine", () => {
     expect(session.totalTimeLimitSeconds).toBe(15 * 60);
     expect(session.passingScore).toBe(80);
 
-    // First case must be opening shift
+    // Opening Shift Case
     expect(session.cases[0].id).toBe("case-open-shift");
-    // Last case must be closing shift
+    // Closing Shift Case
     expect(session.cases[session.cases.length - 1].id).toBe("case-close-shift");
 
-    // All cases have titles, events, and milestones
+    // Case Structure Validation
     session.cases.forEach((c) => {
       expect(c.title).toBeTruthy();
       expect(c.customerQuote).toBeTruthy();
@@ -52,7 +52,7 @@ describe("Practical Hands-On Exam Engine", () => {
 
   it("fails a case when a critical milestone is missed or wrong change is given", () => {
     const simpleCashCase = PRACTICAL_CASE_POOL.find((c) => c.id === "case-simple-cash")!;
-    // Trainee completely forgot to scan the notebook
+    // Missing Item Scan Action Log
     const actionLog = [
       { action: "GO_PAYMENT", timestamp: 2000 },
       { action: "CONFIRM_BEST_BUY", timestamp: 3000 },

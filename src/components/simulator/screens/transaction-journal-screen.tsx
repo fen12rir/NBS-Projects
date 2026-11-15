@@ -48,7 +48,7 @@ export function TransactionJournalScreen({
 
   return (
     <div className="flex min-h-[500px] w-full flex-1 select-none flex-col bg-white font-sans overflow-hidden">
-      {/* 1. TOP HEADER BAR: Authentic Light Grey Monospace Bar */}
+      {/* 1. Top Header Bar */}
       <div className="flex h-7 w-full flex-shrink-0 items-center justify-between border-y border-gray-400 border-t-white bg-[#BCC4CC] px-4 py-1 font-mono text-[11px] text-gray-900">
         <span>
           <span className="font-bold">Trx.:</span> {state.transactionNumber}
@@ -65,7 +65,7 @@ export function TransactionJournalScreen({
         <span className="font-bold">{state.dateStr || "2026-Feb-16"}</span>
       </div>
 
-      {/* 2. Yellow Bar across the top */}
+      {/* 2. Top Yellow Banner */}
       <div className="flex h-7 flex-shrink-0 items-center justify-center border-b border-gray-400 bg-[#FFF275] text-center text-xs font-bold uppercase tracking-wide text-gray-900">
         {isSalesJournal ? "Sales Journal" : "Transaction Journal"}
       </div>

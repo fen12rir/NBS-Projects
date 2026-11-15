@@ -19,12 +19,11 @@ function findFilipinoVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice
   return pickBestVoice(voices, "fil-PH");
 }
 
-// Robotic / novelty voices (mostly Apple "Eloquence" & effect voices) that should never be used
+// Excluded Robotic Voices
 const ROBOTIC_VOICE_RE =
   /\b(albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|junior|organ|pipe organ|ralph|superstar|trinoids|whisper|wobble|zarvox|fred|kathy|grandma|grandpa|eddy|flo|reed|rocko|sandy|shelley|espeak)\b/i;
 
-// One consistent "character" across platforms: a warm US-English female voice
-// (Edge: Aria/Jenny Natural, Apple: Ava/Zoe/Samantha, Chrome: Google US English, Android: Google en-US).
+// Preferred Voice Names
 const PREFERRED_EN_NAMES = [
   "aria",
   "jenny",
@@ -62,7 +61,7 @@ function scoreVoice(v: SpeechSynthesisVoice, lang: "en-US" | "fil-PH"): number {
     if (MALE_NAME_RE.test(name)) score -= 30;
   }
 
-  // Natural-sounding (neural / premium / cloud) voices first
+  // Voice Quality Scoring
   if (/natural|neural|premium|wavenet|studio/.test(name)) score += 120;
   if (/enhanced|online|network/.test(name)) score += 70;
   if (/google/.test(name)) score += 50;
@@ -84,8 +83,7 @@ function pickBestVoice(voices: SpeechSynthesisVoice[], lang: "en-US" | "fil-PH")
   return bestScore > -1000 ? best : undefined;
 }
 
-// Keep active utterance and timer at module scope so Chrome/Safari never garbage-collects it
-// and input focus / layout transitions do not prematurely cancel ongoing speech.
+// Active Speech State
 let activeGlobalUtterance: SpeechSynthesisUtterance | null = null;
 let globalSpeakTimer: ReturnType<typeof setTimeout> | null = null;
 

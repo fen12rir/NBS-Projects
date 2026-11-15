@@ -139,7 +139,7 @@ describe("Comprehensive Audit of All Scenarios and Modules", () => {
           ).toBe(requiredScreen);
         }
 
-        // Update simulated page state
+        // Simulated Page State
         if (action === "NAV_SECOND") currentPage = "SECOND";
         else if (action === "NAV_THIRD") currentPage = "THIRD";
         else if (action === "NAV_FOURTH") currentPage = "FOURTH";
@@ -178,7 +178,7 @@ describe("Comprehensive Audit of All Scenarios and Modules", () => {
       TRAINING_SCENARIOS.flatMap((s) => s.steps.map((st) => st.expectedAction))
     );
 
-    // Ensure disabled / non-functional keys are never included in guided steps
+    // Excluded Disabled Actions
     const excludedActions = [
       "CSA_TOGGLE",
       "ON_OFF_DISCOUNT",
@@ -193,7 +193,7 @@ describe("Comprehensive Audit of All Scenarios and Modules", () => {
       expect(allActions.has(excluded), `Unused/disabled POS action should not be in scenarios: ${excluded}`).toBe(false);
     });
 
-    // Ensure every LOOKUP step actually searches or adds an item before closing
+    // Lookup Action Validation
     TRAINING_SCENARIOS.forEach((scenario) => {
       if (!scenario.lessonRef) {
         expect(

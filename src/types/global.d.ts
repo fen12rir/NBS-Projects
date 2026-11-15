@@ -1,4 +1,4 @@
-// Global ambient declarations for CSS, SCSS, and static assets
+// Global Asset Declarations
 declare module "*.css" {
   const content: { [className: string]: string };
   export default content;

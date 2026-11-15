@@ -218,7 +218,7 @@ export const SYNTHETIC_PRODUCTS: SyntheticProduct[] = [
     isVatable: false,
   },
 
-  // Core NBS training supplies and quick-test items
+  // Core Training Items
   {
     sku: "NBS-BK-001",
     barcode: "NBS-BK-001",

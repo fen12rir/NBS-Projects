@@ -50,13 +50,13 @@ export function DashboardHeader({
 
   useEffect(() => {
     const handleScroll = (e: Event) => {
-      // On desktop (>= 1024px), navbar must always remain docked and visible
+      // Desktop Docked Header
       if (typeof window !== "undefined" && window.innerWidth >= 1024) {
         setIsVisible(true);
         return;
       }
 
-      // If mobile navigation drawer is open, keep navbar visible and ignore scrolls
+      // Mobile Drawer Guard
       if (isMobileMenuOpen) {
         setIsVisible(true);
         return;
@@ -64,12 +64,12 @@ export function DashboardHeader({
 
       const targetEl = e.target instanceof HTMLElement ? e.target : null;
 
-      // NEVER trigger hide/show from scrolling inside side nav drawer or modals
+      // Sidebar Scroll Guard
       if (targetEl && (targetEl.closest("aside") || targetEl.closest("[data-sidebar]"))) {
         return;
       }
 
-      // Only handle scrolling of the main content area or full page
+      // Main Content Scroll Filter
       const isMainOrDoc =
         !targetEl ||
         targetEl === document.documentElement ||
@@ -90,7 +90,7 @@ export function DashboardHeader({
 
       const maxScroll = (scrollContainer.scrollHeight || 0) - (scrollContainer.clientHeight || 0);
 
-      // Prevent bottom overscroll and rubber-band bounce from toggling the navbar
+      // Bottom Overscroll Guard
       if (maxScroll > 0 && currentScrollY >= maxScroll - 50) {
         lastScrollY.current = Math.max(0, currentScrollY);
         return;
@@ -98,14 +98,14 @@ export function DashboardHeader({
 
       const delta = currentScrollY - lastScrollY.current;
 
-      // Require intentional scroll delta (>= 12px) to prevent micro-jitters / bouncing
+      // Scroll Direction Threshold
       if (currentScrollY <= 20) {
         setIsVisible(true);
       } else if (delta > 12) {
-        // Intentional scroll down in main content -> hide
+        // Scroll Down Hide
         setIsVisible(false);
       } else if (delta < -12) {
-        // Intentional scroll up in main content -> show
+        // Scroll Up Show
         setIsVisible(true);
       }
       lastScrollY.current = Math.max(0, currentScrollY);

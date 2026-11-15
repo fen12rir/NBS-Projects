@@ -2849,7 +2849,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 ];
 
 export function getScenarioForModule(moduleRef: string): TrainingScenario | null {
-  // Prefer a module-level assessment scenario (no lessonRef), fallback to first lesson scenario
+  // Module Assessment Scenario Lookup
   return (
     TRAINING_SCENARIOS.find((s) => s.moduleRef === moduleRef && !s.lessonRef) ||
     TRAINING_SCENARIOS.find((s) => s.moduleRef === moduleRef) ||

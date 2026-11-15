@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-// GET /api/progress?userId=xyz
+// Progress API Route (GET)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     const record = rows[0];
 
-    // Fetch attempts
+    // Scenario Attempts Query
     const attempts = await query<any[]>(
       "SELECT id, scenario_id, scenario_title, timestamp, score, passed, steps_completed, total_steps, hints_used, time_spent_seconds, mistakes FROM scenario_attempts WHERE user_id = ? ORDER BY timestamp DESC",
       [userId]
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/progress
+// Progress API Route (POST)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const lastActiveModuleId = body.lastActiveModuleId || null;
     const certDate = body.certificationCompletedAt || null;
 
-    // Upsert into user_progress
+    // User Progress Upsert
     await query(
       `INSERT INTO user_progress (user_id, completed_lessons, completed_modules, last_active_lesson_id, last_active_module_id, certification_completed_at)
        VALUES (?, ?, ?, ?, ?, ?)
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       [userId, completedLessons, completedModules, lastActiveLessonId, lastActiveModuleId, certDate]
     );
 
-    // If there is a new scenario attempt to record
+    // Scenario Attempt Insert
     if (body.newAttempt) {
       const a = body.newAttempt;
       await query(

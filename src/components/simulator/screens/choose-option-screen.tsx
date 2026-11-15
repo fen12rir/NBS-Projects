@@ -71,7 +71,7 @@ export function ChooseOptionScreen({
 
   return (
     <div className="w-full flex-1 flex flex-col font-sans bg-[#DCDAD4] min-h-0 overflow-hidden select-none">
-      {/* 1. TOP HEADER BAR: Light Grey Monospace / Sans Bar */}
+      {/* 1. Top Header Bar */}
       <div className="bg-[#BCC4CC] border-b border-gray-400 px-4 py-1 flex items-center justify-between text-[11px] font-mono text-gray-900 border-t border-t-white flex-shrink-0 h-7 select-none w-full">
         <span><span className="font-bold">Trx.:</span> {trxNumber}</span>
         <span><span className="font-bold">Clerk:</span> {clerkName}</span>
