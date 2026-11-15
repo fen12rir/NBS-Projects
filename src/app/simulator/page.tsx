@@ -380,6 +380,8 @@ function SimulatorContent() {
   // User-selected input zoom & mobile keyboard / iOS accessory bar visibility tracking
   useEffect(() => {
     let isUserTap = false;
+    let lastTapTarget: HTMLElement | null = null;
+    let lastTapTime = 0;
     let wasKeyboardOpen = false;
     let blurTimer: ReturnType<typeof setTimeout> | null = null;
     let scrollTimer1: ReturnType<typeof setTimeout> | null = null;
@@ -488,10 +490,24 @@ function SimulatorContent() {
 
     const handlePointerDown = (e: PointerEvent) => {
       const target = e.target as HTMLElement | null;
+      lastTapTarget = target;
+      lastTapTime = Date.now();
       isUserTap = isEditableElement(target);
       if (isUserTap) {
         stampNoAutofill(target);
       }
+    };
+
+    // A focus counts as user-initiated if it follows a recent tap on that field (or on its label /
+    // wrapper). Using the tap target + time instead of a flag means a focusout from a previously
+    // focused button can no longer swallow the first tap (which forced users to tap twice).
+    const wasTappedByUser = (target: HTMLElement | null) => {
+      if (!target || !lastTapTarget) return false;
+      if (Date.now() - lastTapTime > 1500) return false;
+      if (lastTapTarget === target) return true;
+      const label = lastTapTarget.closest("label");
+      if (label && (label.contains(target) || (label as HTMLLabelElement).control === target)) return true;
+      return lastTapTarget.contains(target) && !lastTapTarget.closest("button");
     };
 
     const handleFocusIn = (e: FocusEvent) => {
@@ -502,6 +518,7 @@ function SimulatorContent() {
 
       const target = e.target as HTMLElement | null;
       stampNoAutofill(target);
+      isUserTap = isUserTap || wasTappedByUser(target);
 
       const isMobile =
         typeof window !== "undefined" &&
@@ -552,6 +569,9 @@ function SimulatorContent() {
         setKeyboardShiftY(0);
         setVvOffsetTop(0);
       }
+      if (isEditableElement(target)) {
+        lastTapTarget = null; // consume the tap so later programmatic autoFocus is not treated as a tap
+      }
       isUserTap = false;
     };
 
@@ -572,7 +592,6 @@ function SimulatorContent() {
           }
         }
       }, 80);
-      isUserTap = false;
     };
 
     window.addEventListener("pointerdown", handlePointerDown, true);
