@@ -256,7 +256,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
 
   const rows = layer === "letters" ? LETTER_ROWS : SYMBOL_ROWS;
   const upper = shift !== "off" && layer === "letters";
-  const keyH = compact ? "h-[30px]" : "h-10";
+  const keyH = compact ? "h-[26px]" : "h-10";
   const keyText = compact ? "text-[13px]" : "text-base";
   const base = `${keyH} ${keyText} rounded-md font-semibold flex items-center justify-center select-none touch-none transition-colors data-[pressed=true]:bg-emerald-600 data-[pressed=true]:text-white`;
   const charKey = `${base} flex-1 min-w-0 bg-[#3a3f47] text-white shadow-[0_1px_0_#111]`;
@@ -267,12 +267,12 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
       ref={rootRef}
       role="group"
       aria-label="On-screen keyboard"
-      className={`w-full bg-[#14171c]/98 border-t border-emerald-800/70 shadow-[0_-6px_18px_rgba(0,0,0,0.6)] select-none touch-none ${
+      className={`w-full bg-[#14171c] border-t border-emerald-800/70 shadow-[0_-6px_18px_rgba(0,0,0,0.6)] select-none touch-none ${
         compact ? "px-1.5 pt-1 pb-1" : "px-1 pt-1.5 pb-[max(6px,env(safe-area-inset-bottom))]"
       }`}
       style={{ WebkitUserSelect: "none", WebkitTouchCallout: "none" }}
     >
-      <div className={`mx-auto flex flex-col ${compact ? "gap-1 max-w-[760px]" : "gap-1.5 max-w-[640px]"}`}>
+      <div className={`mx-auto flex flex-col ${compact ? "gap-[3px] max-w-[760px]" : "gap-1.5 max-w-[640px]"}`}>
         {/* Toolbar */}
         <div className="flex items-center justify-between gap-2 text-[10px] font-mono text-gray-400">
           <div className="flex items-center gap-1.5">
@@ -299,7 +299,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
         </div>
 
         {rows.slice(0, 3).map((row, i) => (
-          <div key={`${layer}-${i}`} className={`flex ${compact ? "gap-1" : "gap-[5px]"} ${i === 2 && layer === "letters" ? "px-[5%]" : ""}`}>
+          <div key={`${layer}-${i}`} className={`flex ${compact ? "gap-[3px]" : "gap-[5px]"} ${i === 2 && layer === "letters" ? "px-[5%]" : ""}`}>
             {row.split("").map((ch) => (
               <button key={ch} type="button" data-osk-key={ch} className={charKey}>
                 {upper ? ch.toUpperCase() : ch}
@@ -308,7 +308,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
           </div>
         ))}
 
-        <div className={`flex ${compact ? "gap-1" : "gap-[5px]"}`}>
+        <div className={`flex ${compact ? "gap-[3px]" : "gap-[5px]"}`}>
           {layer === "letters" ? (
             <button
               type="button"
@@ -331,7 +331,7 @@ export const OnScreenKeyboard = forwardRef<OnScreenKeyboardHandle, OnScreenKeybo
           </button>
         </div>
 
-        <div className={`flex ${compact ? "gap-1" : "gap-[5px]"}`}>
+        <div className={`flex ${compact ? "gap-[3px]" : "gap-[5px]"}`}>
           <button type="button" data-osk-key="__layer" className={`${fnKey} w-[15%] text-xs`}>
             {layer === "letters" ? "?123" : "ABC"}
           </button>

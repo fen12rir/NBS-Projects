@@ -258,7 +258,7 @@ function SimulatorContent() {
       (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100);
     setIsTouchDevice(touch);
     try {
-      if (window.localStorage.getItem("nbs-pos-keyboard") === "device") {
+      if (window.sessionStorage.getItem("nbs-pos-keyboard") === "device") {
         setPreferAppKeyboard(false);
       }
     } catch {}
@@ -1008,7 +1008,7 @@ function SimulatorContent() {
       }
       return;
     }
-    const raf = requestAnimationFrame(() => {
+    const measure = () => {
       const layer = oskLayerRef.current;
       const kbHeight = oskRef.current?.getHeight() ?? 0;
       const field = oskFocusedField;
@@ -1039,8 +1039,14 @@ function SimulatorContent() {
         oskShiftRef.current = next;
         setOskShiftY(next);
       }
-    });
-    return () => cancelAnimationFrame(raf);
+    };
+    // measure after layout, then again once header compaction / transforms have settled
+    const raf = requestAnimationFrame(measure);
+    const settle = setTimeout(measure, 260);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(settle);
+    };
   }, [showOsk, oskFocusedField, isCssRotated, terminalScale, isFocusMode, isPortrait]);
 
   const hideOnScreenKeyboard = () => {
@@ -1051,7 +1057,7 @@ function SimulatorContent() {
 
   const switchToDeviceKeyboard = () => {
     try {
-      window.localStorage.setItem("nbs-pos-keyboard", "device");
+      window.sessionStorage.setItem("nbs-pos-keyboard", "device");
     } catch {}
     const active = document.activeElement as HTMLElement | null;
     active?.blur();
@@ -1061,7 +1067,7 @@ function SimulatorContent() {
   const toggleKeyboardMode = () => {
     const nextApp = !preferAppKeyboard;
     try {
-      window.localStorage.setItem("nbs-pos-keyboard", nextApp ? "app" : "device");
+      window.sessionStorage.setItem("nbs-pos-keyboard", nextApp ? "app" : "device");
     } catch {}
     (document.activeElement as HTMLElement | null)?.blur();
     setPreferAppKeyboard(nextApp);
@@ -3993,7 +3999,7 @@ function SimulatorContent() {
         {isFocusMode && isFocusHeaderExpanded && (
           <div
             className={`w-full shrink-0 z-30 border-b border-gray-700 bg-gray-900 shadow-md ${
-              isExamMode ? "overflow-y-auto max-h-36 sm:max-h-48" : "overflow-visible"
+              isExamMode ? (showOsk ? "overflow-y-auto max-h-[46px]" : "overflow-y-auto max-h-36 sm:max-h-48 [@media(max-height:520px)]:!max-h-[92px]") : "overflow-visible"
             }`}
           >
             {isExamMode && examSession ? (
@@ -4026,6 +4032,8 @@ function SimulatorContent() {
         <div
           ref={posViewportRef}
           className={`flex-1 flex flex-col min-h-0 w-full transition-all duration-200 ${
+            oskShiftY !== 0 ? "relative z-40 !overflow-visible" : ""
+          } ${
             userZoomLevel > 1
               ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
               : isFocusMode
