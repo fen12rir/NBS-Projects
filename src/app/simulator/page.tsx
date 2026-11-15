@@ -3726,23 +3726,6 @@ function SimulatorContent() {
           </span>
         </div>
         <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
-          <button
-            type="button"
-            onClick={toggleFocusMode}
-            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2 py-0.5 sm:px-2.5 sm:py-0.5 text-[10px] sm:text-[11px] font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-xs shrink-0"
-          >
-            {isFocusMode ? (
-              <>
-                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
-                <span>Exit Focus</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
-                <span>Focus Mode</span>
-              </>
-            )}
-          </button>
           {!isExamMode && (
             <div className="flex items-center space-x-1 hidden sm:flex">
               <span className="text-gray-400 text-[10px] hidden md:inline">POS Screen:</span>
@@ -3760,6 +3743,23 @@ function SimulatorContent() {
               </select>
             </div>
           )}
+          <button
+            type="button"
+            onClick={toggleFocusMode}
+            className="bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white border border-emerald-500 px-2 py-0.5 sm:px-2.5 sm:py-0.5 text-[10px] sm:text-[11px] font-mono font-bold flex items-center space-x-1 cursor-pointer rounded shadow-xs shrink-0"
+          >
+            {isFocusMode ? (
+              <>
+                <X className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
+                <span>Exit Focus</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 shrink-0" />
+                <span>Focus Mode</span>
+              </>
+            )}
+          </button>
         </div>
       </header>
 
