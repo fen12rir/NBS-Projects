@@ -963,43 +963,69 @@ function SimulatorContent() {
 
   const checkViewport = () => {
     if (typeof window === "undefined") return;
-    // Skip Resize While Input Focused
-    if (isInputFocusedRef.current) return;
+    // Skip Resize While Native Keyboard Open
+    if (isInputFocusedRef.current && !oskEnabledRef.current) return;
 
     const portrait = window.innerHeight > window.innerWidth;
     setIsPortrait(portrait);
     setLockedScreenSize({ width: window.innerWidth, height: window.innerHeight });
 
+    const targetWidth = isExternalReceiptShowing ? 1360 : 1080;
+    const targetHeight = 600;
+
+    const vp = posViewportRef.current;
+    if (vp && vp.clientWidth > 0 && vp.clientHeight > 0) {
+      const style = window.getComputedStyle(vp);
+      const padX = (parseFloat(style.paddingLeft) || 0) + (parseFloat(style.paddingRight) || 0);
+      const padY = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0);
+      const availWidth = Math.max(100, vp.clientWidth - padX - 4);
+      const availHeight = Math.max(100, vp.clientHeight - padY - 4);
+      const scaleByWidth = Math.max(0.2, availWidth / targetWidth);
+      const scaleByHeight = Math.max(0.2, availHeight / targetHeight);
+      const nextScale = Math.min(1, scaleByWidth, scaleByHeight);
+      setTerminalScale((prev) => (Math.abs(prev - nextScale) > 0.001 ? nextScale : prev));
+      return;
+    }
+
     const effectiveWidth = isFocusMode && portrait && forceRotatePortrait
       ? window.innerHeight
       : window.innerWidth;
-    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 84 : 38) : 56;
+    const overhead = isFocusMode ? (isFocusHeaderExpanded ? 84 : 38) : 140;
     const effectiveHeight = isFocusMode && portrait && forceRotatePortrait
       ? window.innerWidth - overhead
       : window.innerHeight - overhead;
 
-    const targetWidth = isExternalReceiptShowing ? 1360 : 1080;
     const availWidth = effectiveWidth - 16;
-    const scaleByWidth = Math.max(0.25, availWidth / targetWidth);
-    const scaleByHeight = Math.max(0.25, effectiveHeight / 600);
+    const scaleByWidth = Math.max(0.2, availWidth / targetWidth);
+    const scaleByHeight = Math.max(0.2, effectiveHeight / targetHeight);
     const scale = Math.min(1, scaleByWidth, scaleByHeight);
 
-    setTerminalScale(scale);
+    setTerminalScale((prev) => (Math.abs(prev - scale) > 0.001 ? scale : prev));
   };
 
   useEffect(() => {
     checkViewport();
+    const raf = requestAnimationFrame(checkViewport);
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => checkViewport())
+        : null;
+    if (ro && posViewportRef.current) {
+      ro.observe(posViewportRef.current);
+    }
     window.addEventListener("resize", checkViewport);
     window.addEventListener("orientationchange", checkViewport);
     document.addEventListener("fullscreenchange", checkViewport);
     document.addEventListener("webkitfullscreenchange", checkViewport);
     return () => {
+      cancelAnimationFrame(raf);
+      ro?.disconnect();
       window.removeEventListener("resize", checkViewport);
       window.removeEventListener("orientationchange", checkViewport);
       document.removeEventListener("fullscreenchange", checkViewport);
       document.removeEventListener("webkitfullscreenchange", checkViewport);
     };
-  }, [isFocusMode, forceRotatePortrait, isFocusHeaderExpanded, isExternalReceiptShowing]);
+  }, [isFocusMode, forceRotatePortrait, isFocusHeaderExpanded, isExternalReceiptShowing, isExamMode]);
 
   const isCssRotated = isFocusMode && isPortrait && forceRotatePortrait;
   const showOsk = oskEnabled && oskFocusedField !== null;
@@ -3851,7 +3877,7 @@ function SimulatorContent() {
             ? shouldCssRotate
               ? "fixed z-50 bg-black flex flex-col justify-start p-0 overflow-hidden overscroll-none"
               : "fixed inset-0 z-50 bg-black flex flex-col justify-start p-0 overflow-hidden overscroll-none"
-            : "flex-1 p-2 sm:p-4 flex flex-col items-center justify-center relative overflow-hidden overscroll-none min-h-0"
+            : "flex-1 w-full min-w-0 min-h-0 p-0 flex flex-col items-center justify-center relative overflow-hidden overscroll-none"
         }`}
         style={
           shouldCssRotate
@@ -4025,12 +4051,12 @@ function SimulatorContent() {
 
         <div
           ref={posViewportRef}
-          className={`flex-1 flex flex-col min-h-0 w-full overscroll-none transition-all duration-200 ${
+          className={`flex-1 flex flex-col min-h-0 min-w-0 w-full overscroll-none transition-all duration-200 ${
             userZoomLevel > 1
               ? "items-start justify-start overflow-auto touch-pan-x touch-pan-y py-1 px-1"
               : isFocusMode
-              ? "items-center justify-center overflow-hidden py-0 px-1"
-              : "items-center justify-center overflow-hidden p-2"
+              ? "items-center justify-center overflow-hidden py-0.5 px-1"
+              : "items-center justify-center overflow-hidden p-1 sm:p-2"
           }`}
         >
           {(() => {
@@ -6521,8 +6547,8 @@ function SimulatorContent() {
 
       {/* QUICK CATALOG PICKER */}
       {!isExamMode && (
-        <div className="max-w-[1080px] w-full mx-auto px-4 pb-4 hidden md:block">
-          <div className="bg-gray-800 p-2 border border-gray-700 text-xs font-mono text-gray-300 flex items-center space-x-2 overflow-x-auto">
+        <div className="max-w-[1080px] w-full mx-auto px-3 pb-1.5 pt-0.5 shrink-0 hidden md:block">
+          <div className="bg-gray-800 px-2 py-1 border border-gray-700 text-xs font-mono text-gray-300 flex items-center space-x-2 overflow-x-auto">
             <span className="text-yellow-400 font-bold whitespace-nowrap">Catalog Quick-Fill:</span>
             {SYNTHETIC_PRODUCTS.map((p) => (
               <button
