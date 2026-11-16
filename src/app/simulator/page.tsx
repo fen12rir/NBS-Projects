@@ -2366,6 +2366,7 @@ function SimulatorContent() {
           e.preventDefault();
           setSelectedTenderMethod("COUPON");
           setCouponEntryMode("SELECT");
+          setCouponDenom((totals.totalAmount || 85).toFixed(2));
           setElectronicPaymentType("Promo Coupon");
           validateScenarioStep("PAY_COUPON");
           return;
@@ -2379,6 +2380,7 @@ function SimulatorContent() {
         if (e.key === "F8") {
           e.preventDefault();
           setSelectedTenderMethod("CREDIT_MEMO");
+          setCreditMemoAmount((totals.totalAmount || 180).toFixed(2));
           setElectronicPaymentType("Debit Card / BancNet");
           validateScenarioStep("PAY_CREDIT_MEMO");
           return;
@@ -5688,6 +5690,7 @@ function SimulatorContent() {
                             <div className="grid grid-cols-3 items-center">
                               <span className="font-bold">Amount:</span>
                               <input
+                                key={totals.totalAmount}
                                 type="text"
                                 defaultValue={(totals.totalAmount || 500).toFixed(2)}
                                 className="col-span-2 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
@@ -5951,6 +5954,7 @@ function SimulatorContent() {
                           onClick: () => {
                             setSelectedTenderMethod("COUPON");
                             setCouponEntryMode("SELECT");
+                            setCouponDenom((totals.totalAmount || 85).toFixed(2));
                             setElectronicPaymentType("Promo Coupon");
                             validateScenarioStep("PAY_COUPON");
                           },
@@ -5974,6 +5978,7 @@ function SimulatorContent() {
                           variant: "gray",
                           onClick: () => {
                             setSelectedTenderMethod("CREDIT_MEMO");
+                            setCreditMemoAmount((totals.totalAmount || 180).toFixed(2));
                             setElectronicPaymentType("Debit Card / BancNet");
                             validateScenarioStep("PAY_CREDIT_MEMO");
                           },

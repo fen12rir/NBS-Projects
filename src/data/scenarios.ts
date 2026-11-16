@@ -594,25 +594,25 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: The Manager Override prompt appears. Authorize the line void by clicking 'Confirm Override'.",
+        instruction: "Step 3: The Manager Override screen appears. Authorize the line void by clicking [Yes] (or pressing ENTER).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click the 'Confirm Override' button in the supervisor modal.",
-        errorFeedback: "Click Confirm Override to approve the Item Void."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) to approve the Item Void."
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Choose 'Customer Cancel' as the reason for voiding the pen, then confirm.",
+        instruction: "Step 4: Choose 'Customer Cancel' in Select a Reason, then click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_ITEM_VOID",
         expectedData: "Customer Cancel",
-        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
-        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+        hint: "Select Customer Cancel in the Item Void reason list and click [Ok] (or press Alt+Enter).",
+        errorFeedback: "Select Customer Cancel and click [Ok] to confirm the item-void reason."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter.",
+        instruction: "Step 5: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter (or click 'Confirm Void Item <Alt+Enter>').",
         expectedAction: "SCAN_VOID_SKU",
         expectedData: "NBS-PEN-002",
-        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item or press Alt+Enter.",
+        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item <Alt+Enter> or press Alt+Enter.",
         errorFeedback: "Select NBS-PEN-002 and confirm the item void."
       },
       {
@@ -632,25 +632,25 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Authorize the transaction void by clicking 'Confirm Override' in the manager prompt.",
+        instruction: "Step 8: Authorize the transaction void by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click Confirm Override in the Manager Override modal.",
-        errorFeedback: "Click Confirm Override to approve the Transaction Void."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) to approve the Transaction Void."
       },
       {
         stepNumber: 9,
-        instruction: "Step 9: Confirm that you want to void the transaction by choosing Yes.",
+        instruction: "Step 9: Confirm that you want to void the transaction by clicking [Yes] (or pressing Y / ENTER).",
         expectedAction: "TRX_VOID_CONFIRM",
-        hint: "Choose Yes on the Transaction Void confirmation screen.",
-        errorFeedback: "Choose Yes to continue with the transaction void."
+        hint: "Click [Yes] or press Y / ENTER on the Transaction Void confirmation screen.",
+        errorFeedback: "Choose [Yes] to continue with the transaction void."
       },
       {
         stepNumber: 10,
-        instruction: "Step 10: Select 'Changed mind' as the transaction-void reason and confirm.",
+        instruction: "Step 10: Select 'Changed mind' in Select a Reason and click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_TRX_VOID",
         expectedData: "Changed mind",
-        hint: "Select Changed mind in the reason list, then confirm with Alt+Enter.",
-        errorFeedback: "Select Changed mind and confirm the transaction void."
+        hint: "Select Changed mind in the reason list, then click [Ok] or press Alt+Enter.",
+        errorFeedback: "Select Changed mind and click [Ok] to confirm the transaction void."
       }
     ]
   },
@@ -802,10 +802,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: On the Transaction Discount screen, select Senior Citizen / PWD / LNQR Family Discount and confirm to apply (returning to the Main Screen).",
+        instruction: "Step 8: On the Transaction Discount screen, select a discount category (e.g. Senior Citizen / PWD / LNQR Family Discount) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply and return to the Main Screen.",
         expectedAction: "APPLY_DISCOUNT",
-        hint: "Select a discount category (e.g. ZSEN 20%), enter details if prompted, and press Enter / Ok to apply.",
-        errorFeedback: "Select a discount category and apply it."
+        hint: "Select a discount row (e.g. ZSEN 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
+        errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
       }
     ]
   },
@@ -855,10 +855,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Authorize the No Sale drawer open by confirming the Manager Override (which returns to the Main Screen).",
+        instruction: "Step 6: Authorize the No Sale drawer open by clicking [Yes] (or pressing ENTER) on the Manager Override screen (returning to the Main Screen).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt to authorize No Sale.",
-        errorFeedback: "Confirm the Manager Override to authorize No Sale."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to authorize No Sale.",
+        errorFeedback: "Click [Yes] (or press ENTER) on the Manager Override screen to authorize No Sale."
       },
       {
         stepNumber: 7,
@@ -876,17 +876,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 9,
-        instruction: "Step 9: Authorize access to the Recall screen by confirming the Manager Override.",
+        instruction: "Step 9: Authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt to open the Recall screen.",
-        errorFeedback: "Confirm the Manager Override to continue to Recall."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to open the Recall buffer.",
+        errorFeedback: "Click [Yes] (or press ENTER) on the Manager Override screen to continue to Recall."
       },
       {
         stepNumber: 10,
-        instruction: "Step 10: In the Recall buffer screen, select the suspended transaction and click 'Recall Transaction' (or press Alt+Enter) to restore it to the Main Screen.",
+        instruction: "Step 10: In the Recall Transaction Buffer window, select the suspended transaction and click [Recall (Enter)] (or press ENTER) to restore it to the Main Screen.",
         expectedAction: "CONFIRM_RECALL",
-        hint: "Click 'Recall Transaction' on the suspended entry to restore the transaction.",
-        errorFeedback: "Select and confirm the suspended transaction to recall it."
+        hint: "Click [Recall (Enter)] or press ENTER to restore the suspended transaction.",
+        errorFeedback: "Click [Recall (Enter)] or press ENTER to recall the suspended transaction."
       }
     ]
   },
@@ -936,17 +936,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Authorize access to the Recall screen by confirming the Manager Override.",
+        instruction: "Step 6: Authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt to open the Recall screen.",
-        errorFeedback: "Confirm the Manager Override to continue to Recall."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) on the Manager Override screen to continue to Recall."
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: In the Recall buffer, select the suspended transaction and click 'Recall Transaction' (or press Alt+Enter) to restore it to the Main Screen.",
+        instruction: "Step 7: In the Recall Transaction Buffer window, select the suspended transaction and click [Recall (Enter)] (or press ENTER) to restore it to the Main Screen.",
         expectedAction: "CONFIRM_RECALL",
-        hint: "Click 'Recall Transaction' to restore the transaction.",
-        errorFeedback: "Confirm recall of the transaction."
+        hint: "Click [Recall (Enter)] or press ENTER to restore the transaction.",
+        errorFeedback: "Click [Recall (Enter)] or press ENTER to recall the transaction."
       },
       {
         stepNumber: 8,
@@ -964,10 +964,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 10,
-        instruction: "Step 10: On the Transaction Discount screen, select Senior Citizen Discount (ZSEN, 20%) and confirm (returning to the Main Screen).",
+        instruction: "Step 10: On the Transaction Discount screen, select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to return to the Main Screen.",
         expectedAction: "APPLY_DISCOUNT",
-        hint: "Select Senior Citizen Discount (ZSEN, 20%) and apply the discount.",
-        errorFeedback: "Select and apply the discount."
+        hint: "Select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
+        errorFeedback: "Select a discount and click [SELECT <Alt-Enter>] to apply it."
       },
       {
         stepNumber: 11,
@@ -985,17 +985,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 13,
-        instruction: "Step 13: Authorize the receipt reprint by confirming the Manager Override.",
+        instruction: "Step 13: Authorize the receipt reprint by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click Confirm Override to authorize the receipt reprint.",
-        errorFeedback: "Authorize receipt reprint in the Manager Override screen."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to authorize the receipt reprint.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen."
       },
       {
         stepNumber: 14,
-        instruction: "Step 14: In the Reprint Official Receipt window, verify the OR number and click 'Reprint Receipt' (or press Enter) to finish.",
+        instruction: "Step 14: In the REPRINT window, verify the OR No. and click [PRINT <Enter>] (or press ENTER) to finish.",
         expectedAction: "CONFIRM_REPRINT",
-        hint: "Click 'Reprint Receipt' to complete the receipt reprint.",
-        errorFeedback: "Confirm reprint of the Official Receipt to finish Module 5 assessment."
+        hint: "Click [PRINT <Enter>] or press ENTER to complete the receipt reprint.",
+        errorFeedback: "Click [PRINT <Enter>] or press ENTER to finish Module 5 assessment."
       }
     ]
   },
@@ -1121,17 +1121,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Enter the supervisor PIN ('9999' or '1234') and authorize the Post Void.",
+        instruction: "Step 4: Enter the supervisor PIN ('9999' or '1234') and click [Authorize (Enter)] to approve the Post Void.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Enter the supervisor PIN (9999 or 1234) and click Authorize.",
-        errorFeedback: "Enter and authorize with the supervisor PIN."
+        hint: "Enter the supervisor PIN (9999 or 1234) and click [Authorize (Enter)].",
+        errorFeedback: "Enter and authorize with the supervisor PIN (9999 or 1234)."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Post Void screen, verify the OR number and reason, then click 'Confirm Void'.",
+        instruction: "Step 5: On the Post Void screen, verify the OR number and reason, then click [Yes, Void Transaction (Alt+Enter)] (or press ENTER).",
         expectedAction: "CONFIRM_POST_VOID",
-        hint: "Click 'Confirm Void' in the Post Void dialog.",
-        errorFeedback: "Confirm the Post Void in the dialog."
+        hint: "Click [Yes, Void Transaction (Alt+Enter)] or press ENTER in the Post Void dialog.",
+        errorFeedback: "Click [Yes, Void Transaction (Alt+Enter)] to confirm the Post Void."
       },
       {
         stepNumber: 6,
@@ -1194,17 +1194,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Enter the supervisor PIN ('9999' or '1234') and authorize the Post Void.",
+        instruction: "Step 6: Enter the supervisor PIN ('9999' or '1234') and click [Authorize (Enter)] to approve the Post Void.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Enter the supervisor PIN (9999 or 1234) and authorize to continue.",
-        errorFeedback: "Enter and authorize with the supervisor PIN."
+        hint: "Enter the supervisor PIN (9999 or 1234) and click [Authorize (Enter)].",
+        errorFeedback: "Enter and authorize with the supervisor PIN (9999 or 1234)."
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: On the Post Void screen, select or confirm the invoice to void and click 'Confirm Void'.",
+        instruction: "Step 7: On the Post Void screen, verify the OR number and reason, then click [Yes, Void Transaction (Alt+Enter)] (or press ENTER).",
         expectedAction: "CONFIRM_POST_VOID",
-        hint: "Click 'Confirm Void' in the Post Void dialog.",
-        errorFeedback: "Confirm the Post Void in the dialog."
+        hint: "Click [Yes, Void Transaction (Alt+Enter)] or press ENTER in the Post Void dialog.",
+        errorFeedback: "Click [Yes, Void Transaction (Alt+Enter)] to confirm the Post Void."
       },
       {
         stepNumber: 8,
@@ -1299,10 +1299,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Transaction Comments screen, enter or review customer TIN and company details, then click [Save Comments] (which returns to the Main Screen).",
+        instruction: "Step 5: On the Transaction Comment screen, enter or review customer TIN and company details, then click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click Save Comments in the dialog to record corporate details.",
-        errorFeedback: "Save the transaction comment to continue."
+        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog to record corporate details.",
+        errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
         stepNumber: 6,
@@ -1365,10 +1365,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Return screen, verify the Sales Invoice (SI) number and reason, then click 'Confirm Return' (returning to the Main Screen in Return UPC mode).",
+        instruction: "Step 5: In SELECT STORE, choose 'Own Store' and click [Continue] (or press Alt+Enter), click [Yes] (or press ENTER) on MANAGER OVERRIDE, then verify the reason and ORNO on ITEM RETURN and click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_RETURN",
-        hint: "Click 'Confirm Return' in the dialog.",
-        errorFeedback: "Confirm the item return in the dialog."
+        hint: "Select 'Own Store' -> [Continue], click [Yes] on Manager Override, then click [Ok] on the ITEM RETURN dialog.",
+        errorFeedback: "Complete Store Selection, Manager Override [Yes], and click [Ok] on ITEM RETURN."
       },
       {
         stepNumber: 6,
@@ -1418,10 +1418,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Transaction Comments screen, enter or verify corporate billing information and click [Save Comments] (returning to the Main Screen).",
+        instruction: "Step 5: On the Transaction Comment screen, enter or verify corporate billing information and click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click Save Comments in the dialog.",
-        errorFeedback: "Save the transaction comment to continue."
+        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog.",
+        errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
         stepNumber: 6,
@@ -1439,10 +1439,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Enter the manager override to authorize Zero Rated (which applies Zero Rated and returns to the Main Screen).",
+        instruction: "Step 8: Click [Yes] (or press ENTER) on the Manager Override screen to authorize Zero Rated (which applies Zero Rated and returns to the Main Screen).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt to apply Zero Rated.",
-        errorFeedback: "Authorize Zero Rated in the Manager Override prompt."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to apply Zero Rated.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen to authorize Zero Rated."
       },
       {
         stepNumber: 9,
@@ -1460,10 +1460,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 11,
-        instruction: "Step 11: Enter the manager override PIN to authorize the refund.",
+        instruction: "Step 11: Click [Yes] (or press ENTER) on the Manager Override screen to authorize the refund.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt for Refund.",
-        errorFeedback: "Authorize the refund in the Manager Override prompt."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen for Refund.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen to authorize the refund."
       },
       {
         stepNumber: 12,
@@ -1669,10 +1669,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 17,
-        instruction: "Step 17: On the GCASH Payment Details screen, verify the amount ('420.00') and Reference/Approval Code, then click [Ok] (or press Enter) to complete the e-wallet checkout.",
+        instruction: "Step 17: On the GCASH Payment Details screen, verify Amount ('420.00'), enter Reference No. 'GC88492019' from the GCash terminal on the right (or click [Use Ref] / [Auto-fill Reference]), then click [Ok] (or press Enter) to complete the e-wallet checkout.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 420,
-        hint: "Verify the GCash Reference No. and amount 420.00, then click [Ok] or press Enter.",
+        hint: "Enter GCash Reference No. 'GC88492019' (or click Use Ref) and click [Ok] or press Enter.",
         errorFeedback: "Confirm the PHP 420.00 GCash payment by clicking [Ok] or pressing Enter."
       }
     ]
@@ -1883,11 +1883,11 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: In Gift Certificate Details, enter the GC denomination '240' in Enter Amount and press ENTER (or click [Ok]) to complete Customer 1's sale.",
+        instruction: "Step 7: In Gift Certificate Details, verify GC Number and Amount ('240.00'), then click [Process Payment (Enter)] or [Ok] (or press ENTER) to complete Customer 1's sale.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 240,
-        hint: "Type 240 in Enter Amount and press Enter or click [Ok].",
-        errorFeedback: "Enter 240 and confirm the Gift Certificate tender."
+        hint: "Verify Amount '240.00' and click [Process Payment (Enter)] or [Ok] (or press Enter).",
+        errorFeedback: "Confirm the PHP 240.00 Gift Certificate tender."
       },
       {
         stepNumber: 8,
@@ -1935,18 +1935,18 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 14,
-        instruction: "Step 14: In Please Select Coupon Entry Mode, select '1 - WITHOUT SERIES NO.' (or '2 - WITH SERIES NO.') and click [Ok].",
+        instruction: "Step 14: Under Coupon Type ('Select Coupon Type'), choose 'Without Series' (or 'With Series') from the dropdown or click [Ok].",
         expectedAction: "SELECT_COUPON_MODE",
-        hint: "Click [Ok] in the Coupon Entry Mode panel.",
-        errorFeedback: "Confirm the Coupon Entry Mode by clicking [Ok]."
+        hint: "Select 'Without Series' in the Select Coupon Type dropdown or click [Ok].",
+        errorFeedback: "Select a Coupon Type ('Without Series' or 'With Series') or click [Ok]."
       },
       {
         stepNumber: 15,
-        instruction: "Step 15: In Coupon Details, enter '85' in Enter Amount and press ENTER (or click [Ok]) to complete Customer 2's coupon checkout.",
+        instruction: "Step 15: In Coupon Details, verify Coupon Denomination / Avail Amount ('85.00') and click [Process Payment (Enter)] or [Ok] (or press ENTER) to complete Customer 2's coupon checkout.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 85,
-        hint: "Type 85 in Enter Amount and press Enter or click [Ok].",
-        errorFeedback: "Enter 85 and confirm the Coupon tender."
+        hint: "Click [Process Payment (Enter)] or [Ok] (or press Enter) to confirm the Coupon tender.",
+        errorFeedback: "Confirm the PHP 85.00 Coupon tender."
       },
       {
         stepNumber: 16,
@@ -1994,11 +1994,11 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 22,
-        instruction: "Step 22: In Credit Memo Details, enter '180' in Enter Amount (with Trx/Reg/Store details pre-filled) and press ENTER (or click [Ok]) to complete Lesson 8-4.",
+        instruction: "Step 22: In Credit Memo Details, verify Credit Memo ('CM-2026-0041') and Amount ('180.00'), then click [Process Payment (Enter)] or [Ok] (or press ENTER) to complete Lesson 8-4.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 180,
-        hint: "Type 180 in Enter Amount and press Enter or click [Ok].",
-        errorFeedback: "Enter 180 and confirm the Credit Memo tender."
+        hint: "Verify Amount '180.00' and click [Process Payment (Enter)] or [Ok] (or press Enter).",
+        errorFeedback: "Confirm the PHP 180.00 Credit Memo tender."
       }
     ]
   },
@@ -2146,11 +2146,11 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 19,
-        instruction: "Step 19: In Gift Certificate Details, enter '180' in Enter Amount and press ENTER (or click [Ok]) to complete the Module 8 Assessment!",
+        instruction: "Step 19: In Gift Certificate Details, verify GC Number and Amount ('180.00'), then click [Process Payment (Enter)] or [Ok] (or press ENTER) to complete the Module 8 Assessment!",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 180,
-        hint: "Type 180 in Enter Amount and press Enter or click [Ok].",
-        errorFeedback: "Enter 180 and confirm the Gift Certificate tender."
+        hint: "Verify Amount '180.00' and click [Process Payment (Enter)] or [Ok] (or press Enter).",
+        errorFeedback: "Confirm the PHP 180.00 Gift Certificate tender."
       }
     ]
   },
@@ -2183,25 +2183,25 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: The Manager Override screen opens. Click Confirm Override to authorize the void.",
+        instruction: "Step 3: The Manager Override screen opens. Click [Yes] (or press ENTER) to authorize the void.",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click Confirm Override in the Manager Override screen.",
-        errorFeedback: "Click Confirm Override to continue with the void."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) to continue with the void."
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Choose 'Customer Cancel' as the reason for voiding the item, then confirm.",
+        instruction: "Step 4: Choose 'Customer Cancel' in Select a Reason, then click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_ITEM_VOID",
         expectedData: "Customer Cancel",
-        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
-        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+        hint: "Select Customer Cancel in the Item Void reason list and click [Ok] (or press Alt+Enter).",
+        errorFeedback: "Select Customer Cancel and click [Ok] to confirm the item-void reason."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: Select the Faber-Castell Color Pencils line item and confirm the void with Alt+Enter.",
+        instruction: "Step 5: Select the Faber-Castell Color Pencils line item and confirm the void with Alt+Enter (or click 'Confirm Void Item <Alt+Enter>').",
         expectedAction: "SCAN_VOID_SKU",
         expectedData: "NBS-ART-004",
-        hint: "Click the NBS-ART-004 line item, then click Confirm Void Item or press Alt+Enter.",
+        hint: "Click the NBS-ART-004 line item, then click Confirm Void Item <Alt+Enter> or press Alt+Enter.",
         errorFeedback: "Select NBS-ART-004 and confirm the item void."
       }
     ]
@@ -2283,25 +2283,25 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 10,
-        instruction: "Step 10: The Manager Override prompt appears. Authorize the line void by clicking 'Confirm Override'.",
+        instruction: "Step 10: The Manager Override screen appears. Authorize the line void by clicking [Yes] (or pressing ENTER).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click the 'Confirm Override' button in the supervisor modal.",
-        errorFeedback: "Click Confirm Override to approve the Item Void."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) to approve the Item Void."
       },
       {
         stepNumber: 11,
-        instruction: "Step 11: Choose 'Customer Cancel' as the reason for voiding the pen, then confirm.",
+        instruction: "Step 11: Choose 'Customer Cancel' in Select a Reason, then click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_ITEM_VOID",
         expectedData: "Customer Cancel",
-        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
-        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+        hint: "Select Customer Cancel in the Item Void reason list and click [Ok] (or press Alt+Enter).",
+        errorFeedback: "Select Customer Cancel and click [Ok] to confirm the item-void reason."
       },
       {
         stepNumber: 12,
-        instruction: "Step 12: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter.",
+        instruction: "Step 12: Select the Pilot G-Tech Pen line item and confirm the void with Alt+Enter (or click 'Confirm Void Item <Alt+Enter>').",
         expectedAction: "SCAN_VOID_SKU",
         expectedData: "NBS-PEN-002",
-        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item or press Alt+Enter.",
+        hint: "Click the NBS-PEN-002 line item, then click Confirm Void Item <Alt+Enter> or press Alt+Enter.",
         errorFeedback: "Select NBS-PEN-002 and confirm the item void."
       },
       {
@@ -2496,10 +2496,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 20,
-        instruction: "Step 20: On the Transaction Discount screen, select PWD Discount (ZPWD, 20%) and confirm to apply (returning to the Main Screen).",
+        instruction: "Step 20: On the Transaction Discount screen, select PWD Discount (ZPWD, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply and return to the Main Screen.",
         expectedAction: "APPLY_DISCOUNT",
-        hint: "Select PWD Discount (ZPWD, 20%), then confirm to apply the discount.",
-        errorFeedback: "Select a discount category and apply it."
+        hint: "Select PWD Discount (ZPWD, 20%), then click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
+        errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
       },
       {
         stepNumber: 21,
@@ -2591,10 +2591,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 33,
-        instruction: "Step 33: On the Transaction Comments screen, enter or verify corporate billing information and click [Save Comments] (returning to the Main Screen).",
+        instruction: "Step 33: On the Transaction Comment screen, enter or verify corporate billing information and click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click Save Comments in the dialog.",
-        errorFeedback: "Save the transaction comment to continue."
+        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog.",
+        errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
         stepNumber: 34,
@@ -2612,10 +2612,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 36,
-        instruction: "Step 36: Enter the manager override to authorize Zero Rated (which applies Zero Rated and returns to the Main Screen).",
+        instruction: "Step 36: Click [Yes] (or press ENTER) on the Manager Override screen to authorize Zero Rated (which applies Zero Rated and returns to the Main Screen).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Complete the Manager Override prompt to apply Zero Rated.",
-        errorFeedback: "Authorize Zero Rated in the Manager Override prompt."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to apply Zero Rated.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen to authorize Zero Rated."
       },
       {
         stepNumber: 37,
@@ -2677,25 +2677,25 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 44,
-        instruction: "Step 44: The Manager Override prompt appears. Authorize the line void by clicking 'Confirm Override'.",
+        instruction: "Step 44: The Manager Override screen appears. Authorize the line void by clicking [Yes] (or pressing ENTER).",
         expectedAction: "CONFIRM_OVERRIDE",
-        hint: "Click the 'Confirm Override' button in the supervisor modal.",
-        errorFeedback: "Click Confirm Override to approve the Item Void."
+        hint: "Click [Yes] or press ENTER in the Manager Override screen.",
+        errorFeedback: "Click [Yes] (or press ENTER) to approve the Item Void."
       },
       {
         stepNumber: 45,
-        instruction: "Step 45: Choose 'Customer Cancel' as the reason for voiding the calculators, then confirm.",
+        instruction: "Step 45: Choose 'Customer Cancel' in Select a Reason, then click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_ITEM_VOID",
         expectedData: "Customer Cancel",
-        hint: "Select Customer Cancel in the Item Void reason list and confirm.",
-        errorFeedback: "Select Customer Cancel and confirm the item-void reason."
+        hint: "Select Customer Cancel in the Item Void reason list and click [Ok] (or press Alt+Enter).",
+        errorFeedback: "Select Customer Cancel and click [Ok] to confirm the item-void reason."
       },
       {
         stepNumber: 46,
-        instruction: "Step 46: Select the Casio Scientific Calculator line item and confirm the void with Alt+Enter.",
+        instruction: "Step 46: Select the Casio Scientific Calculator line item and confirm the void with Alt+Enter (or click 'Confirm Void Item <Alt+Enter>').",
         expectedAction: "SCAN_VOID_SKU",
         expectedData: "NBS-CAL-005",
-        hint: "Click the NBS-CAL-005 line item, then click Confirm Void Item or press Alt+Enter.",
+        hint: "Click the NBS-CAL-005 line item, then click Confirm Void Item <Alt+Enter> or press Alt+Enter.",
         errorFeedback: "Select NBS-CAL-005 and confirm the item void."
       },
 

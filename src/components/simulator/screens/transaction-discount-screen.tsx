@@ -127,7 +127,7 @@ export function TransactionDiscountScreen({
         setSelectedIndex((index) =>
           Math.min(DISCOUNT_OPTIONS.length - 1, index + 1)
         );
-      } else if (event.altKey && event.key === "Enter") {
+      } else if (event.key === "Enter") {
         event.preventDefault();
         submitSelectedDiscount();
       }
