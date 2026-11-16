@@ -29,6 +29,7 @@ import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option
 import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-terminal";
 import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-terminal-preview";
 import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
+import { NbsGiftCardPreview } from "@/components/simulator/terminals/nbs-gift-card-preview";
 import { CustomerPanel } from "@/components/simulator/customer-panel";
 import { ChangeCheckModal } from "@/components/simulator/modals/change-check-modal";
 import { PosAlertModal, PosAlertState } from "@/components/simulator/modals/pos-alert-modal";
@@ -922,15 +923,20 @@ function SimulatorContent() {
       selectedBankCardType === "VISA" ||
       selectedBankCardType === "MASTERCARD" ||
       (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
-      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
+      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
+      (selectedBankCardType === "NBS GIFTCARD" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
     );
 
-  const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" =
+  const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" | "NBS_GIFTCARD" =
     selectedBankCardType === "GCASH"
       ? "GCASH"
       : selectedBankCardType === "MAYA"
       ? "MAYA"
+      : selectedBankCardType === "NBS GIFTCARD"
+      ? "NBS_GIFTCARD"
       : "BDO";
+
+  const currentGiftCardVoucher = "000044505";
 
   const currentGcashRef =
     gcashReferenceNumber ||
@@ -1529,6 +1535,19 @@ function SimulatorContent() {
           setIsFinalTenderStep(true);
         }
       }, 800);
+      return;
+    }
+
+    if (
+      bankCardStep === "EWALLET_DETAILS" &&
+      selectedBankCardType.toUpperCase() === "NBS GIFTCARD" &&
+      !bankCardRefNo.trim()
+    ) {
+      showPosAlert(
+        `Please enter Voucher Code '${currentGiftCardVoucher}' from the NBS Gift Card into the Voucher Code field.`,
+        "Voucher Code Required",
+        "warning"
+      );
       return;
     }
 
@@ -5469,26 +5488,35 @@ function SimulatorContent() {
                                           ? (currentGcashRef || "GC88492019")
                                           : selectedBankCardType.toUpperCase() === "MAYA"
                                           ? (currentMayaRef || "MY994821")
+                                          : selectedBankCardType.toUpperCase() === "NBS GIFTCARD"
+                                          ? currentGiftCardVoucher
                                           : ""
                                       }
                                       className="w-48 bg-white border-2 border-gray-500 px-2 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
                                     />
                                   </div>
-                                  {(selectedBankCardType.toUpperCase() === "GCASH" || selectedBankCardType.toUpperCase() === "MAYA") && (
+                                  {(selectedBankCardType.toUpperCase() === "GCASH" ||
+                                    selectedBankCardType.toUpperCase() === "MAYA" ||
+                                    selectedBankCardType.toUpperCase() === "NBS GIFTCARD") && (
                                     <div className="flex justify-end pt-0.5">
                                       <button
                                         type="button"
                                         onClick={() => {
                                           if (selectedBankCardType.toUpperCase() === "GCASH") {
                                             setBankCardRefNo(currentGcashRef || "GC88492019");
-                                          } else {
+                                          } else if (selectedBankCardType.toUpperCase() === "MAYA") {
                                             setBankCardRefNo(currentMayaRef || "MY994821");
+                                          } else {
+                                            setBankCardRefNo(currentGiftCardVoucher);
                                           }
                                         }}
                                         className="cursor-pointer text-[10px] font-mono font-bold text-blue-800 hover:text-blue-950 bg-blue-100 hover:bg-blue-200 border border-blue-400 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
-                                        title="Click to copy reference number from customer device into POS"
+                                        title="Click to copy code from customer card/device into POS"
                                       >
-                                        <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill Reference ({selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})
+                                        <ClipboardList className="w-3 h-3 mr-1 inline-block" />{" "}
+                                        {selectedBankCardType.toUpperCase() === "NBS GIFTCARD"
+                                          ? `Auto-fill Voucher Code (${currentGiftCardVoucher})`
+                                          : `Auto-fill Reference (${selectedBankCardType.toUpperCase() === "GCASH" ? (currentGcashRef || "GC88492019") : (currentMayaRef || "MY994821")})`}
                                       </button>
                                     </div>
                                   )}
@@ -6446,6 +6474,12 @@ function SimulatorContent() {
                 referenceNumber={currentMayaRef}
                 generatedAt={mayaGeneratedAt || new Date()}
                 totalAmount={totals.totalAmount || 2990}
+              />
+            ) : activeExternalTerminalType === "NBS_GIFTCARD" ? (
+              <NbsGiftCardPreview
+                isExternalReceiptShowing={isExternalReceiptShowing}
+                voucherCode={currentGiftCardVoucher}
+                onUseCode={() => setBankCardRefNo(currentGiftCardVoucher)}
               />
             ) : (
               <BdoCardTerminal

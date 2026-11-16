@@ -1821,11 +1821,11 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 19,
-        instruction: "Step 19: On the NBS GIFTCARD Payment Details screen, verify the amount ('240.00') and Gift Card number, then click [Ok] (or press Enter) to complete Lesson 8-3.",
+        instruction: "Step 19: On the NBS GIFTCARD Payment Details screen, verify the Voucher Amount ('240.00'), enter Voucher Code '000044505' from the NBS Gift Card shown on the right, and click [Ok] (or press Enter) to complete Lesson 8-3.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 240,
-        hint: "Verify the Gift Card details and click [Ok] or press Enter.",
-        errorFeedback: "Confirm the PHP 240.00 NBS Gift Card payment by clicking [Ok] or pressing Enter."
+        hint: "Enter Voucher Code '000044505' from the NBS Gift Card (or click Use Code) and click [Ok] or press Enter.",
+        errorFeedback: "Enter Voucher Code '000044505' and confirm the PHP 240.00 NBS Gift Card payment."
       }
     ]
   },
