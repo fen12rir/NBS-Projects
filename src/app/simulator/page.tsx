@@ -1516,13 +1516,13 @@ function SimulatorContent() {
         const remainingDue = Math.max(0, totals.totalAmount - redeemedCoins);
         // Remaining Balance Tender
         if (remainingDue > 0) {
-          setSelectedTenderMethod(null);
+          setSelectedTenderMethod("CASH");
           setSelectedBankCardType("-SELECT-");
           setBankCardStep("SELECT_TYPE");
           setIsLnqrCashPaymentOpen(true);
           setIsLnqrTenderProcessed(false);
           setIsFinalTenderStep(false);
-          setLnqrCashTenderInput("");
+          setLnqrCashTenderInput(isExamMode ? "500.00" : "3000.00");
         } else {
           // Full Sulit Coins Payment
           setSelectedTenderMethod("BANK_CARD");
@@ -3091,7 +3091,11 @@ function SimulatorContent() {
     }
 
     // Cash Tender Key Repeat
-    if (currentStep.expectedAction === "CONFIRM_TENDER" && actionId === "PAY_CASH") {
+    if (
+      (currentStep.expectedAction === "CONFIRM_TENDER" ||
+        currentStep.expectedAction === "SUBMIT_CASH_TENDER") &&
+      actionId === "PAY_CASH"
+    ) {
       return true;
     }
 
