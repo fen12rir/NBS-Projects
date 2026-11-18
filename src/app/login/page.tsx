@@ -62,9 +62,14 @@ function LoginForm() {
     }
   };
 
-  const handleDemoLogin = () => {
-    enterDemoMode();
+  const handleDemoTraineeLogin = async () => {
+    await enterDemoMode("trainee");
     router.push("/dashboard");
+  };
+
+  const handleDemoAdminLogin = async () => {
+    await enterDemoMode("admin");
+    router.push("/admin");
   };
 
   return (
@@ -176,15 +181,29 @@ function LoginForm() {
           </Link>
         </div>
 
-        {/* Offline Local Demo Mode Fallback */}
-        <div className="pt-2">
-          <button
-            type="button"
-            onClick={handleDemoLogin}
-            className="text-[11px] text-gray-400 hover:text-gray-700 underline font-mono"
-          >
-            Continue in Local Offline Demo Mode
-          </button>
+        {/* Instant Demo Access (No Database Required) */}
+        <div className="pt-2 border-t border-dashed border-gray-200 space-y-2">
+          <div className="text-[10px] uppercase font-bold text-gray-400 text-center tracking-wider">
+            Quick Sandbox Access (No DB Required)
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={handleDemoAdminLogin}
+              className="py-2 px-2.5 bg-black hover:bg-gray-800 text-white text-xs font-bold flex items-center justify-center space-x-1 transition-colors"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>Admin Demo</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDemoTraineeLogin}
+              className="py-2 px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold border border-gray-300 flex items-center justify-center space-x-1 transition-colors"
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#E4002B] shrink-0" />
+              <span>Trainee Demo</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

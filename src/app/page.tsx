@@ -47,9 +47,14 @@ export default function HomePage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleDemoEntry = () => {
-    enterDemoMode();
+  const handleDemoEntry = async () => {
+    await enterDemoMode("trainee");
     router.push("/dashboard");
+  };
+
+  const handleAdminDemoEntry = async () => {
+    await enterDemoMode("admin");
+    router.push("/admin");
   };
 
   const handleLaunchClick = () => {
@@ -98,6 +103,14 @@ export default function HomePage() {
               </Link>
             ) : (
               <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAdminDemoEntry}
+                  className="hidden md:inline-flex border-gray-900 bg-black text-white hover:bg-gray-800 font-bold text-xs"
+                >
+                  Admin Portal (Demo)
+                </Button>
                 <Link href="/signup">
                   <Button
                     variant="outline"
@@ -484,17 +497,33 @@ export default function HomePage() {
                 </Button>
               </Link>
 
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  enterDemoMode();
-                  setShowAuthModal(false);
-                  router.push("/simulator");
-                }}
-                className="w-full text-xs text-gray-500 hover:text-gray-900 font-semibold underline"
-              >
-                Continue in Local Offline Demo Mode
-              </Button>
+              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-200">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await enterDemoMode("admin");
+                    setShowAuthModal(false);
+                    router.push("/admin");
+                  }}
+                  className="w-full py-2.5 text-xs bg-black text-white hover:bg-gray-800 font-bold flex items-center justify-center space-x-1"
+                >
+                  <Lock className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Demo</span>
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    await enterDemoMode("trainee");
+                    setShowAuthModal(false);
+                    router.push("/dashboard");
+                  }}
+                  className="w-full py-2.5 text-xs border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-1"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-[#E4002B]" />
+                  <span>Trainee Demo</span>
+                </Button>
+              </div>
             </div>
           </div>
         </div>

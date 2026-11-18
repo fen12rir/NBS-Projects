@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
-import { AuthUser, DEMO_USER } from "./demo-user";
+import { AuthUser, DEMO_ADMIN_USER, DEMO_TRAINEE_USER, DEMO_USER } from "./demo-user";
 
 export interface SignupData {
   fullName: string;
@@ -20,9 +20,8 @@ interface AuthContextType {
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string; message?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
-  // Legacy stubs kept for backwards compatibility
+  enterDemoMode: (mode?: "trainee" | "admin") => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  enterDemoMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,8 +32,8 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => ({ success: false }),
   signOut: async () => {},
   refreshSession: async () => {},
+  enterDemoMode: async () => {},
   signInWithGoogle: async () => {},
-  enterDemoMode: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,10 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             branchRegion: data.user.branchRegion,
             employeeId: data.user.employeeId,
             accessExpiresAt: data.user.accessExpiresAt,
-            isDemo: false,
+            isDemo: Boolean(data.user.id?.includes("demo")),
           };
           setUser(authUser);
-          setIsDemoMode(false);
+          setIsDemoMode(Boolean(data.user.id?.includes("demo")));
           setIsLoading(false);
           return;
         }
@@ -77,11 +76,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Network or API failure
     }
 
-    // Check if user explicitly set local demo mode (for offline / dev fallback)
+    // Check if user set local demo mode in localStorage
     if (typeof window !== "undefined") {
       const demoFlag = localStorage.getItem("nbs_demo_active");
-      if (demoFlag === "true") {
-        setUser(DEMO_USER);
+      if (demoFlag === "admin") {
+        setUser(DEMO_ADMIN_USER);
+        setIsDemoMode(true);
+        setIsLoading(false);
+        return;
+      } else if (demoFlag === "trainee" || demoFlag === "true") {
+        setUser(DEMO_TRAINEE_USER);
         setIsDemoMode(true);
         setIsLoading(false);
         return;
@@ -162,22 +166,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("nbs_demo_active");
       localStorage.removeItem("nbs_user_profile");
+      // Clear client-accessible cookies
+      document.cookie = "nbs_demo_mode=; path=/; max-age=0";
     }
 
     setUser(null);
     setIsDemoMode(false);
   };
 
-  const enterDemoMode = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("nbs_demo_active", "true");
+  const enterDemoMode = async (mode: "trainee" | "admin" = "trainee") => {
+    try {
+      await fetch("/api/auth/demo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode }),
+      });
+    } catch {
+      // Best effort
     }
-    setUser(DEMO_USER);
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem("nbs_demo_active", mode);
+      document.cookie = `nbs_demo_mode=${mode}; path=/; max-age=604800`;
+    }
+
+    const demoUser = mode === "admin" ? DEMO_ADMIN_USER : DEMO_TRAINEE_USER;
+    setUser(demoUser);
     setIsDemoMode(true);
+    setIsLoading(false);
   };
 
   const signInWithGoogle = async () => {
-    enterDemoMode();
+    await enterDemoMode("trainee");
   };
 
   return (
@@ -190,8 +210,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signup,
         signOut,
         refreshSession: fetchSession,
-        signInWithGoogle,
         enterDemoMode,
+        signInWithGoogle,
       }}
     >
       {children}

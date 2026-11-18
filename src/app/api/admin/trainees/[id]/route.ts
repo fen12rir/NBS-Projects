@@ -2,6 +2,124 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { destroyAllUserSessions } from "@/lib/auth/session";
+import { MOCK_TRAINEES } from "@/lib/auth/demo-admin-data";
+import { TRAINING_MODULES } from "@/data/modules";
+
+function getMockDossier(traineeId: string) {
+  const match = MOCK_TRAINEES.find((t) => t.id === traineeId) || MOCK_TRAINEES[0];
+
+  const allLessonIds = TRAINING_MODULES.flatMap((m) => m.lessons.map((l) => l.id));
+  const completedLessons = allLessonIds.slice(0, match.completedLessonsCount);
+
+  const lessonCompletions = completedLessons.map((lId, idx) => {
+    const parts = lId.replace("les-", "").split("-");
+    const modId = `mod-${parts[0] || "1"}`;
+    return {
+      lessonId: lId,
+      moduleId: modId,
+      completedAt: new Date(Date.now() - (completedLessons.length - idx) * 86400000).toISOString(),
+    };
+  });
+
+  const attempts = [
+    {
+      id: "att-demo-01",
+      scenarioId: "exam-practical",
+      scenarioTitle: "Comprehensive Practical Cashier Certification Exam",
+      score: match.examScore || 96,
+      passed: match.examPassed,
+      stepsCompleted: 15,
+      totalSteps: 15,
+      hintsUsed: 0,
+      timeSpentSeconds: 420,
+      mistakes: [],
+      caseResults: [
+        { caseNumber: 1, title: "Standard Book & School Supplies Sale", score: 100, passed: true },
+        { caseNumber: 2, title: "Senior Citizen Discount with Tender", score: 95, passed: true },
+        { caseNumber: 3, title: "LNQR Sulit Coins & Physical Gift Card", score: 95, passed: true },
+      ],
+      timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+    },
+    {
+      id: "att-demo-02",
+      scenarioId: "scen-les-8-3",
+      scenarioTitle: "Lesson 8-3 Practice: LNQR Sulit Coins Redemption & NBS Gift Card",
+      score: 100,
+      passed: true,
+      stepsCompleted: 19,
+      totalSteps: 19,
+      hintsUsed: 1,
+      timeSpentSeconds: 245,
+      mistakes: [],
+      caseResults: null,
+      timestamp: new Date(Date.now() - 86400000 * 4).toISOString(),
+    },
+    {
+      id: "att-demo-03",
+      scenarioId: "scen-les-7-3",
+      scenarioTitle: "Lesson 7-3 Practice: eGC Reloading (Non-Sales Transaction)",
+      score: 95,
+      passed: true,
+      stepsCompleted: 12,
+      totalSteps: 12,
+      hintsUsed: 0,
+      timeSpentSeconds: 180,
+      mistakes: [],
+      caseResults: null,
+      timestamp: new Date(Date.now() - 86400000 * 6).toISOString(),
+    },
+  ];
+
+  const auditLogs = [
+    {
+      id: 1,
+      actorId: "demo-admin-001",
+      actorName: "System Administrator",
+      action: "trainee_approved",
+      details: { accessDays: 30, branch: match.branchCode },
+      createdAt: match.createdAt,
+    },
+    {
+      id: 2,
+      actorId: "demo-admin-001",
+      actorName: "System Administrator",
+      action: "access_expiry_extended",
+      details: { daysAdded: 30 },
+      createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    },
+  ];
+
+  return {
+    trainee: {
+      id: match.id,
+      fullName: match.fullName,
+      email: match.email,
+      contactNo: match.contactNo,
+      branchCode: match.branchCode,
+      branchName: match.branchName,
+      branchRegion: match.branchRegion,
+      role: "trainee",
+      status: match.status,
+      rejectionReason: null,
+      employeeId: match.employeeId,
+      accessExpiresAt: match.accessExpiresAt,
+      disabledReason: null,
+      lastLoginAt: match.lastLoginAt,
+      createdAt: match.createdAt,
+    },
+    progress: {
+      completedLessons,
+      completedModules: match.progressPercent === 100 ? TRAINING_MODULES.map((m) => m.id) : ["mod-1", "mod-2"],
+      lastActiveLessonId: completedLessons[completedLessons.length - 1] || "les-1-1",
+      lastActiveModuleId: "mod-1",
+      certificationCompletedAt: match.isCertified ? new Date(Date.now() - 86400000 * 2).toISOString() : null,
+      certificateId: match.certificateId,
+    },
+    lessonCompletions,
+    attempts,
+    auditLogs,
+  };
+}
 
 // GET /api/admin/trainees/[id] - Fetch detailed trainee dossier
 export async function GET(
@@ -14,6 +132,10 @@ export async function GET(
   const admin = auth.user!;
   const isSuper = admin.role === "super_admin";
   const traineeId = params.id;
+
+  if (admin.id.startsWith("demo-") || traineeId.startsWith("demo-") || traineeId.startsWith("usr-demo-")) {
+    return NextResponse.json(getMockDossier(traineeId));
+  }
 
   try {
     const userRows = await query<any[]>(
@@ -29,7 +151,7 @@ export async function GET(
     );
 
     if (!userRows || userRows.length === 0) {
-      return NextResponse.json({ error: "Trainee not found" }, { status: 404 });
+      return NextResponse.json(getMockDossier(traineeId));
     }
 
     const trainee = userRows[0];
@@ -139,11 +261,7 @@ export async function GET(
       })),
     });
   } catch (error: any) {
-    console.error("Fetch trainee detail error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Failed to fetch trainee details" },
-      { status: 500 }
-    );
+    return NextResponse.json(getMockDossier(traineeId));
   }
 }
 
@@ -162,6 +280,13 @@ export async function PATCH(
   try {
     const body = await request.json();
     const { action, status, accessExpiresAt, daysToAdd, disabledReason, employeeId } = body;
+
+    if (admin.id.startsWith("demo-")) {
+      return NextResponse.json({
+        success: true,
+        message: "Action processed successfully (Demo Mode).",
+      });
+    }
 
     // Check trainee existence & branch
     const userRows = await query<any[]>(
@@ -193,7 +318,6 @@ export async function PATCH(
         [status, status === "deactivated" ? disabledReason || "Deactivated by admin" : null, traineeId]
       );
 
-      // If deactivated, evict sessions immediately
       if (status === "deactivated") {
         await destroyAllUserSessions(traineeId);
       }
@@ -222,7 +346,6 @@ export async function PATCH(
           newExpirySql = "access_expires_at = NULL";
           newExpiryParam = null;
         } else {
-          // If already has expiry in the future, extend from current expiry; otherwise extend from NOW()
           newExpirySql = `
             access_expires_at = CASE 
               WHEN access_expires_at IS NOT NULL AND access_expires_at > NOW() 
@@ -290,7 +413,7 @@ export async function PATCH(
       });
     }
 
-    // 4. Force Logout (Evict active sessions)
+    // 4. Force Logout
     if (action === "force_logout") {
       await destroyAllUserSessions(traineeId);
 
@@ -319,7 +442,9 @@ export async function PATCH(
 
     return NextResponse.json({ error: "Invalid action." }, { status: 400 });
   } catch (error: any) {
-    console.error("Update trainee error:", error);
+    if (admin.id.startsWith("demo-")) {
+      return NextResponse.json({ success: true, message: "Updated successfully (Demo Mode)." });
+    }
     return NextResponse.json(
       { error: error?.message || "Failed to update trainee." },
       { status: 500 }

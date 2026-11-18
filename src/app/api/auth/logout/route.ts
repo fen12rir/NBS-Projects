@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { destroySession, SESSION_COOKIE_NAME, isCookieSecure } from "@/lib/auth/session";
+import { destroySession, SESSION_COOKIE_NAME, DEMO_COOKIE_NAME, isCookieSecure } from "@/lib/auth/session";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,12 +9,24 @@ export async function POST(request: NextRequest) {
     }
 
     const response = NextResponse.json({ success: true, message: "Logged out successfully" });
+    const secure = isCookieSecure();
+
     response.cookies.set({
       name: SESSION_COOKIE_NAME,
       value: "",
       httpOnly: true,
       sameSite: "lax",
-      secure: isCookieSecure(),
+      secure,
+      path: "/",
+      maxAge: 0,
+    });
+
+    response.cookies.set({
+      name: DEMO_COOKIE_NAME,
+      value: "",
+      httpOnly: false,
+      sameSite: "lax",
+      secure,
       path: "/",
       maxAge: 0,
     });

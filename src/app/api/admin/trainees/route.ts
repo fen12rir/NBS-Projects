@@ -1,8 +1,91 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
+import { MOCK_TRAINEES } from "@/lib/auth/demo-admin-data";
 
 const TOTAL_LESSONS_COUNT = 19;
+
+function formatTraineesCsv(trainees: any[]) {
+  const headers = [
+    "Full Name",
+    "Email",
+    "Contact No",
+    "Branch Code",
+    "Branch Name",
+    "Status",
+    "Completed Lessons",
+    "Progress %",
+    "Exam Passed",
+    "Exam Score",
+    "Certified",
+    "Access Expiry",
+    "Last Login",
+    "Registered At",
+  ];
+
+  const csvRows = [headers.join(",")];
+
+  for (const t of trainees) {
+    const values = [
+      `"${(t.fullName || "").replace(/"/g, '""')}"`,
+      `"${t.email}"`,
+      `"${t.contactNo}"`,
+      `"${t.branchCode}"`,
+      `"${(t.branchName || "").replace(/"/g, '""')}"`,
+      t.status,
+      `${t.completedLessonsCount}/${t.totalLessonsCount}`,
+      `${t.progressPercent}%`,
+      t.examPassed ? "YES" : "NO",
+      t.examScore !== null && t.examScore !== undefined ? t.examScore : "N/A",
+      t.isCertified ? "YES" : "NO",
+      t.accessExpiresAt ? new Date(t.accessExpiresAt).toISOString().split("T")[0] : "None",
+      t.lastLoginAt ? new Date(t.lastLoginAt).toISOString().split("T")[0] : "Never",
+      new Date(t.createdAt).toISOString().split("T")[0],
+    ];
+    csvRows.push(values.join(","));
+  }
+
+  const csvContent = csvRows.join("\r\n");
+  return new NextResponse(csvContent, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/csv; charset=utf-8",
+      "Content-Disposition": `attachment; filename="nbs-trainees-${new Date().toISOString().slice(0, 10)}.csv"`,
+    },
+  });
+}
+
+function filterMockTrainees(admin: any, search: string, branch: string | null, status: string | null) {
+  let list = [...MOCK_TRAINEES];
+
+  if (admin.role !== "super_admin") {
+    list = list.filter((t) => t.branchCode === admin.branchCode);
+  } else if (branch && branch !== "all") {
+    list = list.filter((t) => t.branchCode === branch);
+  }
+
+  if (status && status !== "all") {
+    if (status === "expired") {
+      list = list.filter((t) => t.isExpired);
+    } else if (status === "expiring_soon") {
+      list = list.filter((t) => t.isExpiringSoon);
+    } else {
+      list = list.filter((t) => t.status === status);
+    }
+  }
+
+  if (search) {
+    const q = search.toLowerCase();
+    list = list.filter(
+      (t) =>
+        t.fullName.toLowerCase().includes(q) ||
+        t.email.toLowerCase().includes(q) ||
+        t.contactNo.includes(q)
+    );
+  }
+
+  return list;
+}
 
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin();
@@ -11,13 +94,21 @@ export async function GET(request: NextRequest) {
   const admin = auth.user!;
   const isSuper = admin.role === "super_admin";
 
-  try {
-    const { searchParams } = new URL(request.url);
-    const search = (searchParams.get("search") || "").trim();
-    const branch = searchParams.get("branch");
-    const status = searchParams.get("status");
-    const isCsvExport = searchParams.get("export") === "csv";
+  const { searchParams } = new URL(request.url);
+  const search = (searchParams.get("search") || "").trim();
+  const branch = searchParams.get("branch");
+  const status = searchParams.get("status");
+  const isCsvExport = searchParams.get("export") === "csv";
 
+  if (admin.id.startsWith("demo-")) {
+    const filtered = filterMockTrainees(admin, search, branch, status);
+    if (isCsvExport) {
+      return formatTraineesCsv(filtered);
+    }
+    return NextResponse.json({ totalCount: filtered.length, trainees: filtered });
+  }
+
+  try {
     const conditions: string[] = ["u.role = 'trainee'"];
     const params: any[] = [];
 
@@ -127,55 +218,8 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // CSV Export
     if (isCsvExport) {
-      const headers = [
-        "Full Name",
-        "Email",
-        "Contact No",
-        "Branch Code",
-        "Branch Name",
-        "Status",
-        "Completed Lessons",
-        "Progress %",
-        "Exam Passed",
-        "Exam Score",
-        "Certified",
-        "Access Expiry",
-        "Last Login",
-        "Registered At",
-      ];
-
-      const csvRows = [headers.join(",")];
-
-      for (const t of trainees) {
-        const values = [
-          `"${(t.fullName || "").replace(/"/g, '""')}"`,
-          `"${t.email}"`,
-          `"${t.contactNo}"`,
-          `"${t.branchCode}"`,
-          `"${(t.branchName || "").replace(/"/g, '""')}"`,
-          t.status,
-          `${t.completedLessonsCount}/${t.totalLessonsCount}`,
-          `${t.progressPercent}%`,
-          t.examPassed ? "YES" : "NO",
-          t.examScore !== null ? t.examScore : "N/A",
-          t.isCertified ? "YES" : "NO",
-          t.accessExpiresAt ? new Date(t.accessExpiresAt).toISOString().split("T")[0] : "None",
-          t.lastLoginAt ? new Date(t.lastLoginAt).toISOString().split("T")[0] : "Never",
-          new Date(t.createdAt).toISOString().split("T")[0],
-        ];
-        csvRows.push(values.join(","));
-      }
-
-      const csvContent = csvRows.join("\r\n");
-      return new NextResponse(csvContent, {
-        status: 200,
-        headers: {
-          "Content-Type": "text/csv; charset=utf-8",
-          "Content-Disposition": `attachment; filename="nbs-trainees-${new Date().toISOString().slice(0, 10)}.csv"`,
-        },
-      });
+      return formatTraineesCsv(trainees);
     }
 
     return NextResponse.json({
@@ -183,10 +227,10 @@ export async function GET(request: NextRequest) {
       trainees,
     });
   } catch (error: any) {
-    console.error("Admin trainees error:", error);
-    return NextResponse.json(
-      { error: error?.message || "Failed to load trainees list" },
-      { status: 500 }
-    );
+    const filtered = filterMockTrainees(admin, search, branch, status);
+    if (isCsvExport) {
+      return formatTraineesCsv(filtered);
+    }
+    return NextResponse.json({ totalCount: filtered.length, trainees: filtered });
   }
 }

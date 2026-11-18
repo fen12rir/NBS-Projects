@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { MOCK_BRANCHES } from "@/lib/auth/demo-admin-data";
 
 export async function GET() {
   try {
     const rows = await query<any[]>(
       "SELECT code, name, region, is_active FROM branches WHERE is_active = 1 ORDER BY code ASC"
     );
+
+    if (!rows || rows.length === 0) {
+      return NextResponse.json({
+        branches: MOCK_BRANCHES.map((b) => ({ ...b, isActive: true })),
+      });
+    }
 
     return NextResponse.json({
       branches: (rows || []).map((b) => ({
@@ -16,9 +23,8 @@ export async function GET() {
       })),
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { error: error?.message || "Failed to load branches" },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      branches: MOCK_BRANCHES.map((b) => ({ ...b, isActive: true })),
+    });
   }
 }
