@@ -585,8 +585,19 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         action.description.toUpperCase().includes("SODEXHO") ||
         action.description.toUpperCase().includes("SODEXO") ||
         action.referenceNo === "ZSOI";
-      const sku = isSodexho ? "ZSOI" : action.sku || `VAR-${action.referenceNo || "001"}`;
-      const desc = isSodexho ? "SODEXHO VARIANCE" : `NON-MDSE: ${action.description}`;
+      const isNonSalesCharge =
+        Boolean(action.sku && action.sku.startsWith("S400")) ||
+        action.description.toUpperCase() === "LNQR EGC";
+      const sku = isSodexho
+        ? "ZSOI"
+        : isNonSalesCharge
+        ? action.sku || "S400000001352"
+        : action.sku || `VAR-${action.referenceNo || "001"}`;
+      const desc = isSodexho
+        ? "SODEXHO VARIANCE"
+        : isNonSalesCharge
+        ? action.description
+        : `NON-MDSE: ${action.description}`;
       const nonMdseItem: POSLineItem = {
         id: `NMDSE-${Date.now()}`,
         sku,

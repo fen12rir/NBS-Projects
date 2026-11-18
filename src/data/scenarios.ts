@@ -1313,17 +1313,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: On the 4th Screen, press F4 (NON SALES) to record a non-sales deposit or card reload.",
+        instruction: "Step 7: On the 4th Screen, press F4 (NON SALES) to open the NON SALES screen.",
         expectedAction: "NON_SALES",
         hint: "Click F4 Non Sales on the 4th Screen or press F4.",
         errorFeedback: "Press F4 (NON SALES) on the 4th Screen."
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Verify the Non-Sales transaction type, amount, and reference number, then click 'Process Non-Sales (Enter)' to return to the Main Screen.",
+        instruction: "Step 8: On the NON SALES screen, verify 'LNQR EGC' is selected, enter '500' in Enter Price, press TAB to [Ok] and press ENTER, then in the 'Unnamed' pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?') press TAB to [Ok] and press ENTER (or click [Ok]).",
         expectedAction: "CONFIRM_NON_SALES",
-        hint: "Click 'Process Non-Sales (Enter)' or press Enter in the dialog.",
-        errorFeedback: "Confirm the Non-Sales transaction in the dialog."
+        hint: "Enter 500 in Enter Price, click [Ok], and click [Ok] in the confirmation pop-up.",
+        errorFeedback: "Confirm the P500 LNQR EGC load in the NON SALES screen and confirmation pop-up."
       }
     ]
   },
@@ -1377,6 +1377,67 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
         expectedData: "NBS-BK-001",
         hint: "Type NBS-BK-001 in the yellow 'Enter Refund UPC' box and press Enter.",
         errorFeedback: "Scan or enter 'NBS-BK-001' to record the returned item."
+      }
+    ]
+  },
+  {
+    id: "scen-les-7-3",
+    title: "Lesson 7-3 Practice: eGC Reloading (F4 Non Sales)",
+    description: "Practice the official LNQR eGC Reloading workflow: navigate to the 4th Screen, press F4 Non Sales, select LNQR EGC and enter PHP 500, confirm the 'Unnamed' reload pop-up, and proceed directly to payment.",
+    moduleRef: "mod-7",
+    lessonRef: "les-7-3",
+    passingScore: 70,
+    steps: [
+      {
+        stepNumber: 1,
+        instruction: "Step 1: Go to the 4th page of the POS. First, press F5 (OPTION) on the Main Screen to advance to the 2nd Screen (or press F11 Page Up to jump directly).",
+        expectedAction: "NAV_SECOND",
+        hint: "Click F5 Option on the right column or press F5.",
+        errorFeedback: "Press F5 (OPTION) to advance toward the 4th Screen."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: Press F5 (NEXT OPTION) to advance to the 3rd Screen.",
+        expectedAction: "NAV_THIRD",
+        hint: "Click F5 Next Option or press F5.",
+        errorFeedback: "Press F5 (NEXT OPTION) to go to the 3rd Screen."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: Press F5 (NEXT OPTION) to reach the 4th Screen.",
+        expectedAction: "NAV_FOURTH",
+        hint: "Click F5 Next Option or press F5 to open the 4th Screen.",
+        errorFeedback: "Press F5 (NEXT OPTION) to reach the 4th Screen."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: On the 4th Screen of the POS, press F4 (NON SALES).",
+        expectedAction: "NON_SALES",
+        hint: "Click F4 Non Sales on the 4th Screen or press F4.",
+        errorFeedback: "Press F4 (NON SALES) on the 4th Screen."
+      },
+      {
+        stepNumber: 5,
+        instruction: "Step 5: On the NON SALES screen, select 'LNQR EGC' under Select Charge, enter '500' in Enter Price, press TAB to [Ok] and press ENTER, then in the pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?') press TAB to [Ok] and press ENTER (or click [Ok]).",
+        expectedAction: "CONFIRM_NON_SALES",
+        expectedData: 500,
+        hint: "Ensure 'LNQR EGC' and '500' are entered, click [Ok], then click [Ok] in the confirmation pop-up.",
+        errorFeedback: "Enter 500 for LNQR EGC, click [Ok], and confirm [Ok] in the pop-up."
+      },
+      {
+        stepNumber: 6,
+        instruction: "Step 6: Back on the Main Screen (with '1 | S400000001352 | LNQR EGC | 500.00 | VE' posted), press F4 (PAYMENT) to proceed to payment.",
+        expectedAction: "GO_PAYMENT",
+        hint: "Click F4 Payment on the right column or press F4.",
+        errorFeedback: "Press F4 (PAYMENT) to proceed to payment."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7: On the Cash Payment Details screen (Acknowledgement Receipt), verify or enter '500' in Enter Amount and press ENTER (or click [Ok]) to complete the eGC Reloading transaction.",
+        expectedAction: "CONFIRM_TENDER",
+        expectedData: 500,
+        hint: "Verify 500 in Enter Amount and press Enter or click [Ok].",
+        errorFeedback: "Confirm the P500 cash payment by pressing Enter or clicking [Ok]."
       }
     ]
   },

@@ -23,7 +23,7 @@ import { ElectronicPaymentModal, CardTenderType } from "@/components/simulator/m
 import { PostVoidModal } from "@/components/simulator/modals/post-void-modal";
 import { PriceChangeModal } from "@/components/simulator/modals/price-change-modal";
 import { NonMerchandiseScreen } from "@/components/simulator/screens/non-merchandise-screen";
-import { NonSalesModal } from "@/components/simulator/modals/non-sales-modal";
+import { NonSalesScreen } from "@/components/simulator/screens/non-sales-screen";
 import { BonusBuyScreen } from "@/components/simulator/screens/bonus-buy-screen";
 import { ChooseOptionScreen } from "@/components/simulator/screens/choose-option-screen";
 import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-terminal";
@@ -3203,6 +3203,24 @@ function SimulatorContent() {
         if (state.lineItems.length === 0) {
           return;
         }
+        const isEgcReloadOnly = state.lineItems.every(
+          (it) =>
+            it.isVoided ||
+            it.sku.startsWith("S40000000135") ||
+            it.description.toUpperCase() === "LNQR EGC"
+        );
+        if (isEgcReloadOnly) {
+          setLoyaltyType("NONE");
+          setSelectedTenderMethod("CASH");
+          setIsLnqrTenderProcessed(false);
+          setIsFinalTenderStep(false);
+          setLnqrCashTenderInput(totals.totalAmount ? totals.totalAmount.toFixed(0) : "500");
+          setReceiptGeneratedAt(new Date());
+          dispatch({ type: "OPEN_PAYMENT" });
+          setIsLnqrCashPaymentOpen(true);
+          validateScenarioStep("GO_PAYMENT");
+          break;
+        }
         if (!hasBonusBuyBeenPrompted) {
           setIsBonusBuyOpen(true);
           setHasBonusBuyBeenPrompted(true);
@@ -4382,7 +4400,30 @@ function SimulatorContent() {
                     validateScenarioStep("CONFIRM_NON_MDSE", data.amount);
                   }}
                 />
-) : isTrxDiscOpen ? (
+              ) : isNonSalesOpen ? (
+                <NonSalesScreen
+                  clerkName={state.cashierName}
+                  terminalId={state.terminalId}
+                  branchCode={state.branchCode}
+                  trxNumber={state.transactionNumber}
+                  onConfirm={(data) => {
+                    dispatch({
+                      type: "ADD_NON_MDSE_ITEM",
+                      description: data.category,
+                      amount: data.amount,
+                      referenceNo: data.referenceNo,
+                      sku: data.sku,
+                    });
+                    setIsNonSalesOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                    validateScenarioStep("CONFIRM_NON_SALES", data.amount);
+                  }}
+                  onCancel={() => {
+                    setIsNonSalesOpen(false);
+                    dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+                  }}
+                />
+              ) : isTrxDiscOpen ? (
                 <TransactionDiscountScreen
                   clerkName={state.cashierName}
                   terminalId={state.terminalId}
@@ -4726,6 +4767,12 @@ function SimulatorContent() {
                               <div>MIN : 140355124</div>
                               <div>Serial No. : AT14-AP0164</div>
                               <div>ACCREDTN : </div>
+                              {state.lineItems.some(
+                                (it) =>
+                                  !it.isVoided &&
+                                  (it.sku.startsWith("S40000000135") ||
+                                    it.description.toUpperCase() === "LNQR EGC")
+                              ) && <div>ACKNOWLEDGEMENT RECEIPT</div>}
                             </div>
 
                             <div className="flex justify-between pt-1">
@@ -4765,7 +4812,7 @@ function SimulatorContent() {
                                         {idx + 1}&nbsp; &nbsp;{item.sku} @ {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                       </span>
                                       <span className={isVoid ? "text-red-700 font-bold" : ""}>
-                                        {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.sku === "ZSOI" || item.description.includes("SODEXHO") ? "NV" : item.total > 0 ? "V" : ""}
+                                        {displayTotal < 0 ? "-" : ""}{Math.abs(displayTotal).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {isVoid ? "-V" : item.sku.startsWith("S40000000135") || item.description.toUpperCase() === "LNQR EGC" ? "VE" : item.sku === "ZSOI" || item.description.includes("SODEXHO") ? "NV" : item.total > 0 ? "V" : ""}
                                       </span>
                                     </div>
                                     <div className="pl-6 text-[9px] text-gray-800">{item.description}</div>
@@ -6318,11 +6365,14 @@ function SimulatorContent() {
                     .reverse()
                     .map(({ item, originalIdx }, reverseIdx) => {
                       const isVoidLine = item.isVoided || item.quantity < 0;
+                      const isVatExempt =
+                        item.sku.startsWith("S40000000135") ||
+                        item.description.toUpperCase() === "LNQR EGC";
                       const isNonMdse =
                         item.sku === "ZSOI" ||
                         item.description.toUpperCase().includes("SODEXHO") ||
                         item.description.toUpperCase().includes("NON-MDSE");
-                      const itemType = isVoidLine ? "-V" : isNonMdse ? "NV" : state.isZeroRated ? "VZ" : "V";
+                      const itemType = isVoidLine ? "-V" : isVatExempt ? "VE" : isNonMdse ? "NV" : state.isZeroRated ? "VZ" : "V";
                       const isLatestItem = reverseIdx === 0;
 
                       return (
@@ -6680,23 +6730,6 @@ function SimulatorContent() {
       )}
 
       
-
-      {/* F4 NON-SALES DEPOSIT / GIFT CARD MODAL */}
-      {isNonSalesOpen && (
-        <NonSalesModal
-          onConfirm={(data) => {
-            setIsNonSalesOpen(false);
-            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
-            validateScenarioStep("CONFIRM_NON_SALES", data.amount);
-          }}
-          onCancel={() => {
-            setIsNonSalesOpen(false);
-            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
-          }}
-        />
-      )}
-
-
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
       <ScenarioCompleteModal

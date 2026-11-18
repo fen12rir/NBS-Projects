@@ -570,7 +570,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
     id: "mod-7",
     number: 7,
     title: "Fourth-Page Functions & Exceptions",
-    shortDesc: "Customer transaction comments (TIN/Invoice details), zero-rated sales, returns, and refunds.",
+    shortDesc: "Customer transaction comments (TIN/Invoice details), eGC reloading (Non Sales), zero-rated sales, returns, and refunds.",
     deckPages: "Slides 83-101",
     lessons: [
       {
@@ -603,10 +603,9 @@ export const TRAINING_MODULES: TrainingModule[] = [
         instructions: [
           "Press F5 three times to advance to the 4th Page (or press F11 Page Up from Main Screen to wrap directly to the 4th Page; use F12 to return to Main).",
           "Press F3 (TRX Comment). Type the customer's registered company name, address, and TIN, then press OK (returns automatically to Main Screen).",
-          "For non-sales reference coding: Navigate to the 4th Page and press F4 (Non Sales), enter the reference code, and confirm (returns automatically to Main Screen).",
           "These comments will automatically print on the official sales invoice receipt."
         ],
-        keyCallouts: ["F3 (4th): TRX Comment", "F4 (4th): Non Sales", "F11: Page Up"]
+        keyCallouts: ["F3 (4th): TRX Comment", "F11: Page Up", "F12: Page Down"]
       },
       {
         id: "les-7-2",
@@ -671,6 +670,52 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "For Zero-Rated sales: Press F7 (Zero Rated) before scanning vatable items to apply VAT exemption."
         ],
         keyCallouts: ["F8 (4th): Return", "F10 (4th): Refund", "F7 (4th): Zero Rated"]
+      },
+      {
+        id: "les-7-3",
+        title: "eGC Reloading",
+        objective: "Process LNQR eGC reloading using the 4th-Screen F4 Non Sales function and complete the Acknowledgement Receipt payment.",
+        deckSlideRef: "Slides 84-85, eGC Reloading SOP",
+        visualAssets: [
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step1.png",
+            caption: "Step 1: Go to the fourth page of POS then press F4 Non Sales.",
+            alt: "4th Screen of POS showing F4 Non Sales button"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step2.png",
+            caption: "Step 2: On the NON SALES screen, select 'LNQR EGC' under Select Charge.",
+            alt: "NON SALES screen with LNQR EGC selected under Select Charge"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step3.png",
+            caption: "Step 3: Enter the amount (e.g. 500) in Enter Price. Press Tab key to Ok then press Enter key.",
+            alt: "NON SALES screen with 500 entered in Enter Price"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step4.png",
+            caption: "Step 4: Once the pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?') appears, press Tab key to Ok then press Enter key.",
+            alt: "Unnamed confirmation pop-up asking if you are sure you want to proceed with loading P500"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step5.png",
+            caption: "Step 5: The LNQR EGC line item (UPC S400000001352, Type VE) is posted on the Main Screen. Press F4 Payment to proceed to payment.",
+            alt: "Main Screen showing LNQR EGC line item S400000001352 for 500.00 VE"
+          },
+          {
+            src: "/assets/modules/module-7-fourth-page-functions/images/pos-egc-reload-step6.png",
+            caption: "Step 6: On the Payment Screen (Acknowledgement Receipt), enter the cash amount (500) and press Enter or click [Ok].",
+            alt: "Payment Screen showing Acknowledgement Receipt for LNQR EGC 500.00 VE and Cash Payment Details"
+          }
+        ],
+        instructions: [
+          "Go to the 4th Page of the POS (press F5 three times or F11 Page Up from the Main Screen) then press F4 (Non Sales).",
+          "On the NON SALES screen, select 'LNQR EGC' under Select Charge.",
+          "Enter the reload amount (e.g. 500) in the Enter Price field, press the TAB key to highlight [Ok], then press the ENTER key.",
+          "When the confirmation pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?') appears, press the TAB key to [Ok] then press the ENTER key.",
+          "The POS returns to the Main Screen and posts the line item (UPC: S400000001352, Description: LNQR EGC, Type: VE). Press F4 (Payment) and tender the payment to print the Acknowledgement Receipt."
+        ],
+        keyCallouts: ["F4 (4th): Non Sales", "Charge: LNQR EGC", "TAB -> Ok -> ENTER", "F4: Payment"]
       }
     ]
   },

@@ -361,6 +361,31 @@ export const LESSON_TRANSLATIONS_TL: Record<string, LessonTranslation> = {
       "Video Walkthrough: Pagpapakita ng Zero-Rated sale authorization at pag-scan.",
     ],
   },
+  "les-7-3": {
+    title: "eGC Reloading",
+    objective: "Iproseso ang LNQR eGC reloading gamit ang F4 Non Sales sa 4th Screen at tapusin ang Acknowledgement Receipt payment.",
+    instructions: [
+      "Pumunta sa 4th Page ng POS (pindutin nang tatlong beses ang F5 o pindutin ang F11 Page Up mula sa Main Screen) at pindutin ang F4 (Non Sales).",
+      "Sa NON SALES screen, piliin ang 'LNQR EGC' sa ilalim ng Select Charge.",
+      "Ilagay ang halaga ng load (hal. 500) sa Enter Price field, pindutin ang TAB key papuntang [Ok], at pindutin ang ENTER key.",
+      "Kapag lumabas ang confirmation pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?'), pindutin ang TAB key papuntang [Ok] at pindutin ang ENTER key.",
+      "Babalik ang POS sa Main Screen na may naka-post na line item (UPC: S400000001352, Description: LNQR EGC, Type: VE). Pindutin ang F4 (Payment) at iproseso ang bayad.",
+    ],
+    keyCallouts: [
+      "F4 (4th): Non Sales",
+      "Charge: LNQR EGC",
+      "TAB -> Ok -> ENTER",
+      "F4: Payment",
+    ],
+    visualCaptions: [
+      "Hakbang 1: Pumunta sa ika-apat na pahina ng POS at pindutin ang F4 Non Sales.",
+      "Hakbang 2: Sa NON SALES screen, piliin ang 'LNQR EGC' sa Select Charge.",
+      "Hakbang 3: Ilagay ang halaga (500) sa Enter Price. Pindutin ang Tab key papuntang Ok at pindutin ang Enter key.",
+      "Hakbang 4: Sa pop-up ('The amount to be loaded is P500. Are you sure you want to proceed?'), pindutin ang Tab key papuntang Ok at pindutin ang Enter key.",
+      "Hakbang 5: Makikita na ang LNQR EGC (S400000001352, VE) sa Main Screen. Maaari nang magpatuloy sa F4 Payment.",
+      "Hakbang 6: Sa Payment Screen (Acknowledgement Receipt), ilagay ang 500 sa Cash Payment Details at pindutin ang Enter o [Ok].",
+    ],
+  },
   "les-8-1": {
     title: "Pagbabayad ng Cash at Pagsusukli",
     objective: "Pumunta sa payment screen, ilagay ang halagang ibinayad, at kumpirmahin ang tamang sukli.",
