@@ -1,8 +1,37 @@
+import fs from "fs";
+import path from "path";
 import mysql from "mysql2/promise";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
+function loadEnv() {
+  const envFiles = [".env.local", ".env"];
+  for (const file of envFiles) {
+    const fullPath = path.resolve(process.cwd(), file);
+    if (fs.existsSync(fullPath)) {
+      const content = fs.readFileSync(fullPath, "utf8");
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#")) continue;
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx !== -1) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (process.env[key] === undefined) {
+            process.env[key] = val;
+          }
+        }
+      }
+    }
+  }
+}
+
 async function seedAdmin() {
+  loadEnv();
+
   console.log("=== NBS POS Training Platform: Seed Super Admin ===");
 
   const args = process.argv.slice(2);
@@ -46,6 +75,9 @@ async function seedAdmin() {
     });
   } catch (err: any) {
     console.error("❌ Failed to connect to database:", err.message);
+    console.error("\nTroubleshooting tips:");
+    console.error("1. Ensure MariaDB / MySQL is running.");
+    console.error("2. Verify credentials in your .env or .env.local file (see .env.example).");
     process.exit(1);
   }
 
