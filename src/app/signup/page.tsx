@@ -16,7 +16,8 @@ import {
   AlertCircle, 
   ArrowRight,
   Clock,
-  ShieldCheck
+  ShieldCheck,
+  ShieldAlert
 } from "lucide-react";
 
 // Hardcoded fallback branches in case database is loading
@@ -36,7 +37,7 @@ const FALLBACK_BRANCHES = [
 
 export default function SignupPage() {
   const router = useRouter();
-  const { signup, user } = useAuth();
+  const { signup, user, enterDemoMode } = useAuth();
 
   const [branches, setBranches] = useState<Array<{ code: string; name: string }>>(FALLBACK_BRANCHES);
   const [formData, setFormData] = useState({
@@ -51,6 +52,18 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ message: string; branchName: string } | null>(null);
+
+  const handleDemoTraineeLogin = async () => {
+    setIsLoading(true);
+    await enterDemoMode("trainee");
+    window.location.href = "/dashboard";
+  };
+
+  const handleDemoAdminLogin = async () => {
+    setIsLoading(true);
+    await enterDemoMode("admin");
+    window.location.href = "/admin";
+  };
 
   // If already logged in, redirect to dashboard
   useEffect(() => {
@@ -345,6 +358,38 @@ export default function SignupPage() {
                 >
                   Log In Here
                 </Link>
+              </div>
+
+              {/* Demo Mode Instant Access */}
+              <div className="pt-4 border-t border-dashed border-gray-300 space-y-2.5">
+                <div className="text-center">
+                  <div className="text-[11px] font-black uppercase text-gray-700 tracking-wider">
+                    Or Test Immediately in Demo Mode
+                  </div>
+                  <p className="text-[11px] text-gray-500">
+                    Skip registration and explore the system with simulated data:
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDemoAdminLogin}
+                    disabled={isLoading}
+                    className="py-2 px-2.5 bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors border border-black"
+                  >
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Admin Demo &rarr;</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDemoTraineeLogin}
+                    disabled={isLoading}
+                    className="py-2 px-2.5 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors border border-[#E4002B]"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
+                    <span>Trainee Demo &rarr;</span>
+                  </button>
+                </div>
               </div>
             </form>
           )}

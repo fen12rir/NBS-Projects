@@ -49,12 +49,12 @@ export default function HomePage() {
 
   const handleDemoEntry = async () => {
     await enterDemoMode("trainee");
-    router.push("/dashboard");
+    window.location.href = "/dashboard";
   };
 
   const handleAdminDemoEntry = async () => {
     await enterDemoMode("admin");
-    router.push("/admin");
+    window.location.href = "/admin";
   };
 
   const handleLaunchClick = () => {
@@ -503,7 +503,7 @@ export default function HomePage() {
                   onClick={async () => {
                     await enterDemoMode("admin");
                     setShowAuthModal(false);
-                    router.push("/admin");
+                    window.location.href = "/admin";
                   }}
                   className="w-full py-2.5 text-xs bg-black text-white hover:bg-gray-800 font-bold flex items-center justify-center space-x-1"
                 >
@@ -516,7 +516,7 @@ export default function HomePage() {
                   onClick={async () => {
                     await enterDemoMode("trainee");
                     setShowAuthModal(false);
-                    router.push("/dashboard");
+                    window.location.href = "/dashboard";
                   }}
                   className="w-full py-2.5 text-xs border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-1"
                 >
