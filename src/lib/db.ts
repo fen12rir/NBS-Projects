@@ -3,6 +3,11 @@ import mysql from "mysql2/promise";
 // Global Connection Pool Cache
 const globalForDb = globalThis as unknown as { pool: mysql.Pool | undefined };
 
+const sslOption =
+  process.env.DB_SSL === "true" || process.env.DB_SSL === "1"
+    ? { rejectUnauthorized: false }
+    : undefined;
+
 export const dbPool =
   globalForDb.pool ||
   mysql.createPool({
@@ -11,6 +16,7 @@ export const dbPool =
     user: process.env.DB_USER || "ptp_user",
     password: process.env.DB_PASSWORD || "",
     database: process.env.DB_NAME || "nbs_pos_training",
+    ssl: sslOption,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
@@ -27,7 +33,7 @@ export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
 
 export async function testDbConnection(): Promise<{ connected: boolean; message: string }> {
   try {
-    const [rows] = await dbPool.query("SELECT 1 AS connected");
+    await dbPool.query("SELECT 1 AS connected");
     return { connected: true, message: "Database connection successful" };
   } catch (error: any) {
     return { connected: false, message: error?.message || "Database connection failed" };

@@ -14,7 +14,9 @@ import {
   Award, 
   ArrowLeft,
   Menu,
-  PanelLeft
+  PanelLeft,
+  Shield,
+  Clock
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -36,11 +38,16 @@ export function DashboardHeader({
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
+  // Check days remaining until access expires
+  const daysUntilExpiry = user?.accessExpiresAt
+    ? Math.ceil((new Date(user.accessExpiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
   useEffect(() => {
     if (headerRef.current) {
       setHeaderHeight(headerRef.current.offsetHeight);
     }
-  }, [isDemoMode]);
+  }, [isDemoMode, daysUntilExpiry]);
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -117,24 +124,36 @@ export function DashboardHeader({
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/");
+    router.push("/login");
   };
+
+  const isAdmin = user?.role === "branch_admin" || user?.role === "super_admin";
 
   return (
     <header
       ref={headerRef}
       className={`bg-white z-50 shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
         isVisible
-          ? "max-h-28 opacity-100 border-b border-gray-200"
+          ? "max-h-36 opacity-100 border-b border-gray-200"
           : "max-h-0 opacity-0 pointer-events-none border-b-0"
       }`}
     >
-      {/* Demo Warning Banner */}
+      {/* Expiry Warning Banner (within 7 days) */}
+      {daysUntilExpiry !== null && daysUntilExpiry <= 7 && daysUntilExpiry > 0 && (
+        <div className="bg-amber-500 text-black py-1 px-4 text-xs font-bold text-center tracking-wide flex items-center justify-center space-x-2">
+          <Clock className="w-3.5 h-3.5 shrink-0" />
+          <span>
+            Training access expiring in {daysUntilExpiry} day{daysUntilExpiry === 1 ? "" : "s"} ({new Date(user!.accessExpiresAt!).toLocaleDateString()}). Please complete your required modules or contact your branch administrator.
+          </span>
+        </div>
+      )}
+
+      {/* Offline Demo Warning Banner */}
       {isDemoMode && (
-        <div className="bg-amber-500 text-black py-1.5 px-4 text-xs font-bold text-center tracking-wide flex items-center justify-center space-x-2">
-          <ShieldAlert className="w-4 h-4 shrink-0" />
-          <span className="truncate">
-            LOCAL DEMO MODE ACTIVE - Using synthetic local storage profile: {user?.name} ({user?.email})
+        <div className="bg-gray-800 text-white py-1 px-4 text-xs font-mono text-center tracking-wide flex items-center justify-center space-x-2">
+          <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+          <span>
+            OFFLINE DEMO MODE ACTIVE ({user?.name || "Trainee"})
           </span>
         </div>
       )}
@@ -175,13 +194,31 @@ export function DashboardHeader({
               <Monitor className="w-3.5 h-3.5 shrink-0" />
               <span>POS Simulator</span>
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-gray-900 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1 font-bold flex items-center space-x-1 shrink-0 border border-gray-300"
+              >
+                <Shield className="w-3.5 h-3.5 text-[#E4002B] shrink-0" />
+                <span>Admin Portal</span>
+              </Link>
+            )}
           </nav>
         </div>
 
         <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
           <div className="text-right hidden sm:block">
-            <div className="text-xs font-bold text-gray-900">{user?.name || "Trainee"}</div>
-            <div className="text-[10px] text-gray-500 font-mono">Branch: {user?.branchCode || "BR-014"}</div>
+            <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
+              <span>{user?.fullName || user?.name || "Trainee"}</span>
+              {isAdmin && (
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 bg-black text-white font-bold">
+                  {user?.role === "super_admin" ? "SUPER ADMIN" : "BRANCH ADMIN"}
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] text-gray-500 font-mono truncate max-w-[220px]">
+              {user?.branchName ? `${user.branchCode} - ${user.branchName}` : `Branch ${user?.branchCode || "2438"}`}
+            </div>
           </div>
           <Button
             variant="outline"

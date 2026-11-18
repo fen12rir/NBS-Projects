@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import { getSessionUser } from "@/lib/auth/session";
 
 // Progress API Route (GET)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get("userId") || "demo-cashier-001";
+    const session = await getSessionUser();
+    const userId = session.user?.id || searchParams.get("userId") || "demo-cashier-001";
 
     const rows = await query<any[]>(
       "SELECT completed_lessons, completed_modules, last_active_lesson_id, last_active_module_id, certification_completed_at FROM user_progress WHERE user_id = ?",
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     // Scenario Attempts Query
     const attempts = await query<any[]>(
-      "SELECT id, scenario_id, scenario_title, timestamp, score, passed, steps_completed, total_steps, hints_used, time_spent_seconds, mistakes FROM scenario_attempts WHERE user_id = ? ORDER BY timestamp DESC",
+      "SELECT id, scenario_id, scenario_title, timestamp, score, passed, steps_completed, total_steps, hints_used, time_spent_seconds, mistakes, case_results FROM scenario_attempts WHERE user_id = ? ORDER BY timestamp DESC",
       [userId]
     );
 
@@ -46,6 +48,7 @@ export async function GET(request: NextRequest) {
         hintsUsed: a.hints_used,
         timeSpentSeconds: a.time_spent_seconds,
         mistakes: JSON.parse(a.mistakes || "[]"),
+        caseResults: a.case_results ? JSON.parse(a.case_results) : null,
       })),
     });
   } catch (error: any) {
@@ -60,7 +63,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const userId = body.userId || "demo-cashier-001";
+    const session = await getSessionUser();
+    const userId = session.user?.id || body.userId || "demo-cashier-001";
+
     const completedLessons = JSON.stringify(body.completedLessons || []);
     const completedModules = JSON.stringify(body.completedModules || []);
     const lastActiveLessonId = body.lastActiveLessonId || null;
@@ -80,12 +85,29 @@ export async function POST(request: NextRequest) {
       [userId, completedLessons, completedModules, lastActiveLessonId, lastActiveModuleId, certDate]
     );
 
+    // Populate normalized lesson_completions table for admin queries
+    if (Array.isArray(body.completedLessons)) {
+      for (const item of body.completedLessons) {
+        const lessonId = typeof item === "string" ? item : item?.lessonId;
+        if (lessonId) {
+          const parts = lessonId.replace("les-", "").split("-");
+          const modNum = parts[0] || "1";
+          const moduleId = `mod-${modNum}`;
+          await query(
+            `INSERT IGNORE INTO lesson_completions (user_id, lesson_id, module_id, completed_at)
+             VALUES (?, ?, ?, NOW())`,
+            [userId, lessonId, moduleId]
+          );
+        }
+      }
+    }
+
     // Scenario Attempt Insert
     if (body.newAttempt) {
       const a = body.newAttempt;
       await query(
-        `INSERT INTO scenario_attempts (id, user_id, scenario_id, scenario_title, score, passed, steps_completed, total_steps, hints_used, time_spent_seconds, mistakes, timestamp)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `INSERT INTO scenario_attempts (id, user_id, scenario_id, scenario_title, score, passed, steps_completed, total_steps, hints_used, time_spent_seconds, mistakes, case_results, timestamp)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE score = VALUES(score)`,
         [
           a.id,
@@ -99,6 +121,7 @@ export async function POST(request: NextRequest) {
           a.hintsUsed || 0,
           a.timeSpentSeconds || 0,
           JSON.stringify(a.mistakes || []),
+          a.caseResults ? JSON.stringify(a.caseResults) : null,
           a.timestamp || new Date(),
         ]
       );

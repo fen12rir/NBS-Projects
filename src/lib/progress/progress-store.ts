@@ -97,7 +97,7 @@ async function syncToMariaDb(progress: UserProgress, newAttempt?: AttemptRecord)
   if (typeof window === "undefined") return;
   try {
     const userProfileRaw = localStorage.getItem("nbs_user_profile");
-    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : "demo-cashier-001";
+    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : undefined;
     await fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -120,8 +120,9 @@ export async function fetchProgressFromMariaDb(): Promise<UserProgress | null> {
   if (typeof window === "undefined") return null;
   try {
     const userProfileRaw = localStorage.getItem("nbs_user_profile");
-    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : "demo-cashier-001";
-    const res = await fetch(`/api/progress?userId=${encodeURIComponent(userId)}`);
+    const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : undefined;
+    const url = userId ? `/api/progress?userId=${encodeURIComponent(userId)}` : "/api/progress";
+    const res = await fetch(url);
     if (!res.ok) return null;
     const data = await res.json();
     if (data && Array.isArray(data.completedLessons)) {

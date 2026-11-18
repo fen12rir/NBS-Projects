@@ -98,22 +98,24 @@ export default function HomePage() {
               </Link>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDemoEntry}
-                  className="hidden sm:inline-flex border-gray-400 font-semibold"
-                >
-                  Local Demo Mode
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={signInWithGoogle}
-                  className="font-bold flex items-center space-x-1.5 text-xs sm:text-sm"
-                >
-                  <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  <span>Sign in</span>
-                </Button>
+                <Link href="/signup">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="hidden sm:inline-flex border-gray-300 font-bold text-gray-700"
+                  >
+                    Register
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button
+                    size="sm"
+                    className="font-bold flex items-center space-x-1.5 text-xs sm:text-sm bg-[#E4002B] hover:bg-[#C10024] text-white"
+                  >
+                    <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Sign In</span>
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
@@ -168,15 +170,16 @@ export default function HomePage() {
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
 
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={signInWithGoogle}
-                  className="border-gray-300 font-bold text-sm sm:text-base px-5 sm:px-6 py-3 sm:py-4 flex items-center justify-center space-x-2"
-                >
-                  <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
-                  <span>Sign in with Google</span>
-                </Button>
+                <Link href="/login" className="flex">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="w-full border-gray-300 font-bold text-sm sm:text-base px-5 sm:px-6 py-3 sm:py-4 flex items-center justify-center space-x-2"
+                  >
+                    <LogIn className="w-4 h-4 sm:w-5 sm:h-5 text-gray-700" />
+                    <span>Staff Sign In</span>
+                  </Button>
+                </Link>
               </div>
 
               <div className="pt-2 flex items-center space-x-6 text-xs text-gray-500 font-medium">
@@ -459,36 +462,38 @@ export default function HomePage() {
             </div>
             
             <p className="text-sm text-gray-600 leading-relaxed">
-              Access to the interactive POS Terminal Simulator is restricted to authenticated NBS cashiers and trainees. Please sign in with your Google account or continue using Local Demo Mode.
+              Access to the interactive POS Terminal Simulator is restricted to registered NBS cashiers and trainees. Please sign in or register your trainee account.
             </p>
 
             <div className="space-y-3 pt-2">
-              <Button
-                onClick={signInWithGoogle}
-                className="w-full py-3 bg-[#E4002B] hover:bg-[#C10024] text-white font-bold flex items-center justify-center space-x-2"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Sign in with Google</span>
-              </Button>
+              <Link href="/login" className="block">
+                <Button
+                  className="w-full py-3 bg-[#E4002B] hover:bg-[#C10024] text-white font-bold flex items-center justify-center space-x-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span>Sign In with Account</span>
+                </Button>
+              </Link>
+
+              <Link href="/signup" className="block">
+                <Button
+                  variant="outline"
+                  className="w-full py-3 border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-2"
+                >
+                  <span>Register as New Trainee</span>
+                </Button>
+              </Link>
 
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   enterDemoMode();
                   setShowAuthModal(false);
                   router.push("/simulator");
                 }}
-                className="w-full py-3 border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-2"
+                className="w-full text-xs text-gray-500 hover:text-gray-900 font-semibold underline"
               >
-                <span>Continue in Local Demo Mode</span>
-              </Button>
-
-              <Button
-                variant="ghost"
-                onClick={() => setShowAuthModal(false)}
-                className="w-full text-xs text-gray-500 hover:text-gray-900 font-semibold"
-              >
-                Cancel
+                Continue in Local Offline Demo Mode
               </Button>
             </div>
           </div>
