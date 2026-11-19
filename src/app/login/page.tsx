@@ -84,7 +84,7 @@ function LoginForm() {
           className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>&larr; Return to Landing Page</span>
+          <span>Return to Landing Page</span>
         </Link>
       </div>
 
@@ -224,16 +224,6 @@ function LoginForm() {
             >
               <Building2 className="w-4 h-4 text-white shrink-0" />
               <span>Trainee Demo &rarr;</span>
-            </button>
-          </div>
-
-          <div className="text-center pt-1 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleDemoTraineeLogin}
-              className="text-xs text-gray-700 hover:text-[#E4002B] font-bold underline font-mono tracking-tight"
-            >
-              Continue in Local Offline Demo Mode &raquo;
             </button>
           </div>
         </div>

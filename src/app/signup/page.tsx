@@ -150,7 +150,7 @@ export default function SignupPage() {
               className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
             >
               <ArrowRight className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-0.5" />
-              <span>&larr; Return to Landing Page</span>
+              <span>Return to Landing Page</span>
             </Link>
           </div>
 
