@@ -556,14 +556,14 @@ export default function TraineeDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Scenario / Exam</th>
-                  <th className="py-2.5 px-3">Date &amp; Time</th>
-                  <th className="py-2.5 px-3 text-center">Score</th>
-                  <th className="py-2.5 px-3 text-center">Outcome</th>
-                  <th className="py-2.5 px-3 text-center">Steps</th>
-                  <th className="py-2.5 px-3 text-center">Mistakes</th>
-                  <th className="py-2.5 px-3 text-center">Time Spent</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[240px]">Scenario / Exam</th>
+                  <th className="py-2.5 px-3 min-w-[170px]">Date &amp; Time</th>
+                  <th className="py-2.5 px-3 text-center min-w-[70px]">Score</th>
+                  <th className="py-2.5 px-3 text-center min-w-[90px]">Outcome</th>
+                  <th className="py-2.5 px-3 text-center min-w-[100px]">Steps</th>
+                  <th className="py-2.5 px-3 text-center min-w-[80px]">Mistakes</th>
+                  <th className="py-2.5 px-3 text-center min-w-[110px]">Time Spent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -580,30 +580,30 @@ export default function TraineeDetailPage() {
                         <div className="font-bold text-gray-900">{a.scenarioTitle}</div>
                         <div className="text-[10px] text-gray-400 font-mono">ID: {a.scenarioId}</div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-gray-600">
+                      <td className="py-2.5 px-3 font-mono text-gray-600 whitespace-nowrap">
                         {new Date(a.timestamp).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-sm">
+                      <td className="py-2.5 px-3 text-center font-mono font-bold text-sm whitespace-nowrap">
                         {a.score}%
                       </td>
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`inline-block px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase ${
+                          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase leading-none whitespace-nowrap ${
                             a.passed
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-red-100 text-red-800 border border-red-300"
                           }`}
                         >
                           {a.passed ? "PASSED" : "FAILED"}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono">
+                      <td className="py-2.5 px-3 text-center font-mono whitespace-nowrap font-bold text-gray-800">
                         {a.stepsCompleted} / {a.totalSteps}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono text-amber-700">
+                      <td className="py-2.5 px-3 text-center font-mono text-amber-700 whitespace-nowrap">
                         {a.mistakes?.length || 0}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono text-gray-600">
+                      <td className="py-2.5 px-3 text-center font-mono text-gray-600 whitespace-nowrap">
                         {Math.floor(a.timeSpentSeconds / 60)}m {a.timeSpentSeconds % 60}s
                       </td>
                     </tr>

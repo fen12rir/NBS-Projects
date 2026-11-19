@@ -258,11 +258,11 @@ export default function AdminTraineesPage() {
 
                       {/* Progress */}
                       <td className="py-3 px-3 min-w-[150px]">
-                        <div className="flex items-center justify-between text-[11px] mb-1">
-                          <span className="font-bold text-gray-800">
+                        <div className="flex items-center justify-between text-[11px] mb-1 gap-2">
+                          <span className="font-bold text-gray-800 whitespace-nowrap">
                             {t.completedLessonsCount} / {t.totalLessonsCount} lessons
                           </span>
-                          <span className="font-mono text-gray-500 font-bold">{t.progressPercent}%</span>
+                          <span className="font-mono text-gray-500 font-bold whitespace-nowrap">{t.progressPercent}%</span>
                         </div>
                         <div className="w-full bg-gray-200 h-1.5 overflow-hidden">
                           <div
