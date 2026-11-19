@@ -124,7 +124,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
       {/* Main Admin Header */}
       <header className="bg-white border-b border-gray-300 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               type="button"
@@ -178,9 +178,9 @@ export function AdminShell({ children }: AdminShellProps) {
       </header>
 
       {/* Main Body with Sidebar + Content */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
+      <div className="flex-1 flex max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-5">
         {/* Desktop Sidebar */}
-        <aside className="w-64 shrink-0 hidden md:block">
+        <aside className="w-56 shrink-0 hidden md:block">
           <nav className="bg-white border border-gray-300 p-3 space-y-1 shadow-sm sticky top-24">
             <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 mb-2">
               Navigation
