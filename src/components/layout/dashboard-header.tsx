@@ -195,10 +195,10 @@ export function DashboardHeader({
   return (
     <header
       ref={headerRef}
-      className={`bg-white z-50 shrink-0 overflow-hidden transition-all duration-300 ease-in-out ${
+      className={`bg-white z-50 shrink-0 transition-all duration-300 ease-in-out ${
         isVisible
-          ? "max-h-36 opacity-100 border-b border-gray-200"
-          : "max-h-0 opacity-0 pointer-events-none border-b-0"
+          ? "max-h-36 opacity-100 border-b border-gray-200 overflow-visible"
+          : "max-h-0 opacity-0 pointer-events-none border-b-0 overflow-hidden"
       }`}
     >
       {/* Expiry Warning Banner (within 7 days) */}
