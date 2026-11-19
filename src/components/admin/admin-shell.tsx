@@ -19,7 +19,8 @@ import {
   BookOpen,
   Shield,
   Layers,
-  Clock
+  Clock,
+  Settings
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -80,6 +81,11 @@ export function AdminShell({ children }: AdminShellProps) {
           },
         ]
       : []),
+    {
+      title: "Settings",
+      href: "/admin/settings",
+      icon: Settings,
+    },
   ];
 
   const handleSignOut = async () => {
@@ -144,15 +150,17 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <div className="flex items-center space-x-3">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
-                <span className="truncate max-w-[180px]">{user?.fullName || user?.name || "Administrator"}</span>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-black text-white font-bold shrink-0 whitespace-nowrap leading-none inline-flex items-center">
+            <div className="text-right hidden sm:flex flex-col items-end justify-center">
+              <div className="text-xs font-bold text-gray-900 truncate max-w-[200px]">
+                {user?.fullName || user?.name || "System Administrator"}
+              </div>
+              <div className="mt-0.5 flex items-center space-x-1.5">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold shrink-0 whitespace-nowrap leading-none inline-flex items-center">
                   {isSuper ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
-              </div>
-              <div className="text-[11px] text-gray-600 font-mono truncate max-w-[240px]">
-                {user?.branchName ? `${user.branchCode} - ${user.branchName}` : (isSuper ? "All 11 Branches" : `Branch ${user?.branchCode}`)}
+                <span className="text-[11px] text-gray-500 font-mono truncate max-w-[180px]">
+                  {user?.branchName ? `${user.branchCode} - ${user.branchName}` : (isSuper ? "All 11 Branches" : `Branch ${user?.branchCode}`)}
+                </span>
               </div>
             </div>
 
@@ -219,7 +227,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
         {/* Mobile Sidebar Modal */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 md:hidden flex">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] md:hidden flex">
             <div className="w-72 bg-white h-full p-4 flex flex-col justify-between shadow-2xl">
               <div>
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200">

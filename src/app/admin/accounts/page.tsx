@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableBranchSelect } from "@/components/ui/searchable-branch-select";
 import { 
   ShieldCheck, 
   UserPlus, 
@@ -221,7 +222,7 @@ export default function AdminAccountsPage() {
 
         {/* Modal: Create Administrator */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-lg w-full border-4 border-gray-900 p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2 text-[#E4002B] font-black uppercase text-base">
@@ -299,18 +300,20 @@ export default function AdminAccountsPage() {
                     <label className="block font-bold text-gray-700 uppercase mb-1">
                       Assigned Branch
                     </label>
-                    <select
-                      value={form.branchCode}
-                      onChange={(e) => setForm({ ...form, branchCode: e.target.value })}
-                      disabled={form.role === "super_admin"}
-                      className="w-full border border-gray-300 p-2 text-xs"
-                    >
-                      {branches.map((b) => (
-                        <option key={b.code} value={b.code}>
-                          {b.code} - {b.name}
-                        </option>
-                      ))}
-                    </select>
+                    {form.role === "super_admin" ? (
+                      <div className="border border-gray-200 bg-gray-100 p-2 text-xs text-gray-500 font-mono">
+                        Global Access (All Branches)
+                      </div>
+                    ) : (
+                      <SearchableBranchSelect
+                        branches={branches}
+                        value={form.branchCode}
+                        onChange={(code) => setForm({ ...form, branchCode: code })}
+                        includeAllOption={false}
+                        placeholder="Type branch or code..."
+                        className="w-full sm:w-full"
+                      />
+                    )}
                   </div>
                 </div>
 

@@ -653,7 +653,7 @@ export default function TraineeDetailPage() {
 
         {/* Deactivate Modal */}
         {showDeactivateModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 space-y-4 shadow-2xl">
               <h3 className="text-sm font-bold uppercase text-red-700">Deactivate Trainee Account</h3>
               <p className="text-xs text-gray-600">

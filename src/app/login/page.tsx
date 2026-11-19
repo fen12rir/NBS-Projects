@@ -14,7 +14,8 @@ import {
   Clock, 
   ShieldAlert, 
   Building2,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from "lucide-react";
 
 function LoginForm() {
@@ -76,6 +77,17 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md bg-white border border-gray-300 shadow-sm p-6 sm:p-8">
+      {/* Return to Landing Page */}
+      <div className="mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>&larr; Return to Landing Page</span>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
         <div className="bg-[#E4002B] text-white px-2.5 py-1 font-extrabold text-xl tracking-tighter">

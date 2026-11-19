@@ -283,7 +283,7 @@ export default function AdminApprovalsPage() {
 
         {/* Modal: Approve Trainee & Set Expiry */}
         {approvingTrainee && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-[#E4002B] p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2 text-emerald-700 font-black uppercase text-base">
@@ -390,7 +390,7 @@ export default function AdminApprovalsPage() {
 
         {/* Modal: Reject Trainee */}
         {rejectingTrainee && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2 text-red-700 font-black uppercase text-base">

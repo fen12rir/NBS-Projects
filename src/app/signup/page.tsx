@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableBranchSelect } from "@/components/ui/searchable-branch-select";
 import { 
   Building2, 
   Mail, 
@@ -142,6 +143,17 @@ export default function SignupPage() {
 
       <main className="flex-1 w-full flex justify-center items-start py-6 sm:py-10 px-4">
         <div className="w-full max-w-lg bg-white border border-gray-300 shadow-sm p-5 sm:p-8 my-auto">
+          {/* Return to Landing Page */}
+          <div className="mb-4">
+            <Link
+              href="/"
+              className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
+            >
+              <ArrowRight className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-0.5" />
+              <span>&larr; Return to Landing Page</span>
+            </Link>
+          </div>
+
           {/* Header */}
           <div className="flex items-center space-x-3 mb-4 pb-4 border-b border-gray-200">
             <div className="bg-[#E4002B] text-white px-2.5 py-1 font-extrabold text-xl tracking-tighter">
@@ -277,24 +289,16 @@ export default function SignupPage() {
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
                   Branch Assigned <span className="text-[#E4002B]">*</span>
                 </label>
-                <div className="relative">
-                  <Building2 className="w-4 h-4 text-gray-400 absolute left-3 top-2.5 pointer-events-none" />
-                  <select
-                    name="branchCode"
-                    required
-                    value={formData.branchCode}
-                    onChange={handleChange}
-                    className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
-                  >
-                    {branches.map((b) => (
-                      <option key={b.code} value={b.code}>
-                        {b.code} - {b.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <SearchableBranchSelect
+                  branches={branches}
+                  value={formData.branchCode}
+                  onChange={(code) => setFormData((prev) => ({ ...prev, branchCode: code }))}
+                  includeAllOption={false}
+                  placeholder="Type to search branch (e.g. Clark, Megamall, 2438)..."
+                  className="w-full sm:w-full"
+                />
                 <p className="text-[11px] text-gray-500 mt-1">
-                  Your supervisor at this branch will approve your account.
+                  Type store name or code to filter, or select your store from the 11 NBS branches.
                 </p>
               </div>
 

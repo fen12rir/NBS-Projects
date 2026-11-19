@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableBranchSelect } from "@/components/ui/searchable-branch-select";
 import { 
   Users, 
   Search, 
@@ -138,20 +139,15 @@ export default function AdminTraineesPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Branch Filter (Super Admin) */}
+            {/* Searchable Branch Filter (Super Admin) */}
             {isSuper && (
-              <select
+              <SearchableBranchSelect
+                branches={branches}
                 value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="text-xs border border-gray-300 bg-white px-2.5 py-1.5 text-gray-800 font-medium focus:ring-1 focus:ring-[#E4002B]"
-              >
-                <option value="all">All Branches (11)</option>
-                {branches.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.code} - {b.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedBranch}
+                placeholder="Type branch name or code..."
+                allLabel="All Branches (11)"
+              />
             )}
 
             {/* Status Filter */}
