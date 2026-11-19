@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
+import { PortalLoadingScreen } from "@/components/ui/portal-loading-screen";
 import { 
   LayoutDashboard, 
   UserCheck, 
@@ -94,16 +95,7 @@ export function AdminShell({ children }: AdminShellProps) {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 space-y-3">
-        <div className="bg-[#E4002B] text-white px-3 py-1 font-black text-xl tracking-tighter animate-pulse">
-          NBS
-        </div>
-        <div className="text-center font-mono text-sm text-gray-500">
-          Loading Admin Portal Session...
-        </div>
-      </div>
-    );
+    return <PortalLoadingScreen message="Loading Admin Portal Session..." />;
   }
 
   return (
