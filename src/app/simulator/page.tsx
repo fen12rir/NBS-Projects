@@ -6512,6 +6512,27 @@ function SimulatorContent() {
           )}
           </>
         )}
+        {isPriceChangeOpen && (
+          <PriceChangeModal
+            items={state.lineItems}
+            onAuthorizeOverride={() => validateScenarioStep("CONFIRM_OVERRIDE")}
+            onConfirm={(data) => {
+              dispatch({
+                type: "CHANGE_ITEM_PRICE",
+                itemId: data.itemId,
+                newPrice: data.newPrice,
+                reason: data.reason,
+              });
+              setIsPriceChangeOpen(false);
+              dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+              validateScenarioStep("CONFIRM_PRICE_CHANGE", data.newPrice);
+            }}
+            onCancel={() => {
+              setIsPriceChangeOpen(false);
+              dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
+            }}
+          />
+        )}
         </div>
         {/* EXTERNAL CARD / EWALLET TERMINAL SLIP BESIDE POS */}
         {isExternalReceiptShowing && (
@@ -6705,31 +6726,6 @@ function SimulatorContent() {
           onCancel={() => setIsPostVoidOpen(false)}
         />
       )}
-
-      {/* F3 PRICE CHANGE MODAL */}
-      {isPriceChangeOpen && (
-        <PriceChangeModal
-          items={state.lineItems}
-          onAuthorizeOverride={() => validateScenarioStep("CONFIRM_OVERRIDE")}
-          onConfirm={(data) => {
-            dispatch({
-              type: "CHANGE_ITEM_PRICE",
-              itemId: data.itemId,
-              newPrice: data.newPrice,
-              reason: data.reason,
-            });
-            setIsPriceChangeOpen(false);
-            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
-            validateScenarioStep("CONFIRM_PRICE_CHANGE", data.newPrice);
-          }}
-          onCancel={() => {
-            setIsPriceChangeOpen(false);
-            dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
-          }}
-        />
-      )}
-
-      
 
       {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
       <ScenarioCompleteModal
