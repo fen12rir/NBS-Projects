@@ -93,6 +93,19 @@ export function AdminShell({ children }: AdminShellProps) {
     router.push("/login");
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 space-y-3">
+        <div className="bg-[#E4002B] text-white px-3 py-1 font-black text-xl tracking-tighter animate-pulse">
+          NBS
+        </div>
+        <div className="text-center font-mono text-sm text-gray-500">
+          Loading Admin Portal Session...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 text-gray-900 font-sans">
       {/* Top Banner */}
