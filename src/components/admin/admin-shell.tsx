@@ -146,8 +146,8 @@ export function AdminShell({ children }: AdminShellProps) {
           <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:block">
               <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
-                <span>{user?.fullName || user?.name || "Administrator"}</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold">
+                <span className="truncate max-w-[180px]">{user?.fullName || user?.name || "Administrator"}</span>
+                <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-black text-white font-bold shrink-0 whitespace-nowrap leading-none inline-flex items-center">
                   {isSuper ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
               </div>
@@ -198,7 +198,7 @@ export function AdminShell({ children }: AdminShellProps) {
                     <span>{item.title}</span>
                   </div>
                   {item.badge !== null && item.badge !== undefined && (
-                    <span className={`text-[10px] font-mono px-1.5 py-0.2 font-extrabold ${isActive ? "bg-white text-black" : item.badgeColor}`}>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 font-extrabold shrink-0 inline-flex items-center justify-center leading-none ${isActive ? "bg-white text-black" : item.badgeColor}`}>
                       {item.badge}
                     </span>
                   )}
@@ -251,7 +251,7 @@ export function AdminShell({ children }: AdminShellProps) {
                           <span>{item.title}</span>
                         </div>
                         {item.badge !== null && item.badge !== undefined && (
-                          <span className={`text-[10px] font-mono px-1.5 py-0.5 font-bold ${isActive ? "bg-white text-black" : item.badgeColor}`}>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 font-bold shrink-0 inline-flex items-center justify-center leading-none ${isActive ? "bg-white text-black" : item.badgeColor}`}>
                             {item.badge}
                           </span>
                         )}

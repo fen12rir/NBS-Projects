@@ -193,12 +193,12 @@ export default function AdminApprovalsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Trainee Name</th>
-                  <th className="py-2.5 px-3">Contact Details</th>
-                  <th className="py-2.5 px-3">Branch Assigned</th>
-                  <th className="py-2.5 px-3">Registration Date</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[180px]">Trainee Name</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">Contact Details</th>
+                  <th className="py-2.5 px-3 min-w-[170px]">Branch Assigned</th>
+                  <th className="py-2.5 px-3 min-w-[140px]">Registration Date</th>
+                  <th className="py-2.5 px-3 text-right min-w-[140px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -228,7 +228,7 @@ export default function AdminApprovalsPage() {
                       <td className="py-3 px-3">
                         <div className="flex items-center space-x-1.5 text-gray-700">
                           <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                          <span className="font-mono">{t.email}</span>
+                          <span className="font-mono break-all">{t.email}</span>
                         </div>
                         <div className="flex items-center space-x-1.5 text-gray-500 mt-0.5">
                           <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
@@ -241,11 +241,11 @@ export default function AdminApprovalsPage() {
                           Code: {t.branchCode} • {t.branchRegion}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-gray-600 font-mono">
+                      <td className="py-3 px-3 text-gray-600 font-mono whitespace-nowrap">
                         <div>{new Date(t.createdAt).toLocaleDateString()}</div>
                         <div className="text-[10px] text-gray-400">{new Date(t.createdAt).toLocaleTimeString()}</div>
                       </td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
                             size="sm"

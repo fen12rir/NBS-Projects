@@ -155,13 +155,13 @@ export default function AdminAccountsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Name</th>
-                  <th className="py-2.5 px-3">Email &amp; Contact</th>
-                  <th className="py-2.5 px-3">Role</th>
-                  <th className="py-2.5 px-3">Branch Assignment</th>
-                  <th className="py-2.5 px-3">Last Login</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[180px]">Name</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">Email &amp; Contact</th>
+                  <th className="py-2.5 px-3 min-w-[130px]">Role</th>
+                  <th className="py-2.5 px-3 min-w-[180px]">Branch Assignment</th>
+                  <th className="py-2.5 px-3 min-w-[140px]">Last Login</th>
+                  <th className="py-2.5 px-3 text-center min-w-[80px]">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -179,15 +179,15 @@ export default function AdminAccountsPage() {
                         <div className="text-[10px] text-gray-400 font-mono">ID: {a.id}</div>
                       </td>
                       <td className="py-3 px-3 font-mono">
-                        <div className="text-gray-800">{a.email}</div>
+                        <div className="text-gray-800 break-all">{a.email}</div>
                         <div className="text-[10px] text-gray-500">{a.contactNo}</div>
                       </td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${
+                          className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
                             a.role === "super_admin"
                               ? "bg-black text-white"
-                              : "bg-blue-100 text-blue-900"
+                              : "bg-blue-100 text-blue-900 border border-blue-300"
                           }`}
                         >
                           {a.role === "super_admin" ? "SUPER ADMIN" : "BRANCH ADMIN"}
@@ -203,11 +203,11 @@ export default function AdminAccountsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-3 font-mono text-gray-600">
+                      <td className="py-3 px-3 font-mono text-gray-600 whitespace-nowrap">
                         {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800">
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 leading-none inline-flex items-center justify-center">
                           ACTIVE
                         </span>
                       </td>

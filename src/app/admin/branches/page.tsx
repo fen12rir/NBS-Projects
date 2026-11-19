@@ -87,15 +87,15 @@ export default function AdminBranchesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Branch Code</th>
-                  <th className="py-2.5 px-3">Store Name</th>
-                  <th className="py-2.5 px-3">Region</th>
-                  <th className="py-2.5 px-3 text-center">Enrolled</th>
-                  <th className="py-2.5 px-3 text-center text-emerald-700">Active</th>
-                  <th className="py-2.5 px-3 text-center text-amber-600">Pending</th>
-                  <th className="py-2.5 px-3 text-center text-[#E4002B]">Certified</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[100px]">Branch Code</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">Store Name</th>
+                  <th className="py-2.5 px-3 min-w-[160px]">Region</th>
+                  <th className="py-2.5 px-3 text-center min-w-[70px]">Enrolled</th>
+                  <th className="py-2.5 px-3 text-center text-emerald-700 min-w-[70px]">Active</th>
+                  <th className="py-2.5 px-3 text-center text-amber-600 min-w-[70px]">Pending</th>
+                  <th className="py-2.5 px-3 text-center text-[#E4002B] min-w-[70px]">Certified</th>
+                  <th className="py-2.5 px-3 text-center min-w-[80px]">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -132,8 +132,8 @@ export default function AdminBranchesPage() {
                       <td className="py-3 px-3 text-center font-mono font-bold text-[#E4002B]">
                         {b.certifiedUsers}
                       </td>
-                      <td className="py-3 px-3 text-center">
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800">
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 leading-none inline-flex items-center justify-center">
                           ACTIVE
                         </span>
                       </td>
