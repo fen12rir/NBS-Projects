@@ -116,3 +116,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #555;
 }
+
+/* Seamless horizontal text loop (marquee) for alert banners */
+@keyframes nbs-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-nbs-marquee {
+  display: flex;
+  width: max-content;
+  animation: nbs-marquee 24s linear infinite;
+}
+
+.animate-nbs-marquee:hover {
+  animation-play-state: paused;
+}
