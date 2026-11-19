@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -18,10 +18,18 @@ import {
   ArrowLeft
 } from "lucide-react";
 
+function getDefaultDestination(role?: string) {
+  if (role === "super_admin" || role === "branch_admin") {
+    return "/admin";
+  }
+  return "/dashboard";
+}
+
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/dashboard";
+  const explicitRedirect = searchParams.get("redirect");
+  const isRedirectingRef = useRef(false);
 
   const { login, user, enterDemoMode } = useAuth();
 
@@ -31,12 +39,14 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
 
-  // If already logged in, redirect
+  // If already logged in, redirect directly to role-appropriate portal
   useEffect(() => {
+    if (isRedirectingRef.current) return;
     if (user && user.status === "active") {
-      router.push(redirectPath);
+      isRedirectingRef.current = true;
+      router.replace(explicitRedirect || getDefaultDestination(user.role));
     }
-  }, [user, redirectPath, router]);
+  }, [user, explicitRedirect, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,12 +59,15 @@ function LoginForm() {
     }
 
     setIsLoading(true);
+    isRedirectingRef.current = true;
     const result = await login(email, password);
-    setIsLoading(false);
 
     if (result.success) {
-      router.push(redirectPath);
+      const target = explicitRedirect || getDefaultDestination(result.role);
+      router.replace(target);
     } else {
+      isRedirectingRef.current = false;
+      setIsLoading(false);
       if (result.code === "PENDING") {
         setPendingNotice(result.error || "Your account registration is awaiting approval from your branch administrator.");
       } else {
@@ -64,12 +77,14 @@ function LoginForm() {
   };
 
   const handleDemoTraineeLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("trainee");
     window.location.href = "/dashboard";
   };
 
   const handleDemoAdminLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("admin");
     window.location.href = "/admin";

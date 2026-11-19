@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -54,22 +54,32 @@ export default function SignupPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ message: string; branchName: string } | null>(null);
 
+  const isRedirectingRef = useRef(false);
+
   const handleDemoTraineeLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("trainee");
     window.location.href = "/dashboard";
   };
 
   const handleDemoAdminLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("admin");
     window.location.href = "/admin";
   };
 
-  // If already logged in, redirect to dashboard
+  // If already logged in, redirect to role-appropriate portal
   useEffect(() => {
+    if (isRedirectingRef.current) return;
     if (user && user.status === "active") {
-      router.push("/dashboard");
+      isRedirectingRef.current = true;
+      const target =
+        user.role === "super_admin" || user.role === "branch_admin"
+          ? "/admin"
+          : "/dashboard";
+      router.replace(target);
     }
   }, [user, router]);
 

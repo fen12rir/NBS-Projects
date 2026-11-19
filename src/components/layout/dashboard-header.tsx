@@ -20,7 +20,8 @@ import {
   Lock,
   CheckCircle2,
   AlertCircle,
-  X
+  X,
+  Settings
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -42,6 +43,8 @@ export function DashboardHeader({
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollY = useRef(0);
 
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const settingsMenuRef = useRef<HTMLDivElement>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -49,6 +52,16 @@ export function DashboardHeader({
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (settingsMenuRef.current && !settingsMenuRef.current.contains(event.target as Node)) {
+        setShowSettingsMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleChangePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -261,7 +274,7 @@ export function DashboardHeader({
             <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
               <span>{user?.fullName || user?.name || "Trainee"}</span>
               {isAdmin && (
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.2 bg-black text-white font-bold">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold leading-none">
                   {user?.role === "super_admin" ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
               )}
@@ -270,20 +283,54 @@ export function DashboardHeader({
               {user?.branchName ? `${user.branchCode} - ${user.branchName}` : `Branch ${user?.branchCode || "2438"}`}
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setShowPasswordModal(true);
-              setPasswordError(null);
-              setPasswordSuccess(null);
-            }}
-            title="Change Account Password"
-            className="flex items-center space-x-1 text-xs shrink-0 border-gray-300 hover:text-[#E4002B]"
-          >
-            <Lock className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">Password</span>
-          </Button>
+
+          {/* Settings Gear Dropdown */}
+          <div ref={settingsMenuRef} className="relative">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSettingsMenu((prev) => !prev)}
+              title="Account Settings"
+              aria-label="Account Settings"
+              aria-expanded={showSettingsMenu}
+              className={`flex items-center justify-center p-2 border-gray-300 shrink-0 ${
+                showSettingsMenu ? "border-[#E4002B] text-[#E4002B] bg-red-50" : "text-gray-700 hover:text-[#E4002B]"
+              }`}
+            >
+              <Settings className="w-4 h-4 shrink-0" />
+            </Button>
+
+            {showSettingsMenu && (
+              <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-300 shadow-lg z-50">
+                <div className="px-3.5 py-2.5 bg-gray-50 border-b border-gray-200">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                    Account Settings
+                  </div>
+                  <div className="text-xs font-bold text-gray-900 truncate mt-0.5">
+                    {user?.fullName || user?.name || "Trainee"}
+                  </div>
+                  <div className="text-[10px] font-mono text-gray-500 truncate">
+                    {user?.email || ""}
+                  </div>
+                </div>
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSettingsMenu(false);
+                      setShowPasswordModal(true);
+                      setPasswordError(null);
+                      setPasswordSuccess(null);
+                    }}
+                    className="w-full px-3.5 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-[#E4002B] flex items-center space-x-2 transition-colors"
+                  >
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Change Password</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           <Button
             variant="outline"
