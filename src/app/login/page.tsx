@@ -245,20 +245,22 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-y-auto">
       {/* Top Banner */}
-      <div className="bg-[#E4002B] text-white py-1.5 px-4 text-center text-xs font-semibold tracking-wide">
+      <div className="bg-[#E4002B] text-white py-1.5 px-4 text-center text-xs font-semibold tracking-wide shrink-0">
         NATIONAL BOOK STORE • CASHIER ACADEMY
       </div>
 
-      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:py-12">
-        <Suspense fallback={<div className="text-center text-xs text-gray-400">Loading sign in...</div>}>
-          <LoginForm />
-        </Suspense>
-      </div>
+      <main className="flex-1 w-full flex justify-center items-start py-6 sm:py-10 px-4">
+        <div className="w-full max-w-md my-auto">
+          <Suspense fallback={<div className="text-center text-xs text-gray-400">Loading sign in...</div>}>
+            <LoginForm />
+          </Suspense>
+        </div>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
+      <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500 shrink-0">
         National Book Store, Inc. • Internal Retail Training System
       </footer>
     </div>
