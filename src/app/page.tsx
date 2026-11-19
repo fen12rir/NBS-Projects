@@ -52,11 +52,6 @@ export default function HomePage() {
     window.location.href = "/dashboard";
   };
 
-  const handleAdminDemoEntry = async () => {
-    await enterDemoMode("admin");
-    window.location.href = "/admin";
-  };
-
   const handleLaunchClick = () => {
     if (user) {
       router.push("/simulator");
@@ -103,14 +98,6 @@ export default function HomePage() {
               </Link>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAdminDemoEntry}
-                  className="hidden md:inline-flex border-gray-900 bg-black text-white hover:bg-gray-800 font-bold text-xs"
-                >
-                  Admin Portal (Demo)
-                </Button>
                 <Link href="/signup">
                   <Button
                     variant="outline"
