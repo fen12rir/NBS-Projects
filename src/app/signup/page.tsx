@@ -157,41 +157,6 @@ export default function SignupPage() {
             </div>
           </div>
 
-          {/* Top Demo Shortcut Banner */}
-          <div className="mb-5 p-3.5 bg-neutral-900 text-white border-l-4 border-[#E4002B] shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
-              <div>
-                <div className="text-xs font-black uppercase tracking-wider text-white flex items-center space-x-1.5">
-                  <span className="text-amber-400">⚡</span>
-                  <span>Skip Registration?</span>
-                </div>
-                <p className="text-[11px] text-gray-300">
-                  Instant demo access with simulated data (no DB required):
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={handleDemoAdminLogin}
-                  disabled={isLoading}
-                  className="py-1.5 px-2.5 bg-white hover:bg-gray-100 text-gray-900 text-xs font-bold flex items-center space-x-1 transition-colors border border-white"
-                >
-                  <ShieldAlert className="w-3.5 h-3.5 text-[#E4002B]" />
-                  <span>Admin Demo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDemoTraineeLogin}
-                  disabled={isLoading}
-                  className="py-1.5 px-2.5 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-bold flex items-center space-x-1 transition-colors"
-                >
-                  <Building2 className="w-3.5 h-3.5 text-white" />
-                  <span>Trainee Demo</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           {/* Pending Approval Success State */}
           {successInfo ? (
             <div className="space-y-6 text-center py-4">
