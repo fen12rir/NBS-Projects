@@ -151,14 +151,14 @@ export function AdminShell({ children }: AdminShellProps) {
 
           <div className="flex items-center space-x-3">
             <div className="text-right hidden sm:flex flex-col items-end justify-center">
-              <div className="text-xs font-bold text-gray-900 truncate max-w-[200px]">
+              <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
                 {user?.fullName || user?.name || "System Administrator"}
               </div>
               <div className="mt-0.5 flex items-center space-x-1.5">
                 <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold shrink-0 whitespace-nowrap leading-none inline-flex items-center">
                   {isSuper ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
-                <span className="text-[11px] text-gray-500 font-mono truncate max-w-[180px]">
+                <span className="text-[11px] text-gray-500 font-mono whitespace-nowrap">
                   {user?.branchName ? `${user.branchCode} - ${user.branchName}` : (isSuper ? "All 11 Branches" : `Branch ${user?.branchCode}`)}
                 </span>
               </div>
