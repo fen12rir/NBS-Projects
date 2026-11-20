@@ -37,15 +37,34 @@ export default function AdminApprovalsPage() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
-  // Approval Modal State
-  const [approvingTrainee, setApprovingTrainee] = useState<PendingTrainee | null>(null);
+  // Bulk Selection State
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Approval Modal State (supports single or mass approval)
+  const [approvingTrainees, setApprovingTrainees] = useState<PendingTrainee[]>([]);
   const [selectedDays, setSelectedDays] = useState<number>(30);
   const [isUnlimited, setIsUnlimited] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Reject Modal State
-  const [rejectingTrainee, setRejectingTrainee] = useState<PendingTrainee | null>(null);
+  // Reject Modal State (supports single or mass rejection)
+  const [rejectingTrainees, setRejectingTrainees] = useState<PendingTrainee[]>([]);
   const [rejectionReason, setRejectionReason] = useState<string>("");
+
+  const allSelected = pendingList.length > 0 && selectedIds.length === pendingList.length;
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pendingList.map((t) => t.id));
+    }
+  };
+
+  const toggleSelectOne = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
 
   const fetchApprovals = async () => {
     setIsLoading(true);
@@ -55,6 +74,7 @@ export default function AdminApprovalsPage() {
       if (!res.ok) throw new Error("Failed to load pending queue");
       const data = await res.json();
       setPendingList(data.pending || []);
+      setSelectedIds([]);
       if (data.defaultDays) setDefaultDays(data.defaultDays);
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to load pending approvals.");
@@ -68,14 +88,15 @@ export default function AdminApprovalsPage() {
   }, []);
 
   const handleApproveSubmit = async () => {
-    if (!approvingTrainee) return;
+    if (approvingTrainees.length === 0) return;
     setIsSubmitting(true);
     try {
+      const targetIds = approvingTrainees.map((t) => t.id);
       const res = await fetch("/api/admin/approvals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: approvingTrainee.id,
+          userIds: targetIds,
           action: "approve",
           days: isUnlimited ? 0 : selectedDays,
         }),
@@ -84,25 +105,35 @@ export default function AdminApprovalsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Approval failed");
 
-      setActionSuccess(data.message || `Approved ${approvingTrainee.fullName}`);
-      setApprovingTrainee(null);
-      fetchApprovals();
+      setActionSuccess(
+        data.message ||
+          (approvingTrainees.length > 1
+            ? `Approved ${approvingTrainees.length} trainee accounts.`
+            : `Approved ${approvingTrainees[0].fullName}`)
+      );
+      setApprovingTrainees([]);
+      setSelectedIds((prev) => prev.filter((id) => !targetIds.includes(id)));
+      setPendingList((prev) => prev.filter((t) => !targetIds.includes(t.id)));
+      if (!data.message?.includes("Demo Mode")) {
+        fetchApprovals();
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to approve trainee.");
+      setErrorMessage(err.message || "Failed to approve trainee(s).");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleRejectSubmit = async () => {
-    if (!rejectingTrainee) return;
+    if (rejectingTrainees.length === 0) return;
     setIsSubmitting(true);
     try {
+      const targetIds = rejectingTrainees.map((t) => t.id);
       const res = await fetch("/api/admin/approvals", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: rejectingTrainee.id,
+          userIds: targetIds,
           action: "reject",
           rejectionReason,
         }),
@@ -111,12 +142,21 @@ export default function AdminApprovalsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Rejection failed");
 
-      setActionSuccess(data.message || `Registration declined for ${rejectingTrainee.fullName}`);
-      setRejectingTrainee(null);
+      setActionSuccess(
+        data.message ||
+          (rejectingTrainees.length > 1
+            ? `Declined ${rejectingTrainees.length} trainee registrations.`
+            : `Registration declined for ${rejectingTrainees[0].fullName}`)
+      );
+      setRejectingTrainees([]);
       setRejectionReason("");
-      fetchApprovals();
+      setSelectedIds((prev) => prev.filter((id) => !targetIds.includes(id)));
+      setPendingList((prev) => prev.filter((t) => !targetIds.includes(t.id)));
+      if (!data.message?.includes("Demo Mode")) {
+        fetchApprovals();
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to decline registration.");
+      setErrorMessage(err.message || "Failed to decline registration(s).");
     } finally {
       setIsSubmitting(false);
     }
@@ -172,45 +212,103 @@ export default function AdminApprovalsPage() {
 
         {/* Queue Table Card */}
         <div className="bg-white border border-gray-300 shadow-sm overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+          <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <UserCheck className="w-4 h-4 text-gray-600" />
               <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
                 Pending Verification Queue ({pendingList.length})
               </h2>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchApprovals}
-              disabled={isLoading}
-              className="text-xs h-7 border-gray-300"
-            >
-              Refresh Queue
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={fetchApprovals}
+                disabled={isLoading}
+                className="text-xs h-7 border-gray-300"
+              >
+                Refresh Queue
+              </Button>
+            </div>
           </div>
+
+          {/* Bulk Action Toolbar */}
+          {selectedIds.length > 0 && (
+            <div className="px-4 py-2.5 bg-red-50 border-b border-red-200 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center space-x-3 text-xs">
+                <span className="font-bold text-gray-900">
+                  {selectedIds.length} trainee{selectedIds.length === 1 ? "" : "s"} selected
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds([])}
+                  className="text-[11px] font-semibold text-gray-500 hover:text-black underline"
+                >
+                  Clear selection
+                </button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    const selected = pendingList.filter((t) => selectedIds.includes(t.id));
+                    setApprovingTrainees(selected);
+                    setSelectedDays(defaultDays);
+                    setIsUnlimited(false);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-7 px-3 flex items-center space-x-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Mass Approve ({selectedIds.length})</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const selected = pendingList.filter((t) => selectedIds.includes(t.id));
+                    setRejectingTrainees(selected);
+                    setRejectionReason("");
+                  }}
+                  className="border-red-400 bg-white text-red-700 hover:bg-red-100 font-bold text-xs h-7 px-3 flex items-center space-x-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  <span>Mass Reject ({selectedIds.length})</span>
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Trainee Name</th>
-                  <th className="py-2.5 px-3">Contact Details</th>
-                  <th className="py-2.5 px-3">Branch Assigned</th>
-                  <th className="py-2.5 px-3">Registration Date</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      disabled={pendingList.length === 0}
+                      aria-label="Select all pending trainees"
+                      className="w-4 h-4 accent-[#E4002B] cursor-pointer align-middle"
+                    />
+                  </th>
+                  <th className="py-2.5 px-3 min-w-[180px]">Trainee Name</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">Contact Details</th>
+                  <th className="py-2.5 px-3 min-w-[170px]">Branch Assigned</th>
+                  <th className="py-2.5 px-3 min-w-[140px]">Registration Date</th>
+                  <th className="py-2.5 px-3 text-right min-w-[140px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-gray-400">
+                    <td colSpan={6} className="py-8 text-center text-gray-400">
                       Loading pending approvals...
                     </td>
                   </tr>
                 ) : pendingList.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-gray-400">
+                    <td colSpan={6} className="py-12 text-center text-gray-400">
                       <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2 opacity-80" />
                       <div className="font-bold text-gray-700">Approval queue is empty</div>
                       <div className="text-[11px] text-gray-400 mt-0.5">
@@ -219,8 +317,19 @@ export default function AdminApprovalsPage() {
                     </td>
                   </tr>
                 ) : (
-                  pendingList.map((t) => (
-                    <tr key={t.id} className="hover:bg-gray-50">
+                  pendingList.map((t) => {
+                    const isChecked = selectedIds.includes(t.id);
+                    return (
+                    <tr key={t.id} className={isChecked ? "bg-red-50/40" : "hover:bg-gray-50"}>
+                      <td className="py-3 px-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => toggleSelectOne(t.id)}
+                          aria-label={`Select ${t.fullName}`}
+                          className="w-4 h-4 accent-[#E4002B] cursor-pointer align-middle"
+                        />
+                      </td>
                       <td className="py-3 px-3">
                         <div className="font-bold text-gray-900 text-sm">{t.fullName}</div>
                         <div className="text-[10px] text-gray-400 font-mono">ID: {t.id}</div>
@@ -228,7 +337,7 @@ export default function AdminApprovalsPage() {
                       <td className="py-3 px-3">
                         <div className="flex items-center space-x-1.5 text-gray-700">
                           <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
-                          <span className="font-mono">{t.email}</span>
+                          <span className="font-mono break-all">{t.email}</span>
                         </div>
                         <div className="flex items-center space-x-1.5 text-gray-500 mt-0.5">
                           <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
@@ -241,16 +350,16 @@ export default function AdminApprovalsPage() {
                           Code: {t.branchCode} • {t.branchRegion}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-gray-600 font-mono">
+                      <td className="py-3 px-3 text-gray-600 font-mono whitespace-nowrap">
                         <div>{new Date(t.createdAt).toLocaleDateString()}</div>
                         <div className="text-[10px] text-gray-400">{new Date(t.createdAt).toLocaleTimeString()}</div>
                       </td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end space-x-2">
                           <Button
                             size="sm"
                             onClick={() => {
-                              setApprovingTrainee(t);
+                              setApprovingTrainees([t]);
                               setSelectedDays(defaultDays);
                               setIsUnlimited(false);
                             }}
@@ -263,7 +372,7 @@ export default function AdminApprovalsPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              setRejectingTrainee(t);
+                              setRejectingTrainees([t]);
                               setRejectionReason("");
                             }}
                             className="border-red-300 text-red-700 hover:bg-red-50 font-bold text-xs h-7 px-2.5 flex items-center space-x-1"
@@ -274,35 +383,56 @@ export default function AdminApprovalsPage() {
                         </div>
                       </td>
                     </tr>
-                  ))
+                  );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
 
-        {/* Modal: Approve Trainee & Set Expiry */}
-        {approvingTrainee && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+        {/* Modal: Approve Trainee(s) & Set Expiry */}
+        {approvingTrainees.length > 0 && (
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-[#E4002B] p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2 text-emerald-700 font-black uppercase text-base">
                   <CheckCircle2 className="w-5 h-5" />
-                  <span>Approve Trainee Account</span>
+                  <span>
+                    {approvingTrainees.length > 1
+                      ? `Mass Approve (${approvingTrainees.length} Trainees)`
+                      : "Approve Trainee Account"}
+                  </span>
                 </div>
                 <button
-                  onClick={() => setApprovingTrainee(null)}
+                  onClick={() => setApprovingTrainees([])}
                   className="text-gray-400 hover:text-black font-bold text-lg"
                 >
                   ×
                 </button>
               </div>
 
-              <div className="text-xs text-gray-700 space-y-1">
-                <div>Approving: <strong className="text-gray-900 text-sm">{approvingTrainee.fullName}</strong></div>
-                <div>Email: <span className="font-mono">{approvingTrainee.email}</span></div>
-                <div>Branch: <strong>{approvingTrainee.branchCode} - {approvingTrainee.branchName}</strong></div>
-              </div>
+              {approvingTrainees.length === 1 ? (
+                <div className="text-xs text-gray-700 space-y-1">
+                  <div>Approving: <strong className="text-gray-900 text-sm">{approvingTrainees[0].fullName}</strong></div>
+                  <div>Email: <span className="font-mono">{approvingTrainees[0].email}</span></div>
+                  <div>Branch: <strong>{approvingTrainees[0].branchCode} - {approvingTrainees[0].branchName}</strong></div>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-700 space-y-2">
+                  <div>
+                    You are about to activate <strong className="text-gray-900">{approvingTrainees.length} trainee accounts</strong> with the same access validity period:
+                  </div>
+                  <div className="max-h-28 overflow-y-auto bg-gray-50 border border-gray-200 p-2 space-y-1">
+                    {approvingTrainees.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-gray-900 truncate pr-2">{t.fullName}</span>
+                        <span className="font-mono text-gray-500 shrink-0">{t.branchCode}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Access Expiry Setting */}
               <div className="pt-2 border-t border-gray-200">
@@ -369,7 +499,7 @@ export default function AdminApprovalsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setApprovingTrainee(null)}
+                  onClick={() => setApprovingTrainees([])}
                   disabled={isSubmitting}
                   className="text-xs"
                 >
@@ -381,35 +511,61 @@ export default function AdminApprovalsPage() {
                   disabled={isSubmitting}
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"
                 >
-                  {isSubmitting ? "Approving..." : "Confirm & Activate Trainee"}
+                  {isSubmitting
+                    ? "Approving..."
+                    : approvingTrainees.length > 1
+                    ? `Confirm & Activate (${approvingTrainees.length})`
+                    : "Confirm & Activate Trainee"}
                 </Button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Modal: Reject Trainee */}
-        {rejectingTrainee && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+        {/* Modal: Reject Trainee(s) */}
+        {rejectingTrainees.length > 0 && (
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 shadow-2xl space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-gray-200">
                 <div className="flex items-center space-x-2 text-red-700 font-black uppercase text-base">
                   <ShieldAlert className="w-5 h-5" />
-                  <span>Decline Trainee Registration</span>
+                  <span>
+                    {rejectingTrainees.length > 1
+                      ? `Mass Decline (${rejectingTrainees.length} Trainees)`
+                      : "Decline Trainee Registration"}
+                  </span>
                 </div>
                 <button
-                  onClick={() => setRejectingTrainee(null)}
+                  onClick={() => setRejectingTrainees([])}
                   className="text-gray-400 hover:text-black font-bold text-lg"
                 >
                   ×
                 </button>
               </div>
 
-              <p className="text-xs text-gray-600">
-                Are you sure you want to decline registration for{" "}
-                <strong className="text-gray-900">{rejectingTrainee.fullName}</strong>?
-                This user will not be allowed to log in.
-              </p>
+              {rejectingTrainees.length === 1 ? (
+                <p className="text-xs text-gray-600">
+                  Are you sure you want to decline registration for{" "}
+                  <strong className="text-gray-900">{rejectingTrainees[0].fullName}</strong>?
+                  This user will not be allowed to log in.
+                </p>
+              ) : (
+                <div className="text-xs text-gray-600 space-y-2">
+                  <p>
+                    Are you sure you want to decline registrations for{" "}
+                    <strong className="text-gray-900">{rejectingTrainees.length} selected trainees</strong>?
+                    None of these users will be allowed to log in.
+                  </p>
+                  <div className="max-h-28 overflow-y-auto bg-gray-50 border border-gray-200 p-2 space-y-1">
+                    {rejectingTrainees.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-gray-900 truncate pr-2">{t.fullName}</span>
+                        <span className="font-mono text-gray-500 shrink-0">{t.branchCode}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
@@ -428,7 +584,7 @@ export default function AdminApprovalsPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setRejectingTrainee(null)}
+                  onClick={() => setRejectingTrainees([])}
                   disabled={isSubmitting}
                   className="text-xs"
                 >
@@ -440,7 +596,11 @@ export default function AdminApprovalsPage() {
                   disabled={isSubmitting}
                   className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs"
                 >
-                  {isSubmitting ? "Declining..." : "Confirm Decline"}
+                  {isSubmitting
+                    ? "Declining..."
+                    : rejectingTrainees.length > 1
+                    ? `Confirm Mass Decline (${rejectingTrainees.length})`
+                    : "Confirm Decline"}
                 </Button>
               </div>
             </div>

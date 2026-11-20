@@ -14,6 +14,7 @@ import { TRAINING_SCENARIOS } from "@/data/scenarios";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
 import { getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
 import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
+import { PortalLoadingScreen } from "@/components/ui/portal-loading-screen";
 import { 
   BookOpen, 
   Monitor, 
@@ -42,13 +43,7 @@ export default function DashboardPage() {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center font-mono text-sm text-gray-500">
-          Loading Training Portal Session...
-        </div>
-      </div>
-    );
+    return <PortalLoadingScreen message="Loading Training Portal Session..." />;
   }
 
   const totalLessons = TRAINING_MODULES.reduce((sum, m) => sum + m.lessons.length, 0);

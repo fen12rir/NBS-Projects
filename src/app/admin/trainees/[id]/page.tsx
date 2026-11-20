@@ -220,41 +220,41 @@ export default function TraineeDetailPage() {
           </div>
         )}
 
-        {/* Trainee Profile Dossier Header */}
+        {/* Trainee Profile & Performance Record Header */}
         <div className="bg-white border border-gray-300 p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200">
             <div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
                   {trainee.fullName}
                 </h1>
                 <span
-                  className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase ${
+                  className={`px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
                     trainee.status === "active"
-                      ? "bg-emerald-100 text-emerald-800"
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                       : trainee.status === "pending"
-                      ? "bg-amber-100 text-amber-800"
+                      ? "bg-amber-100 text-amber-800 border border-amber-300"
                       : trainee.status === "deactivated"
-                      ? "bg-gray-200 text-gray-700"
-                      : "bg-red-100 text-red-800"
+                      ? "bg-gray-200 text-gray-700 border border-gray-300"
+                      : "bg-red-100 text-red-800 border border-red-300"
                   }`}
                 >
                   {trainee.status}
                 </span>
                 {progress.certificationCompletedAt && (
-                  <span className="bg-[#E4002B] text-white px-2 py-0.5 text-[10px] font-bold uppercase flex items-center space-x-1">
-                    <Award className="w-3 h-3" />
-                    <span>Certified</span>
+                  <span className="bg-[#E4002B] text-white px-2.5 py-0.5 text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0 leading-none">
+                    <Award className="w-3.5 h-3.5" />
+                    <span>Certified Cashier</span>
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 font-mono mt-0.5">
-                User ID: {trainee.id}
+              <p className="text-xs text-gray-500 font-mono mt-1">
+                Trainee ID: {trainee.id}
               </p>
             </div>
 
             {/* Quick Summary Metrics */}
-            <div className="flex items-center space-x-4 text-xs">
+            <div className="flex items-center space-x-4 text-xs shrink-0">
               <div className="text-right">
                 <div className="text-gray-400 font-mono text-[10px] uppercase">Progress</div>
                 <div className="font-mono font-extrabold text-base text-gray-900">
@@ -283,19 +283,21 @@ export default function TraineeDetailPage() {
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 text-xs">
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Email Address</span>
-              <span className="font-mono font-bold text-gray-800">{trainee.email}</span>
+              <span className="font-mono font-bold text-gray-800 break-all">{trainee.email}</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Mobile Number</span>
               <span className="font-mono font-bold text-gray-800">{trainee.contactNo}</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Branch Assigned</span>
-              <span className="font-bold text-gray-800">{trainee.branchCode} - {trainee.branchName}</span>
+              <span className="font-bold text-gray-800 block truncate" title={`${trainee.branchCode} - ${trainee.branchName}`}>
+                {trainee.branchCode} - {trainee.branchName}
+              </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Employee ID</span>
               {isEditingEmpId ? (
                 <div className="flex items-center space-x-1 mt-0.5">
@@ -328,23 +330,23 @@ export default function TraineeDetailPage() {
                 </div>
               )}
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Registration Date</span>
               <span className="font-mono text-gray-800">{new Date(trainee.createdAt).toLocaleString()}</span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Last Portal Login</span>
               <span className="font-mono text-gray-800">
                 {trainee.lastLoginAt ? new Date(trainee.lastLoginAt).toLocaleString() : "Never logged in"}
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Certificate Number</span>
-              <span className="font-mono text-[#E4002B] font-bold">
+              <span className="font-mono text-[#E4002B] font-bold break-all">
                 {progress.certificateId || "Not certified yet"}
               </span>
             </div>
-            <div>
+            <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Access Expires On</span>
               <span className="font-mono font-bold text-gray-800">
                 {trainee.accessExpiresAt ? new Date(trainee.accessExpiresAt).toLocaleDateString() : "Unlimited"}
@@ -512,24 +514,26 @@ export default function TraineeDetailPage() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`p-2 border text-xs flex items-center justify-between ${
+                          className={`p-2.5 border text-xs flex items-start justify-between gap-2 ${
                             isCompleted
                               ? "bg-emerald-50/80 border-emerald-200 text-emerald-950"
                               : "bg-white border-gray-200 text-gray-500"
                           }`}
                         >
-                          <div className="min-w-0 pr-1">
-                            <div className="font-semibold truncate">{lesson.title}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-semibold text-xs leading-snug line-clamp-2" title={lesson.title}>
+                              {lesson.title}
+                            </div>
                             {completionRecord && (
-                              <div className="text-[10px] text-emerald-700 font-mono">
-                                {new Date(completionRecord.completedAt).toLocaleDateString()}
+                              <div className="text-[10px] text-emerald-700 font-mono mt-1">
+                                Completed: {new Date(completionRecord.completedAt).toLocaleDateString()}
                               </div>
                             )}
                           </div>
                           {isCompleted ? (
-                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                           ) : (
-                            <div className="w-4 h-4 rounded-full border border-gray-300 shrink-0" />
+                            <div className="w-4 h-4 rounded-full border border-gray-300 shrink-0 mt-0.5" />
                           )}
                         </div>
                       );
@@ -552,14 +556,14 @@ export default function TraineeDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Scenario / Exam</th>
-                  <th className="py-2.5 px-3">Date &amp; Time</th>
-                  <th className="py-2.5 px-3 text-center">Score</th>
-                  <th className="py-2.5 px-3 text-center">Outcome</th>
-                  <th className="py-2.5 px-3 text-center">Steps</th>
-                  <th className="py-2.5 px-3 text-center">Mistakes</th>
-                  <th className="py-2.5 px-3 text-center">Time Spent</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[240px]">Scenario / Exam</th>
+                  <th className="py-2.5 px-3 min-w-[170px]">Date &amp; Time</th>
+                  <th className="py-2.5 px-3 text-center min-w-[70px]">Score</th>
+                  <th className="py-2.5 px-3 text-center min-w-[90px]">Outcome</th>
+                  <th className="py-2.5 px-3 text-center min-w-[100px]">Steps</th>
+                  <th className="py-2.5 px-3 text-center min-w-[80px]">Mistakes</th>
+                  <th className="py-2.5 px-3 text-center min-w-[110px]">Time Spent</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -576,30 +580,30 @@ export default function TraineeDetailPage() {
                         <div className="font-bold text-gray-900">{a.scenarioTitle}</div>
                         <div className="text-[10px] text-gray-400 font-mono">ID: {a.scenarioId}</div>
                       </td>
-                      <td className="py-2.5 px-3 font-mono text-gray-600">
+                      <td className="py-2.5 px-3 font-mono text-gray-600 whitespace-nowrap">
                         {new Date(a.timestamp).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono font-bold text-sm">
+                      <td className="py-2.5 px-3 text-center font-mono font-bold text-sm whitespace-nowrap">
                         {a.score}%
                       </td>
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`inline-block px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase ${
+                          className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase leading-none whitespace-nowrap ${
                             a.passed
-                              ? "bg-emerald-100 text-emerald-800"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : "bg-red-100 text-red-800 border border-red-300"
                           }`}
                         >
                           {a.passed ? "PASSED" : "FAILED"}
                         </span>
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono">
+                      <td className="py-2.5 px-3 text-center font-mono whitespace-nowrap font-bold text-gray-800">
                         {a.stepsCompleted} / {a.totalSteps}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono text-amber-700">
+                      <td className="py-2.5 px-3 text-center font-mono text-amber-700 whitespace-nowrap">
                         {a.mistakes?.length || 0}
                       </td>
-                      <td className="py-2.5 px-3 text-center font-mono text-gray-600">
+                      <td className="py-2.5 px-3 text-center font-mono text-gray-600 whitespace-nowrap">
                         {Math.floor(a.timeSpentSeconds / 60)}m {a.timeSpentSeconds % 60}s
                       </td>
                     </tr>
@@ -649,7 +653,7 @@ export default function TraineeDetailPage() {
 
         {/* Deactivate Modal */}
         {showDeactivateModal && (
-          <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
             <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 space-y-4 shadow-2xl">
               <h3 className="text-sm font-bold uppercase text-red-700">Deactivate Trainee Account</h3>
               <p className="text-xs text-gray-600">

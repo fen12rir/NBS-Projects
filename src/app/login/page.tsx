@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
@@ -14,13 +14,22 @@ import {
   Clock, 
   ShieldAlert, 
   Building2,
-  ChevronRight
+  ChevronRight,
+  ArrowLeft
 } from "lucide-react";
+
+function getDefaultDestination(role?: string) {
+  if (role === "super_admin" || role === "branch_admin") {
+    return "/admin";
+  }
+  return "/dashboard";
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/dashboard";
+  const explicitRedirect = searchParams.get("redirect");
+  const isRedirectingRef = useRef(false);
 
   const { login, user, enterDemoMode } = useAuth();
 
@@ -30,12 +39,14 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
 
-  // If already logged in, redirect
+  // If already logged in, redirect directly to role-appropriate portal
   useEffect(() => {
+    if (isRedirectingRef.current) return;
     if (user && user.status === "active") {
-      router.push(redirectPath);
+      isRedirectingRef.current = true;
+      router.replace(explicitRedirect || getDefaultDestination(user.role));
     }
-  }, [user, redirectPath, router]);
+  }, [user, explicitRedirect, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,12 +59,15 @@ function LoginForm() {
     }
 
     setIsLoading(true);
+    isRedirectingRef.current = true;
     const result = await login(email, password);
-    setIsLoading(false);
 
     if (result.success) {
-      router.push(redirectPath);
+      const target = explicitRedirect || getDefaultDestination(result.role);
+      router.replace(target);
     } else {
+      isRedirectingRef.current = false;
+      setIsLoading(false);
       if (result.code === "PENDING") {
         setPendingNotice(result.error || "Your account registration is awaiting approval from your branch administrator.");
       } else {
@@ -63,12 +77,14 @@ function LoginForm() {
   };
 
   const handleDemoTraineeLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("trainee");
     window.location.href = "/dashboard";
   };
 
   const handleDemoAdminLogin = async () => {
+    isRedirectingRef.current = true;
     setIsLoading(true);
     await enterDemoMode("admin");
     window.location.href = "/admin";
@@ -76,6 +92,17 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-md bg-white border border-gray-300 shadow-sm p-6 sm:p-8">
+      {/* Return to Landing Page */}
+      <div className="mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Return to Landing Page</span>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200">
         <div className="bg-[#E4002B] text-white px-2.5 py-1 font-extrabold text-xl tracking-tighter">
@@ -212,16 +239,6 @@ function LoginForm() {
             >
               <Building2 className="w-4 h-4 text-white shrink-0" />
               <span>Trainee Demo &rarr;</span>
-            </button>
-          </div>
-
-          <div className="text-center pt-1 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={handleDemoTraineeLogin}
-              className="text-xs text-gray-700 hover:text-[#E4002B] font-bold underline font-mono tracking-tight"
-            >
-              Continue in Local Offline Demo Mode &raquo;
             </button>
           </div>
         </div>

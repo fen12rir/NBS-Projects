@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
+import { PortalLoadingScreen } from "@/components/ui/portal-loading-screen";
 import { 
   LayoutDashboard, 
   UserCheck, 
@@ -19,7 +20,8 @@ import {
   BookOpen,
   Shield,
   Layers,
-  Clock
+  Clock,
+  Settings
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -80,12 +82,21 @@ export function AdminShell({ children }: AdminShellProps) {
           },
         ]
       : []),
+    {
+      title: "Settings",
+      href: "/admin/settings",
+      icon: Settings,
+    },
   ];
 
   const handleSignOut = async () => {
     await signOut();
     router.push("/login");
   };
+
+  if (isLoading) {
+    return <PortalLoadingScreen message="Loading Admin Portal Session..." />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-100 text-gray-900 font-sans">
@@ -118,7 +129,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
       {/* Main Admin Header */}
       <header className="bg-white border-b border-gray-300 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <button
               type="button"
@@ -144,15 +155,17 @@ export function AdminShell({ children }: AdminShellProps) {
           </div>
 
           <div className="flex items-center space-x-3">
-            <div className="text-right hidden sm:block">
-              <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
-                <span>{user?.fullName || user?.name || "Administrator"}</span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold">
+            <div className="text-right hidden sm:flex flex-col items-end justify-center">
+              <div className="text-xs font-bold text-gray-900 whitespace-nowrap">
+                {user?.fullName || user?.name || "System Administrator"}
+              </div>
+              <div className="mt-0.5 flex items-center space-x-1.5">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold shrink-0 whitespace-nowrap leading-none inline-flex items-center">
                   {isSuper ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
-              </div>
-              <div className="text-[11px] text-gray-600 font-mono truncate max-w-[240px]">
-                {user?.branchName ? `${user.branchCode} - ${user.branchName}` : (isSuper ? "All 11 Branches" : `Branch ${user?.branchCode}`)}
+                <span className="text-[11px] text-gray-500 font-mono whitespace-nowrap">
+                  {user?.branchName ? `${user.branchCode} - ${user.branchName}` : (isSuper ? "All 11 Branches" : `Branch ${user?.branchCode}`)}
+                </span>
               </div>
             </div>
 
@@ -170,9 +183,9 @@ export function AdminShell({ children }: AdminShellProps) {
       </header>
 
       {/* Main Body with Sidebar + Content */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-6">
+      <div className="flex-1 flex max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 gap-5">
         {/* Desktop Sidebar */}
-        <aside className="w-64 shrink-0 hidden md:block">
+        <aside className="w-56 shrink-0 hidden md:block">
           <nav className="bg-white border border-gray-300 p-3 space-y-1 shadow-sm sticky top-24">
             <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-gray-500 border-b border-gray-200 mb-2">
               Navigation
@@ -198,7 +211,7 @@ export function AdminShell({ children }: AdminShellProps) {
                     <span>{item.title}</span>
                   </div>
                   {item.badge !== null && item.badge !== undefined && (
-                    <span className={`text-[10px] font-mono px-1.5 py-0.2 font-extrabold ${isActive ? "bg-white text-black" : item.badgeColor}`}>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 font-extrabold shrink-0 inline-flex items-center justify-center leading-none ${isActive ? "bg-white text-black" : item.badgeColor}`}>
                       {item.badge}
                     </span>
                   )}
@@ -219,7 +232,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
         {/* Mobile Sidebar Modal */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 bg-black/60 md:hidden flex">
+          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] md:hidden flex">
             <div className="w-72 bg-white h-full p-4 flex flex-col justify-between shadow-2xl">
               <div>
                 <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-200">
@@ -251,7 +264,7 @@ export function AdminShell({ children }: AdminShellProps) {
                           <span>{item.title}</span>
                         </div>
                         {item.badge !== null && item.badge !== undefined && (
-                          <span className={`text-[10px] font-mono px-1.5 py-0.5 font-bold ${isActive ? "bg-white text-black" : item.badgeColor}`}>
+                          <span className={`text-[10px] font-mono px-2 py-0.5 font-bold shrink-0 inline-flex items-center justify-center leading-none ${isActive ? "bg-white text-black" : item.badgeColor}`}>
                             {item.badge}
                           </span>
                         )}

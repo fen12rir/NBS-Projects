@@ -6,6 +6,7 @@ import { AdminShell } from "@/components/admin/admin-shell";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SearchableBranchSelect } from "@/components/ui/searchable-branch-select";
 import { 
   Users, 
   Search, 
@@ -138,20 +139,15 @@ export default function AdminTraineesPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {/* Branch Filter (Super Admin) */}
+            {/* Searchable Branch Filter (Super Admin) */}
             {isSuper && (
-              <select
+              <SearchableBranchSelect
+                branches={branches}
                 value={selectedBranch}
-                onChange={(e) => setSelectedBranch(e.target.value)}
-                className="text-xs border border-gray-300 bg-white px-2.5 py-1.5 text-gray-800 font-medium focus:ring-1 focus:ring-[#E4002B]"
-              >
-                <option value="all">All Branches (11)</option>
-                {branches.map((b) => (
-                  <option key={b.code} value={b.code}>
-                    {b.code} - {b.name}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedBranch}
+                placeholder="Type branch name or code..."
+                allLabel="All Branches (11)"
+              />
             )}
 
             {/* Status Filter */}
@@ -188,14 +184,14 @@ export default function AdminTraineesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                  <th className="py-2.5 px-3">Trainee</th>
-                  <th className="py-2.5 px-3">Branch</th>
-                  <th className="py-2.5 px-3 text-center">Status</th>
-                  <th className="py-2.5 px-3">Curriculum Progress</th>
-                  <th className="py-2.5 px-3 text-center">Practical Exam</th>
-                  <th className="py-2.5 px-3">Access Expiry</th>
-                  <th className="py-2.5 px-3 text-right">Actions</th>
+                <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                  <th className="py-2.5 px-3 min-w-[200px]">Trainee</th>
+                  <th className="py-2.5 px-3 min-w-[170px]">Branch</th>
+                  <th className="py-2.5 px-3 text-center min-w-[90px]">Status</th>
+                  <th className="py-2.5 px-3 min-w-[150px]">Curriculum Progress</th>
+                  <th className="py-2.5 px-3 text-center min-w-[140px]">Practical Exam</th>
+                  <th className="py-2.5 px-3 min-w-[120px]">Access Expiry</th>
+                  <th className="py-2.5 px-3 text-right min-w-[120px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -240,16 +236,16 @@ export default function AdminTraineesPage() {
                       </td>
 
                       {/* Status */}
-                      <td className="py-3 px-3 text-center">
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
                         <span
-                          className={`inline-block px-2 py-0.5 text-[10px] font-mono font-black uppercase ${
+                          className={`inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-mono font-bold uppercase leading-none ${
                             t.status === "active"
-                              ? "bg-emerald-100 text-emerald-800"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
                               : t.status === "pending"
-                              ? "bg-amber-100 text-amber-800"
+                              ? "bg-amber-100 text-amber-800 border border-amber-300"
                               : t.status === "deactivated"
-                              ? "bg-gray-200 text-gray-700"
-                              : "bg-red-100 text-red-800"
+                              ? "bg-gray-200 text-gray-700 border border-gray-300"
+                              : "bg-red-100 text-red-800 border border-red-300"
                           }`}
                         >
                           {t.status}
@@ -257,12 +253,12 @@ export default function AdminTraineesPage() {
                       </td>
 
                       {/* Progress */}
-                      <td className="py-3 px-3">
-                        <div className="flex items-center justify-between text-[11px] mb-1">
-                          <span className="font-bold text-gray-800">
+                      <td className="py-3 px-3 min-w-[150px]">
+                        <div className="flex items-center justify-between text-[11px] mb-1 gap-2">
+                          <span className="font-bold text-gray-800 whitespace-nowrap">
                             {t.completedLessonsCount} / {t.totalLessonsCount} lessons
                           </span>
-                          <span className="font-mono text-gray-500 font-bold">{t.progressPercent}%</span>
+                          <span className="font-mono text-gray-500 font-bold whitespace-nowrap">{t.progressPercent}%</span>
                         </div>
                         <div className="w-full bg-gray-200 h-1.5 overflow-hidden">
                           <div
@@ -275,37 +271,39 @@ export default function AdminTraineesPage() {
                       </td>
 
                       {/* Practical Exam */}
-                      <td className="py-3 px-3 text-center">
-                        {t.examPassed ? (
-                          <div className="flex items-center justify-center space-x-1 text-emerald-700 font-bold">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            <span className="font-mono text-xs">Passed ({t.examScore}%)</span>
-                          </div>
-                        ) : t.examScore !== null && t.examScore !== undefined ? (
-                          <div className="text-red-600 font-bold font-mono text-xs">
-                            Failed ({t.examScore}%)
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 font-mono text-[11px]">Not attempted</span>
-                        )}
-                        {t.isCertified && (
-                          <div className="mt-0.5 inline-flex items-center space-x-1 text-[9px] font-black uppercase text-[#E4002B] bg-red-50 px-1 border border-red-200">
-                            <Award className="w-3 h-3" />
-                            <span>Certified</span>
-                          </div>
-                        )}
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                        <div className="flex flex-col items-center justify-center gap-1">
+                          {t.examPassed ? (
+                            <div className="inline-flex items-center space-x-1 text-emerald-700 font-bold">
+                              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                              <span className="font-mono text-xs">Passed ({t.examScore}%)</span>
+                            </div>
+                          ) : t.examScore !== null && t.examScore !== undefined ? (
+                            <div className="text-red-600 font-bold font-mono text-xs">
+                              Failed ({t.examScore}%)
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 font-mono text-[11px]">Not attempted</span>
+                          )}
+                          {t.isCertified && (
+                            <span className="inline-flex items-center space-x-1 text-[9px] font-black uppercase text-[#E4002B] bg-red-50 px-1.5 py-0.5 border border-red-200 leading-none">
+                              <Award className="w-3 h-3 shrink-0" />
+                              <span>Certified</span>
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Expiry */}
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-3 whitespace-nowrap">
                         {t.isExpired ? (
-                          <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 text-[10px] font-bold bg-red-100 text-red-800">
-                            <AlertTriangle className="w-3 h-3" />
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 border border-red-300 leading-none">
+                            <AlertTriangle className="w-3 h-3 shrink-0" />
                             <span>Expired</span>
                           </span>
                         ) : t.isExpiringSoon ? (
-                          <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800">
-                            <Clock className="w-3 h-3" />
+                          <span className="inline-flex items-center space-x-1 px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300 leading-none">
+                            <Clock className="w-3 h-3 shrink-0" />
                             <span>Expiring Soon</span>
                           </span>
                         ) : t.accessExpiresAt ? (
@@ -318,14 +316,14 @@ export default function AdminTraineesPage() {
                       </td>
 
                       {/* Action */}
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
                         <Link href={`/admin/trainees/${t.id}`}>
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs h-7 px-2.5 border-gray-300 font-bold hover:text-[#E4002B]"
+                            className="text-xs h-7 px-2.5 border-gray-300 font-bold hover:text-[#E4002B] hover:border-[#E4002B]"
                           >
-                            <span>Dossier</span>
+                            <span>View Record</span>
                             <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
                           </Button>
                         </Link>

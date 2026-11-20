@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/admin/approvals - Approve or Reject a trainee
+// POST /api/admin/approvals - Approve or Reject one or multiple trainees
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin();
   if (!auth.authorized) return auth.errorResponse!;
@@ -74,112 +74,136 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { userId, action, days, rejectionReason } = body;
+    const { userId, userIds, action, days, rejectionReason } = body;
 
-    if (!userId || !action) {
+    const targetIds: string[] = Array.isArray(userIds)
+      ? userIds.filter((id: any) => typeof id === "string" && id.trim().length > 0)
+      : userId
+      ? [userId]
+      : [];
+
+    if (targetIds.length === 0 || !action) {
       return NextResponse.json(
-        { error: "Missing required parameters (userId, action)." },
+        { error: "Missing required parameters (userId/userIds, action)." },
         { status: 400 }
       );
     }
 
+    if (action !== "approve" && action !== "reject") {
+      return NextResponse.json({ error: "Invalid action specified." }, { status: 400 });
+    }
+
+    const isBulk = targetIds.length > 1;
+    const accessDays = typeof days === "number" && days > 0 ? days : 30;
+    const isUnlimited = days === 0 || days === null;
+
     if (admin.id.startsWith("demo-")) {
       return NextResponse.json({
         success: true,
+        processedCount: targetIds.length,
         message:
           action === "approve"
-            ? `Account approved (Demo Mode). Status is now active with ${days ? days + " days" : "unlimited"} access.`
+            ? isBulk
+              ? `${targetIds.length} accounts approved (Demo Mode) with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`
+              : `Account approved (Demo Mode). Status is now active with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`
+            : isBulk
+            ? `${targetIds.length} trainee registrations declined (Demo Mode).`
             : "Account registration declined (Demo Mode).",
       });
     }
 
-    // Verify trainee exists and check branch permissions
+    // Verify all target trainees exist and check branch permissions
+    const placeholders = targetIds.map(() => "?").join(", ");
     const userRows = await query<any[]>(
-      "SELECT id, full_name, email, branch_code, status FROM users WHERE id = ? LIMIT 1",
-      [userId]
+      `SELECT id, full_name, email, branch_code, status FROM users WHERE id IN (${placeholders})`,
+      targetIds
     );
 
     if (!userRows || userRows.length === 0) {
-      return NextResponse.json({ error: "Trainee not found." }, { status: 404 });
+      return NextResponse.json({ error: "No matching trainees found." }, { status: 404 });
     }
 
-    const trainee = userRows[0];
-
     // Branch admin permission check
-    if (!isSuper && trainee.branch_code !== admin.branchCode) {
-      return NextResponse.json(
-        { error: "Unauthorized. You may only review trainees assigned to your branch." },
-        { status: 403 }
-      );
+    if (!isSuper) {
+      const unauthorized = userRows.find((t) => t.branch_code !== admin.branchCode);
+      if (unauthorized) {
+        return NextResponse.json(
+          { error: "Unauthorized. You may only review trainees assigned to your branch." },
+          { status: 403 }
+        );
+      }
     }
 
     if (action === "approve") {
-      const accessDays = typeof days === "number" && days > 0 ? days : 30;
-      const isUnlimited = days === 0 || days === null;
+      for (const trainee of userRows) {
+        const updateSql = `
+          UPDATE users 
+          SET status = 'active', 
+              rejection_reason = NULL,
+              access_expires_at = ${isUnlimited ? "NULL" : `DATE_ADD(NOW(), INTERVAL ? DAY)`}
+          WHERE id = ?
+        `;
+        const updateParams = isUnlimited ? [trainee.id] : [accessDays, trainee.id];
+        await query(updateSql, updateParams);
 
-      let updateSql = `
-        UPDATE users 
-        SET status = 'active', 
-            rejection_reason = NULL,
-            access_expires_at = ${isUnlimited ? "NULL" : `DATE_ADD(NOW(), INTERVAL ? DAY)`}
-        WHERE id = ?
-      `;
-      const updateParams = isUnlimited ? [userId] : [accessDays, userId];
-
-      await query(updateSql, updateParams);
-
-      // Audit log
-      await query(
-        `INSERT INTO audit_log (actor_id, action, target_user_id, details)
-         VALUES (?, 'trainee_approved', ?, ?)`,
-        [
-          admin.id,
-          userId,
-          JSON.stringify({
-            adminName: admin.fullName,
-            adminEmail: admin.email,
-            adminBranch: admin.branchCode,
-            accessDays: isUnlimited ? "Unlimited" : accessDays,
-          }),
-        ]
-      );
+        await query(
+          `INSERT INTO audit_log (actor_id, action, target_user_id, details)
+           VALUES (?, 'trainee_approved', ?, ?)`,
+          [
+            admin.id,
+            trainee.id,
+            JSON.stringify({
+              adminName: admin.fullName,
+              adminEmail: admin.email,
+              adminBranch: admin.branchCode,
+              accessDays: isUnlimited ? "Unlimited" : accessDays,
+              bulkAction: isBulk,
+            }),
+          ]
+        );
+      }
 
       return NextResponse.json({
         success: true,
-        message: `Account approved for ${trainee.full_name}. Status is now active with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`,
+        processedCount: userRows.length,
+        message: isBulk
+          ? `Approved ${userRows.length} trainee accounts with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`
+          : `Account approved for ${userRows[0].full_name}. Status is now active with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`,
       });
     }
 
-    if (action === "reject") {
-      const reason = (rejectionReason || "").trim() || "Registration declined by administrator.";
+    // action === "reject"
+    const reason = (rejectionReason || "").trim() || "Registration declined by administrator.";
 
+    for (const trainee of userRows) {
       await query(
         "UPDATE users SET status = 'rejected', rejection_reason = ? WHERE id = ?",
-        [reason, userId]
+        [reason, trainee.id]
       );
 
-      // Audit log
       await query(
         `INSERT INTO audit_log (actor_id, action, target_user_id, details)
          VALUES (?, 'trainee_rejected', ?, ?)`,
         [
           admin.id,
-          userId,
+          trainee.id,
           JSON.stringify({
             adminName: admin.fullName,
             adminEmail: admin.email,
             reason,
+            bulkAction: isBulk,
           }),
         ]
       );
-
-      return NextResponse.json({
-        success: true,
-        message: `Account registration rejected for ${trainee.full_name}.`,
-      });
     }
 
-    return NextResponse.json({ error: "Invalid action specified." }, { status: 400 });
+    return NextResponse.json({
+      success: true,
+      processedCount: userRows.length,
+      message: isBulk
+        ? `Declined ${userRows.length} trainee registrations.`
+        : `Account registration rejected for ${userRows[0].full_name}.`,
+    });
   } catch (error: any) {
     if (admin.id.startsWith("demo-")) {
       return NextResponse.json({

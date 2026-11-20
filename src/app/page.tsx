@@ -52,11 +52,6 @@ export default function HomePage() {
     window.location.href = "/dashboard";
   };
 
-  const handleAdminDemoEntry = async () => {
-    await enterDemoMode("admin");
-    window.location.href = "/admin";
-  };
-
   const handleLaunchClick = () => {
     if (user) {
       router.push("/simulator");
@@ -103,14 +98,6 @@ export default function HomePage() {
               </Link>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAdminDemoEntry}
-                  className="hidden md:inline-flex border-gray-900 bg-black text-white hover:bg-gray-800 font-bold text-xs"
-                >
-                  Admin Portal (Demo)
-                </Button>
                 <Link href="/signup">
                   <Button
                     variant="outline"
@@ -137,12 +124,24 @@ export default function HomePage() {
 
       {/* Safety Alert Banner */}
       <div className="bg-amber-50 border-b border-amber-200 px-3 sm:px-4 py-2 sm:py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between text-[11px] sm:text-sm text-amber-900">
-          <div className="flex items-center space-x-2 truncate">
-            <span className="font-medium truncate">
-              <strong className="hidden sm:inline">Training Sandbox: </strong>
-              {APP_CONFIG.safetyDisclaimer}
-            </span>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 text-[11px] sm:text-sm text-amber-900">
+          <div className="relative flex-1 overflow-hidden">
+            {/* Subtle edge fade masks */}
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-amber-50 to-transparent z-10" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-amber-50 to-transparent z-10" />
+
+            <div className="animate-nbs-marquee whitespace-nowrap font-medium">
+              <span className="inline-flex items-center pr-12">
+                <strong className="mr-1.5">Training Sandbox:</strong>
+                {APP_CONFIG.safetyDisclaimer}
+                <span className="ml-12 text-amber-400">•</span>
+              </span>
+              <span className="inline-flex items-center pr-12" aria-hidden="true">
+                <strong className="mr-1.5">Training Sandbox:</strong>
+                {APP_CONFIG.safetyDisclaimer}
+                <span className="ml-12 text-amber-400">•</span>
+              </span>
+            </div>
           </div>
           <Badge variant="warning" className="hidden md:inline-flex items-center shrink-0">
             Safe Environment

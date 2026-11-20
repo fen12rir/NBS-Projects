@@ -16,7 +16,7 @@ interface AuthContextType {
   user: AuthUser | null;
   isLoading: boolean;
   isDemoMode: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; code?: string; role?: string }>;
   signup: (data: SignupData) => Promise<{ success: boolean; error?: string; message?: string }>;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       await fetchSession();
-      return { success: true };
+      return { success: true, role: data.user?.role };
     } catch (err: any) {
       return { success: false, error: err?.message || "Network error. Please try again." };
     }

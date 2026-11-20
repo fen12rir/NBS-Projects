@@ -229,12 +229,12 @@ export default function AdminOverviewPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200">
-                    <th className="py-2.5 px-3">Branch</th>
-                    <th className="py-2.5 px-2 text-center">Total</th>
-                    <th className="py-2.5 px-2 text-center text-emerald-700">Active</th>
-                    <th className="py-2.5 px-2 text-center text-amber-600">Pending</th>
-                    <th className="py-2.5 px-2 text-center text-[#E4002B]">Certified</th>
+                  <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
+                    <th className="py-2.5 px-3 min-w-[180px]">Branch</th>
+                    <th className="py-2.5 px-2 text-center min-w-[60px]">Total</th>
+                    <th className="py-2.5 px-2 text-center text-emerald-700 min-w-[60px]">Active</th>
+                    <th className="py-2.5 px-2 text-center text-amber-600 min-w-[60px]">Pending</th>
+                    <th className="py-2.5 px-2 text-center text-[#E4002B] min-w-[60px]">Certified</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -293,23 +293,23 @@ export default function AdminOverviewPage() {
                 recentActivity.map((act) => (
                   <div
                     key={act.id}
-                    className="p-2.5 bg-gray-50 border border-gray-200 text-xs flex items-center justify-between"
+                    className="p-2.5 bg-gray-50 border border-gray-200 text-xs flex items-center justify-between gap-3"
                   >
-                    <div className="min-w-0 pr-2">
+                    <div className="min-w-0 flex-1">
                       <div className="font-bold text-gray-900 truncate">{act.fullName}</div>
-                      <div className="text-[10px] text-gray-500 truncate">
+                      <div className="text-[10px] text-gray-500 truncate" title={`${act.scenarioTitle} • ${act.branchName}`}>
                         {act.scenarioTitle} • {act.branchName}
                       </div>
                       <div className="text-[10px] text-gray-400 font-mono mt-0.5">
                         {new Date(act.timestamp).toLocaleString()}
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="shrink-0 text-right">
                       <span
-                        className={`inline-block px-1.5 py-0.5 text-[10px] font-mono font-extrabold uppercase ${
+                        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-extrabold uppercase whitespace-nowrap leading-none ${
                           act.passed
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-red-100 text-red-800"
+                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                            : "bg-red-100 text-red-800 border border-red-300"
                         }`}
                       >
                         {act.passed ? "PASSED" : "FAILED"} ({act.score}%)
