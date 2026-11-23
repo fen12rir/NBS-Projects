@@ -21,7 +21,7 @@ import {
   Shield,
   Layers,
   Clock,
-  Settings
+  User
 } from "lucide-react";
 
 interface AdminShellProps {
@@ -85,7 +85,7 @@ export function AdminShell({ children }: AdminShellProps) {
     {
       title: "Settings",
       href: "/admin/settings",
-      icon: Settings,
+      icon: User,
     },
   ];
 

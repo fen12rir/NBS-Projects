@@ -21,7 +21,7 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  Settings
+  User
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -289,20 +289,20 @@ export function DashboardHeader({
             </div>
           </div>
 
-          {/* Settings Gear Dropdown */}
+          {/* User Account / Change Password Dropdown */}
           <div ref={settingsMenuRef} className="relative">
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowSettingsMenu((prev) => !prev)}
-              title="Account Settings"
-              aria-label="Account Settings"
+              title="Account & Change Password"
+              aria-label="Account & Change Password"
               aria-expanded={showSettingsMenu}
               className={`flex items-center justify-center p-2 border-slate-300 shrink-0 rounded-lg ${
                 showSettingsMenu ? "border-[#E4002B] text-[#E4002B] bg-red-50" : "text-slate-700 hover:text-[#E4002B]"
               }`}
             >
-              <Settings className="w-4 h-4 shrink-0" />
+              <User className="w-4 h-4 shrink-0" />
             </Button>
 
             {showSettingsMenu && (
