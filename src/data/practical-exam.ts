@@ -541,7 +541,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
           { sku: "NBS-PAP-003", barcode: "NBS-PAP-003", qty: 1, label: "A4 Copy Paper 80gsm", unitPrice: 240.0 },
         ],
         shows: "TIN_INFO",
-        tender: { kind: "CASH", amount: 500 },
+        tender: { kind: "CASH", amount: 1500 },
       },
     ],
     milestones: [
@@ -555,7 +555,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       { id: "m-bb-cancel", action: "CONFIRM_BEST_BUY", label: "Dismiss Bonus Buy", points: 5 },
       { id: "m-f4-2", action: "GO_PAYMENT", label: "Open Choose Option", points: 5 },
       { id: "m-opt-none", action: "CHOOSE_LNQR_OPTION", expectedData: 1, label: "Select 1. None", points: 5 },
-      { id: "m-cash", action: "SUBMIT_CASH_TENDER", label: "Tender ₱500", points: 10 },
+      { id: "m-cash", action: "SUBMIT_CASH_TENDER", label: "Tender ₱1500", points: 10 },
     ],
     finalChecks: {
       tenderMethod: "CASH",
