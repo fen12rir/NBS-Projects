@@ -54,11 +54,16 @@ export interface ExamSessionGradingResult {
 function isActionMatch(expectedAction: string, loggedAction: string): boolean {
   if (expectedAction === loggedAction) return true;
   // Navigation Aliases
-  if (expectedAction === "PAGE_DOWN" && (loggedAction === "NAV_MAIN" || loggedAction === "PAGE_DOWN")) return true;
-  if (expectedAction === "NAV_MAIN" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_MAIN")) return true;
-  if (expectedAction === "NAV_SECOND" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_SECOND")) return true;
-  if (expectedAction === "NAV_THIRD" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_THIRD")) return true;
-  if (expectedAction === "NAV_FOURTH" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_FOURTH")) return true;
+  if (expectedAction === "PAGE_DOWN" && (loggedAction === "NAV_MAIN" || loggedAction === "PAGE_DOWN" || loggedAction === "PAGE_UP")) return true;
+  if (expectedAction === "NAV_MAIN" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_MAIN" || loggedAction === "PAGE_UP")) return true;
+  if (expectedAction === "NAV_SECOND" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_SECOND" || loggedAction === "PAGE_UP")) return true;
+  if (expectedAction === "NAV_THIRD" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_THIRD" || loggedAction === "PAGE_UP")) return true;
+  if (expectedAction === "NAV_FOURTH" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_FOURTH" || loggedAction === "PAGE_UP")) return true;
+  // Lookup Aliases: directly selecting an item from Lookup satisfies the search query milestone
+  if (expectedAction === "LOOKUP_QUERY" && (loggedAction === "LOOKUP_QUERY" || loggedAction === "LOOKUP_SEARCH" || loggedAction === "ADD_ITEM")) return true;
+  // Logout Aliases
+  if (expectedAction === "TRIGGER_LOGOUT" && (loggedAction === "TRIGGER_LOGOUT" || loggedAction === "CONFIRM_LOGOUT_YES" || loggedAction === "LOGOUT")) return true;
+  if (expectedAction === "CONFIRM_LOGOUT_YES" && (loggedAction === "TRIGGER_LOGOUT" || loggedAction === "CONFIRM_LOGOUT_YES" || loggedAction === "LOGOUT")) return true;
   // Tender Aliases
   if (expectedAction === "CONFIRM_TENDER" && (loggedAction === "SUBMIT_CASH_TENDER" || loggedAction === "CONFIRM_TENDER")) return true;
   if (expectedAction === "SUBMIT_CASH_TENDER" && (loggedAction === "CONFIRM_TENDER" || loggedAction === "SUBMIT_CASH_TENDER")) return true;
@@ -69,7 +74,13 @@ function isActionMatch(expectedAction: string, loggedAction: string): boolean {
 function isDataMatch(expected?: string | number, actual?: string | number): boolean {
   if (expected === undefined) return true;
   if (actual === undefined) return false;
-  return String(expected).trim().toLowerCase() === String(actual).trim().toLowerCase();
+  const exp = String(expected).trim().toLowerCase();
+  const act = String(actual).trim().toLowerCase();
+  if (exp === act) return true;
+  // Normalize statutory discount codes/descriptions (e.g. "ZPWD" <-> "PWD", "ZSEN" <-> "Senior Citizen Discount")
+  if ((exp === "pwd" || exp === "zpwd") && (act === "pwd" || act === "zpwd" || act.includes("pwd"))) return true;
+  if ((exp === "zsen" || exp.includes("senior")) && (act === "zsen" || act.includes("senior"))) return true;
+  return false;
 }
 
 // Individual Case Grader
@@ -138,7 +149,7 @@ export function gradeCase(
     feedback.push(`Required item or transaction void was not completed.`);
   }
 
-  if (checks.discountType && finalSnapshot.discountType !== checks.discountType) {
+  if (checks.discountType && !isDataMatch(checks.discountType, finalSnapshot.discountType)) {
     finalStatePoints -= 10;
     feedback.push(`Expected ${checks.discountType} discount was not applied.`);
   }

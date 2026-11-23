@@ -222,10 +222,10 @@ export const LESSON_TRANSLATIONS_TL: Record<string, LessonTranslation> = {
     title: "Mga Transaction Discount (Senior Citizen, PWD, Employee)",
     objective: "Magbigay ng tamang statutory o company discount na may pahintulot ng supervisor.",
     instructions: [
-      "Pindutin ang F5 (Option) mula sa Main Screen para pumasok sa 2nd Page.",
-      "Para sa awtorisadong pagbabago ng presyo: Pindutin ang F3 (Price Change) sa 2nd Page, ilagay ang manager override, ilagay ang bagong unit price at dahilan, at kumpirmahin (kusang babalik sa Main Screen).",
-      "Pindutin ang F6 (TRX Disc) para buksan ang listahan ng mga discount category.",
-      "Piliin ang tamang diskwento (hal. Senior 20%, Employee 15%, LNQR Family Discount), ilagay ang ID details ng customer at manager override kapag hiningi, at pindutin ang Alt + Enter (kusang babalik sa Main Screen).",
+      "Para sa Transaction Discounts (Senior Citizen, PWD, Employee, LNQR Family): Ilapat MUNA ang diskwento BAGO mag-scan o maglagay ng item ng customer. Pindutin ang F5 (Option) mula sa Main Screen para pumasok sa 2nd Page.",
+      "Pindutin ang F6 (TRX Disc) sa 2nd Page para buksan ang listahan ng mga discount category.",
+      "Piliin ang tamang diskwento (hal. ZPWD para sa PWD 20%, ZSEN para sa Senior 20%, Employee 15%, o ZQFD para sa LNQR Family Discount), ilagay ang ID details ng customer at manager override kapag hiningi, at pindutin ang Alt + Enter (kusang babalik sa Main Screen upang ma-scan na ang mga item).",
+      "Para sa awtorisadong pagbabago ng presyo ng na-scan nang item: Pindutin ang F3 (Price Change) sa 2nd Page, ilagay ang manager override, ilagay ang bagong unit price at dahilan, at kumpirmahin (kusang babalik sa Main Screen).",
     ],
     keyCallouts: [
       "F5: Option",

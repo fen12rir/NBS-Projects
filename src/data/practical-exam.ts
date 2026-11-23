@@ -188,10 +188,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
     ],
     milestones: [
-      { id: "m-f2-lookup", action: "LOOKUP", label: "Press F2 Lookup", points: 10, critical: true },
-      { id: "m-f3-desc", action: "LOOKUP_SEARCH", label: "Switch to Description Search (F3)", points: 10 },
+      { id: "m-f2-lookup", action: "LOOKUP", label: "Press F2 Lookup", points: 15, critical: true },
       { id: "m-query", action: "LOOKUP_QUERY", label: "Search for 'casio' / 'calculator'", points: 15, critical: true },
-      { id: "m-add-item", action: "ADD_ITEM", expectedData: "NBS-CAL-005", label: "Add Casio Calculator", points: 10, critical: true },
+      { id: "m-add-item", action: "ADD_ITEM", expectedData: "NBS-CAL-005", label: "Add Casio Calculator", points: 15, critical: true },
       { id: "m-f4-1", action: "GO_PAYMENT", label: "Press F4 Payment", points: 5 },
       { id: "m-bb-cancel", action: "CONFIRM_BEST_BUY", label: "Dismiss Bonus Buy", points: 5 },
       { id: "m-f4-2", action: "GO_PAYMENT", label: "Open Choose Option", points: 5 },
@@ -388,7 +387,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     customerQuote: "Wait! I changed my mind about the copy paper. Please remove it from my bill. I'll just take the notebook.",
     difficulty: 2,
     targetSeconds: 75,
-    modulesCovered: ["mod-5", "mod-8"],
+    modulesCovered: ["mod-4", "mod-8"],
     events: [
       {
         say: "I have a notebook and copy paper.",
@@ -406,7 +405,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     milestones: [
       { id: "m-scan-1", action: "ADD_ITEM", label: "Scan First Item", points: 5 },
       { id: "m-scan-2", action: "ADD_ITEM", label: "Scan Second Item", points: 5 },
-      { id: "m-req-void", action: "ITEM_VOID", label: "Press F9 Item Void", points: 10, critical: true },
+      { id: "m-req-void", action: "ITEM_VOID", label: "Press F7 Item Void", points: 10, critical: true },
       { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Manager Override Sign-Off", points: 15, critical: true },
       { id: "m-sel-void-sku", action: "SCAN_VOID_SKU", expectedData: "NBS-PAP-003", label: "Select NBS-PAP-003 to Void", points: 15, critical: true },
       { id: "m-f4-1", action: "GO_PAYMENT", label: "Press F4 Payment", points: 5 },
@@ -430,7 +429,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     customerQuote: "Oh no! I forgot my wallet at the coffee shop! Please cancel everything, I'm so sorry!",
     difficulty: 2,
     targetSeconds: 50,
-    modulesCovered: ["mod-5"],
+    modulesCovered: ["mod-4"],
     events: [
       {
         say: "Ring up these two items first.",
@@ -447,7 +446,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     milestones: [
       { id: "m-scan-1", action: "ADD_ITEM", label: "Scan Item 1", points: 5 },
       { id: "m-scan-2", action: "ADD_ITEM", label: "Scan Item 2", points: 5 },
-      { id: "m-trx-void", action: "TRX_VOID", label: "Press F10 Transaction Void", points: 15, critical: true },
+      { id: "m-trx-void", action: "TRX_VOID", label: "Press F8 Transaction Void", points: 15, critical: true },
       { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Manager Override Sign-Off", points: 15, critical: true },
       { id: "m-reason", action: "CONFIRM_TRX_VOID", label: "Confirm Trx Void Reason", points: 10, critical: true },
     ],
@@ -462,10 +461,10 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     customerQuote: "Good morning, dear. Here is my PWD booklet and ID for my discount on this notebook. Paying cash.",
     difficulty: 2,
     targetSeconds: 70,
-    modulesCovered: ["mod-6", "mod-8"],
+    modulesCovered: ["mod-5", "mod-8"],
     events: [
       {
-        say: "Here is my government-issued PWD ID (ID #PWD-2024-0091).",
+        say: "Here is my government-issued PWD ID (ID #PWD-2024-0091). Please apply my 20% PWD discount on the 2nd Screen (F5 Option -> F6 Trx Disc -> ZPWD) before completing the sale.",
         hands: [
           { sku: "NBS-BK-001", barcode: "NBS-BK-001", qty: 1, label: "NBS Classic Notebook Spiral 80L", unitPrice: 35.0 },
         ],
@@ -474,10 +473,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
     ],
     milestones: [
+      { id: "m-trx-disc", action: "TRX_DISC", label: "Press F6 Trx Discount (2nd Screen)", points: 15, critical: true },
+      { id: "m-apply-pwd", action: "APPLY_DISCOUNT", expectedData: "ZPWD", label: "Select PWD Discount (ZPWD)", points: 15, critical: true },
       { id: "m-scan", action: "ADD_ITEM", expectedData: "NBS-BK-001", label: "Scan NBS-BK-001", points: 10, critical: true },
-      { id: "m-nav-2", action: "NAV_SECOND", label: "Navigate to 2nd Screen (F5)", points: 5 },
-      { id: "m-trx-disc", action: "TRX_DISC", label: "Press F4 Trx Discount", points: 10, critical: true },
-      { id: "m-apply-pwd", action: "APPLY_DISCOUNT", expectedData: "PWD", label: "Select PWD Discount (Option 4)", points: 15, critical: true },
       { id: "m-f4-1", action: "GO_PAYMENT", label: "Press F4 Payment", points: 5 },
       { id: "m-bb-cancel", action: "CONFIRM_BEST_BUY", label: "Dismiss Bonus Buy", points: 5 },
       { id: "m-f4-2", action: "GO_PAYMENT", label: "Open Choose Option", points: 5 },
@@ -485,7 +483,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       { id: "m-cash", action: "SUBMIT_CASH_TENDER", label: "Tender ₱100 Cash", points: 10 },
     ],
     finalChecks: {
-      discountType: "PWD",
+      discountType: "ZPWD",
       tenderMethod: "CASH",
     },
   },
@@ -508,18 +506,17 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
       {
         triggerAfterAction: "ADD_ITEM",
-        say: "Please suspend this transaction (press F11 Suspend) so I can run back and grab an eraser!",
+        say: "Please suspend this transaction (press F9 Suspend) so I can run back and grab an eraser!",
       },
       {
         triggerAfterAction: "CONFIRM_SUSPEND",
-        say: "I'm back with the eraser! Please recall my transaction (press F5 to 2nd screen, then F9 Recall, select transaction and confirm).",
+        say: "I'm back with the eraser! Please recall my transaction (go to 2nd Screen -> F7 Recall, select transaction and confirm).",
       },
     ],
     milestones: [
       { id: "m-scan", action: "ADD_ITEM", expectedData: "NBS-BK-001", label: "Scan NBS-BK-001", points: 10 },
-      { id: "m-suspend", action: "SUSPEND", label: "Press F11 Suspend", points: 15, critical: true },
-      { id: "m-nav-2", action: "NAV_SECOND", label: "Navigate to 2nd Screen (F5)", points: 5 },
-      { id: "m-recall", action: "RECALL", label: "Press F9 Recall", points: 15, critical: true },
+      { id: "m-suspend", action: "SUSPEND", label: "Press F9 Suspend", points: 20, critical: true },
+      { id: "m-recall", action: "RECALL", label: "Press F7 Recall (2nd Screen)", points: 15, critical: true },
       { id: "m-confirm-recall", action: "CONFIRM_RECALL", label: "Select & Confirm Recalled Trx", points: 15, critical: true },
     ],
     finalChecks: {},
@@ -546,11 +543,8 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     ],
     milestones: [
       { id: "m-scan", action: "ADD_ITEM", expectedData: "NBS-PAP-003", label: "Scan Item", points: 10 },
-      { id: "m-nav-2", action: "NAV_SECOND", label: "F5 Page Down to 2nd", points: 5 },
-      { id: "m-nav-3", action: "NAV_THIRD", label: "F5 Page Down to 3rd", points: 5 },
-      { id: "m-nav-4", action: "NAV_FOURTH", label: "F5 Page Down to 4th", points: 5 },
-      { id: "m-comment", action: "TRX_COMMENT", label: "Press F2 Trx Comment", points: 15, critical: true },
-      { id: "m-save-comm", action: "SAVE_TRX_COMMENT", label: "Fill & Save Buyer Name, Address, TIN", points: 15, critical: true },
+      { id: "m-comment", action: "TRX_COMMENT", label: "Press F3 Trx Comment (4th Screen)", points: 20, critical: true },
+      { id: "m-save-comm", action: "SAVE_TRX_COMMENT", label: "Fill & Save Buyer Name, Address, TIN", points: 20, critical: true },
       { id: "m-f4-1", action: "GO_PAYMENT", label: "Press F4 Payment", points: 5 },
       { id: "m-bb-cancel", action: "CONFIRM_BEST_BUY", label: "Dismiss Bonus Buy", points: 5 },
       { id: "m-f4-2", action: "GO_PAYMENT", label: "Open Choose Option", points: 5 },
@@ -577,15 +571,10 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
     ],
     milestones: [
-      { id: "m-nav-2", action: "NAV_SECOND", label: "F5 Page Down to 2nd", points: 5 },
-      { id: "m-nav-3", action: "NAV_THIRD", label: "F5 Page Down to 3rd", points: 5 },
-      { id: "m-sdv", action: "SDV_CHECK", label: "Press F9 SDV Check", points: 15, critical: true },
-      { id: "m-reading-y", action: "READING_Y", label: "Press F7 Y Reading", points: 15, critical: true },
-      { id: "m-reading-z", action: "READING_Z", label: "Press F8 Z Reading", points: 15, critical: true },
-      { id: "m-nav-4", action: "NAV_FOURTH", label: "F5 to 4th Screen", points: 5 },
-      { id: "m-nav-1", action: "PAGE_DOWN", label: "F12 to Main Screen", points: 5 },
-      { id: "m-nav-2b", action: "NAV_SECOND", label: "F5 to 2nd Screen", points: 5 },
-      { id: "m-logout", action: "TRIGGER_LOGOUT", label: "Press F11 Logout", points: 15, critical: true },
+      { id: "m-sdv", action: "SDV_CHECK", label: "Run SDV Check (F10)", points: 15, critical: true },
+      { id: "m-reading-y", action: "READING_Y", label: "Generate Y Reading (F8)", points: 15, critical: true },
+      { id: "m-reading-z", action: "READING_Z", label: "Generate Z Reading (F9)", points: 15, critical: true },
+      { id: "m-logout", action: "TRIGGER_LOGOUT", label: "Cashier Logout (F8 on 2nd Screen)", points: 15, critical: true },
     ],
     finalChecks: {},
   },
