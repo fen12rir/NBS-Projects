@@ -49,6 +49,7 @@ import { PosReloaderScreen } from "@/components/simulator/screens/pos-reloader-s
 import { UserLoginScreen } from "@/components/simulator/screens/user-login-screen";
 import { 
   PracticalExamSession, 
+  getNextExamEventIndex,
   generatePracticalExamSession 
 } from "@/data/practical-exam";
 import { 
@@ -197,6 +198,7 @@ function SimulatorContent() {
 
   const [examSession, setExamSession] = useState<PracticalExamSession | null>(null);
   const [examCaseIndex, setExamCaseIndex] = useState(0);
+  const [examEventIndex, setExamEventIndex] = useState(0);
   const [examActionLog, setExamActionLog] = useState<TraineeActionLog[]>([]);
   const examActionLogRef = useRef<TraineeActionLog[]>([]);
   const isAdvancingCaseRef = useRef(false);
@@ -717,6 +719,7 @@ function SimulatorContent() {
       const session = generatePracticalExamSession();
       setExamSession(session);
       setExamCaseIndex(0);
+      setExamEventIndex(0);
       setExamActionLog([]);
       setCaseResults([]);
       setCaseStartTime(Date.now());
@@ -2927,6 +2930,7 @@ function SimulatorContent() {
     const nextIndex = examCaseIndex + 1;
     if (nextIndex < examSession.cases.length) {
       setExamCaseIndex(nextIndex);
+      setExamEventIndex(0);
       const nextCase = examSession.cases[nextIndex];
       setCustomerNotice({
         name: nextCase.customerName,
@@ -3020,6 +3024,15 @@ function SimulatorContent() {
       const entry = { action: actionId, data: dataVal, timestamp: Date.now() };
       examActionLogRef.current.push(entry);
       setExamActionLog((prev) => [...prev, entry]);
+      const currentCase = examSession?.cases[examCaseIndex];
+      if (currentCase) {
+        const actionCount = examActionLogRef.current.filter(
+          (loggedAction) => loggedAction.action === actionId,
+        ).length;
+        setExamEventIndex((activeIndex) =>
+          getNextExamEventIndex(currentCase.events, activeIndex, actionId, actionCount),
+        );
+      }
       return true;
     }
     if (!activeScenario || isExamCompleted) return true;
@@ -3925,6 +3938,7 @@ function SimulatorContent() {
         isExamMode && examSession ? (
           <CustomerPanel
             currentCase={examSession.cases[examCaseIndex]}
+            activeEventIndex={examEventIndex}
             caseIndex={examCaseIndex}
             totalCases={examSession.cases.length}
             remainingSeconds={remainingSeconds}
@@ -4107,6 +4121,7 @@ function SimulatorContent() {
             {isExamMode && examSession ? (
               <CustomerPanel
                 currentCase={examSession.cases[examCaseIndex]}
+                activeEventIndex={examEventIndex}
                 caseIndex={examCaseIndex}
                 totalCases={examSession.cases.length}
                 remainingSeconds={remainingSeconds}

@@ -31,6 +31,7 @@ export interface ExamCustomerEvent {
   shows?: "LNC_CARD" | "LNQR_QR" | "PWD_ID" | "SENIOR_ID" | "RECEIPT" | "TIN_INFO";
   note?: string;
   triggerAfterAction?: string;
+  triggerAfterActionCount?: number;
 }
 
 export interface ExamMilestone {
@@ -64,6 +65,19 @@ export interface PracticalExamCase {
     discountType?: string;
     isZeroRated?: boolean;
   };
+}
+
+export function getNextExamEventIndex(
+  events: ExamCustomerEvent[],
+  activeIndex: number,
+  action: string,
+  actionCount = 1,
+): number {
+  const nextEvent = events[activeIndex + 1];
+  const requiredActionCount = nextEvent?.triggerAfterActionCount ?? 1;
+  return nextEvent?.triggerAfterAction === action && actionCount >= requiredActionCount
+    ? activeIndex + 1
+    : activeIndex;
 }
 
 export interface PracticalExamSession {
@@ -384,7 +398,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     id: "case-item-void",
     title: "Mid-Sale Item Cancellation (Item Void)",
     customerName: "Jessica Lee",
-    customerQuote: "Wait! I changed my mind about the copy paper. Please remove it from my bill. I'll just take the notebook.",
+    customerQuote: "I have a notebook and copy paper, but I changed my mind about the paper. Please remove it from my bill.",
     difficulty: 2,
     targetSeconds: 75,
     modulesCovered: ["mod-4", "mod-8"],
@@ -398,7 +412,8 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
       {
         triggerAfterAction: "ADD_ITEM",
-        say: "Actually, please void the A4 Copy Paper (₱240). I don't have enough cash.",
+        triggerAfterActionCount: 2,
+        say: "Wait! I changed my mind about the copy paper. Please remove it from my bill. I'll just take the notebook.",
         tender: { kind: "CASH", amount: 100 },
       },
     ],

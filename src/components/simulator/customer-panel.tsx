@@ -19,6 +19,7 @@ import {
 
 interface CustomerPanelProps {
   currentCase: PracticalExamCase;
+  activeEventIndex?: number;
   caseIndex: number;
   totalCases: number;
   remainingSeconds: number | null;
@@ -30,6 +31,7 @@ interface CustomerPanelProps {
 
 export function CustomerPanel({
   currentCase,
+  activeEventIndex = 0,
   caseIndex,
   totalCases,
   remainingSeconds,
@@ -37,6 +39,7 @@ export function CustomerPanel({
   isKeyboardOpen = false,
 }: CustomerPanelProps) {
   const [showFullQuoteMobile, setShowFullQuoteMobile] = useState(false);
+  const activeEvent = currentCase.events[activeEventIndex] || currentCase.events[0];
 
   const formatTime = (secs: number | null) => {
     if (secs === null) return "--:--";
@@ -206,6 +209,11 @@ export function CustomerPanel({
       {!isKeyboardOpen && (
         <div className="bg-[#111827] border-t border-gray-700 py-1 px-2.5 sm:px-4 text-xs font-sans">
           <div className="max-w-[1080px] mx-auto flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-contain scrollbar-none">
+            <div className="bg-amber-950/80 border border-amber-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs">
+              <Info className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="font-bold text-white">Customer says:</span>
+              <span>{activeEvent?.say || activeEvent?.note || "Verify terminal date/time and sign in."}</span>
+            </div>
             {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
               <div className="bg-amber-950/90 border border-amber-500 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs animate-pulse">
                 <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
@@ -233,13 +241,7 @@ export function CustomerPanel({
                 )}
               </div>
             ) : (
-              <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs">
-                <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="font-bold text-white">Cashier Briefing:</span>
-                <span>
-                  {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
-                </span>
-              </div>
+              null
             )}
           </div>
         </div>
