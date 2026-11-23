@@ -53,8 +53,20 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ message: string; branchName: string } | null>(null);
+  const [demoAccessEnabled, setDemoAccessEnabled] = useState(true);
 
   const isRedirectingRef = useRef(false);
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.demoAccessEnabled === "boolean") {
+          setDemoAccessEnabled(data.demoAccessEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleDemoTraineeLogin = async () => {
     isRedirectingRef.current = true;
@@ -375,36 +387,38 @@ export default function SignupPage() {
               </div>
 
               {/* Demo Mode Instant Access */}
-              <div className="pt-4 border-t border-slate-200 space-y-2.5">
-                <div className="text-center">
-                  <div className="text-[11px] font-bold text-slate-700">
-                    Or Preview in Sandbox Mode
+              {demoAccessEnabled && (
+                <div className="pt-4 border-t border-slate-200 space-y-2.5">
+                  <div className="text-center">
+                    <div className="text-[11px] font-bold text-slate-700">
+                      Or Preview in Sandbox Mode
+                    </div>
+                    <p className="text-[11px] text-slate-500">
+                      Skip enrollment and explore the system with simulated data:
+                    </p>
                   </div>
-                  <p className="text-[11px] text-slate-500">
-                    Skip enrollment and explore the system with simulated data:
-                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={handleDemoAdminLogin}
+                      disabled={isLoading}
+                      className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                      <span>Admin Demo &rarr;</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleDemoTraineeLogin}
+                      disabled={isLoading}
+                      className="py-2 px-3 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
+                    >
+                      <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
+                      <span>Trainee Demo &rarr;</span>
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={handleDemoAdminLogin}
-                    disabled={isLoading}
-                    className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
-                  >
-                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    <span>Admin Demo &rarr;</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDemoTraineeLogin}
-                    disabled={isLoading}
-                    className="py-2 px-3 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
-                  >
-                    <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
-                    <span>Trainee Demo &rarr;</span>
-                  </button>
-                </div>
-              </div>
+              )}
             </form>
           )}
         </div>
