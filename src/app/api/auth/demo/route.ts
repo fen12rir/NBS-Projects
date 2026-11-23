@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME, DEMO_COOKIE_NAME, isCookieSecure } from "@/lib/auth/session";
 import { DEMO_ADMIN_USER, DEMO_TRAINEE_USER } from "@/lib/auth/demo-user";
-import { isDemoAccessEnabled } from "@/app/api/settings/public/route";
+import { isDemoAccessEnabled } from "@/lib/auth/demo-access";
 
 export async function POST(request: NextRequest) {
   try {

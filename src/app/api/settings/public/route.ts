@@ -1,25 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
-
-// Global in-memory fallback for Demo Mode
-const globalForSettings = globalThis as unknown as { demoAccessEnabled?: boolean };
-
-export async function isDemoAccessEnabled(): Promise<boolean> {
-  try {
-    const rows = await query<any[]>(
-      "SELECT setting_value FROM app_settings WHERE setting_key = 'demo_access_enabled' LIMIT 1"
-    );
-    if (rows && rows.length > 0) {
-      return rows[0].setting_value !== "false";
-    }
-    return true;
-  } catch {
-    return globalForSettings.demoAccessEnabled !== undefined
-      ? globalForSettings.demoAccessEnabled
-      : true;
-  }
-}
+import {
+  isDemoAccessEnabled,
+  setInMemoryDemoAccessEnabled,
+} from "@/lib/auth/demo-access";
 
 // GET /api/settings/public - Publicly readable portal settings (e.g. demo_access_enabled)
 export async function GET() {
@@ -37,7 +22,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
     const demoAccessEnabled = Boolean(body.demoAccessEnabled);
-    globalForSettings.demoAccessEnabled = demoAccessEnabled;
+    setInMemoryDemoAccessEnabled(demoAccessEnabled);
 
     if (!superAdmin.id.startsWith("demo-")) {
       try {
