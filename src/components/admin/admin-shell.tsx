@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { Button } from "@/components/ui/button";
 import { PortalLoadingScreen } from "@/components/ui/portal-loading-screen";
 import { 
@@ -35,9 +36,8 @@ export function AdminShell({ children }: AdminShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState<number>(0);
 
-  // Poll or fetch pending count on mount
-  useEffect(() => {
-    fetch("/api/admin/approvals")
+  const fetchPendingCount = useCallback(() => {
+    fetch("/api/admin/approvals", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (data && Array.isArray(data.pending)) {
@@ -45,7 +45,14 @@ export function AdminShell({ children }: AdminShellProps) {
         }
       })
       .catch(() => {});
-  }, [pathname]);
+  }, []);
+
+  // Pending approvals count
+  useEffect(() => {
+    fetchPendingCount();
+  }, [pathname, fetchPendingCount]);
+
+  useAutoRefresh(fetchPendingCount, { intervalMs: 20000 });
 
   const isSuper = user?.role === "super_admin";
 

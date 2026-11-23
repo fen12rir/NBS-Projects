@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SearchableBranchSelect } from "@/components/ui/searchable-branch-select";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { 
   Users, 
   Search, 
@@ -23,7 +24,8 @@ import {
   Building2,
   Archive,
   RotateCcw,
-  Trash2
+  Trash2,
+  RefreshCw
 } from "lucide-react";
 
 interface TraineeListItem {
@@ -57,6 +59,8 @@ export default function AdminTraineesPage() {
   const [trainees, setTrainees] = useState<TraineeListItem[]>([]);
   const [branches, setBranches] = useState<Array<{ code: string; name: string }>>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,28 +77,36 @@ export default function AdminTraineesPage() {
       .catch(() => {});
   }, []);
 
-  const fetchTrainees = useCallback(async () => {
-    setIsLoading(true);
+  const fetchTrainees = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.set("search", searchTerm);
       if (selectedBranch !== "all") params.set("branch", selectedBranch);
       if (selectedStatus !== "all") params.set("status", selectedStatus);
 
-      const res = await fetch(`/api/admin/trainees?${params.toString()}`);
+      const res = await fetch(`/api/admin/trainees?${params.toString()}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load trainees");
       const data = await res.json();
       setTrainees(data.trainees || []);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch {
       // Handled
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   }, [searchTerm, selectedBranch, selectedStatus]);
 
   useEffect(() => {
-    fetchTrainees();
+    fetchTrainees(false);
   }, [fetchTrainees]);
+
+  useAutoRefresh(() => fetchTrainees(true), { intervalMs: 20000 });
 
   const handleExportCsv = () => {
     const params = new URLSearchParams();
@@ -165,17 +177,32 @@ export default function AdminTraineesPage() {
             </h1>
             <p className="text-xs text-slate-500 font-medium">
               Check trainee lesson progress, practical exam scores, and account expiry dates
+              {lastUpdated && (
+                <span className="ml-2 text-slate-400">· Updated {lastUpdated}</span>
+              )}
             </p>
           </div>
 
-          <Button
-            size="sm"
-            onClick={handleExportCsv}
-            className="font-semibold flex items-center space-x-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Export to CSV</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchTrainees(true)}
+              disabled={isRefreshing}
+              className="font-semibold flex items-center space-x-1.5 text-xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleExportCsv}
+              className="font-semibold flex items-center space-x-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Export to CSV</span>
+            </Button>
+          </div>
         </div>
 
         {/* Filter Toolbar */}

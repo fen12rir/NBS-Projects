@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { 
   Users, 
   UserCheck, 
@@ -15,7 +16,8 @@ import {
   TrendingUp,
   Building2,
   FileSpreadsheet,
-  Activity
+  Activity,
+  RefreshCw
 } from "lucide-react";
 
 interface AdminStats {
@@ -55,25 +57,38 @@ export default function AdminOverviewPage() {
   const [branches, setBranches] = useState<BranchStat[]>([]);
   const [recentActivity, setRecentActivity] = useState<ActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/admin/stats")
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to load dashboard statistics");
-        return res.json();
-      })
-      .then((data) => {
-        setStats(data.stats);
-        setBranches(data.branches || []);
-        setRecentActivity(data.recentActivity || []);
-        setIsLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setIsLoading(false);
-      });
+  const fetchStats = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    try {
+      const res = await fetch("/api/admin/stats", { cache: "no-store" });
+      if (!res.ok) throw new Error("Failed to load dashboard statistics");
+      const data = await res.json();
+      setStats(data.stats);
+      setBranches(data.branches || []);
+      setRecentActivity(data.recentActivity || []);
+      setError(null);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch (err: any) {
+      if (!silent) setError(err.message);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchStats(false);
+  }, [fetchStats]);
+
+  useAutoRefresh(() => fetchStats(true), { intervalMs: 20000 });
 
   return (
     <AdminShell>
@@ -86,9 +101,22 @@ export default function AdminOverviewPage() {
             </h1>
             <p className="text-xs text-slate-500 font-medium">
               National Book Store cashier trainee progress, exam results, and branch summary
+              {lastUpdated && (
+                <span className="ml-2 text-slate-400">· Updated {lastUpdated}</span>
+              )}
             </p>
           </div>
-          <div className="flex items-center space-x-2.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchStats(true)}
+              disabled={isRefreshing}
+              className="font-semibold flex items-center space-x-1.5 text-xs"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+              <span>Refresh</span>
+            </Button>
             <Link href="/admin/approvals">
               <Button
                 size="sm"

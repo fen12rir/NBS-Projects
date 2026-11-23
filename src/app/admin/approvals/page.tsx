@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { 
   UserCheck, 
   Check, 
@@ -15,7 +16,8 @@ import {
   Phone, 
   Calendar,
   CheckCircle2,
-  ShieldAlert
+  ShieldAlert,
+  RefreshCw
 } from "lucide-react";
 
 interface PendingTrainee {
@@ -34,6 +36,8 @@ export default function AdminApprovalsPage() {
   const [pendingList, setPendingList] = useState<PendingTrainee[]>([]);
   const [defaultDays, setDefaultDays] = useState<number>(30);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
@@ -66,26 +70,42 @@ export default function AdminApprovalsPage() {
     );
   };
 
-  const fetchApprovals = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
+  const fetchApprovals = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+      setErrorMessage(null);
+    } else {
+      setIsRefreshing(true);
+    }
     try {
-      const res = await fetch("/api/admin/approvals");
+      const res = await fetch("/api/admin/approvals", { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load pending queue");
       const data = await res.json();
-      setPendingList(data.pending || []);
-      setSelectedIds([]);
+      const nextPending: PendingTrainee[] = data.pending || [];
+      setPendingList(nextPending);
+      if (silent) {
+        const validIds = new Set(nextPending.map((t) => t.id));
+        setSelectedIds((prev) => prev.filter((id) => validIds.has(id)));
+      } else {
+        setSelectedIds([]);
+      }
       if (data.defaultDays) setDefaultDays(data.defaultDays);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to load pending approvals.");
+      if (!silent) {
+        setErrorMessage(err.message || "Failed to load pending approvals.");
+      }
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchApprovals();
-  }, []);
+    fetchApprovals(false);
+  }, [fetchApprovals]);
+
+  useAutoRefresh(() => fetchApprovals(true), { intervalMs: 15000 });
 
   const handleApproveSubmit = async () => {
     if (approvingTrainees.length === 0) return;
@@ -166,17 +186,32 @@ export default function AdminApprovalsPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="pb-4 border-b border-slate-200">
-          <div className="flex items-center space-x-2 text-amber-600 mb-1">
-            <Clock className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Access Authorization</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+          <div>
+            <div className="flex items-center space-x-2 text-amber-600 mb-1">
+              <Clock className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Access Authorization</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Pending Trainee Approvals
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">
+              Approve or decline new cashier trainee accounts for your branch
+              {lastUpdated && (
+                <span className="ml-2 text-slate-400">· Updated {lastUpdated}</span>
+              )}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            Pending Trainee Approvals
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Approve or decline new cashier trainee accounts for your branch
-          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchApprovals(true)}
+            disabled={isRefreshing}
+            className="font-semibold flex items-center space-x-1.5 text-xs self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </Button>
         </div>
 
         {/* Feedback Alerts */}
@@ -223,8 +258,8 @@ export default function AdminApprovalsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={fetchApprovals}
-                disabled={isLoading}
+                onClick={() => fetchApprovals(true)}
+                disabled={isLoading || isRefreshing}
                 className="text-xs h-7"
               >
                 Refresh Queue

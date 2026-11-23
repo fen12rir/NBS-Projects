@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { Button } from "@/components/ui/button";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { 
   Building2, 
   Users, 
@@ -17,7 +18,8 @@ import {
   ArrowRight,
   UserCheck,
   User,
-  ExternalLink
+  ExternalLink,
+  RefreshCw
 } from "lucide-react";
 
 interface BranchSummary {
@@ -35,19 +37,36 @@ export default function AdminBranchesPage() {
   const [trainees, setTrainees] = useState<any[]>([]);
   const [expandedBranch, setExpandedBranch] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+
+  const fetchBranches = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    try {
+      const [statsData, traineesData] = await Promise.all([
+        fetch("/api/admin/stats", { cache: "no-store" }).then((r) => r.json()),
+        fetch("/api/admin/trainees", { cache: "no-store" }).then((r) => r.json()).catch(() => ({ trainees: [] })),
+      ]);
+      setBranches(statsData.branches || []);
+      setTrainees(traineesData.trainees || []);
+      setLastUpdated(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+    } catch {
+      // Handled
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/admin/stats").then((r) => r.json()),
-      fetch("/api/admin/trainees").then((r) => r.json()).catch(() => ({ trainees: [] })),
-    ])
-      .then(([statsData, traineesData]) => {
-        setBranches(statsData.branches || []);
-        setTrainees(traineesData.trainees || []);
-      })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }, []);
+    fetchBranches(false);
+  }, [fetchBranches]);
+
+  useAutoRefresh(() => fetchBranches(true), { intervalMs: 20000 });
 
   const totalTraineesAcrossBranches = branches.reduce((acc, b) => acc + b.totalUsers, 0);
   const totalCertifiedAcrossBranches = branches.reduce((acc, b) => acc + b.certifiedUsers, 0);
@@ -56,17 +75,32 @@ export default function AdminBranchesPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="pb-4 border-b border-slate-200">
-          <div className="flex items-center space-x-2 text-[#E4002B] mb-1">
-            <Building2 className="w-4 h-4" />
-            <span className="text-xs font-semibold uppercase tracking-wider">Store Branches</span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+          <div>
+            <div className="flex items-center space-x-2 text-[#E4002B] mb-1">
+              <Building2 className="w-4 h-4" />
+              <span className="text-xs font-semibold uppercase tracking-wider">Store Branches</span>
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              NBS Retail Branches
+            </h1>
+            <p className="text-xs text-slate-500 font-medium">
+              Active stores participating in the cashier POS training program
+              {lastUpdated && (
+                <span className="ml-2 text-slate-400">· Updated {lastUpdated}</span>
+              )}
+            </p>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            NBS Retail Branches
-          </h1>
-          <p className="text-xs text-slate-500 font-medium">
-            Active stores participating in the cashier POS training program
-          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fetchBranches(true)}
+            disabled={isRefreshing}
+            className="font-semibold flex items-center space-x-1.5 text-xs self-start sm:self-auto"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </Button>
         </div>
 
         {/* Aggregate Stats */}
