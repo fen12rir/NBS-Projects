@@ -110,24 +110,24 @@ export default function AdminAccountsPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-300">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
           <div>
             <div className="flex items-center space-x-2 text-[#E4002B] mb-1">
               <ShieldCheck className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">Super Administrator Console</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Enterprise Access Governance</span>
             </div>
-            <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
               Administrative Accounts
             </h1>
-            <p className="text-xs text-gray-500 font-medium">
-              Manage branch supervisors and platform system administrators
+            <p className="text-xs text-slate-500 font-medium">
+              Manage branch training supervisors and enterprise L&amp;D administrators
             </p>
           </div>
 
           <Button
             size="sm"
             onClick={() => setShowCreateModal(true)}
-            className="bg-[#E4002B] hover:bg-[#C30024] text-white font-bold flex items-center space-x-1.5 text-xs"
+            className="bg-[#E4002B] hover:bg-[#C30024] text-white font-semibold flex items-center space-x-1.5 text-xs"
           >
             <UserPlus className="w-4 h-4" />
             <span>Create New Administrator</span>
@@ -136,7 +136,7 @@ export default function AdminAccountsPage() {
 
         {/* Feedback Alerts */}
         {feedback && (
-          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center justify-between">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{feedback}</span>
@@ -146,9 +146,9 @@ export default function AdminAccountsPage() {
         )}
 
         {/* Accounts Table */}
-        <div className="bg-white border border-gray-300 shadow-sm overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50/80 border-b border-slate-200">
+            <h2 className="text-xs font-bold text-slate-800">
               Active Administrators ({accounts.length})
             </h2>
           </div>
@@ -185,10 +185,10 @@ export default function AdminAccountsPage() {
                       </td>
                       <td className="py-3 px-3 whitespace-nowrap">
                         <span
-                          className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
+                          className={`px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
                             a.role === "super_admin"
-                              ? "bg-black text-white"
-                              : "bg-blue-100 text-blue-900 border border-blue-300"
+                              ? "bg-slate-900 text-white"
+                              : "bg-blue-50 text-blue-700 border border-blue-200"
                           }`}
                         >
                           {a.role === "super_admin" ? "SUPER ADMIN" : "BRANCH ADMIN"}
@@ -196,19 +196,19 @@ export default function AdminAccountsPage() {
                       </td>
                       <td className="py-3 px-3">
                         {a.role === "super_admin" ? (
-                          <span className="text-gray-500 font-medium">All Branches (Global)</span>
+                          <span className="text-slate-500 font-medium">All Branches</span>
                         ) : (
                           <div>
-                            <span className="font-bold text-gray-900">{a.branchName}</span>
-                            <span className="text-[10px] text-gray-500 font-mono block">Code: {a.branchCode}</span>
+                            <span className="font-semibold text-slate-900">{a.branchName}</span>
+                            <span className="text-[10px] text-slate-500 font-mono block">Code: {a.branchCode}</span>
                           </div>
                         )}
                       </td>
-                      <td className="py-3 px-3 font-mono text-gray-600 whitespace-nowrap">
+                      <td className="py-3 px-3 text-slate-600 whitespace-nowrap">
                         {a.lastLoginAt ? new Date(a.lastLoginAt).toLocaleString() : "Never"}
                       </td>
                       <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 leading-none inline-flex items-center justify-center">
+                        <span className="px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200 leading-none inline-flex items-center justify-center">
                           ACTIVE
                         </span>
                       </td>
@@ -222,16 +222,18 @@ export default function AdminAccountsPage() {
 
         {/* Modal: Create Administrator */}
         {showCreateModal && (
-          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="bg-white max-w-lg w-full border-4 border-gray-900 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <div className="flex items-center space-x-2 text-[#E4002B] font-black uppercase text-base">
-                  <UserPlus className="w-5 h-5" />
+          <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white max-w-lg w-full border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center space-x-2 text-slate-900 font-bold text-base">
+                  <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E4002B] flex items-center justify-center">
+                    <UserPlus className="w-4 h-4" />
+                  </div>
                   <span>Create Administrator Account</span>
                 </div>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-black font-bold text-lg"
+                  className="text-slate-400 hover:text-slate-800 font-bold text-lg"
                 >
                   ×
                 </button>

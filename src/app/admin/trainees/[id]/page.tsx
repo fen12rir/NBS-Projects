@@ -221,34 +221,34 @@ export default function TraineeDetailPage() {
         )}
 
         {/* Trainee Profile & Performance Record Header */}
-        <div className="bg-white border border-gray-300 p-6 shadow-sm">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-gray-200">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-100">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">
                   {trainee.fullName}
                 </h1>
                 <span
-                  className={`px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
+                  className={`px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase shrink-0 leading-none inline-flex items-center ${
                     trainee.status === "active"
-                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : trainee.status === "pending"
-                      ? "bg-amber-100 text-amber-800 border border-amber-300"
+                      ? "bg-amber-50 text-amber-700 border border-amber-200"
                       : trainee.status === "deactivated"
-                      ? "bg-gray-200 text-gray-700 border border-gray-300"
-                      : "bg-red-100 text-red-800 border border-red-300"
+                      ? "bg-slate-100 text-slate-600 border border-slate-200"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
                   }`}
                 >
                   {trainee.status}
                 </span>
                 {progress.certificationCompletedAt && (
-                  <span className="bg-[#E4002B] text-white px-2.5 py-0.5 text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0 leading-none">
+                  <span className="bg-[#E4002B] text-white px-2 py-0.5 rounded-none text-[10px] font-bold uppercase flex items-center space-x-1 shrink-0 leading-none">
                     <Award className="w-3.5 h-3.5" />
                     <span>Certified Cashier</span>
                   </span>
                 )}
               </div>
-              <p className="text-xs text-gray-500 font-mono mt-1">
+              <p className="text-xs text-slate-500 font-mono mt-1">
                 Trainee ID: {trainee.id}
               </p>
             </div>
@@ -282,7 +282,7 @@ export default function TraineeDetailPage() {
           </div>
 
           {/* Details Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 text-xs">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 pt-4 text-xs">
             <div className="min-w-0">
               <span className="text-gray-500 block text-[10px] uppercase font-bold">Email Address</span>
               <span className="font-mono font-bold text-gray-800 break-all">{trainee.email}</span>
@@ -356,20 +356,20 @@ export default function TraineeDetailPage() {
         </div>
 
         {/* Access Control & Actions Card */}
-        <div className="bg-white border border-gray-300 p-6 shadow-sm">
-          <div className="flex items-center space-x-2 pb-3 mb-4 border-b border-gray-200">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+          <div className="flex items-center space-x-2 pb-3 mb-4 border-b border-slate-100">
             <Lock className="w-4 h-4 text-[#E4002B]" />
-            <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
+            <h2 className="text-sm font-bold text-slate-900">
               Account Access &amp; Lifecycle Controls
             </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Control 1: Account Status */}
-            <div className="p-4 bg-gray-50 border border-gray-200 space-y-3">
-              <div className="font-bold text-xs uppercase text-gray-800 flex items-center justify-between">
+            <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+              <div className="font-bold text-xs text-slate-800 flex items-center justify-between">
                 <span>Account Status</span>
-                <span className="font-mono text-[10px] uppercase font-extrabold">{trainee.status}</span>
+                <span className="text-[11px] capitalize font-semibold text-slate-600">{trainee.status}</span>
               </div>
               <p className="text-[11px] text-gray-500">
                 Active trainees can access learning modules and simulator. Deactivating prevents any login.
@@ -395,10 +395,10 @@ export default function TraineeDetailPage() {
             </div>
 
             {/* Control 2: Access Expiry Extension */}
-            <div className="p-4 bg-gray-50 border border-gray-200 space-y-3">
-              <div className="font-bold text-xs uppercase text-gray-800 flex items-center justify-between">
+            <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+              <div className="font-bold text-xs text-slate-800 flex items-center justify-between">
                 <span>Access Expiry</span>
-                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                <Clock className="w-3.5 h-3.5 text-slate-400" />
               </div>
               <p className="text-[11px] text-gray-500">
                 Current: <strong className="text-gray-900">{trainee.accessExpiresAt ? new Date(trainee.accessExpiresAt).toLocaleDateString() : "Unlimited"}</strong>
@@ -432,9 +432,9 @@ export default function TraineeDetailPage() {
             </div>
 
             {/* Control 3: Exam Reset & Security Actions */}
-            <div className="p-4 bg-gray-50 border border-gray-200 space-y-3">
-              <div className="font-bold text-xs uppercase text-gray-800">
-                Security &amp; Exam Actions
+            <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
+              <div className="font-bold text-xs text-slate-800">
+                Security &amp; Assessment Actions
               </div>
               <div className="space-y-2">
                 <Button
@@ -470,12 +470,12 @@ export default function TraineeDetailPage() {
         </div>
 
         {/* Curriculum Progress Matrix */}
-        <div className="bg-white border border-gray-300 p-6 shadow-sm">
-          <div className="flex items-center justify-between pb-3 mb-4 border-b border-gray-200">
-            <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
-              Curriculum Progress Matrix ({completedLessonsSet.size} of {totalLessons} Lessons)
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+          <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+            <h2 className="text-sm font-bold text-slate-900">
+              Module &amp; Lesson Checklist ({completedLessonsSet.size} of {totalLessons} Lessons)
             </h2>
-            <div className="text-xs font-mono font-bold text-gray-700">
+            <div className="text-xs font-semibold text-slate-700 bg-slate-100 border border-slate-200 px-2.5 py-0.5 rounded-none">
               {progressPercent}% Complete
             </div>
           </div>
@@ -492,21 +492,21 @@ export default function TraineeDetailPage() {
               return (
                 <div
                   key={module.id}
-                  className="border border-gray-200 p-3 bg-gray-50/50"
+                  className="border border-slate-200/80 rounded-xl p-3.5 bg-slate-50/50"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center space-x-2">
                       <span className={`w-2 h-2 rounded-full ${isModuleComplete ? "bg-emerald-500" : "bg-amber-400"}`} />
-                      <span className="font-bold text-xs uppercase text-gray-900">
+                      <span className="font-bold text-xs text-slate-900">
                         {module.title}
                       </span>
                     </div>
-                    <span className="text-[11px] font-mono font-bold text-gray-500">
+                    <span className="text-[11px] font-semibold text-slate-500">
                       {moduleLessonsCompleted.length} / {module.lessons.length}
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {module.lessons.map((lesson) => {
                       const isCompleted = completedLessonsSet.has(lesson.id);
                       const completionRecord = lessonCompletions.find((lc) => lc.lessonId === lesson.id);
@@ -514,10 +514,10 @@ export default function TraineeDetailPage() {
                       return (
                         <div
                           key={lesson.id}
-                          className={`p-2.5 border text-xs flex items-start justify-between gap-2 ${
+                          className={`p-2.5 border rounded-lg text-xs flex items-start justify-between gap-2 ${
                             isCompleted
                               ? "bg-emerald-50/80 border-emerald-200 text-emerald-950"
-                              : "bg-white border-gray-200 text-gray-500"
+                              : "bg-white border-slate-200 text-slate-500"
                           }`}
                         >
                           <div className="min-w-0 flex-1">
@@ -546,10 +546,10 @@ export default function TraineeDetailPage() {
         </div>
 
         {/* Assessment Attempts History */}
-        <div className="bg-white border border-gray-300 p-6 shadow-sm">
-          <div className="pb-3 mb-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
-              Scenario &amp; Assessment History ({attempts.length})
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+          <div className="pb-3 mb-4 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="text-sm font-bold text-slate-900">
+              Scenario &amp; Skills Assessment History ({attempts.length})
             </h2>
           </div>
 
@@ -615,34 +615,34 @@ export default function TraineeDetailPage() {
         </div>
 
         {/* Audit Log Card */}
-        <div className="bg-white border border-gray-300 p-6 shadow-sm">
-          <div className="pb-3 mb-4 border-b border-gray-200 flex items-center space-x-2">
-            <History className="w-4 h-4 text-gray-500" />
-            <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-xs">
+          <div className="pb-3 mb-4 border-b border-slate-100 flex items-center space-x-2">
+            <History className="w-4 h-4 text-slate-500" />
+            <h2 className="text-sm font-bold text-slate-900">
               Administrative Audit History
             </h2>
           </div>
 
           <div className="space-y-2">
             {auditLogs.length === 0 ? (
-              <p className="text-xs text-gray-400 py-4 text-center">No administrative changes recorded.</p>
+              <p className="text-xs text-slate-400 py-4 text-center">No administrative changes recorded.</p>
             ) : (
               auditLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="p-2.5 bg-gray-50 border border-gray-200 text-xs flex items-center justify-between"
+                  className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs flex items-center justify-between"
                 >
                   <div>
-                    <span className="font-bold text-gray-900 font-mono uppercase">{log.action}</span>
-                    <span className="text-gray-500 mx-2">•</span>
-                    <span className="text-gray-600">by {log.actorName}</span>
+                    <span className="font-semibold text-slate-900 font-mono uppercase">{log.action}</span>
+                    <span className="text-slate-400 mx-2">•</span>
+                    <span className="text-slate-600">by {log.actorName}</span>
                     {log.details && (
-                      <span className="text-[11px] text-gray-400 ml-2 font-mono">
+                      <span className="text-[11px] text-slate-400 ml-2 font-mono">
                         ({JSON.stringify(log.details)})
                       </span>
                     )}
                   </div>
-                  <div className="text-[10px] font-mono text-gray-400">
+                  <div className="text-[10px] text-slate-400">
                     {new Date(log.createdAt).toLocaleString()}
                   </div>
                 </div>
@@ -653,14 +653,14 @@ export default function TraineeDetailPage() {
 
         {/* Deactivate Modal */}
         {showDeactivateModal && (
-          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 space-y-4 shadow-2xl">
-              <h3 className="text-sm font-bold uppercase text-red-700">Deactivate Trainee Account</h3>
-              <p className="text-xs text-gray-600">
-                Deactivating <strong className="text-gray-900">{trainee.fullName}</strong> will immediately terminate all active sessions and block sign-in.
+          <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white max-w-md w-full border border-slate-200 rounded-2xl p-6 space-y-4 shadow-2xl">
+              <h3 className="text-base font-bold text-rose-700">Deactivate Learner Account</h3>
+              <p className="text-xs text-slate-600">
+                Deactivating <strong className="text-slate-900">{trainee.fullName}</strong> will immediately terminate all active sessions and block sign-in.
               </p>
               <div>
-                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Reason for Deactivation
                 </label>
                 <textarea
@@ -668,7 +668,7 @@ export default function TraineeDetailPage() {
                   value={deactivateReason}
                   onChange={(e) => setDeactivateReason(e.target.value)}
                   placeholder="e.g. End of employment, transferred branch, disciplinary hold"
-                  className="w-full text-xs p-2 border border-gray-300 focus:outline-none focus:border-red-600"
+                  className="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-600"
                 />
               </div>
               <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-200">

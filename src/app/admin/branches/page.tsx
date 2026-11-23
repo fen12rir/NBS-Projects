@@ -56,43 +56,43 @@ export default function AdminBranchesPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="pb-4 border-b border-gray-300">
+        <div className="pb-4 border-b border-slate-200">
           <div className="flex items-center space-x-2 text-[#E4002B] mb-1">
             <Building2 className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Multi-Branch Administration</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Store Branches</span>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             NBS Retail Branches
           </h1>
-          <p className="text-xs text-gray-500 font-medium">
-            Active physical stores enrolled in the POS Fidelity cashier training program
+          <p className="text-xs text-slate-500 font-medium">
+            Active stores participating in the cashier POS training program
           </p>
         </div>
 
         {/* Aggregate Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white border border-gray-300 p-4 shadow-sm">
-            <div className="text-xs font-bold uppercase text-gray-500 mb-1">Active Branches</div>
-            <div className="text-2xl font-black font-mono text-gray-900">{branches.length} Stores</div>
-            <div className="text-[11px] text-gray-400 mt-1">NCR, Region I &amp; Region III</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="col-span-2 sm:col-span-1 bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs">
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 mb-1">Active Branches</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-900">{branches.length} Stores</div>
+            <div className="text-[11px] text-slate-400 mt-1">NCR, CAR, Region I &amp; Region III</div>
           </div>
-          <div className="bg-white border border-gray-300 p-4 shadow-sm">
-            <div className="text-xs font-bold uppercase text-gray-500 mb-1">Enrolled Trainees</div>
-            <div className="text-2xl font-black font-mono text-gray-900">{totalTraineesAcrossBranches}</div>
-            <div className="text-[11px] text-gray-400 mt-1">Across all participating locations</div>
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs">
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 mb-1">Total Trainees</div>
+            <div className="text-xl sm:text-2xl font-bold text-slate-900">{totalTraineesAcrossBranches}</div>
+            <div className="text-[11px] text-slate-400 mt-1">Across all branches</div>
           </div>
-          <div className="bg-white border border-gray-300 p-4 shadow-sm">
-            <div className="text-xs font-bold uppercase text-gray-500 mb-1">Total Certified</div>
-            <div className="text-2xl font-black font-mono text-[#E4002B]">{totalCertifiedAcrossBranches}</div>
-            <div className="text-[11px] text-gray-400 mt-1">Graduated cashiers</div>
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs">
+            <div className="text-[11px] sm:text-xs font-semibold text-slate-500 mb-1">Certified Cashiers</div>
+            <div className="text-xl sm:text-2xl font-bold text-[#E4002B]">{totalCertifiedAcrossBranches}</div>
+            <div className="text-[11px] text-slate-400 mt-1">Finished training &amp; exam</div>
           </div>
         </div>
 
         {/* Branches Table */}
-        <div className="bg-white border border-gray-300 shadow-sm overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
-              Branch Roster &amp; Training Capacity
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50/80 border-b border-slate-200">
+            <h2 className="text-xs font-bold text-slate-800">
+              Branch Roster &amp; Competency Status
             </h2>
           </div>
 

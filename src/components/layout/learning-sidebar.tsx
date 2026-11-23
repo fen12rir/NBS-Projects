@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { TRAINING_MODULES } from "@/data/modules";
 import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { useAuth } from "@/lib/auth/auth-context";
 import { useLockBodyScroll } from "@/lib/use-lock-body-scroll";
 import { 
   LayoutDashboard, 
@@ -20,7 +21,8 @@ import {
   X,
   FileCheck2,
   Sparkles,
-  Monitor
+  Monitor,
+  Shield
 } from "lucide-react";
 
 interface LearningSidebarProps {
@@ -41,6 +43,8 @@ export function LearningSidebar({
   onToggleDesktop,
 }: LearningSidebarProps) {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "super_admin" || user?.role === "branch_admin";
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({});
 
@@ -127,16 +131,16 @@ export function LearningSidebar({
         }`}
       >
         {/* Sidebar Header */}
-        <div className="p-4 border-b border-gray-200 bg-gray-50/60 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="bg-[#E4002B] text-white p-1.5 rounded shadow-xs">
+            <div className="bg-[#E4002B] text-white p-1.5 rounded-none shadow-xs">
               <BookOpen className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-xs font-black uppercase tracking-wider text-gray-900">
-                Curriculum
+              <h2 className="text-xs font-bold tracking-tight text-slate-900">
+                Training Guide
               </h2>
-              <p className="text-[10px] text-gray-500 font-medium">NBS POS Training Portal</p>
+              <p className="text-[10px] text-slate-500 font-medium">POS Cashier Steps</p>
             </div>
           </div>
 
@@ -195,6 +199,18 @@ export function LearningSidebar({
             <Monitor className={`w-4 h-4 shrink-0 ${pathname === "/simulator" ? "text-white" : "text-emerald-700"}`} />
             <span>Launch POS Simulator</span>
           </Link>
+
+          {/* Admin Portal Link (if Admin) */}
+          {isAdmin && (
+            <Link
+              href="/admin"
+              onClick={onCloseMobile}
+              className="flex items-center space-x-2.5 px-3 py-2 rounded-lg text-xs font-bold bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200 transition-all"
+            >
+              <Shield className="w-4 h-4 shrink-0 text-[#E4002B]" />
+              <span>Admin Portal</span>
+            </Link>
+          )}
 
           <div className="pt-2 pb-1 px-2 text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center justify-between">
             <span>Module Lessons</span>
