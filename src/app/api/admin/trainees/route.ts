@@ -5,6 +5,17 @@ import { MOCK_TRAINEES } from "@/lib/auth/demo-admin-data";
 
 const TOTAL_LESSONS_COUNT = 19;
 
+function csvEscape(val: string) {
+  return `"${val.replace(/"/g, '""')}"`;
+}
+
+// Forces Excel to treat a value as literal text (prevents scientific notation on phone numbers
+// and prevents auto-date conversion on fractions/codes)
+function csvExcelText(val: string) {
+  const safe = val.replace(/"/g, '""');
+  return `"=""${safe}"""`;
+}
+
 function formatTraineesCsv(trainees: any[]) {
   const headers = [
     "Full Name",
@@ -27,13 +38,13 @@ function formatTraineesCsv(trainees: any[]) {
 
   for (const t of trainees) {
     const values = [
-      `"${(t.fullName || "").replace(/"/g, '""')}"`,
-      `"${t.email}"`,
-      `"${t.contactNo}"`,
-      `"${t.branchCode}"`,
-      `"${(t.branchName || "").replace(/"/g, '""')}"`,
-      t.status,
-      `${t.completedLessonsCount}/${t.totalLessonsCount}`,
+      csvEscape(t.fullName || ""),
+      csvEscape(t.email || ""),
+      t.contactNo ? csvExcelText(String(t.contactNo)) : '""',
+      t.branchCode ? csvExcelText(String(t.branchCode)) : '""',
+      csvEscape(t.branchName || ""),
+      t.status === "deactivated" ? "archived" : t.status,
+      csvEscape(`${t.completedLessonsCount} of ${t.totalLessonsCount}`),
       `${t.progressPercent}%`,
       t.examPassed ? "YES" : "NO",
       t.examScore !== null && t.examScore !== undefined ? t.examScore : "N/A",
@@ -45,7 +56,8 @@ function formatTraineesCsv(trainees: any[]) {
     csvRows.push(values.join(","));
   }
 
-  const csvContent = csvRows.join("\r\n");
+  // Prepend UTF-8 BOM so Excel renders Filipino characters (e.g. ñ) properly
+  const csvContent = "\uFEFF" + csvRows.join("\r\n");
   return new NextResponse(csvContent, {
     status: 200,
     headers: {
