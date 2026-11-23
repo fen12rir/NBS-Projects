@@ -79,20 +79,20 @@ export default function AdminOverviewPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-gray-300">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
           <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
-              Operations Overview
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Training Overview
             </h1>
-            <p className="text-xs text-gray-500 font-medium">
-              National Book Store cashier trainee progress and branch metrics
+            <p className="text-xs text-slate-500 font-medium">
+              National Book Store cashier trainee progress, exam results, and branch summary
             </p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2.5">
             <Link href="/admin/approvals">
               <Button
                 size="sm"
-                className="bg-amber-500 hover:bg-amber-600 text-black font-bold flex items-center space-x-1.5 text-xs"
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold flex items-center space-x-1.5 text-xs"
               >
                 <UserCheck className="w-4 h-4" />
                 <span>Pending Approvals ({stats?.pendingApprovals || 0})</span>
@@ -102,7 +102,7 @@ export default function AdminOverviewPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="border-gray-300 font-bold flex items-center space-x-1.5 text-xs"
+                className="font-semibold flex items-center space-x-1.5 text-xs"
               >
                 <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
                 <span>Export CSV</span>
@@ -112,7 +112,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-50 border border-red-300 text-red-700 text-xs flex items-center space-x-2">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center space-x-2">
             <AlertCircle className="w-4 h-4" />
             <span>{error}</span>
           </div>
@@ -120,24 +120,24 @@ export default function AdminOverviewPage() {
 
         {/* Pending Approval Callout Banner if any pending */}
         {stats && stats.pendingApprovals > 0 && (
-          <div className="bg-amber-50 border-2 border-amber-300 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
             <div className="flex items-start space-x-3">
-              <div className="p-2 bg-amber-200 text-amber-900 shrink-0">
+              <div className="p-2.5 bg-amber-100 text-amber-800 rounded-xl shrink-0">
                 <Clock className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-amber-950 uppercase tracking-tight">
-                  {stats.pendingApprovals} Trainee Sign-Up{stats.pendingApprovals === 1 ? "" : "s"} Awaiting Approval
+                <h3 className="text-sm font-bold text-amber-950 tracking-tight">
+                  {stats.pendingApprovals} Trainee Sign-Up{stats.pendingApprovals === 1 ? "" : "s"} Waiting for Approval
                 </h3>
-                <p className="text-xs text-amber-800">
-                  New trainees cannot log into the training modules or simulator until verified and activated by an administrator.
+                <p className="text-xs text-amber-800 mt-0.5">
+                  New trainees cannot open the training lessons or POS simulator until approved by an admin.
                 </p>
               </div>
             </div>
             <Link href="/admin/approvals" className="shrink-0">
               <Button
                 size="sm"
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center space-x-1"
+                className="bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs flex items-center space-x-1"
               >
                 <span>Review Queue</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -147,122 +147,132 @@ export default function AdminOverviewPage() {
         )}
 
         {/* KPI Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Card 1: Total Trainees */}
-          <div className="bg-white border border-gray-300 p-4 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between text-gray-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Total Trainees</span>
-              <Users className="w-4 h-4 text-gray-400" />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-semibold">Total Trainees</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
+                <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-black font-mono text-gray-900">
+            <div className="text-2xl sm:text-3xl font-bold text-slate-900">
               {isLoading ? "..." : stats?.totalTrainees || 0}
             </div>
-            <div className="mt-2 text-[11px] text-gray-500 flex items-center space-x-1.5">
-              <span className="font-bold text-emerald-600">{stats?.activeTrainees || 0} active</span>
+            <div className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-500 flex flex-wrap items-center gap-x-1.5">
+              <span className="font-semibold text-emerald-600">{stats?.activeTrainees || 0} active</span>
               <span>•</span>
-              <span className="font-bold text-amber-600">{stats?.pendingApprovals || 0} pending</span>
+              <span className="font-semibold text-amber-600">{stats?.pendingApprovals || 0} pending</span>
             </div>
           </div>
 
           {/* Card 2: Pending Approvals */}
-          <div className="bg-white border border-gray-300 p-4 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between text-gray-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Pending Approvals</span>
-              <UserCheck className="w-4 h-4 text-amber-500" />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-semibold">Pending Approvals</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-black font-mono text-amber-600">
+            <div className="text-2xl sm:text-3xl font-bold text-amber-600">
               {isLoading ? "..." : stats?.pendingApprovals || 0}
             </div>
-            <div className="mt-2 text-[11px] text-gray-500">
-              {stats?.pendingApprovals ? "Requires administrative review" : "Queue is clear"}
+            <div className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-500">
+              {stats?.pendingApprovals ? "Needs supervisor approval" : "Approval queue is clear"}
             </div>
           </div>
 
-          {/* Card 3: Certified Trainees */}
-          <div className="bg-white border border-gray-300 p-4 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between text-gray-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Certified Cashiers</span>
-              <Award className="w-4 h-4 text-[#E4002B]" />
+          {/* Card 3: Certified Cashiers */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-semibold">Certified Cashiers</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0">
+                <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-black font-mono text-[#E4002B]">
+            <div className="text-2xl sm:text-3xl font-bold text-[#E4002B]">
               {isLoading ? "..." : stats?.certifiedTrainees || 0}
             </div>
-            <div className="mt-2 text-[11px] text-gray-500">
-              Completed all 9 modules &amp; passed practical exam
+            <div className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-500">
+              Finished all 9 modules &amp; passed practical exam
             </div>
           </div>
 
           {/* Card 4: Exam Pass Rate */}
-          <div className="bg-white border border-gray-300 p-4 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center justify-between text-gray-500 mb-2">
-              <span className="text-xs font-bold uppercase tracking-wider">Practical Exam Pass Rate</span>
-              <TrendingUp className="w-4 h-4 text-emerald-600" />
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-5 shadow-xs flex flex-col justify-between">
+            <div className="flex items-center justify-between text-slate-500 mb-1.5 sm:mb-2">
+              <span className="text-[11px] sm:text-xs font-semibold">Exam Pass Rate</span>
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              </div>
             </div>
-            <div className="text-3xl font-black font-mono text-emerald-700">
+            <div className="text-2xl sm:text-3xl font-bold text-emerald-600">
               {isLoading ? "..." : `${stats?.examPassRate || 0}%`}
             </div>
-            <div className="mt-2 text-[11px] text-gray-500">
-              From {stats?.examAttempts || 0} recorded attempts
+            <div className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs text-slate-500">
+              From {stats?.examAttempts || 0} recorded exam attempts
             </div>
           </div>
         </div>
 
-        {/* Two-Column Grid: Branch Performance & Recent Activity */}
+        {/* Two-Column Grid: Branch Summary & Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Branch Performance Summary (7 cols) */}
-          <div className="lg:col-span-7 bg-white border border-gray-300 shadow-sm p-4">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Building2 className="w-4 h-4 text-[#E4002B]" />
-                <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
-                  Branch Performance Matrix
+          {/* Branch Summary (7 cols) */}
+          <div className="lg:col-span-7 bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-lg bg-red-50 text-[#E4002B] flex items-center justify-center">
+                  <Building2 className="w-4 h-4" />
+                </div>
+                <h2 className="text-sm font-bold text-slate-900">
+                  Branch Training Summary
                 </h2>
               </div>
               <Link
                 href="/admin/trainees"
-                className="text-xs font-bold text-[#E4002B] hover:underline"
+                className="text-xs font-semibold text-[#E4002B] hover:underline"
               >
-                View Trainees →
+                View Trainee List →
               </Link>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-gray-100 text-gray-700 uppercase font-bold border-b border-gray-200 whitespace-nowrap">
-                    <th className="py-2.5 px-3 min-w-[180px]">Branch</th>
+                  <tr className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 whitespace-nowrap">
+                    <th className="py-2.5 px-3 min-w-[180px] rounded-tl-lg">Store Branch</th>
                     <th className="py-2.5 px-2 text-center min-w-[60px]">Total</th>
                     <th className="py-2.5 px-2 text-center text-emerald-700 min-w-[60px]">Active</th>
                     <th className="py-2.5 px-2 text-center text-amber-600 min-w-[60px]">Pending</th>
-                    <th className="py-2.5 px-2 text-center text-[#E4002B] min-w-[60px]">Certified</th>
+                    <th className="py-2.5 px-2 text-center text-[#E4002B] min-w-[80px] rounded-tr-lg">Certified</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-slate-100">
                   {branches.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-4 text-center text-gray-400">
+                      <td colSpan={5} className="py-6 text-center text-slate-400">
                         {isLoading ? "Loading branch data..." : "No branch activity recorded yet."}
                       </td>
                     </tr>
                   ) : (
                     branches.map((b) => (
-                      <tr key={b.code} className="hover:bg-gray-50">
-                        <td className="py-2 px-3">
-                          <div className="font-bold text-gray-900">{b.name}</div>
-                          <div className="text-[10px] text-gray-500 font-mono">
-                            Code: {b.code} • {b.region}
+                      <tr key={b.code} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-2.5 px-3">
+                          <div className="font-semibold text-slate-900">{b.name}</div>
+                          <div className="text-[11px] text-slate-500">
+                            <span className="font-mono">{b.code}</span> • {b.region}
                           </div>
                         </td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-gray-800">
+                        <td className="py-2.5 px-2 text-center font-semibold text-slate-800">
                           {b.totalUsers}
                         </td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-emerald-700">
+                        <td className="py-2.5 px-2 text-center font-semibold text-emerald-700">
                           {b.activeUsers}
                         </td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-amber-600">
+                        <td className="py-2.5 px-2 text-center font-semibold text-amber-600">
                           {b.pendingUsers}
                         </td>
-                        <td className="py-2 px-2 text-center font-mono font-bold text-[#E4002B]">
+                        <td className="py-2.5 px-2 text-center font-semibold text-[#E4002B]">
                           {b.certifiedUsers}
                         </td>
                       </tr>
@@ -273,43 +283,45 @@ export default function AdminOverviewPage() {
             </div>
           </div>
 
-          {/* Recent Training Attempts Feed (5 cols) */}
-          <div className="lg:col-span-5 bg-white border border-gray-300 shadow-sm p-4">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
-              <div className="flex items-center space-x-2">
-                <Activity className="w-4 h-4 text-[#E4002B]" />
-                <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
-                  Recent Scenario Attempts
+          {/* Recent Practice & Exam Attempts Feed (5 cols) */}
+          <div className="lg:col-span-5 bg-white border border-slate-200/90 rounded-2xl shadow-xs p-5">
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-7 h-7 rounded-lg bg-red-50 text-[#E4002B] flex items-center justify-center">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <h2 className="text-sm font-bold text-slate-900">
+                  Recent Practice &amp; Exam Attempts
                 </h2>
               </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {recentActivity.length === 0 ? (
-                <div className="py-8 text-center text-xs text-gray-400">
-                  {isLoading ? "Loading activity..." : "No recent assessment attempts recorded."}
+                <div className="py-8 text-center text-xs text-slate-400">
+                  {isLoading ? "Loading activity..." : "No recent practice attempts recorded."}
                 </div>
               ) : (
                 recentActivity.map((act) => (
                   <div
                     key={act.id}
-                    className="p-2.5 bg-gray-50 border border-gray-200 text-xs flex items-center justify-between gap-3"
+                    className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl text-xs flex items-center justify-between gap-3"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-gray-900 truncate">{act.fullName}</div>
-                      <div className="text-[10px] text-gray-500 truncate" title={`${act.scenarioTitle} • ${act.branchName}`}>
+                      <div className="font-semibold text-slate-900 truncate">{act.fullName}</div>
+                      <div className="text-[11px] text-slate-500 truncate" title={`${act.scenarioTitle} • ${act.branchName}`}>
                         {act.scenarioTitle} • {act.branchName}
                       </div>
-                      <div className="text-[10px] text-gray-400 font-mono mt-0.5">
+                      <div className="text-[10px] text-slate-400 mt-0.5">
                         {new Date(act.timestamp).toLocaleString()}
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-mono font-extrabold uppercase whitespace-nowrap leading-none ${
+                        className={`inline-flex items-center px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase whitespace-nowrap leading-none ${
                           act.passed
-                            ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                            : "bg-red-100 text-red-800 border border-red-300"
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            : "bg-rose-50 text-rose-700 border border-rose-200"
                         }`}
                       >
                         {act.passed ? "PASSED" : "FAILED"} ({act.score}%)

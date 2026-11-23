@@ -75,22 +75,22 @@ export default function AdminSettingsPage() {
     <AdminShell>
       <div className="space-y-6 max-w-4xl">
         {/* Page Header */}
-        <div className="pb-4 border-b border-gray-300">
+        <div className="pb-4 border-b border-slate-200">
           <div className="flex items-center space-x-2 text-[#E4002B] mb-1">
             <KeyRound className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Account Administration</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Account Administration</span>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Administrator Settings
           </h1>
-          <p className="text-xs text-gray-500 font-medium">
+          <p className="text-xs text-slate-500 font-medium">
             Manage your credentials, security preferences, and portal access
           </p>
         </div>
 
         {/* Feedback Alerts */}
         {successMessage && (
-          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center justify-between">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{successMessage}</span>
@@ -100,21 +100,21 @@ export default function AdminSettingsPage() {
         )}
 
         {errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-300 text-red-700 text-xs flex items-center justify-between">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
               <span>{errorMessage}</span>
             </div>
-            <button onClick={() => setErrorMessage(null)} className="text-red-700 font-bold">×</button>
+            <button onClick={() => setErrorMessage(null)} className="text-rose-700 font-bold">×</button>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           {/* Change Password Card (7 cols) */}
-          <div className="md:col-span-7 bg-white border border-gray-300 shadow-sm p-6 space-y-4">
-            <div className="flex items-center space-x-2 pb-3 border-b border-gray-200">
+          <div className="md:col-span-7 bg-white border border-slate-200/90 rounded-2xl shadow-xs p-6 space-y-4">
+            <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
               <Lock className="w-4 h-4 text-[#E4002B]" />
-              <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
+              <h2 className="text-sm font-bold text-slate-900">
                 Change Password
               </h2>
             </div>
@@ -177,29 +177,29 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Account Profile Summary Card (5 cols) */}
-          <div className="md:col-span-5 bg-white border border-gray-300 shadow-sm p-6 space-y-4">
-            <div className="flex items-center space-x-2 pb-3 border-b border-gray-200">
-              <Shield className="w-4 h-4 text-gray-700" />
-              <h2 className="text-sm font-bold uppercase tracking-tight text-gray-900">
+          <div className="md:col-span-5 bg-white border border-slate-200/90 rounded-2xl shadow-xs p-6 space-y-4">
+            <div className="flex items-center space-x-2 pb-3 border-b border-slate-100">
+              <Shield className="w-4 h-4 text-slate-700" />
+              <h2 className="text-sm font-bold text-slate-900">
                 Active Administrator
               </h2>
             </div>
 
             <div className="space-y-3 text-xs">
               <div>
-                <span className="text-[10px] uppercase font-bold text-gray-400 block">Name</span>
-                <span className="font-bold text-gray-900 text-sm">{user?.fullName || user?.name || "Administrator"}</span>
+                <span className="text-[10px] uppercase font-semibold text-slate-400 block">Name</span>
+                <span className="font-semibold text-slate-900 text-sm">{user?.fullName || user?.name || "Administrator"}</span>
               </div>
 
               <div>
-                <span className="text-[10px] uppercase font-bold text-gray-400 block">Email Address</span>
-                <span className="font-mono text-gray-800 break-all">{user?.email || "admin@nbs.com.ph"}</span>
+                <span className="text-[10px] uppercase font-semibold text-slate-400 block">Email Address</span>
+                <span className="text-slate-800 break-all">{user?.email || "admin@nbs.com.ph"}</span>
               </div>
 
               <div>
-                <span className="text-[10px] uppercase font-bold text-gray-400 block">Role &amp; Privileges</span>
+                <span className="text-[10px] uppercase font-semibold text-slate-400 block">Role &amp; Privileges</span>
                 <div className="mt-1">
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-black text-white font-bold leading-none inline-flex items-center">
+                  <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-none bg-slate-900 text-white font-bold leading-none inline-flex items-center">
                     {isSuper ? "SUPER ADMIN" : "BRANCH ADMIN"}
                   </span>
                 </div>

@@ -79,8 +79,8 @@ export function SearchableBranchSelect({
             setTimeout(() => inputRef.current?.focus(), 50);
           }
         }}
-        className={`flex items-center justify-between border bg-white px-2.5 py-1.5 cursor-pointer transition-colors ${
-          isOpen ? "border-[#E4002B] ring-1 ring-[#E4002B]" : "border-gray-300 hover:border-gray-400"
+        className={`flex items-center justify-between border bg-white px-3 py-1.5 rounded-lg cursor-pointer transition-all ${
+          isOpen ? "border-[#E4002B] ring-2 ring-[#E4002B]/20" : "border-slate-300 hover:border-slate-400"
         }`}
       >
         <span className="truncate font-medium text-gray-900 pr-1">
@@ -103,17 +103,17 @@ export function SearchableBranchSelect({
 
       {/* Dropdown Menu with Search Input */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 shadow-xl z-50 max-h-64 flex flex-col">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-64 flex flex-col overflow-hidden">
           {/* Search Input Bar */}
-          <div className="p-2 border-b border-gray-200 bg-gray-50 flex items-center space-x-1.5">
-            <Search className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+          <div className="p-2 border-b border-slate-100 bg-slate-50 flex items-center space-x-1.5">
+            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={placeholder}
-              className="w-full text-xs bg-white border border-gray-300 px-2 py-1 outline-none focus:border-[#E4002B]"
+              className="w-full text-xs bg-white border border-slate-300 rounded-md px-2.5 py-1 outline-none focus:border-[#E4002B]"
               onClick={(e) => e.stopPropagation()}
             />
             {searchQuery && (

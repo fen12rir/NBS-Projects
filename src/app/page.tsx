@@ -62,28 +62,28 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 flex flex-col bg-white">
-      {/* Top Brand Notification Bar */}
-      <div className="bg-[#E4002B] text-white py-1.5 px-4 text-center text-[11px] sm:text-xs font-semibold tracking-wide">
-        NATIONAL BOOK STORE • EMPLOYEE POS CASHIER TRAINING &amp; SIMULATOR
+      {/* Top Corporate Bar */}
+      <div className="bg-slate-900 text-slate-300 py-1.5 px-4 text-center text-[11px] sm:text-xs font-medium tracking-wide border-b border-slate-800">
+        National Book Store • Cashier POS Training &amp; Practice Portal
       </div>
 
       {/* Main Navigation Header */}
       <header
-        className={`border-b border-gray-200 bg-white sticky top-0 z-50 transition-transform duration-300 ease-in-out ${
+        className={`border-b border-slate-200 bg-white/95 backdrop-blur-xs sticky top-0 z-50 transition-transform duration-300 ease-in-out ${
           isNavVisible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
-          <div className="flex items-center space-x-2.5 sm:space-x-3">
-            <div className="bg-[#E4002B] text-white px-2.5 py-0.5 sm:px-3 sm:py-1 font-extrabold text-lg sm:text-2xl tracking-tighter">
+          <div className="flex items-center space-x-3">
+            <div className="bg-[#E4002B] text-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-none font-heading font-extrabold text-lg sm:text-2xl tracking-tighter shadow-xs">
               NBS
             </div>
             <div>
-              <div className="font-bold text-gray-900 tracking-tight text-sm sm:text-lg uppercase">
+              <div className="font-bold text-slate-900 tracking-tight text-sm sm:text-lg leading-tight">
                 National Book Store
               </div>
-              <div className="text-[10px] sm:text-xs text-gray-500 font-medium hidden xs:block">
-                Cashier Academy • POS Simulator
+              <div className="text-[11px] sm:text-xs text-slate-500 font-medium hidden xs:block">
+                Cashier POS Training &amp; Simulator
               </div>
             </div>
           </div>
@@ -194,118 +194,124 @@ export default function HomePage() {
                 </Link>
               </div>
 
-              <div className="pt-2 flex items-center space-x-6 text-xs text-gray-500 font-medium">
-                <div className="flex items-center space-x-1.5">
-                  <Sparkles className="w-4 h-4 text-[#E4002B]" />
+              <div className="pt-2 flex flex-wrap items-center gap-x-4 sm:gap-x-6 gap-y-2 text-[11px] sm:text-xs text-gray-500 font-medium">
+                <div className="flex items-center space-x-1.5 whitespace-nowrap">
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E4002B] shrink-0" />
                   <span>9 Structured Modules</span>
                 </div>
-                <div className="flex items-center space-x-1.5">
-                  <Monitor className="w-4 h-4 text-[#E4002B]" />
+                <div className="flex items-center space-x-1.5 whitespace-nowrap">
+                  <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E4002B] shrink-0" />
                   <span>5-Screen POS Terminal</span>
                 </div>
-                <div className="flex items-center space-x-1.5">
-                  <Award className="w-4 h-4 text-[#E4002B]" />
+                <div className="flex items-center space-x-1.5 whitespace-nowrap">
+                  <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E4002B] shrink-0" />
                   <span>Automated Grading</span>
                 </div>
               </div>
             </div>
 
             {/* Right Hero: POS SCREEN DETAILS  */}
-            <div className="lg:col-span-6 flex justify-center">
+            <div className="lg:col-span-6 flex justify-center w-full">
               <div
                 onClick={handleLaunchClick}
-                className="w-full max-w-[560px] bg-[#D4D0C8] border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden hover:ring-4 hover:ring-[#E4002B]/40 transition-all cursor-pointer group"
+                className="w-full max-w-[560px] bg-[#D4D0C8] border-2 sm:border-4 border-[#7A8A99] shadow-2xl flex flex-col font-sans overflow-hidden hover:ring-4 hover:ring-[#E4002B]/40 transition-all cursor-pointer group"
               >
                 {/* 1. Header Bar */}
-                <div className="bg-[#D4D0C8] border-b border-gray-500 px-3 py-1 flex items-center justify-between text-[11px] font-bold text-gray-900 font-mono tracking-tight select-none">
-                  <div>Trx.: <span className="font-normal font-mono">0212202629990003000592</span></div>
-                  <div>Clerk: <span className="font-normal">Jan Angela</span></div>
-                  <div>Str No.: <span className="font-normal">2999</span></div>
-                  <div>Reg No.: <span className="font-normal">0003</span></div>
+                <div className="bg-[#D4D0C8] border-b border-gray-500 px-1.5 sm:px-3 py-1 flex items-center justify-between gap-1 text-[8px] sm:text-[11px] font-bold text-gray-900 font-mono tracking-tight select-none whitespace-nowrap">
+                  <div className="truncate">
+                    Trx.:{" "}
+                    <span className="font-normal font-mono sm:hidden">02122026...0592</span>
+                    <span className="font-normal font-mono hidden sm:inline">0212202629990003000592</span>
+                  </div>
+                  <div className="shrink-0">Clerk: <span className="font-normal">Jan Angela</span></div>
+                  <div className="shrink-0">Str No.: <span className="font-normal">2999</span></div>
+                  <div className="shrink-0">Reg No.: <span className="font-normal">0003</span></div>
                 </div>
 
                 {/* 2. Main Terminal Body */}
-                <div className="grid grid-cols-12 bg-white min-h-[320px] select-none">
+                <div className="grid grid-cols-12 bg-white min-h-[250px] sm:min-h-[320px] select-none">
                   
                   {/* Left 10 Columns: Scanner, Display, Top Keys, Line Item Table */}
-                  <div className="col-span-10 flex flex-col border-r-2 border-gray-400">
+                  <div className="col-span-10 flex flex-col border-r-2 border-gray-400 min-w-0">
                     
                     {/* Top Row: Yellow UPC Input + Black LED Display */}
                     <div className="grid grid-cols-12 border-b-2 border-gray-400">
                       
                       {/* Left 6 cols: Yellow Barcode Box + 4 Function Buttons */}
-                      <div className="col-span-6 border-r-2 border-gray-400 flex flex-col justify-between">
-                        <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
-                          <div className="text-center font-bold text-[10px] text-gray-900 tracking-wide mb-1 font-sans">
+                      <div className="col-span-6 border-r-2 border-gray-400 flex flex-col justify-between min-w-0">
+                        <div className="bg-[#FFF275] p-1.5 sm:p-2 flex flex-col justify-center flex-1">
+                          <div className="text-center font-bold text-[8.5px] sm:text-[10px] text-gray-900 tracking-wide mb-1 font-sans whitespace-nowrap">
                             Scan or Enter UPC
                           </div>
-                          <div className="w-full bg-white border border-gray-500 px-2 py-0.5 text-xs font-mono font-bold text-gray-900 shadow-inner h-6 flex items-center" />
+                          <div className="w-full bg-white border border-gray-500 px-1.5 sm:px-2 py-0.5 text-xs font-mono font-bold text-gray-900 shadow-inner h-5 sm:h-6 flex items-center" />
                         </div>
 
                         {/* 4 HORIZONTAL FUNCTION BUTTONS (F11, F12, F10, F2) */}
-                        <div className="grid grid-cols-4 bg-[#C2CAD0] border-t-2 border-gray-400 text-center font-sans h-[42px]">
+                        <div className="grid grid-cols-4 bg-[#C2CAD0] border-t-2 border-gray-400 text-center font-sans h-[36px] sm:h-[42px]">
                           {/* F11 (Up Arrow) */}
                           <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                            <div className="w-0 h-0 border-x-[5px] border-x-transparent border-b-[8px] border-b-[#16A34A] mb-0.5" />
-                            <span className="text-[9px] font-bold text-gray-900">F11</span>
+                            <div className="w-0 h-0 border-x-[4px] sm:border-x-[5px] border-x-transparent border-b-[6px] sm:border-b-[8px] border-b-[#16A34A] mb-0.5" />
+                            <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-900 leading-none">F11</span>
                           </div>
 
                           {/* F12 (Down Arrow) */}
                           <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                            <div className="w-0 h-0 border-x-[5px] border-x-transparent border-t-[8px] border-t-[#16A34A] mb-0.5" />
-                            <span className="text-[9px] font-bold text-gray-900">F12</span>
+                            <div className="w-0 h-0 border-x-[4px] sm:border-x-[5px] border-x-transparent border-t-[6px] sm:border-t-[8px] border-t-[#16A34A] mb-0.5" />
+                            <span className="text-[7.5px] sm:text-[9px] font-bold text-gray-900 leading-none">F12</span>
                           </div>
 
                           {/* F10 (CSA ON/OFF) */}
                           <div className="border-r border-gray-400 bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                            <span className="text-[8px] font-bold text-gray-900 leading-tight">CSA</span>
-                            <span className="text-[7px] font-bold text-gray-700 leading-none">ON/OFF</span>
-                            <span className="text-[9px] font-extrabold text-[#1D4ED8]">F10</span>
+                            <span className="text-[7px] sm:text-[8px] font-bold text-gray-900 leading-none">CSA</span>
+                            <span className="text-[6px] sm:text-[7px] font-bold text-gray-700 leading-none">ON/OFF</span>
+                            <span className="text-[7.5px] sm:text-[9px] font-extrabold text-[#1D4ED8] leading-none mt-0.5">F10</span>
                           </div>
 
                           {/* F2 (Lookup) */}
                           <div className="bg-[#D2D7DF] flex flex-col items-center justify-center p-0.5 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                            <span className="text-[9px] font-bold text-gray-900 leading-none">Lookup</span>
-                            <span className="text-[9px] font-extrabold text-[#1D4ED8]">F2</span>
+                            <span className="text-[7px] sm:text-[9px] font-bold text-gray-900 leading-none">Lookup</span>
+                            <span className="text-[7.5px] sm:text-[9px] font-extrabold text-[#1D4ED8] leading-none mt-0.5">F2</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Right 6 cols: Black LED Display */}
-                      <div className="col-span-6 bg-black text-white p-2 font-mono flex flex-col justify-between">
-                        <div className="grid grid-cols-2 text-[10px] leading-tight">
-                          <div className="space-y-0.5">
-                            <div className="text-[#38BDF8] font-bold">SubTotal:</div>
-                            <div className="text-white font-bold">Quantity:</div>
-                            <div className="text-[#4ADE80] font-bold">Unit Price:</div>
+                      <div className="col-span-6 bg-black text-white p-1.5 sm:p-2 font-mono flex flex-col justify-between min-w-0">
+                        <div className="text-[8.5px] sm:text-[10px] leading-tight space-y-0.5">
+                          <div className="flex items-center justify-between gap-1 text-[#38BDF8] font-bold whitespace-nowrap">
+                            <span>SubTotal:</span>
+                            <span>0.00</span>
                           </div>
-                          <div className="text-right space-y-0.5">
-                            <div className="text-[#38BDF8] font-bold">0.00</div>
-                            <div className="text-white font-bold">0</div>
-                            <div className="text-[#4ADE80] font-bold">0.00</div>
+                          <div className="flex items-center justify-between gap-1 text-white font-bold whitespace-nowrap">
+                            <span>Quantity:</span>
+                            <span>0</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-1 text-[#4ADE80] font-bold whitespace-nowrap">
+                            <span>Unit Price:</span>
+                            <span>0.00</span>
                           </div>
                         </div>
 
                         {/* Huge Bright Green LED Amount */}
-                        <div className="text-right text-3xl sm:text-4xl font-mono font-bold text-[#00FF66] tracking-wider pt-1">
+                        <div className="text-right text-2xl sm:text-4xl font-mono font-bold text-[#00FF66] tracking-wider pt-1 leading-none">
                           0.00
                         </div>
                       </div>
                     </div>
 
                     {/* Table Headers */}
-                    <div className="bg-[#B8C2CC] border-b border-gray-400 px-2 py-0.5 text-[9px] font-bold text-gray-800 grid grid-cols-12 text-center uppercase tracking-tight">
+                    <div className="bg-[#B8C2CC] border-b border-gray-400 px-1.5 sm:px-2 py-0.5 text-[7px] sm:text-[9px] font-bold text-gray-800 grid grid-cols-12 items-center uppercase tracking-tight whitespace-nowrap">
                       <span className="col-span-1 text-left">LN</span>
-                      <span className="col-span-3 text-left">UPC</span>
-                      <span className="col-span-3 text-left">Description</span>
+                      <span className="col-span-2 sm:col-span-3 text-left">UPC</span>
+                      <span className="col-span-4 sm:col-span-3 text-left truncate">Description</span>
                       <span className="col-span-1 text-center">Qty</span>
-                      <span className="col-span-2 text-right pr-2">SRP</span>
-                      <span className="col-span-1 text-right pr-1">Amount</span>
+                      <span className="col-span-1 sm:col-span-2 text-right pr-1">SRP</span>
+                      <span className="col-span-2 sm:col-span-1 text-right pr-1">Amt</span>
                       <span className="col-span-1 text-right">Type</span>
                     </div>
 
                     {/* Line Item Screen Page (Empty Ready State) */}
-                    <div className="flex-1 bg-white overflow-hidden p-2 font-mono text-[10px] min-h-[140px] flex items-center justify-center">
+                    <div className="flex-1 bg-white overflow-hidden p-2 font-mono text-[9px] sm:text-[10px] min-h-[115px] sm:min-h-[140px] flex items-center justify-center">
                       <span className="text-gray-400 italic text-center">
                         Line item screen page (Scan or Enter UPC above)
                       </span>
@@ -313,83 +319,83 @@ export default function HomePage() {
                   </div>
 
                   {/* Right 2 Columns: Red and Silver Function Buttons Column */}
-                  <div className="col-span-2 bg-[#9AA5B1] p-1 flex flex-col justify-between border-l border-gray-400 space-y-1">
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Quantity</span>
-                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F3</span>
+                  <div className="col-span-2 bg-[#9AA5B1] p-0.5 sm:p-1 flex flex-col justify-between border-l border-gray-400 space-y-0.5 sm:space-y-1 min-w-0">
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Quantity</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-[#1D4ED8] leading-none">F3</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Payment</span>
-                      <span className="text-[9px] font-extrabold text-yellow-300">F4</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Payment</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-300 leading-none">F4</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Option</span>
-                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F5</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Option</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-[#1D4ED8] leading-none">F5</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Non Mdse</span>
-                      <span className="text-[9px] font-extrabold text-[#1D4ED8]">F6</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#D2D7DF] text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Non Mdse</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-[#1D4ED8] leading-none">F6</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Item Void</span>
-                      <span className="text-[9px] font-extrabold text-yellow-300">F7</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Item Void</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-300 leading-none">F7</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Trx Void</span>
-                      <span className="text-[9px] font-extrabold text-yellow-300">F8</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Trx Void</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-300 leading-none">F8</span>
                     </div>
 
-                    <div className="w-full flex-1 p-1 flex flex-col items-center justify-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
-                      <span className="text-[9px] font-bold leading-tight uppercase">Suspend</span>
-                      <span className="text-[9px] font-extrabold text-yellow-300">F9</span>
+                    <div className="w-full flex-1 p-0.5 sm:p-1 flex flex-col items-center justify-center text-center bg-[#E4002B] text-white border-2 border-t-[#FF6680] border-l-[#FF6680] border-r-[#800010] border-b-[#800010] shadow-sm">
+                      <span className="text-[7px] sm:text-[9px] font-bold leading-tight uppercase">Suspend</span>
+                      <span className="text-[7.5px] sm:text-[9px] font-extrabold text-yellow-300 leading-none">F9</span>
                     </div>
 
-                    <div className="text-center font-mono text-[8px] text-gray-700 pt-0.5 border-t border-gray-400">
+                    <div className="text-center font-mono text-[7px] sm:text-[8px] text-gray-700 pt-0.5 border-t border-gray-400 whitespace-nowrap">
                       Page: 0/0
                     </div>
                   </div>
                 </div>
 
                 {/* 3. Bottom Footer Bar */}
-                <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch select-none">
-                  <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between">
-                    <span className="font-bold text-gray-900 text-[10px]">Total Qty</span>
-                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
+                <div className="bg-[#D4D0C8] border-t-2 border-gray-500 grid grid-cols-12 text-xs font-sans items-stretch select-none whitespace-nowrap">
+                  <div className="col-span-4 bg-[#FFF275] border-r-2 border-gray-500 px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1">
+                    <span className="font-bold text-gray-900 text-[8px] sm:text-[10px]">Total Qty</span>
+                    <span className="font-mono font-bold text-[10px] sm:text-xs bg-white px-1.5 sm:px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
                       0
                     </span>
                   </div>
 
-                  <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-2 py-1 flex items-center justify-between text-white">
-                    <span className="font-bold text-[10px]">Total Sales:</span>
-                    <span className="font-mono font-bold text-xs bg-white px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
+                  <div className="col-span-4 bg-[#16A34A] border-r-2 border-gray-500 px-1.5 sm:px-2 py-1 flex items-center justify-between gap-1 text-white">
+                    <span className="font-bold text-[8px] sm:text-[10px]">Total Sales:</span>
+                    <span className="font-mono font-bold text-[10px] sm:text-xs bg-white px-1.5 sm:px-2 py-0.5 border border-gray-400 text-gray-900 shadow-inner">
                       0.00
                     </span>
                   </div>
 
-                  <div className="col-span-2 bg-[#C2CAD0] border-r border-gray-500 px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px] font-mono">
+                  <div className="col-span-2 bg-[#C2CAD0] border-r border-gray-500 px-0.5 sm:px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[7px] sm:text-[9px] font-mono">
                     2026-Feb-12
                   </div>
 
-                  <div className="col-span-2 bg-[#C2CAD0] px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[9px] font-mono">
+                  <div className="col-span-2 bg-[#C2CAD0] px-0.5 sm:px-1 py-1 flex items-center justify-center font-bold text-gray-800 text-[7px] sm:text-[9px] font-mono">
                     09:04:03 AM
                   </div>
                 </div>
 
                 {/* Overlay Prompt on Hover */}
-                <div className="bg-gray-900 text-white py-2 px-4 text-center text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 group-hover:bg-[#E4002B] transition-colors">
+                <div className="bg-gray-900 text-white py-2 px-3 sm:px-4 text-center text-[10px] sm:text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-1.5 sm:space-x-2 group-hover:bg-[#E4002B] transition-colors">
                   {user ? (
                     <>
-                      <Monitor className="w-4 h-4" />
+                      <Monitor className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                       <span>Click to Open Interactive POS Simulator</span>
                     </>
                   ) : (
                     <>
-                      <Lock className="w-4 h-4 text-amber-400" />
+                      <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 shrink-0" />
                       <span>Cashier Login Required to Open Terminal</span>
                     </>
                   )}
@@ -464,23 +470,28 @@ export default function HomePage() {
 
       {/* Cashier Authentication Required Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-[200] bg-black/70 flex items-center justify-center p-4 overscroll-none touch-none">
-          <div className="bg-white max-w-md w-full max-h-[90dvh] overflow-y-auto border-4 border-gray-900 p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center space-x-3 text-[#E4002B]">
-              <Lock className="w-6 h-6 flex-shrink-0" />
-              <h3 className="text-lg font-black text-gray-900 uppercase tracking-tight">
-                Cashier Login Required
-              </h3>
+        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overscroll-none touch-none">
+          <div className="bg-white max-w-md w-full max-h-[90dvh] overflow-y-auto border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                  Cashier Sign In Required
+                </h3>
+                <p className="text-xs text-slate-500">NBS POS Training Portal</p>
+              </div>
             </div>
             
-            <p className="text-sm text-gray-600 leading-relaxed">
-              Access to the interactive POS Terminal Simulator is restricted to registered NBS cashiers and trainees. Please sign in or register your trainee account.
+            <p className="text-sm text-slate-600 leading-relaxed">
+              Access to the interactive POS Terminal Simulator is for registered NBS cashiers and trainees. Please sign in or create your trainee account.
             </p>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-1">
               <Link href="/login" className="block">
                 <Button
-                  className="w-full py-3 bg-[#E4002B] hover:bg-[#C10024] text-white font-bold flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 bg-[#E4002B] hover:bg-[#C10024] text-white font-semibold flex items-center justify-center space-x-2"
                 >
                   <LogIn className="w-4 h-4" />
                   <span>Sign In with Account</span>
@@ -490,21 +501,21 @@ export default function HomePage() {
               <Link href="/signup" className="block">
                 <Button
                   variant="outline"
-                  className="w-full py-3 border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-2"
+                  className="w-full py-2.5 font-semibold flex items-center justify-center space-x-2"
                 >
                   <span>Register as New Trainee</span>
                 </Button>
               </Link>
 
-              <div className="grid grid-cols-2 gap-2 pt-1 border-t border-gray-200">
+              <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   onClick={async () => {
                     await enterDemoMode("admin");
                     setShowAuthModal(false);
                     window.location.href = "/admin";
                   }}
-                  className="w-full py-2.5 text-xs bg-black text-white hover:bg-gray-800 font-bold flex items-center justify-center space-x-1"
+                  className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
                 >
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
                   <span>Admin Demo</span>
@@ -517,7 +528,7 @@ export default function HomePage() {
                     setShowAuthModal(false);
                     window.location.href = "/dashboard";
                   }}
-                  className="w-full py-2.5 text-xs border-gray-400 text-gray-800 font-bold flex items-center justify-center space-x-1"
+                  className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
                 >
                   <BookOpen className="w-3.5 h-3.5 text-[#E4002B]" />
                   <span>Trainee Demo</span>

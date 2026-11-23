@@ -145,19 +145,19 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col font-sans overflow-y-auto">
-      {/* Top Banner */}
-      <div className="bg-[#E4002B] text-white py-1.5 px-4 text-center text-xs font-semibold tracking-wide shrink-0">
-        NATIONAL BOOK STORE • CASHIER ACADEMY REGISTRATION
+    <div className="min-h-screen bg-slate-50 flex flex-col font-sans overflow-y-auto">
+      {/* Top Corporate Bar */}
+      <div className="bg-slate-900 text-slate-300 py-2 px-4 text-center text-xs font-medium tracking-wide shrink-0 border-b border-slate-800">
+        National Book Store • Cashier Trainee Sign Up
       </div>
 
       <main className="flex-1 w-full flex justify-center items-start py-6 sm:py-10 px-4">
-        <div className="w-full max-w-lg bg-white border border-gray-300 shadow-sm p-5 sm:p-8 my-auto">
+        <div className="w-full max-w-lg bg-white border border-slate-200 rounded-2xl shadow-lg p-5 sm:p-8 my-auto">
           {/* Return to Landing Page */}
           <div className="mb-4">
             <Link
               href="/"
-              className="inline-flex items-center space-x-1.5 text-xs font-bold text-gray-500 hover:text-[#E4002B] transition-colors group"
+              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-500 hover:text-[#E4002B] transition-colors group"
             >
               <ArrowRight className="w-4 h-4 rotate-180 transition-transform group-hover:-translate-x-0.5" />
               <span>Return to Landing Page</span>
@@ -165,16 +165,16 @@ export default function SignupPage() {
           </div>
 
           {/* Header */}
-          <div className="flex items-center space-x-3 mb-4 pb-4 border-b border-gray-200">
-            <div className="bg-[#E4002B] text-white px-2.5 py-1 font-extrabold text-xl tracking-tighter">
+          <div className="flex items-center space-x-3 mb-5 pb-4 border-b border-slate-100">
+            <div className="bg-[#E4002B] text-white px-2.5 py-1 rounded-none font-heading font-extrabold text-xl tracking-tighter shadow-xs">
               NBS
             </div>
             <div>
-              <h1 className="text-xl font-bold uppercase tracking-tight text-gray-900">
-                Trainee Registration
+              <h1 className="text-xl font-bold tracking-tight text-slate-900">
+                Trainee Sign Up
               </h1>
-              <p className="text-xs text-gray-500 font-medium">
-                National Book Store POS Fidelity Training Platform
+              <p className="text-xs text-slate-500 font-medium">
+                National Book Store Cashier POS Training Portal
               </p>
             </div>
           </div>
@@ -351,7 +351,7 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="text-[11px] text-gray-500 bg-gray-50 p-2.5 border border-gray-200">
+              <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
                 Password must be at least 8 characters long and contain both letters and numbers.
               </div>
 
@@ -359,37 +359,37 @@ export default function SignupPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full font-bold uppercase tracking-wide py-2.5 mt-2 bg-[#E4002B] hover:bg-[#C30024] text-white"
+                className="w-full font-semibold py-2.5 mt-2 bg-[#E4002B] hover:bg-[#C30024] text-white"
               >
-                {isLoading ? "Submitting Registration..." : "Register Trainee Account"}
+                {isLoading ? "Submitting Sign Up..." : "Register Trainee Account"}
               </Button>
 
-              <div className="text-center pt-3 border-t border-gray-200 text-xs text-gray-600">
-                Already registered?{" "}
+              <div className="text-center pt-3 border-t border-slate-100 text-xs text-slate-600">
+                Already have an account?{" "}
                 <Link
                   href="/login"
-                  className="font-bold text-[#E4002B] hover:underline"
+                  className="font-semibold text-[#E4002B] hover:underline"
                 >
-                  Log In Here
+                  Sign In Here
                 </Link>
               </div>
 
               {/* Demo Mode Instant Access */}
-              <div className="pt-4 border-t border-dashed border-gray-300 space-y-2.5">
+              <div className="pt-4 border-t border-slate-200 space-y-2.5">
                 <div className="text-center">
-                  <div className="text-[11px] font-black uppercase text-gray-700 tracking-wider">
-                    Or Test Immediately in Demo Mode
+                  <div className="text-[11px] font-bold text-slate-700">
+                    Or Preview in Sandbox Mode
                   </div>
-                  <p className="text-[11px] text-gray-500">
-                    Skip registration and explore the system with simulated data:
+                  <p className="text-[11px] text-slate-500">
+                    Skip enrollment and explore the system with simulated data:
                   </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={handleDemoAdminLogin}
                     disabled={isLoading}
-                    className="py-2 px-2.5 bg-black hover:bg-neutral-800 text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors border border-black"
+                    className="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
                   >
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                     <span>Admin Demo &rarr;</span>
@@ -398,7 +398,7 @@ export default function SignupPage() {
                     type="button"
                     onClick={handleDemoTraineeLogin}
                     disabled={isLoading}
-                    className="py-2 px-2.5 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-bold flex items-center justify-center space-x-1.5 transition-colors border border-[#E4002B]"
+                    className="py-2 px-3 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-1.5 transition-all"
                   >
                     <Building2 className="w-3.5 h-3.5 text-white shrink-0" />
                     <span>Trainee Demo &rarr;</span>
@@ -411,8 +411,8 @@ export default function SignupPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-4 text-center text-xs text-gray-500">
-        National Book Store, Inc. • Internal Retail Training System
+      <footer className="border-t border-slate-200 bg-white py-4 text-center text-xs text-slate-500">
+        National Book Store, Inc. • Corporate Learning &amp; Competency System
       </footer>
     </div>
   );

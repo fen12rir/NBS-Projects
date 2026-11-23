@@ -166,22 +166,22 @@ export default function AdminApprovalsPage() {
     <AdminShell>
       <div className="space-y-6">
         {/* Page Header */}
-        <div className="pb-4 border-b border-gray-300">
+        <div className="pb-4 border-b border-slate-200">
           <div className="flex items-center space-x-2 text-amber-600 mb-1">
             <Clock className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Access Authorization</span>
+            <span className="text-xs font-semibold uppercase tracking-wider">Access Authorization</span>
           </div>
-          <h1 className="text-2xl font-black uppercase tracking-tight text-gray-900">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
             Pending Trainee Approvals
           </h1>
-          <p className="text-xs text-gray-500 font-medium">
-            Review and grant portal access to newly registered cashiers and staff
+          <p className="text-xs text-slate-500 font-medium">
+            Approve or decline new cashier trainee accounts for your branch
           </p>
         </div>
 
         {/* Feedback Alerts */}
         {actionSuccess && (
-          <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center justify-between">
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               <span>{actionSuccess}</span>
@@ -196,14 +196,14 @@ export default function AdminApprovalsPage() {
         )}
 
         {errorMessage && (
-          <div className="p-3 bg-red-50 border border-red-300 text-red-700 text-xs flex items-center justify-between">
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMessage}</span>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-red-700 hover:text-black font-bold"
+              className="text-rose-700 hover:text-black font-bold"
             >
               ×
             </button>
@@ -211,11 +211,11 @@ export default function AdminApprovalsPage() {
         )}
 
         {/* Queue Table Card */}
-        <div className="bg-white border border-gray-300 shadow-sm overflow-hidden">
-          <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-wrap items-center justify-between gap-2">
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden">
+          <div className="p-4 bg-slate-50/80 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
-              <UserCheck className="w-4 h-4 text-gray-600" />
-              <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+              <UserCheck className="w-4 h-4 text-slate-600" />
+              <h2 className="text-xs font-bold text-slate-800">
                 Pending Verification Queue ({pendingList.length})
               </h2>
             </div>
@@ -225,7 +225,7 @@ export default function AdminApprovalsPage() {
                 size="sm"
                 onClick={fetchApprovals}
                 disabled={isLoading}
-                className="text-xs h-7 border-gray-300"
+                className="text-xs h-7"
               >
                 Refresh Queue
               </Button>
@@ -393,20 +393,20 @@ export default function AdminApprovalsPage() {
 
         {/* Modal: Approve Trainee(s) & Set Expiry */}
         {approvingTrainees.length > 0 && (
-          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="bg-white max-w-md w-full border-4 border-[#E4002B] p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <div className="flex items-center space-x-2 text-emerald-700 font-black uppercase text-base">
+          <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white max-w-md w-full border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center space-x-2.5 text-emerald-700 font-bold text-base">
                   <CheckCircle2 className="w-5 h-5" />
                   <span>
                     {approvingTrainees.length > 1
-                      ? `Mass Approve (${approvingTrainees.length} Trainees)`
-                      : "Approve Trainee Account"}
+                      ? `Mass Approve (${approvingTrainees.length} Learners)`
+                      : "Approve Learner Account"}
                   </span>
                 </div>
                 <button
                   onClick={() => setApprovingTrainees([])}
-                  className="text-gray-400 hover:text-black font-bold text-lg"
+                  className="text-slate-400 hover:text-slate-800 font-bold text-lg"
                 >
                   ×
                 </button>
@@ -444,28 +444,28 @@ export default function AdminApprovalsPage() {
                   <button
                     type="button"
                     onClick={() => { setSelectedDays(30); setIsUnlimited(false); }}
-                    className={`py-1.5 px-2 text-xs font-bold border ${!isUnlimited && selectedDays === 30 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                    className={`py-1.5 px-2 text-xs font-semibold rounded-lg border transition-colors ${!isUnlimited && selectedDays === 30 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"}`}
                   >
                     30 Days
                   </button>
                   <button
                     type="button"
                     onClick={() => { setSelectedDays(60); setIsUnlimited(false); }}
-                    className={`py-1.5 px-2 text-xs font-bold border ${!isUnlimited && selectedDays === 60 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                    className={`py-1.5 px-2 text-xs font-semibold rounded-lg border transition-colors ${!isUnlimited && selectedDays === 60 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"}`}
                   >
                     60 Days
                   </button>
                   <button
                     type="button"
                     onClick={() => { setSelectedDays(90); setIsUnlimited(false); }}
-                    className={`py-1.5 px-2 text-xs font-bold border ${!isUnlimited && selectedDays === 90 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                    className={`py-1.5 px-2 text-xs font-semibold rounded-lg border transition-colors ${!isUnlimited && selectedDays === 90 ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"}`}
                   >
                     90 Days
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsUnlimited(true)}
-                    className={`py-1.5 px-2 text-xs font-bold border ${isUnlimited ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100"}`}
+                    className={`py-1.5 px-2 text-xs font-semibold rounded-lg border transition-colors ${isUnlimited ? "bg-[#E4002B] text-white border-[#E4002B]" : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"}`}
                   >
                     No Expiry
                   </button>
@@ -524,20 +524,20 @@ export default function AdminApprovalsPage() {
 
         {/* Modal: Reject Trainee(s) */}
         {rejectingTrainees.length > 0 && (
-          <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
-            <div className="bg-white max-w-md w-full border-4 border-red-600 p-6 shadow-2xl space-y-4">
-              <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-                <div className="flex items-center space-x-2 text-red-700 font-black uppercase text-base">
+          <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-white max-w-md w-full border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center space-x-2 text-rose-700 font-bold text-base">
                   <ShieldAlert className="w-5 h-5" />
                   <span>
                     {rejectingTrainees.length > 1
-                      ? `Mass Decline (${rejectingTrainees.length} Trainees)`
-                      : "Decline Trainee Registration"}
+                      ? `Mass Decline (${rejectingTrainees.length} Learners)`
+                      : "Decline Learner Enrollment"}
                   </span>
                 </div>
                 <button
                   onClick={() => setRejectingTrainees([])}
-                  className="text-gray-400 hover:text-black font-bold text-lg"
+                  className="text-slate-400 hover:text-slate-800 font-bold text-lg"
                 >
                   ×
                 </button>

@@ -213,46 +213,51 @@ export function DashboardHeader({
 
       {/* Offline Demo Warning Banner */}
       {isDemoMode && (
-        <div className="bg-gray-800 text-white py-1 px-4 text-xs font-mono text-center tracking-wide flex items-center justify-center space-x-2">
+        <div className="bg-slate-900 text-slate-200 py-1 px-4 text-xs font-medium text-center flex items-center justify-center space-x-2">
           <ShieldAlert className="w-3.5 h-3.5 shrink-0 text-amber-400" />
           <span>
-            OFFLINE DEMO MODE ACTIVE ({user?.name || "Trainee"})
+            Practice Demo Mode Active • {user?.name || "Trainee"}
           </span>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 sm:gap-3">
+        <div className="flex items-center space-x-1.5 sm:space-x-3 lg:space-x-4 min-w-0">
           {onToggleSidebar && (
             <button
               type="button"
               onClick={onToggleSidebar}
               aria-label="Toggle Navigation Sidebar"
-              title="Toggle Curriculum Sidebar"
-              className="p-2 rounded-md text-gray-700 hover:text-[#E4002B] hover:bg-red-50 cursor-pointer transition-colors border border-transparent hover:border-red-200 shrink-0"
+              title="Toggle Training Guide Sidebar"
+              className="p-2 rounded-lg text-slate-600 hover:text-[#E4002B] hover:bg-red-50 cursor-pointer transition-colors border border-transparent hover:border-red-100 shrink-0"
             >
               <PanelLeft className="w-5 h-5 shrink-0" />
             </button>
           )}
-          <Link href="/dashboard" className="flex items-center space-x-2 shrink-0">
-            <div className="bg-[#E4002B] text-white px-2.5 py-0.5 font-extrabold text-lg tracking-tighter">
+          <Link href="/dashboard" className="flex items-center space-x-2.5 shrink-0">
+            <div className="bg-[#E4002B] text-white px-2.5 py-0.5 rounded-none font-heading font-extrabold text-lg tracking-tighter shadow-xs">
               NBS
             </div>
-            <span className="font-bold text-gray-900 tracking-tight text-sm sm:text-base uppercase hidden sm:inline-block">
-              POS Training Portal
-            </span>
+            <div>
+              <div className="font-bold text-slate-900 tracking-tight text-xs sm:text-sm leading-tight whitespace-nowrap">
+                POS Training Portal
+              </div>
+              <div className="text-[11px] text-slate-500 font-medium leading-tight whitespace-nowrap hidden sm:block">
+                Cashier Practice &amp; Guide
+              </div>
+            </div>
           </Link>
-          <div className="h-5 w-px bg-gray-200 hidden sm:block shrink-0"></div>
-          <nav className="hidden sm:flex items-center space-x-1 sm:space-x-3 text-xs sm:text-sm font-semibold truncate">
+          <div className="h-5 w-px bg-slate-200 hidden lg:block shrink-0"></div>
+          <nav className="hidden lg:flex items-center space-x-2 text-xs sm:text-sm font-medium shrink-0">
             <Link
               href="/dashboard"
-              className="text-gray-700 hover:text-[#E4002B] px-2 py-1 shrink-0"
+              className="text-slate-700 hover:text-[#E4002B] hover:bg-slate-100 px-3 py-1.5 rounded-lg transition-colors shrink-0"
             >
               Modules
             </Link>
             <Link
               href="/simulator"
-              className="text-[#E4002B] bg-red-50 hover:bg-red-100 px-2.5 py-1 font-bold flex items-center space-x-1 shrink-0 rounded"
+              className="text-[#E4002B] bg-red-50 hover:bg-red-100/80 px-3 py-1.5 font-semibold flex items-center space-x-1.5 shrink-0 rounded-lg border border-red-200/60 transition-colors"
             >
               <Monitor className="w-3.5 h-3.5 shrink-0" />
               <span>POS Simulator</span>
@@ -260,7 +265,7 @@ export function DashboardHeader({
             {isAdmin && (
               <Link
                 href="/admin"
-                className="text-gray-900 hover:text-black bg-gray-100 hover:bg-gray-200 px-2.5 py-1 font-bold flex items-center space-x-1 shrink-0 border border-gray-300"
+                className="text-slate-800 hover:text-slate-950 bg-slate-100 hover:bg-slate-200/80 px-3 py-1.5 font-semibold flex items-center space-x-1.5 shrink-0 rounded-lg border border-slate-200 transition-colors"
               >
                 <Shield className="w-3.5 h-3.5 text-[#E4002B] shrink-0" />
                 <span>Admin Portal</span>
@@ -269,18 +274,18 @@ export function DashboardHeader({
           </nav>
         </div>
 
-        <div className="flex items-center space-x-2 sm:space-x-3 shrink-0">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs font-bold text-gray-900 flex items-center justify-end space-x-1.5">
-              <span>{user?.fullName || user?.name || "Trainee"}</span>
+        <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+          <div className="text-right hidden md:block">
+            <div className="text-xs font-semibold text-slate-900 flex items-center justify-end space-x-1.5">
+              <span className="truncate max-w-[160px] lg:max-w-none">{user?.fullName || user?.name || "Trainee"}</span>
               {isAdmin && (
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 bg-black text-white font-bold leading-none">
+                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-none bg-slate-900 text-white font-bold leading-none shrink-0">
                   {user?.role === "super_admin" ? "SUPER ADMIN" : "BRANCH ADMIN"}
                 </span>
               )}
             </div>
-            <div className="text-[10px] text-gray-500 font-mono truncate max-w-[220px]">
-              {user?.branchName ? `${user.branchCode} - ${user.branchName}` : `Branch ${user?.branchCode || "2438"}`}
+            <div className="text-[11px] text-slate-500 truncate max-w-[160px] lg:max-w-[220px]">
+              {user?.branchName ? `${user.branchCode} • ${user.branchName}` : `Branch ${user?.branchCode || "2438"}`}
             </div>
           </div>
 
@@ -293,27 +298,32 @@ export function DashboardHeader({
               title="Account Settings"
               aria-label="Account Settings"
               aria-expanded={showSettingsMenu}
-              className={`flex items-center justify-center p-2 border-gray-300 shrink-0 ${
-                showSettingsMenu ? "border-[#E4002B] text-[#E4002B] bg-red-50" : "text-gray-700 hover:text-[#E4002B]"
+              className={`flex items-center justify-center p-2 border-slate-300 shrink-0 rounded-lg ${
+                showSettingsMenu ? "border-[#E4002B] text-[#E4002B] bg-red-50" : "text-slate-700 hover:text-[#E4002B]"
               }`}
             >
               <Settings className="w-4 h-4 shrink-0" />
             </Button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-60 bg-white border border-gray-300 shadow-lg z-50">
-                <div className="px-3.5 py-2.5 bg-gray-50 border-b border-gray-200">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                    Account Settings
+              <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    Learner Account
                   </div>
-                  <div className="text-xs font-bold text-gray-900 truncate mt-0.5">
+                  <div className="text-xs font-semibold text-slate-900 truncate mt-0.5">
                     {user?.fullName || user?.name || "Trainee"}
                   </div>
-                  <div className="text-[10px] font-mono text-gray-500 truncate">
-                    {user?.email || ""}
+                  <div className="text-[11px] text-slate-500 truncate">
+                    {user?.branchName ? `${user.branchCode} • ${user.branchName}` : `Branch ${user?.branchCode || "2438"}`}
                   </div>
+                  {user?.email && (
+                    <div className="text-[11px] text-slate-400 truncate">
+                      {user.email}
+                    </div>
+                  )}
                 </div>
-                <div className="py-1">
+                <div className="py-1.5">
                   <button
                     type="button"
                     onClick={() => {
@@ -322,7 +332,7 @@ export function DashboardHeader({
                       setPasswordError(null);
                       setPasswordSuccess(null);
                     }}
-                    className="w-full px-3.5 py-2 text-left text-xs font-semibold text-gray-700 hover:bg-red-50 hover:text-[#E4002B] flex items-center space-x-2 transition-colors"
+                    className="w-full px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-red-50 hover:text-[#E4002B] flex items-center space-x-2.5 transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5 shrink-0" />
                     <span>Change Password</span>
@@ -339,46 +349,48 @@ export function DashboardHeader({
             className="flex items-center space-x-1 text-xs shrink-0"
           >
             <LogOut className="w-3.5 h-3.5 shrink-0" />
-            <span className="hidden sm:inline">Sign Out</span>
+            <span className="hidden md:inline">Sign Out</span>
           </Button>
         </div>
       </div>
 
       {/* Trainee Change Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 z-[9999] bg-black/75 backdrop-blur-[2px] flex items-center justify-center p-4">
-          <div className="bg-white max-w-md w-full border-4 border-[#E4002B] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-200">
-              <div className="flex items-center space-x-2 text-[#E4002B] font-black uppercase text-base">
-                <Lock className="w-5 h-5" />
+        <div className="fixed inset-0 z-[9999] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white max-w-md w-full border border-slate-200 rounded-2xl p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center space-x-2.5 text-slate-900 font-bold text-base">
+                <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E4002B] flex items-center justify-center">
+                  <Lock className="w-4 h-4" />
+                </div>
                 <span>Change Account Password</span>
               </div>
               <button
                 type="button"
                 onClick={() => setShowPasswordModal(false)}
-                className="text-gray-400 hover:text-black font-bold text-lg p-1"
+                className="text-slate-400 hover:text-slate-700 rounded-lg p-1 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {passwordSuccess && (
-              <div className="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs flex items-center space-x-2">
+              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs flex items-center space-x-2">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 <span>{passwordSuccess}</span>
               </div>
             )}
 
             {passwordError && (
-              <div className="p-3 bg-red-50 border border-red-300 text-red-700 text-xs flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-rose-700 text-xs flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                 <span>{passwordError}</span>
               </div>
             )}
 
-            <form onSubmit={handleChangePasswordSubmit} className="space-y-3">
+            <form onSubmit={handleChangePasswordSubmit} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Current Password
                 </label>
                 <input
@@ -387,12 +399,12 @@ export function DashboardHeader({
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
-                  className="w-full text-xs font-mono px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#E4002B]"
+                  className="w-full text-xs px-3.5 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   New Password
                 </label>
                 <input
@@ -401,12 +413,12 @@ export function DashboardHeader({
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="Min. 8 chars (letters + numbers)"
-                  className="w-full text-xs font-mono px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#E4002B]"
+                  className="w-full text-xs px-3.5 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Confirm New Password
                 </label>
                 <input
@@ -415,15 +427,15 @@ export function DashboardHeader({
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Repeat new password"
-                  className="w-full text-xs font-mono px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#E4002B]"
+                  className="w-full text-xs px-3.5 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B]"
                 />
               </div>
 
-              <div className="text-[11px] text-gray-500 bg-gray-50 p-2 border border-gray-200">
+              <div className="text-[11px] text-slate-500 bg-slate-50 p-2.5 rounded-lg border border-slate-200/80">
                 Password must be at least 8 characters long with letters and numbers.
               </div>
 
-              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-gray-200">
+              <div className="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
                 <Button
                   type="button"
                   variant="outline"
@@ -437,9 +449,9 @@ export function DashboardHeader({
                   type="submit"
                   disabled={isUpdatingPassword}
                   size="sm"
-                  className="bg-[#E4002B] hover:bg-[#C30024] text-white font-bold text-xs"
+                  className="bg-[#E4002B] hover:bg-[#C30024] text-white font-semibold text-xs"
                 >
-                  {isUpdatingPassword ? "Saving..." : "Change Password"}
+                  {isUpdatingPassword ? "Saving..." : "Update Password"}
                 </Button>
               </div>
             </form>
