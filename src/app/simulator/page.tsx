@@ -3096,8 +3096,48 @@ function SimulatorContent() {
       return true;
     }
 
-    // Navigation Validation Rules
+    // Flexible Navigation Auto-Skip toward Logout / Target Screen
     if (NAV_ACTIONS.has(actionId)) {
+      let predictedPage: "MAIN" | "SECOND" | "THIRD" | "FOURTH" = state.currentPage as any;
+      if (actionId === "NAV_SECOND") predictedPage = "SECOND";
+      else if (actionId === "NAV_THIRD") predictedPage = "THIRD";
+      else if (actionId === "NAV_FOURTH") predictedPage = "FOURTH";
+      else if (actionId === "NAV_MAIN") predictedPage = "MAIN";
+      else if (actionId === "PAGE_DOWN") {
+        const nextMap: Record<string, "MAIN" | "SECOND" | "THIRD" | "FOURTH"> = {
+          MAIN: "SECOND",
+          SECOND: "THIRD",
+          THIRD: "FOURTH",
+          FOURTH: "MAIN",
+        };
+        predictedPage = nextMap[state.currentPage] || "MAIN";
+      } else if (actionId === "PAGE_UP") {
+        const prevMap: Record<string, "MAIN" | "SECOND" | "THIRD" | "FOURTH"> = {
+          MAIN: "FOURTH",
+          FOURTH: "THIRD",
+          THIRD: "SECOND",
+          SECOND: "MAIN",
+        };
+        predictedPage = prevMap[state.currentPage] || "MAIN";
+      }
+
+      // If the current step and any consecutive steps are navigation steps, and the user reaches the screen needed by the upcoming non-navigation action (e.g. TRIGGER_LOGOUT on 2nd Screen via F11), auto-advance past those navigation steps!
+      if (NAV_ACTIONS.has(currentStep.expectedAction)) {
+        let lookaheadIdx = currentStepIndex;
+        while (
+          lookaheadIdx < activeScenario.steps.length &&
+          NAV_ACTIONS.has(activeScenario.steps[lookaheadIdx].expectedAction)
+        ) {
+          lookaheadIdx++;
+        }
+        const targetAction = activeScenario.steps[lookaheadIdx]?.expectedAction;
+        if (targetAction && SCREEN_OF_ACTION[targetAction] === predictedPage) {
+          setErrorNotice(null);
+          setActiveHint(null);
+          setCurrentStepIndex(lookaheadIdx);
+          return true;
+        }
+      }
       return true;
     }
 

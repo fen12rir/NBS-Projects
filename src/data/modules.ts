@@ -410,10 +410,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "Press F5 (Option) from the Main Screen to enter the 2nd Page.",
-          "For authorized unit price overrides: Press F3 (Price Change) on the 2nd Page, input manager override credentials, enter the new unit price and reason, and confirm (returns automatically to Main Screen).",
-          "Press F6 (TRX Disc) to open the discount category list.",
-          "Select appropriate discount (e.g., Senior 20%, Employee 15%, LNQR Family Discount), input customer ID details and manager override credentials when prompted, and press Alt + Enter (returns automatically to Main Screen)."
+          "For Transaction Discounts (Senior Citizen, PWD, Employee, LNQR Family): Apply the discount FIRST before scanning or entering the customer's items (or before completing the transaction). Press F5 (Option) from the Main Screen to enter the 2nd Page.",
+          "Press F6 (TRX Disc) on the 2nd Page to open the discount category list.",
+          "Select the appropriate discount (e.g., ZPWD for PWD 20%, ZSEN for Senior Citizen 20%, Employee 15%, or ZQFD for LNQR Family Discount), input customer ID details and manager override credentials when prompted, and press Alt + Enter (returns automatically to the Main Screen so you can scan items and proceed to payment).",
+          "For authorized unit price overrides on an already scanned item: Press F3 (Price Change) on the 2nd Page, input manager override credentials, enter the new unit price and reason, and confirm (returns automatically to Main Screen)."
         ],
         keyCallouts: ["F5: Option", "F3: Price Change", "F6: TRX Disc", "Alt+Enter: Apply"]
       },

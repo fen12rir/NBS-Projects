@@ -744,68 +744,68 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   // =========================================================================
   {
     id: "scen-les-5-1",
-    title: "Lesson 5-1 Practice: Price Change & Transaction Discounts",
-    description: "Practice scanning an item, navigating to the 2nd Screen, executing a Price Change (F3) with Manager Override, and applying a Transaction Discount (F6 Trx Disc).",
+    title: "Lesson 5-1 Practice: Transaction Discounts (F6) & Price Change (F3)",
+    description: "Practice applying a Transaction Discount (F6 Trx Disc) on the 2nd Screen FIRST before scanning the item, then scanning the item and executing a Price Change (F3) with Manager Override.",
     moduleRef: "mod-5",
     lessonRef: "les-5-1",
     passingScore: 70,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
+        instruction: "Step 1: A Senior Citizen / PWD customer presents their ID before you ring up their item. First, navigate from the Main Screen to the 2nd Screen by pressing F5 (OPTION) to apply the discount before scanning.",
+        expectedAction: "NAV_SECOND",
+        hint: "Click F5 Option on the right column or press F5.",
+        errorFeedback: "Press F5 (OPTION) to open the 2nd Screen."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: On the 2nd Screen, press F6 (TRX DISC) to open the Transaction Discount screen before scanning any items.",
+        expectedAction: "TRX_DISC",
+        hint: "Click F6 Trx Disc on the right keypad or press F6.",
+        errorFeedback: "Press F6 (TRX DISC) on the 2nd Screen."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: On the Transaction Discount screen, select a discount category (e.g. PWD / Senior Citizen / LNQR Family Discount) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply the discount and return to the Main Screen.",
+        expectedAction: "APPLY_DISCOUNT",
+        hint: "Select a discount row (e.g. ZPWD or ZSEN 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
+        errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: Back on the Main Screen with the discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-PAP-003",
         hint: "Type NBS-PAP-003 in the yellow barcode input and press Enter.",
         errorFeedback: "Enter 'NBS-PAP-003' into the barcode field."
       },
       {
-        stepNumber: 2,
-        instruction: "Step 2: Navigate from the Main Screen to the 2nd Screen by pressing F5 (OPTION).",
+        stepNumber: 5,
+        instruction: "Step 5: Next, to practice an authorized unit price override on the scanned item, press F5 (OPTION) to open the 2nd Screen.",
         expectedAction: "NAV_SECOND",
         hint: "Click F5 Option on the right column or press F5.",
         errorFeedback: "Press F5 (OPTION) to open the 2nd Screen."
       },
       {
-        stepNumber: 3,
-        instruction: "Step 3: A shelf price discrepancy requires a manual price adjustment. Press F3 (PRICE CHANGE) on the 2nd Screen.",
+        stepNumber: 6,
+        instruction: "Step 6: Press F3 (PRICE CHANGE) on the 2nd Screen.",
         expectedAction: "PRICE_CHANGE",
         hint: "Click F3 Price Change on the 2nd Screen or press F3.",
         errorFeedback: "Press F3 (PRICE CHANGE) on the 2nd Screen."
       },
       {
-        stepNumber: 4,
-        instruction: "Step 4: Enter the Supervisor PIN ('9999' or '1234') and click 'Authorize (Enter)' to approve the price override.",
+        stepNumber: 7,
+        instruction: "Step 7: Enter the Supervisor PIN ('9999' or '1234') and click 'Authorize (Enter)' to approve the price override.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Type 9999 in the Supervisor PIN box and press Enter.",
         errorFeedback: "Enter the Supervisor PIN (9999) and authorize the Price Change."
       },
       {
-        stepNumber: 5,
-        instruction: "Step 5: Verify or enter the adjusted unit price and click 'Apply Price Change (Enter)' (which returns you to the Main Screen).",
+        stepNumber: 8,
+        instruction: "Step 8: Verify or enter the adjusted unit price and click 'Apply Price Change (Enter)' (which returns you to the Main Screen).",
         expectedAction: "CONFIRM_PRICE_CHANGE",
         hint: "Click 'Apply Price Change (Enter)' or press Enter to confirm.",
         errorFeedback: "Confirm the adjusted unit price in the Price Change dialog."
-      },
-      {
-        stepNumber: 6,
-        instruction: "Step 6: Back on the Main Screen, press F5 (OPTION) to return to the 2nd Screen.",
-        expectedAction: "NAV_SECOND",
-        hint: "Click F5 Option on the right column or press F5.",
-        errorFeedback: "Press F5 (OPTION) to open the 2nd Screen."
-      },
-      {
-        stepNumber: 7,
-        instruction: "Step 7: Now press F6 (TRX DISC) on the 2nd Screen to open the Transaction Discount screen.",
-        expectedAction: "TRX_DISC",
-        hint: "Click F6 Trx Disc on the right keypad or press F6.",
-        errorFeedback: "Press F6 (TRX DISC) on the 2nd Screen."
-      },
-      {
-        stepNumber: 8,
-        instruction: "Step 8: On the Transaction Discount screen, select a discount category (e.g. Senior Citizen / PWD / LNQR Family Discount) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply and return to the Main Screen.",
-        expectedAction: "APPLY_DISCOUNT",
-        hint: "Select a discount row (e.g. ZSEN 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
-        errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
       }
     ]
   },
@@ -892,82 +892,82 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   },
   {
     id: "scen-mod-5",
-    title: "Module 5 Assessment: Suspend, Recall, Discount & Receipt Reprint",
-    description: "Test all Module 5 skills in one combined scenario: scan an item, suspend and recall the transaction, navigate back to the 2nd Screen to apply a Transaction Discount, and execute an Official Receipt Reprint.",
+    title: "Module 5 Assessment: Discount First, Suspend, Recall & Receipt Reprint",
+    description: "Test all Module 5 skills in one combined scenario: apply a Transaction Discount on the 2nd Screen FIRST before scanning an item, scan the calculator, suspend and recall the transaction, and execute an Official Receipt Reprint.",
     moduleRef: "mod-5",
     passingScore: 70,
     timeLimitSeconds: 5 * 60,
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: Scan 'NBS-CAL-005' (Casio Scientific Calculator) into the Barcode field and press ENTER.",
+        instruction: "Step 1: A Senior Citizen customer presents their ID before you scan their calculator. First, navigate from the Main Screen to the 2nd Screen by pressing F5 (OPTION) to apply the discount before scanning.",
+        expectedAction: "NAV_SECOND",
+        hint: "Click F5 Option on the right keypad or press F5.",
+        errorFeedback: "Press F5 (OPTION) to navigate to the 2nd Screen."
+      },
+      {
+        stepNumber: 2,
+        instruction: "Step 2: On the 2nd Screen, apply the Senior Citizen / PWD Discount first by pressing F6 (TRX DISC).",
+        expectedAction: "TRX_DISC",
+        hint: "Click F6 Trx Disc on the 2nd Screen.",
+        errorFeedback: "Press F6 (TRX DISC) on the 2nd Screen."
+      },
+      {
+        stepNumber: 3,
+        instruction: "Step 3: On the Transaction Discount screen, select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to return to the Main Screen.",
+        expectedAction: "APPLY_DISCOUNT",
+        hint: "Select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
+        errorFeedback: "Select a discount and click [SELECT <Alt-Enter>] to apply it."
+      },
+      {
+        stepNumber: 4,
+        instruction: "Step 4: Back on the Main Screen with the discount applied, scan 'NBS-CAL-005' (Casio Scientific Calculator) into the Barcode field and press ENTER.",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-CAL-005",
         hint: "Type NBS-CAL-005 into the barcode field and press Enter.",
         errorFeedback: "Enter 'NBS-CAL-005' to add the calculator."
       },
       {
-        stepNumber: 2,
-        instruction: "Step 2: Put the transaction on hold while the customer grabs another item: press F9 (SUSPEND).",
+        stepNumber: 5,
+        instruction: "Step 5: Put the transaction on hold while the customer grabs another item: press F9 (SUSPEND).",
         expectedAction: "SUSPEND",
         hint: "Click F9 Suspend on the Main Screen.",
         errorFeedback: "Press F9 (SUSPEND) to hold the transaction."
       },
       {
-        stepNumber: 3,
-        instruction: "Step 3: Confirm that you want to suspend the transaction by choosing Yes.",
+        stepNumber: 6,
+        instruction: "Step 6: Confirm that you want to suspend the transaction by choosing Yes.",
         expectedAction: "CONFIRM_SUSPEND",
         hint: "Choose Yes on the Suspend confirmation screen.",
         errorFeedback: "Confirm the transaction suspension by choosing Yes."
       },
       {
-        stepNumber: 4,
-        instruction: "Step 4: Switch to the 2nd Screen by pressing F5 (OPTION).",
+        stepNumber: 7,
+        instruction: "Step 7: Switch to the 2nd Screen by pressing F5 (OPTION).",
         expectedAction: "NAV_SECOND",
         hint: "Click F5 Option on the right keypad.",
         errorFeedback: "Press F5 to open the 2nd Screen."
       },
       {
-        stepNumber: 5,
-        instruction: "Step 5: Recall the held transaction by pressing F7 (RECALL) on the 2nd Screen.",
+        stepNumber: 8,
+        instruction: "Step 8: Recall the held transaction by pressing F7 (RECALL) on the 2nd Screen.",
         expectedAction: "RECALL",
         hint: "Click F7 Recall on the 2nd Screen.",
         errorFeedback: "Press F7 (RECALL) to retrieve the suspended sale."
       },
       {
-        stepNumber: 6,
-        instruction: "Step 6: Authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
+        stepNumber: 9,
+        instruction: "Step 9: Authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click [Yes] or press ENTER in the Manager Override screen.",
         errorFeedback: "Click [Yes] (or press ENTER) on the Manager Override screen to continue to Recall."
       },
       {
-        stepNumber: 7,
-        instruction: "Step 7: In the Recall Transaction Buffer window, select the suspended transaction and click [Recall (Enter)] (or press ENTER) to restore it to the Main Screen.",
+        stepNumber: 10,
+        instruction: "Step 10: In the Recall Transaction Buffer window, select the suspended transaction and click [Recall (Enter)] (or press ENTER) to restore it to the Main Screen.",
         expectedAction: "CONFIRM_RECALL",
         hint: "Click [Recall (Enter)] or press ENTER to restore the transaction.",
         errorFeedback: "Click [Recall (Enter)] or press ENTER to recall the transaction."
-      },
-      {
-        stepNumber: 8,
-        instruction: "Step 8: Now back on the Main Screen, press F5 (OPTION) to open the 2nd Screen.",
-        expectedAction: "NAV_SECOND",
-        hint: "Click F5 Option on the right keypad or press F5.",
-        errorFeedback: "Press F5 (OPTION) to navigate to the 2nd Screen."
-      },
-      {
-        stepNumber: 9,
-        instruction: "Step 9: On the 2nd Screen, apply an Employee/Senior Discount by pressing F6 (TRX DISC).",
-        expectedAction: "TRX_DISC",
-        hint: "Click F6 Trx Disc on the 2nd Screen.",
-        errorFeedback: "Press F6 (TRX DISC) on the 2nd Screen."
-      },
-      {
-        stepNumber: 10,
-        instruction: "Step 10: On the Transaction Discount screen, select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to return to the Main Screen.",
-        expectedAction: "APPLY_DISCOUNT",
-        hint: "Select Senior Citizen Discount (ZSEN, 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
-        errorFeedback: "Select a discount and click [SELECT <Alt-Enter>] to apply it."
       },
       {
         stepNumber: 11,
@@ -2535,32 +2535,32 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
 
       {
         stepNumber: 17,
-        instruction: "Step 17: Another customer approaches. Scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
-        expectedAction: "ADD_ITEM",
-        expectedData: "NBS-PAP-003",
-        hint: "Type NBS-PAP-003 in the yellow barcode input and press Enter.",
-        errorFeedback: "Enter 'NBS-PAP-003' into the barcode field."
-      },
-      {
-        stepNumber: 18,
-        instruction: "Step 18: The customer hands you a PWD Card. Navigate from the Main Screen to the 2nd Screen by pressing F5 (OPTION).",
+        instruction: "Step 17: Another customer approaches and presents a PWD ID Card before you scan their item. First, navigate from the Main Screen to the 2nd Screen by pressing F5 (OPTION) to apply the discount before transacting.",
         expectedAction: "NAV_SECOND",
         hint: "Click F5 Option on the right column or press F5.",
         errorFeedback: "Press F5 (OPTION) to open the 2nd Screen."
       },
       {
-        stepNumber: 19,
-        instruction: "Step 19: On the 2nd Screen, press F6 (TRX DISC) to open the statutory discount menu.",
+        stepNumber: 18,
+        instruction: "Step 18: On the 2nd Screen, press F6 (TRX DISC) to open the statutory discount menu first.",
         expectedAction: "TRX_DISC",
         hint: "Click F6 Trx Disc on the right keypad or press F6.",
         errorFeedback: "Press F6 (TRX DISC) on the 2nd Screen."
       },
       {
-        stepNumber: 20,
-        instruction: "Step 20: On the Transaction Discount screen, select PWD Discount (ZPWD, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply and return to the Main Screen.",
+        stepNumber: 19,
+        instruction: "Step 19: On the Transaction Discount screen, select PWD Discount (ZPWD, 20%) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply and return to the Main Screen.",
         expectedAction: "APPLY_DISCOUNT",
         hint: "Select PWD Discount (ZPWD, 20%), then click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
         errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
+      },
+      {
+        stepNumber: 20,
+        instruction: "Step 20: Back on the Main Screen with the PWD discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
+        expectedAction: "ADD_ITEM",
+        expectedData: "NBS-PAP-003",
+        hint: "Type NBS-PAP-003 in the yellow barcode input and press Enter.",
+        errorFeedback: "Enter 'NBS-PAP-003' into the barcode field."
       },
       {
         stepNumber: 21,
@@ -2864,24 +2864,24 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 61,
-        instruction: "Step 61: Advance to the 4th Screen. Press F5 (NEXT OPTION).",
+        instruction: "Step 61: Navigate back to the 2nd Screen (e.g., press F11 Page Up, or cycle via F5 / F12).",
         expectedAction: "NAV_FOURTH",
-        hint: "Click F5 NEXT OPTION on the 3rd Screen.",
-        errorFeedback: "Press F5 on the 3rd Screen to advance to the 4th Screen."
+        hint: "Press F11 Page Up (or cycle F5 -> F12 -> F5) to reach the 2nd Screen.",
+        errorFeedback: "Navigate to the 2nd Screen."
       },
       {
         stepNumber: 62,
-        instruction: "Step 62: On the 4th Screen, press F12 (PAGE DOWN) to return to the Main Screen.",
+        instruction: "Step 62: Continue to the Main Screen (or press F11 Page Up from 3rd Screen to go directly to 2nd Screen).",
         expectedAction: "PAGE_DOWN",
-        hint: "Press F12 on your keyboard or click F12 Page Down on the 4th Screen to return to the Main Screen.",
-        errorFeedback: "Press F12 (PAGE DOWN) to return to the Main Screen."
+        hint: "Navigate to the 2nd Screen to access F8 Logout.",
+        errorFeedback: "Navigate toward the 2nd Screen."
       },
       {
         stepNumber: 63,
-        instruction: "Step 63: Advance from Main to the 2nd Screen. Press F5 (OPTION).",
+        instruction: "Step 63: Open the 2nd Screen where F8 (LOGOUT) is located.",
         expectedAction: "NAV_SECOND",
-        hint: "Press F5.",
-        errorFeedback: "Press F5."
+        hint: "Ensure you are on the 2nd Screen.",
+        errorFeedback: "Open the 2nd Screen."
       },
       {
         stepNumber: 64,
