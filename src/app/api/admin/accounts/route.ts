@@ -3,6 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { query } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
+import { destroyAllUserSessions } from "@/lib/auth/session";
 import { normalizePhilippineMobile, validatePassword } from "@/lib/auth/validation";
 import { MOCK_ADMIN_ACCOUNTS } from "@/lib/auth/demo-admin-data";
 
@@ -128,6 +129,122 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: error?.message || "Failed to create administrator account." },
+      { status: 500 }
+    );
+  }
+}
+
+// PATCH /api/admin/accounts - Archive (deactivate) or restore an admin account (Super Admin only)
+export async function PATCH(request: NextRequest) {
+  const auth = await requireAdmin({ requireSuperAdmin: true });
+  if (!auth.authorized) return auth.errorResponse!;
+
+  const superAdmin = auth.user!;
+
+  try {
+    const body = await request.json();
+    const targetId = (body.userId || "").trim();
+    const newStatus = body.status === "active" ? "active" : "deactivated";
+
+    if (!targetId) {
+      return NextResponse.json({ error: "Missing administrator userId." }, { status: 400 });
+    }
+
+    if (targetId === superAdmin.id && newStatus === "deactivated") {
+      return NextResponse.json(
+        { error: "You cannot archive your own currently active Super Admin account." },
+        { status: 400 }
+      );
+    }
+
+    if (superAdmin.id.startsWith("demo-")) {
+      return NextResponse.json({
+        success: true,
+        message: `Administrator account ${newStatus === "deactivated" ? "archived" : "restored"} (Demo Mode).`,
+      });
+    }
+
+    await query(
+      "UPDATE users SET status = ?, disabled_reason = ? WHERE id = ? AND role IN ('branch_admin', 'super_admin')",
+      [newStatus, newStatus === "deactivated" ? "Archived by Super Admin" : null, targetId]
+    );
+
+    if (newStatus === "deactivated") {
+      await destroyAllUserSessions(targetId);
+    }
+
+    await query(
+      `INSERT INTO audit_log (actor_id, action, target_user_id, details)
+       VALUES (?, ?, ?, ?)`,
+      [
+        superAdmin.id,
+        newStatus === "deactivated" ? "admin_account_archived" : "admin_account_restored",
+        targetId,
+        JSON.stringify({ actorName: superAdmin.fullName, status: newStatus }),
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Administrator account ${newStatus === "deactivated" ? "archived" : "restored"} successfully.`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to update administrator status." },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/admin/accounts - Permanently delete an admin account (Super Admin only)
+export async function DELETE(request: NextRequest) {
+  const auth = await requireAdmin({ requireSuperAdmin: true });
+  if (!auth.authorized) return auth.errorResponse!;
+
+  const superAdmin = auth.user!;
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const targetId = (searchParams.get("userId") || "").trim();
+
+    if (!targetId) {
+      return NextResponse.json({ error: "Missing administrator userId." }, { status: 400 });
+    }
+
+    if (targetId === superAdmin.id) {
+      return NextResponse.json(
+        { error: "You cannot delete your own currently signed-in Super Admin account." },
+        { status: 400 }
+      );
+    }
+
+    if (superAdmin.id.startsWith("demo-")) {
+      return NextResponse.json({
+        success: true,
+        message: "Administrator account deleted permanently (Demo Mode).",
+      });
+    }
+
+    await destroyAllUserSessions(targetId);
+    await query("DELETE FROM users WHERE id = ? AND role IN ('branch_admin', 'super_admin')", [targetId]);
+
+    await query(
+      `INSERT INTO audit_log (actor_id, action, target_user_id, details)
+       VALUES (?, 'admin_account_deleted', ?, ?)`,
+      [
+        superAdmin.id,
+        targetId,
+        JSON.stringify({ deletedByName: superAdmin.fullName }),
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Administrator account permanently deleted.",
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete administrator account." },
       { status: 500 }
     );
   }

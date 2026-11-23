@@ -20,7 +20,10 @@ import {
   ChevronRight,
   Award,
   AlertTriangle,
-  Building2
+  Building2,
+  Archive,
+  RotateCcw,
+  Trash2
 } from "lucide-react";
 
 interface TraineeListItem {
@@ -102,6 +105,55 @@ export default function AdminTraineesPage() {
     window.open(`/api/admin/trainees?${params.toString()}`, "_blank");
   };
 
+  const handleArchiveToggle = async (trainee: TraineeListItem) => {
+    const isArchived = trainee.status === "deactivated";
+    const nextStatus = isArchived ? "active" : "deactivated";
+    const actionLabel = isArchived ? "Restore" : "Archive";
+    if (!confirm(`${actionLabel} trainee account for ${trainee.fullName} (${trainee.email})?`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/trainees/${trainee.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_status",
+          status: nextStatus,
+          disabledReason: isArchived ? null : "Archived by administrator",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Failed to ${actionLabel.toLowerCase()} trainee`);
+      setTrainees((prev) =>
+        prev.map((t) => (t.id === trainee.id ? { ...t, status: nextStatus } : t))
+      );
+    } catch (err: any) {
+      alert(err.message || "Failed to update trainee status");
+    }
+  };
+
+  const handleDeleteTrainee = async (trainee: TraineeListItem) => {
+    if (
+      !confirm(
+        `Permanently delete trainee account for ${trainee.fullName} (${trainee.email}) and all training records? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/trainees/${trainee.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete trainee");
+      setTrainees((prev) => prev.filter((t) => t.id !== trainee.id));
+    } catch (err: any) {
+      alert(err.message || "Failed to delete trainee");
+    }
+  };
+
   return (
     <AdminShell>
       <div className="space-y-6">
@@ -161,7 +213,7 @@ export default function AdminTraineesPage() {
               <option value="pending">Pending Approval</option>
               <option value="expiring_soon">Expiring This Week</option>
               <option value="expired">Expired Access</option>
-              <option value="deactivated">Deactivated</option>
+              <option value="deactivated">Archived / Deactivated</option>
             </select>
 
             <Button
@@ -248,7 +300,7 @@ export default function AdminTraineesPage() {
                               : "bg-rose-50 text-rose-700 border border-rose-200"
                           }`}
                         >
-                          {t.status}
+                          {t.status === "deactivated" ? "ARCHIVED" : t.status}
                         </span>
                       </td>
 
@@ -317,16 +369,44 @@ export default function AdminTraineesPage() {
 
                       {/* Action */}
                       <td className="py-3 px-3 text-right whitespace-nowrap">
-                        <Link href={`/admin/trainees/${t.id}`}>
+                        <div className="inline-flex items-center space-x-1.5">
+                          <Link href={`/admin/trainees/${t.id}`}>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7 px-2.5 border-gray-300 font-bold hover:text-[#E4002B] hover:border-[#E4002B]"
+                            >
+                              <span>View Record</span>
+                              <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                            </Button>
+                          </Link>
+
                           <Button
                             variant="outline"
                             size="sm"
-                            className="text-xs h-7 px-2.5 border-gray-300 font-bold hover:text-[#E4002B] hover:border-[#E4002B]"
+                            onClick={() => handleArchiveToggle(t)}
+                            title={t.status === "deactivated" ? "Restore Trainee" : "Archive Trainee"}
+                            className="h-7 px-2 text-[11px] font-semibold border-gray-300"
                           >
-                            <span>View Record</span>
-                            <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                            {t.status === "deactivated" ? (
+                              <RotateCcw className="w-3.5 h-3.5 text-emerald-600" />
+                            ) : (
+                              <Archive className="w-3.5 h-3.5 text-amber-600" />
+                            )}
                           </Button>
-                        </Link>
+
+                          {isSuper && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDeleteTrainee(t)}
+                              title="Delete Trainee Permanently"
+                              className="h-7 px-2 text-[11px] font-semibold border-rose-200 text-rose-600 hover:bg-rose-50"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

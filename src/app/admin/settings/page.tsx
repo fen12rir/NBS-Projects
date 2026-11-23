@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ import {
   User, 
   Building2, 
   Mail,
-  Shield
+  Shield,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 export default function AdminSettingsPage() {
@@ -26,8 +28,45 @@ export default function AdminSettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [demoAccessEnabled, setDemoAccessEnabled] = useState(true);
+  const [isTogglingDemo, setIsTogglingDemo] = useState(false);
 
   const isSuper = user?.role === "super_admin";
+
+  useEffect(() => {
+    if (isSuper) {
+      fetch("/api/settings/public")
+        .then((res) => res.json())
+        .then((data) => {
+          if (typeof data.demoAccessEnabled === "boolean") {
+            setDemoAccessEnabled(data.demoAccessEnabled);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isSuper]);
+
+  const handleToggleDemoAccess = async () => {
+    setIsTogglingDemo(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    const nextVal = !demoAccessEnabled;
+    try {
+      const res = await fetch("/api/settings/public", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demoAccessEnabled: nextVal }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to update setting");
+      setDemoAccessEnabled(nextVal);
+      setSuccessMessage(data.message);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to update demo access setting");
+    } finally {
+      setIsTogglingDemo(false);
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -222,6 +261,64 @@ export default function AdminSettingsPage() {
             </div>
           </div>
         </div>
+
+        {/* Super Admin Portal Controls: Instant Demo Access Visibility */}
+        {isSuper && (
+          <div className="bg-white border border-slate-200/90 rounded-2xl shadow-xs p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start space-x-3">
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  demoAccessEnabled
+                    ? "bg-amber-50 text-amber-600 border border-amber-200"
+                    : "bg-slate-100 text-slate-500 border border-slate-200"
+                }`}
+              >
+                {demoAccessEnabled ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <h2 className="text-sm font-bold text-slate-900">
+                    Instant Demo Access Visibility
+                  </h2>
+                  <span
+                    className={`px-2 py-0.5 rounded-none text-[10px] font-mono font-bold uppercase leading-none ${
+                      demoAccessEnabled
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                        : "bg-slate-100 text-slate-600 border border-slate-200"
+                    }`}
+                  >
+                    {demoAccessEnabled ? "VISIBLE" : "HIDDEN"}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  {demoAccessEnabled
+                    ? "The 'Admin Demo' and 'Trainee Demo' buttons are currently shown on the Login and Landing pages."
+                    : "Instant Demo Access is hidden on the Login and Landing pages. Only registered users can sign in."}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant={demoAccessEnabled ? "outline" : "primary"}
+              size="sm"
+              disabled={isTogglingDemo}
+              onClick={handleToggleDemoAccess}
+              className="text-xs font-semibold shrink-0 flex items-center space-x-1.5"
+            >
+              {demoAccessEnabled ? (
+                <>
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>{isTogglingDemo ? "Hiding..." : "Hide Demo Access"}</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>{isTogglingDemo ? "Showing..." : "Show Demo Access"}</span>
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </AdminShell>
   );

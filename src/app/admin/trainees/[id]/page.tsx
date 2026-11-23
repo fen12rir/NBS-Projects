@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
+import { useAuth } from "@/lib/auth/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TRAINING_MODULES } from "@/data/modules";
@@ -27,7 +28,9 @@ import {
   Lock,
   Unlock,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Trash2,
+  Archive
 } from "lucide-react";
 
 interface TraineeDossier {
@@ -87,6 +90,8 @@ interface TraineeDossier {
 export default function TraineeDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user: adminUser } = useAuth();
+  const isSuper = adminUser?.role === "super_admin";
   const traineeId = params.id as string;
 
   const [dossier, setDossier] = useState<TraineeDossier | null>(null);
@@ -144,6 +149,28 @@ export default function TraineeDetailPage() {
       fetchDossier();
     } catch (err: any) {
       setErrorMessage(err.message || "Action failed");
+    }
+  };
+
+  const handleDeleteTrainee = async () => {
+    if (!dossier) return;
+    if (
+      !confirm(
+        `Permanently delete trainee account for ${dossier.trainee.fullName} (${dossier.trainee.email}) and all of their training history? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/admin/trainees/${traineeId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete trainee");
+      router.push("/admin/trainees");
+    } catch (err: any) {
+      setErrorMessage(err.message || "Failed to delete trainee");
     }
   };
 
@@ -369,29 +396,47 @@ export default function TraineeDetailPage() {
             <div className="p-4 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-3">
               <div className="font-bold text-xs text-slate-800 flex items-center justify-between">
                 <span>Account Status</span>
-                <span className="text-[11px] capitalize font-semibold text-slate-600">{trainee.status}</span>
+                <span className="text-[11px] capitalize font-semibold text-slate-600">
+                  {trainee.status === "deactivated" ? "Archived" : trainee.status}
+                </span>
               </div>
               <p className="text-[11px] text-gray-500">
-                Active trainees can access learning modules and simulator. Deactivating prevents any login.
+                Active trainees can access learning modules and simulator. Archiving prevents login while preserving records.
               </p>
-              {trainee.status === "active" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowDeactivateModal(true)}
-                  className="w-full border-red-300 text-red-700 hover:bg-red-50 text-xs font-bold"
-                >
-                  Deactivate Account
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => handlePatch({ action: "update_status", status: "active" })}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
-                >
-                  Reactivate Account
-                </Button>
-              )}
+              <div className="space-y-2">
+                {trainee.status === "active" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeactivateModal(true)}
+                    className="w-full border-amber-300 text-amber-800 hover:bg-amber-50 text-xs font-bold flex items-center justify-center space-x-1.5"
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>Archive / Deactivate Account</span>
+                  </Button>
+                ) : (
+                  <Button
+                    size="sm"
+                    onClick={() => handlePatch({ action: "update_status", status: "active" })}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center space-x-1.5"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Restore / Reactivate Account</span>
+                  </Button>
+                )}
+
+                {isSuper && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteTrainee}
+                    className="w-full border-rose-300 text-rose-700 hover:bg-rose-50 text-xs font-bold flex items-center justify-center space-x-1.5"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Account Permanently</span>
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Control 2: Access Expiry Extension */}

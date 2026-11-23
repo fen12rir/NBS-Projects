@@ -1,9 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME, DEMO_COOKIE_NAME, isCookieSecure } from "@/lib/auth/session";
 import { DEMO_ADMIN_USER, DEMO_TRAINEE_USER } from "@/lib/auth/demo-user";
+import { isDemoAccessEnabled } from "@/app/api/settings/public/route";
 
 export async function POST(request: NextRequest) {
   try {
+    const enabled = await isDemoAccessEnabled();
+    if (!enabled) {
+      return NextResponse.json(
+        { error: "Instant Demo Access has been disabled by the System Administrator. Please sign in with your account." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const mode = body.mode === "admin" ? "admin" : "trainee";
 

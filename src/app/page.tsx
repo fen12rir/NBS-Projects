@@ -26,9 +26,21 @@ export default function HomePage() {
   const { user, signInWithGoogle, enterDemoMode } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isNavVisible, setIsNavVisible] = useState(true);
+  const [demoAccessEnabled, setDemoAccessEnabled] = useState(true);
   const lastScrollY = useRef(0);
 
   useLockBodyScroll(showAuthModal);
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.demoAccessEnabled === "boolean") {
+          setDemoAccessEnabled(data.demoAccessEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -102,7 +114,7 @@ export default function HomePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="hidden sm:inline-flex border-gray-300 font-bold text-gray-700"
+                    className="hidden sm:inline-flex border-gray-300 font-bold text-gray-700 h-9 px-3.5 text-xs sm:text-sm"
                   >
                     Register
                   </Button>
@@ -110,7 +122,7 @@ export default function HomePage() {
                 <Link href="/login">
                   <Button
                     size="sm"
-                    className="font-bold flex items-center space-x-1.5 text-xs sm:text-sm bg-[#E4002B] hover:bg-[#C10024] text-white"
+                    className="font-bold flex items-center space-x-1.5 h-9 px-3.5 text-xs sm:text-sm bg-[#E4002B] hover:bg-[#C10024] text-white"
                   >
                     <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     <span>Sign In</span>
@@ -507,33 +519,35 @@ export default function HomePage() {
                 </Button>
               </Link>
 
-              <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
-                <Button
-                  variant="secondary"
-                  onClick={async () => {
-                    await enterDemoMode("admin");
-                    setShowAuthModal(false);
-                    window.location.href = "/admin";
-                  }}
-                  className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
-                >
-                  <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Admin Demo</span>
-                </Button>
+              {demoAccessEnabled && (
+                <div className="grid grid-cols-2 gap-2.5 pt-2 border-t border-slate-100">
+                  <Button
+                    variant="secondary"
+                    onClick={async () => {
+                      await enterDemoMode("admin");
+                      setShowAuthModal(false);
+                      window.location.href = "/admin";
+                    }}
+                    className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Admin Demo</span>
+                  </Button>
 
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    await enterDemoMode("trainee");
-                    setShowAuthModal(false);
-                    window.location.href = "/dashboard";
-                  }}
-                  className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-[#E4002B]" />
-                  <span>Trainee Demo</span>
-                </Button>
-              </div>
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      await enterDemoMode("trainee");
+                      setShowAuthModal(false);
+                      window.location.href = "/dashboard";
+                    }}
+                    className="w-full py-2.5 text-xs font-semibold flex items-center justify-center space-x-1.5"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-[#E4002B]" />
+                    <span>Trainee Demo</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>

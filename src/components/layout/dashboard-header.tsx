@@ -298,7 +298,7 @@ export function DashboardHeader({
               title="Account & Change Password"
               aria-label="Account & Change Password"
               aria-expanded={showSettingsMenu}
-              className={`flex items-center justify-center p-2 border-slate-300 shrink-0 rounded-lg ${
+              className={`h-8 w-8 p-0 flex items-center justify-center border-slate-300 shrink-0 rounded-lg ${
                 showSettingsMenu ? "border-[#E4002B] text-[#E4002B] bg-red-50" : "text-slate-700 hover:text-[#E4002B]"
               }`}
             >

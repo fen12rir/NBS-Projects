@@ -38,6 +38,18 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
+  const [demoAccessEnabled, setDemoAccessEnabled] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/settings/public")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.demoAccessEnabled === "boolean") {
+          setDemoAccessEnabled(data.demoAccessEnabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // If already logged in, redirect directly to role-appropriate portal
   useEffect(() => {
@@ -144,14 +156,14 @@ function LoginForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-            Work E-mail Address
+            Email Address
           </label>
           <div className="relative">
             <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <Input
               type="email"
               required
-              placeholder="name@nbs.com.ph"
+              placeholder="e.g. maria.santos@gmail.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -199,50 +211,52 @@ function LoginForm() {
       </form>
 
       {/* Prominent Demo Mode Section */}
-      <div className="mt-6 pt-5 border-t border-slate-200">
-        <div className="relative mb-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-200" />
-          </div>
-          <div className="relative flex justify-center text-[11px] uppercase font-semibold">
-            <span className="bg-white px-3 text-slate-400 tracking-wider">
-              Sandbox Evaluation Mode
-            </span>
-          </div>
-        </div>
-
-        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
-          <div className="text-center">
-            <div className="text-xs font-bold text-slate-900">
-              Instant Demo Access
+      {demoAccessEnabled && (
+        <div className="mt-6 pt-5 border-t border-slate-200">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200" />
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">
-              Preview the platform without database credentials:
-            </p>
+            <div className="relative flex justify-center text-[11px] uppercase font-semibold">
+              <span className="bg-white px-3 text-slate-400 tracking-wider">
+                Sandbox Evaluation Mode
+              </span>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              onClick={handleDemoAdminLogin}
-              disabled={isLoading}
-              className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-2 shadow-xs transition-all"
-            >
-              <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Admin Demo &rarr;</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleDemoTraineeLogin}
-              disabled={isLoading}
-              className="py-2.5 px-3 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-2 shadow-xs transition-all"
-            >
-              <Building2 className="w-4 h-4 text-white shrink-0" />
-              <span>Trainee Demo &rarr;</span>
-            </button>
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <div className="text-center">
+              <div className="text-xs font-bold text-slate-900">
+                Instant Demo Access
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Preview the platform without database credentials:
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={handleDemoAdminLogin}
+                disabled={isLoading}
+                className="py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-2 shadow-xs transition-all"
+              >
+                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                <span>Admin Demo &rarr;</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDemoTraineeLogin}
+                disabled={isLoading}
+                className="py-2.5 px-3 bg-[#E4002B] hover:bg-[#C30024] text-white text-xs font-semibold rounded-lg flex items-center justify-center space-x-2 shadow-xs transition-all"
+              >
+                <Building2 className="w-4 h-4 text-white shrink-0" />
+                <span>Trainee Demo &rarr;</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* New Trainee Registration Link */}
       <div className="mt-4 pt-3 text-center">

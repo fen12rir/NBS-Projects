@@ -451,3 +451,47 @@ export async function PATCH(
     );
   }
 }
+
+// DELETE /api/admin/trainees/[id] - Permanently delete trainee account (Super Admin only)
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const auth = await requireAdmin({ requireSuperAdmin: true });
+  if (!auth.authorized) return auth.errorResponse!;
+
+  const superAdmin = auth.user!;
+  const traineeId = params.id;
+
+  try {
+    if (superAdmin.id.startsWith("demo-")) {
+      return NextResponse.json({
+        success: true,
+        message: "Trainee account permanently deleted (Demo Mode).",
+      });
+    }
+
+    await destroyAllUserSessions(traineeId);
+    await query("DELETE FROM users WHERE id = ? AND role = 'trainee'", [traineeId]);
+
+    await query(
+      `INSERT INTO audit_log (actor_id, action, target_user_id, details)
+       VALUES (?, 'trainee_account_deleted', ?, ?)`,
+      [
+        superAdmin.id,
+        traineeId,
+        JSON.stringify({ deletedByName: superAdmin.fullName }),
+      ]
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: "Trainee account permanently deleted.",
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete trainee account." },
+      { status: 500 }
+    );
+  }
+}

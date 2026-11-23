@@ -253,7 +253,7 @@ export default function SignupPage() {
               {/* Email */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase mb-1">
-                  E-mail Address <span className="text-[#E4002B]">*</span>
+                  Email Address <span className="text-[#E4002B]">*</span>
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
@@ -261,7 +261,7 @@ export default function SignupPage() {
                     name="email"
                     type="email"
                     required
-                    placeholder="e.g. maria.santos@nbs.com.ph"
+                    placeholder="e.g. maria.santos@gmail.com"
                     value={formData.email}
                     onChange={handleChange}
                     className="pl-9 text-sm"
