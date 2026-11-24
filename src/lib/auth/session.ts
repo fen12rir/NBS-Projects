@@ -22,6 +22,19 @@ export function isCookieSecure(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
+let lastExpiredSessionPurge = 0;
+
+export async function purgeExpiredSessions(): Promise<void> {
+  const nowMs = Date.now();
+  if (nowMs - lastExpiredSessionPurge < 15 * 60 * 1000) return;
+  lastExpiredSessionPurge = nowMs;
+  try {
+    await query("DELETE FROM sessions WHERE expires_at < NOW()");
+  } catch {
+    // Non-fatal
+  }
+}
+
 export async function createSession(
   userId: string,
   userAgent?: string | null
@@ -30,6 +43,14 @@ export async function createSession(
   const tokenHash = hashToken(rawToken);
   const ttlSeconds = getSessionTtlSeconds();
   const expiresAt = new Date(Date.now() + ttlSeconds * 1000);
+
+  // Purge any expired sessions
+  try {
+    await query("DELETE FROM sessions WHERE expires_at < NOW()");
+    lastExpiredSessionPurge = Date.now();
+  } catch {
+    // Non-fatal
+  }
 
   // If single session setting is enabled, purge prior sessions for this user
   try {
@@ -141,6 +162,7 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
 
   try {
     await ensurePosCredentialColumns();
+    void purgeExpiredSessions();
     const rows = await query<any[]>(
       `SELECT s.token_hash, s.user_id, s.expires_at,
               u.id, u.full_name, u.email, u.contact_no, u.branch_code, u.role, u.status,

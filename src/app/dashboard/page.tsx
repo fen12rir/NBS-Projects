@@ -41,10 +41,13 @@ export default function DashboardPage() {
   useEffect(() => {
     setProgress(getLocalProgress());
     if (user && !user.isDemo) {
-      fetchProgressFromMariaDb().then((merged) => {
-        if (merged) setProgress(merged);
+      fetchProgressFromMariaDb().then((serverProg) => {
+        if (serverProg) setProgress(serverProg);
       });
     }
+    const handleUpdate = () => setProgress(getLocalProgress());
+    window.addEventListener("nbs_progress_updated", handleUpdate);
+    return () => window.removeEventListener("nbs_progress_updated", handleUpdate);
   }, [user]);
 
   if (isLoading) {

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
 import { getScenarioForLesson, getScenarioForModule } from "@/data/scenarios";
-import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { getLocalProgress, fetchProgressFromMariaDb, UserProgress } from "@/lib/progress/progress-store";
 import { getLocalizedLesson, getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
 import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
 import { 
@@ -38,6 +38,12 @@ export default function ModuleDetailPage() {
 
   useEffect(() => {
     setProgress(getLocalProgress());
+    fetchProgressFromMariaDb().then((serverProg) => {
+      if (serverProg) setProgress(serverProg);
+    });
+    const handleUpdate = () => setProgress(getLocalProgress());
+    window.addEventListener("nbs_progress_updated", handleUpdate);
+    return () => window.removeEventListener("nbs_progress_updated", handleUpdate);
   }, []);
 
   const currentModuleIndex = TRAINING_MODULES.findIndex((m) => m.id === moduleId);

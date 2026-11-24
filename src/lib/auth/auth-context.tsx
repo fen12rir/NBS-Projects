@@ -70,15 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           if (typeof window !== "undefined") {
             try {
-              const prevRaw = localStorage.getItem("nbs_user_profile");
-              const prevId = prevRaw ? JSON.parse(prevRaw)?.id : null;
-              if (prevId && prevId !== authUser.id) {
-                localStorage.removeItem("nbs_pos_training_progress_v1");
-              }
+              localStorage.removeItem("nbs_pos_training_progress_v1");
               localStorage.setItem(
                 "nbs_user_profile",
                 JSON.stringify({ id: authUser.id, email: authUser.email, fullName: authUser.fullName })
               );
+              window.dispatchEvent(new Event("nbs_progress_updated"));
             } catch {}
           }
           setUser(authUser);
@@ -181,8 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (typeof window !== "undefined") {
       localStorage.removeItem("nbs_demo_active");
       localStorage.removeItem("nbs_user_profile");
+      localStorage.removeItem("nbs_pos_training_progress_v1");
       // Clear client-accessible cookies
       document.cookie = "nbs_demo_mode=; path=/; max-age=0";
+      window.dispatchEvent(new Event("nbs_progress_updated"));
     }
 
     setUser(null);
@@ -200,12 +199,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Best effort
     }
 
+    const demoUser = mode === "admin" ? DEMO_ADMIN_USER : DEMO_TRAINEE_USER;
     if (typeof window !== "undefined") {
       localStorage.setItem("nbs_demo_active", mode);
+      localStorage.removeItem("nbs_pos_training_progress_v1");
+      localStorage.setItem(
+        "nbs_user_profile",
+        JSON.stringify({ id: demoUser.id, email: demoUser.email, fullName: demoUser.fullName })
+      );
       document.cookie = `nbs_demo_mode=${mode}; path=/; max-age=604800`;
+      window.dispatchEvent(new Event("nbs_progress_updated"));
     }
 
-    const demoUser = mode === "admin" ? DEMO_ADMIN_USER : DEMO_TRAINEE_USER;
     setUser(demoUser);
     setIsDemoMode(true);
     setIsLoading(false);
