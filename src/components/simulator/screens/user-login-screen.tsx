@@ -40,20 +40,26 @@ export function UserLoginScreen({
             <div>
               <input
                 type="text"
+                inputMode="none"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="off"
+                spellCheck={false}
                 value={loginUsername}
                 onChange={(e) => onUsernameChange(e.target.value)}
-                placeholder="UserName (e.g. 241209)"
+                placeholder="Enter POS UserName"
                 className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
                 autoFocus={autoFocus}
               />
               <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">
-                UserName (Default: 241209)
+                UserName
               </div>
             </div>
 
             <div>
               <input
                 type="text"
+                inputMode="none"
                 style={{ WebkitTextSecurity: "disc" } as React.CSSProperties}
                 autoComplete="off"
                 autoCorrect="off"
@@ -63,7 +69,7 @@ export function UserLoginScreen({
                 data-form-type="other"
                 value={loginPassword}
                 onChange={(e) => onPasswordChange(e.target.value)}
-                placeholder="Password (e.g. ******)"
+                placeholder="Enter POS Password"
                 className="w-full bg-white border border-gray-500 px-2 py-1 text-center font-mono font-bold text-sm text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-green-600"
               />
               <div className="text-[11px] text-gray-600 text-center font-sans mt-0.5">

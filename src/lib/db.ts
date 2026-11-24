@@ -31,6 +31,32 @@ export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
   return results as T;
 }
 
+let posColumnsChecked = false;
+export async function ensurePosCredentialColumns(): Promise<void> {
+  if (posColumnsChecked) return;
+  posColumnsChecked = true;
+  try {
+    await dbPool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS pos_username VARCHAR(32) NULL AFTER employee_id, ADD COLUMN IF NOT EXISTS pos_password VARCHAR(64) NULL AFTER pos_username"
+    );
+  } catch {
+    // Non-fatal fallback
+  }
+}
+
+export function generatePosCredentials(branchCode?: string): {
+  posUsername: string;
+  posPassword: string;
+} {
+  const prefix = (branchCode || "24").replace(/\D/g, "").slice(0, 2) || "24";
+  const randUser = Math.floor(1000 + Math.random() * 9000).toString();
+  const randPass = Math.floor(100000 + Math.random() * 900000).toString();
+  return {
+    posUsername: `${prefix}${randUser}`,
+    posPassword: randPass,
+  };
+}
+
 export async function testDbConnection(): Promise<{ connected: boolean; message: string }> {
   try {
     await dbPool.query("SELECT 1 AS connected");

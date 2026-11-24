@@ -21,7 +21,9 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  User
+  User,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -44,6 +46,7 @@ export function DashboardHeader({
   const lastScrollY = useRef(0);
 
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
+  const [showPosPassword, setShowPosPassword] = useState(false);
   const settingsMenuRef = useRef<HTMLDivElement>(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -306,7 +309,7 @@ export function DashboardHeader({
             </Button>
 
             {showSettingsMenu && (
-              <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden">
                 <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Learner Account
@@ -323,6 +326,52 @@ export function DashboardHeader({
                     </div>
                   )}
                 </div>
+
+                {/* POS Simulator Credentials Section */}
+                <div className="px-4 py-3 border-b border-slate-100 bg-white space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                      <Monitor className="w-3.5 h-3.5 text-[#E4002B] shrink-0" />
+                      <span>POS Simulator Login</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPosPassword((prev) => !prev)}
+                      className="text-[11px] font-semibold text-slate-500 hover:text-[#E4002B] flex items-center space-x-1 cursor-pointer"
+                      title={showPosPassword ? "Hide POS Password" : "View POS Password"}
+                    >
+                      {showPosPassword ? (
+                        <>
+                          <EyeOff className="w-3.5 h-3.5" />
+                          <span>Hide</span>
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>View</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-900 text-slate-100 rounded-lg p-2.5 font-mono text-xs space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">UserName:</span>
+                      <span className="font-bold text-emerald-400 select-all">
+                        {user?.posUsername || "241209"}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 text-[11px]">Password:</span>
+                      <span className="font-bold text-amber-300 select-all">
+                        {showPosPassword
+                          ? user?.posPassword || "241209"
+                          : "••••••"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="py-1.5">
                   <button
                     type="button"
@@ -335,7 +384,7 @@ export function DashboardHeader({
                     className="w-full px-4 py-2 text-left text-xs font-medium text-slate-700 hover:bg-red-50 hover:text-[#E4002B] flex items-center space-x-2.5 transition-colors"
                   >
                     <Lock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Change Password</span>
+                    <span>Change Portal Password</span>
                   </button>
                 </div>
               </div>

@@ -21,6 +21,8 @@ export interface AuthSessionUser {
   role: UserRole;
   status: UserStatus;
   employeeId?: string | null;
+  posUsername?: string | null;
+  posPassword?: string | null;
   accessExpiresAt?: string | null;
   suspendedFrom?: string | null;
   suspendedUntil?: string | null;

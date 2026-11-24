@@ -190,10 +190,10 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
     steps: [
       {
         stepNumber: 1,
-        instruction: "Step 1: In the USER LOGIN window, enter or verify UserName '241209' and Password, then click [Ok] or press ENTER to sign in.",
+        instruction: "Step 1: In the USER LOGIN window, enter your assigned POS UserName and Password sent to your email, then click [Ok] or press ENTER to sign in.",
         expectedAction: "LOGIN_SUBMIT",
-        hint: "Click [Ok] or press ENTER in the USER LOGIN dialog to log in.",
-        errorFeedback: "Enter your cashier credentials and click [Ok] to log in."
+        hint: "Enter your assigned POS UserName and Password, then click [Ok] or press ENTER in the USER LOGIN dialog.",
+        errorFeedback: "Enter your cashier POS credentials and click [Ok] to log in."
       },
       {
         stepNumber: 2,
@@ -263,9 +263,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Sign in with your cashier credentials ('241209') by clicking [Ok] or pressing ENTER.",
+        instruction: "Step 6: Sign in with your assigned POS UserName and Password by clicking [Ok] or pressing ENTER.",
         expectedAction: "LOGIN_SUBMIT",
-        hint: "Click [Ok] or press ENTER in the USER LOGIN dialog.",
+        hint: "Enter your assigned POS UserName and Password, then click [Ok] or press ENTER in the USER LOGIN dialog.",
         errorFeedback: "Submit your cashier login credentials to open the register."
       },
       {

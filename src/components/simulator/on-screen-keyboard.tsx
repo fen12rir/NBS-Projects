@@ -85,7 +85,10 @@ function insertText(text: string) {
   const [s, e] = getSelectionRange(el);
   const next = el.value.slice(0, s) + text + el.value.slice(e);
   if (el.maxLength > 0 && next.length > el.maxLength) return;
-  if (el instanceof HTMLInputElement && el.type === "number" && !/^-?\d*\.?\d*$/.test(next)) return;
+  const isNumericOnly =
+    el instanceof HTMLInputElement &&
+    (el.type === "number" || el.getAttribute("data-osk-numeric") === "true");
+  if (isNumericOnly && !/^-?\d*\.?\d*$/.test(next)) return;
   setNativeValue(el, next);
   setCaret(el, s + text.length);
 }

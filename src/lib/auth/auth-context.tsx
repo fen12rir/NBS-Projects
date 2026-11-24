@@ -63,9 +63,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             branchName: data.user.branchName,
             branchRegion: data.user.branchRegion,
             employeeId: data.user.employeeId,
+            posUsername: data.user.posUsername,
+            posPassword: data.user.posPassword,
             accessExpiresAt: data.user.accessExpiresAt,
             isDemo: Boolean(data.user.id?.includes("demo")),
           };
+          if (typeof window !== "undefined") {
+            try {
+              const prevRaw = localStorage.getItem("nbs_user_profile");
+              const prevId = prevRaw ? JSON.parse(prevRaw)?.id : null;
+              if (prevId && prevId !== authUser.id) {
+                localStorage.removeItem("nbs_pos_training_progress_v1");
+              }
+              localStorage.setItem(
+                "nbs_user_profile",
+                JSON.stringify({ id: authUser.id, email: authUser.email, fullName: authUser.fullName })
+              );
+            } catch {}
+          }
           setUser(authUser);
           setIsDemoMode(Boolean(data.user.id?.includes("demo")));
           setIsLoading(false);

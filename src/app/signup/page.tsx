@@ -18,7 +18,9 @@ import {
   ArrowRight,
   Clock,
   ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 // Hardcoded fallback branches in case database is loading
@@ -51,6 +53,8 @@ export default function SignupPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successInfo, setSuccessInfo] = useState<{ message: string; branchName: string } | null>(null);
   const [demoAccessEnabled, setDemoAccessEnabled] = useState(true);
@@ -334,13 +338,26 @@ export default function SignupPage() {
                     <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <Input
                       name="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       required
                       placeholder="Min. 8 chars"
                       value={formData.password}
                       onChange={handleChange}
-                      className="pl-9 text-sm"
+                      className="pl-9 pr-9 text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
@@ -352,13 +369,26 @@ export default function SignupPage() {
                     <Lock className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
                     <Input
                       name="confirmPassword"
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       required
                       placeholder="Repeat password"
                       value={formData.confirmPassword}
                       onChange={handleChange}
-                      className="pl-9 text-sm"
+                      className="pl-9 pr-9 text-sm"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      title={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600 focus:outline-none cursor-pointer"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
                   </div>
                 </div>
               </div>

@@ -42,6 +42,8 @@ CREATE TABLE IF NOT EXISTS users (
   status ENUM('pending', 'active', 'rejected', 'deactivated') NOT NULL DEFAULT 'pending',
   rejection_reason VARCHAR(255) NULL,
   employee_id VARCHAR(64) NULL,
+  pos_username VARCHAR(32) NULL,
+  pos_password VARCHAR(64) NULL,
   access_expires_at DATETIME NULL,
   suspended_from DATETIME NULL,
   suspended_until DATETIME NULL,
@@ -144,3 +146,7 @@ CREATE TABLE IF NOT EXISTS audit_log (
   INDEX idx_audit_target (target_user_id),
   INDEX idx_audit_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Safe migration for existing databases
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pos_username VARCHAR(32) NULL AFTER employee_id;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS pos_password VARCHAR(64) NULL AFTER pos_username;

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { useAuth } from "@/lib/auth/auth-context";
+import { useAutoRefresh } from "@/lib/use-auto-refresh";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TRAINING_MODULES } from "@/data/modules";
@@ -46,6 +47,8 @@ interface TraineeDossier {
     status: "active" | "pending" | "rejected" | "deactivated";
     rejectionReason?: string | null;
     employeeId?: string | null;
+    posUsername?: string | null;
+    posPassword?: string | null;
     accessExpiresAt?: string | null;
     disabledReason?: string | null;
     lastLoginAt?: string | null;
@@ -111,11 +114,13 @@ export default function TraineeDetailPage() {
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
   const [deactivateReason, setDeactivateReason] = useState("");
 
-  const fetchDossier = async () => {
-    setIsLoading(true);
-    setErrorMessage(null);
+  const fetchDossier = useCallback(async (silent = false) => {
+    if (!silent) {
+      setIsLoading(true);
+      setErrorMessage(null);
+    }
     try {
-      const res = await fetch(`/api/admin/trainees/${traineeId}`);
+      const res = await fetch(`/api/admin/trainees/${traineeId}`, { cache: "no-store" });
       if (!res.ok) throw new Error("Failed to load trainee dossier");
       const data = await res.json();
       setDossier(data);
@@ -124,15 +129,19 @@ export default function TraineeDetailPage() {
         setCustomExpiryDate(new Date(data.trainee.accessExpiresAt).toISOString().split("T")[0]);
       }
     } catch (err: any) {
-      setErrorMessage(err.message || "Failed to load details");
+      if (!silent) setErrorMessage(err.message || "Failed to load details");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [traineeId]);
 
   useEffect(() => {
-    if (traineeId) fetchDossier();
-  }, [traineeId]);
+    if (traineeId) fetchDossier(false);
+  }, [traineeId, fetchDossier]);
+
+  useAutoRefresh(() => {
+    if (traineeId) fetchDossier(true);
+  }, { intervalMs: 20000 });
 
   const handlePatch = async (payload: any) => {
     try {
@@ -378,6 +387,23 @@ export default function TraineeDetailPage() {
               <span className="font-mono font-bold text-gray-800">
                 {trainee.accessExpiresAt ? new Date(trainee.accessExpiresAt).toLocaleDateString() : "Unlimited"}
               </span>
+            </div>
+            <div className="min-w-0 col-span-2">
+              <span className="text-gray-500 block text-[10px] uppercase font-bold">POS Terminal Login (UserName / Password)</span>
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                <span className="font-mono font-bold text-gray-900 bg-slate-100 border border-slate-200 px-2 py-0.5">
+                  User: {trainee.posUsername || "Pending"} &nbsp;|&nbsp; Pass: {trainee.posPassword || "Pending"}
+                </span>
+                {trainee.status === "active" && (
+                  <button
+                    type="button"
+                    onClick={() => handlePatch({ action: "resend_pos_credentials" })}
+                    className="text-[11px] font-semibold text-[#E4002B] hover:underline cursor-pointer"
+                  >
+                    Email POS Login
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

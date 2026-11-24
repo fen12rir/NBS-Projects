@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
-import { query } from "@/lib/db";
+import { query, ensurePosCredentialColumns, generatePosCredentials } from "@/lib/db";
 import { AuthSessionUser } from "./types";
 
 export const SESSION_COOKIE_NAME = "nbs_session";
@@ -103,6 +103,8 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
       role: "super_admin",
       status: "active",
       employeeId: "NBS-ADM-001",
+      posUsername: "241209",
+      posPassword: "241209",
       accessExpiresAt: null,
       createdAt: new Date().toISOString(),
     };
@@ -122,6 +124,8 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
       role: "trainee",
       status: "active",
       employeeId: "NBS-EMP-2026-0891",
+      posUsername: "241209",
+      posPassword: "241209",
       accessExpiresAt: null,
       createdAt: new Date().toISOString(),
     };
@@ -136,10 +140,12 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
   const now = new Date();
 
   try {
+    await ensurePosCredentialColumns();
     const rows = await query<any[]>(
       `SELECT s.token_hash, s.user_id, s.expires_at,
               u.id, u.full_name, u.email, u.contact_no, u.branch_code, u.role, u.status,
-              u.rejection_reason, u.employee_id, u.access_expires_at, u.suspended_from,
+              u.rejection_reason, u.employee_id, u.pos_username, u.pos_password,
+              u.access_expires_at, u.suspended_from,
               u.suspended_until, u.disabled_reason, u.locked_until, u.last_login_at, u.created_at,
               b.name AS branch_name, b.region AS branch_region
        FROM sessions s
@@ -221,6 +227,20 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
       };
     }
 
+    let posUsername = row.pos_username;
+    let posPassword = row.pos_password;
+    if (!posUsername || !posPassword) {
+      const creds = generatePosCredentials(row.branch_code);
+      posUsername = posUsername || creds.posUsername;
+      posPassword = posPassword || creds.posPassword;
+      try {
+        await query(
+          "UPDATE users SET pos_username = ?, pos_password = ? WHERE id = ?",
+          [posUsername, posPassword, row.id]
+        );
+      } catch {}
+    }
+
     const user: AuthSessionUser = {
       id: row.id,
       fullName: row.full_name,
@@ -232,6 +252,8 @@ export async function getSessionUser(rawToken?: string): Promise<SessionVerifica
       role: row.role,
       status: row.status,
       employeeId: row.employee_id,
+      posUsername,
+      posPassword,
       accessExpiresAt: row.access_expires_at ? new Date(row.access_expires_at).toISOString() : null,
       suspendedFrom: row.suspended_from ? new Date(row.suspended_from).toISOString() : null,
       suspendedUntil: row.suspended_until ? new Date(row.suspended_until).toISOString() : null,

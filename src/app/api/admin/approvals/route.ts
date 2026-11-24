@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query, ensurePosCredentialColumns, generatePosCredentials } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { MOCK_PENDING_TRAINEES } from "@/lib/auth/demo-admin-data";
+import {
+  isEmailConfigured,
+  sendAccountApprovalEmail,
+  sendPosCredentialsEmail,
+  sendAccountRejectionEmail,
+} from "@/lib/email";
 
 // GET /api/admin/approvals - List pending trainee sign-ups
 export async function GET(request: NextRequest) {
@@ -113,9 +119,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify all target trainees exist and check branch permissions
+    await ensurePosCredentialColumns();
     const placeholders = targetIds.map(() => "?").join(", ");
     const userRows = await query<any[]>(
-      `SELECT id, full_name, email, branch_code, status FROM users WHERE id IN (${placeholders})`,
+      `SELECT u.id, u.full_name, u.email, u.branch_code, u.status, u.pos_username, u.pos_password, b.name AS branch_name
+       FROM users u
+       LEFT JOIN branches b ON u.branch_code = b.code
+       WHERE u.id IN (${placeholders})`,
       targetIds
     );
 
@@ -134,17 +144,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const emailConfigured = isEmailConfigured();
+
     if (action === "approve") {
+      const approvedTraineesWithCreds: Array<{
+        id: string;
+        full_name: string;
+        email: string;
+        branch_code: string;
+        branch_name?: string;
+        posUsername: string;
+        posPassword: string;
+      }> = [];
+
       for (const trainee of userRows) {
+        const creds = generatePosCredentials(trainee.branch_code);
+        const posUsername = trainee.pos_username || creds.posUsername;
+        const posPassword = trainee.pos_password || creds.posPassword;
+
         const updateSql = `
           UPDATE users 
           SET status = 'active', 
               rejection_reason = NULL,
+              pos_username = ?,
+              pos_password = ?,
               access_expires_at = ${isUnlimited ? "NULL" : `DATE_ADD(NOW(), INTERVAL ? DAY)`}
           WHERE id = ?
         `;
-        const updateParams = isUnlimited ? [trainee.id] : [accessDays, trainee.id];
+        const updateParams = isUnlimited
+          ? [posUsername, posPassword, trainee.id]
+          : [posUsername, posPassword, accessDays, trainee.id];
         await query(updateSql, updateParams);
+
+        approvedTraineesWithCreds.push({
+          ...trainee,
+          posUsername,
+          posPassword,
+        });
 
         await query(
           `INSERT INTO audit_log (actor_id, action, target_user_id, details)
@@ -157,18 +193,59 @@ export async function POST(request: NextRequest) {
               adminEmail: admin.email,
               adminBranch: admin.branchCode,
               accessDays: isUnlimited ? "Unlimited" : accessDays,
+              posUsername,
               bulkAction: isBulk,
             }),
           ]
         );
       }
 
+      // Send both separate emails: (1) Account Approval Email and (2) POS Simulator Credentials Email
+      const emailResults = await Promise.allSettled(
+        approvedTraineesWithCreds.map(async (trainee) => {
+          const approvalMail = await sendAccountApprovalEmail({
+            to: trainee.email,
+            fullName: trainee.full_name,
+            branchName: trainee.branch_name
+              ? `${trainee.branch_code} - ${trainee.branch_name}`
+              : `Branch ${trainee.branch_code}`,
+            accessDays,
+            isUnlimited,
+          });
+          const posMail = await sendPosCredentialsEmail({
+            to: trainee.email,
+            fullName: trainee.full_name,
+            branchCode: trainee.branch_code,
+            branchName: trainee.branch_name,
+            posUsername: trainee.posUsername,
+            posPassword: trainee.posPassword,
+          });
+          return {
+            sent: approvalMail.sent || posMail.sent,
+            bothSent: approvalMail.sent && posMail.sent,
+          };
+        })
+      );
+      const emailsSent = emailResults.filter(
+        (r) => r.status === "fulfilled" && r.value.sent
+      ).length;
+
+      const emailNote = emailConfigured
+        ? emailsSent > 0
+          ? ` Approval & POS credentials emails sent to ${emailsSent} trainee${emailsSent === 1 ? "" : "s"}.`
+          : " (Email notifications could not be delivered — check SMTP settings.)"
+        : "";
+
       return NextResponse.json({
         success: true,
         processedCount: userRows.length,
-        message: isBulk
-          ? `Approved ${userRows.length} trainee accounts with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`
-          : `Account approved for ${userRows[0].full_name}. Status is now active with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`,
+        emailsSent,
+        emailConfigured,
+        message:
+          (isBulk
+            ? `Approved ${userRows.length} trainee accounts with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`
+            : `Account approved for ${userRows[0].full_name}. Status is now active with ${isUnlimited ? "unlimited" : accessDays + " days"} access.`) +
+          emailNote,
       });
     }
 
@@ -197,12 +274,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Send rejection emails (non-blocking if SMTP is not configured)
+    const emailResults = await Promise.allSettled(
+      userRows.map((trainee) =>
+        sendAccountRejectionEmail({
+          to: trainee.email,
+          fullName: trainee.full_name,
+          branchName: trainee.branch_name
+            ? `${trainee.branch_code} - ${trainee.branch_name}`
+            : `Branch ${trainee.branch_code}`,
+          reason,
+        })
+      )
+    );
+    const emailsSent = emailResults.filter(
+      (r) => r.status === "fulfilled" && r.value.sent
+    ).length;
+
+    const emailNote = emailConfigured
+      ? emailsSent > 0
+        ? ` Email notification sent to ${emailsSent} trainee${emailsSent === 1 ? "" : "s"}.`
+        : " (Email notification could not be delivered — check SMTP settings.)"
+      : "";
+
     return NextResponse.json({
       success: true,
       processedCount: userRows.length,
-      message: isBulk
-        ? `Declined ${userRows.length} trainee registrations.`
-        : `Account registration rejected for ${userRows[0].full_name}.`,
+      emailsSent,
+      emailConfigured,
+      message:
+        (isBulk
+          ? `Declined ${userRows.length} trainee registrations.`
+          : `Account registration rejected for ${userRows[0].full_name}.`) +
+        emailNote,
     });
   } catch (error: any) {
     if (admin.id.startsWith("demo-")) {

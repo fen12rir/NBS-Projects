@@ -108,6 +108,8 @@ async function syncToMariaDb(progress: UserProgress, newAttempt?: AttemptRecord)
         lastActiveLessonId: progress.lastActiveLessonId,
         lastActiveModuleId: progress.lastActiveModuleId,
         certificationCompletedAt: progress.certificationCompletedAt,
+        certificateId: progress.certificateId,
+        scenarioAttempts: progress.scenarioAttempts,
         newAttempt,
       }),
     });
@@ -122,12 +124,44 @@ export async function fetchProgressFromMariaDb(): Promise<UserProgress | null> {
     const userProfileRaw = localStorage.getItem("nbs_user_profile");
     const userId = userProfileRaw ? JSON.parse(userProfileRaw).id : undefined;
     const url = userId ? `/api/progress?userId=${encodeURIComponent(userId)}` : "/api/progress";
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
     const data = await res.json();
     if (data && Array.isArray(data.completedLessons)) {
-      saveLocalProgress(data);
-      return data as UserProgress;
+      const local = getLocalProgress();
+      const mergedLessons = Array.from(
+        new Set([...(data.completedLessons || []), ...(local.completedLessons || [])])
+      );
+      const mergedModules = computeCompletedModules(mergedLessons);
+      const serverAttempts: AttemptRecord[] = Array.isArray(data.scenarioAttempts) ? data.scenarioAttempts : [];
+      const localAttempts: AttemptRecord[] = Array.isArray(local.scenarioAttempts) ? local.scenarioAttempts : [];
+      const attemptMap = new Map<string, AttemptRecord>();
+      for (const att of [...serverAttempts, ...localAttempts]) {
+        if (att && att.id && !attemptMap.has(att.id)) {
+          attemptMap.set(att.id, att);
+        }
+      }
+      const mergedAttempts = Array.from(attemptMap.values()).sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const merged: UserProgress = addCertificationCompletionDate({
+        completedLessons: mergedLessons,
+        completedModules: mergedModules,
+        scenarioAttempts: mergedAttempts,
+        lastActiveLessonId: data.lastActiveLessonId || local.lastActiveLessonId,
+        lastActiveModuleId: data.lastActiveModuleId || local.lastActiveModuleId,
+        certificationCompletedAt: data.certificationCompletedAt || local.certificationCompletedAt,
+        certificateId: data.certificateId || local.certificateId,
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+      window.dispatchEvent(new Event("nbs_progress_updated"));
+      if (
+        mergedAttempts.length > serverAttempts.length ||
+        mergedLessons.length > (data.completedLessons?.length || 0)
+      ) {
+        syncToMariaDb(merged);
+      }
+      return merged;
     }
   } catch {
     // Local Storage Fallback

@@ -203,47 +203,49 @@ export function CustomerPanel({
       </div>
 
       {/* Row 2: Action Items & Briefing Tray */}
-      {!isKeyboardOpen && (
-        <div className="bg-[#111827] border-t border-gray-700 py-1 px-2.5 sm:px-4 text-xs font-sans">
-          <div className="max-w-[1080px] mx-auto flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-contain scrollbar-none">
-            {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
-              <div className="bg-amber-950/90 border border-amber-500 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs animate-pulse">
-                <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                <span className="font-bold text-white">Customer Returned:</span>
-                <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
-              </div>
-            ) : handedItems.length > 0 ? (
-              <div className="flex items-center gap-2 shrink-0">
-                {/* 1. Items to Scan */}
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
-                    Scan Items:
-                  </span>
-                  <div className="flex items-center gap-1.5 shrink-0">{handedItems}</div>
-                </div>
-
-                {/* 2. Payment Method */}
-                {tenderItems.length > 0 && (
-                  <div className="flex items-center gap-1.5 shrink-0 pl-2 border-l border-gray-700">
-                    <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
-                      Tender at F4:
-                    </span>
-                    <div className="flex items-center gap-1.5 shrink-0">{tenderItems}</div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs">
-                <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="font-bold text-white">Cashier Briefing:</span>
-                <span>
-                  {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
+      <div
+        className={`bg-[#111827] border-t border-gray-700 px-2.5 sm:px-4 text-xs font-sans ${
+          isKeyboardOpen ? "py-0.5" : "py-1"
+        }`}
+      >
+        <div className="max-w-[1080px] mx-auto flex items-center gap-2 overflow-x-auto overflow-y-hidden whitespace-nowrap overscroll-contain scrollbar-none">
+          {currentCase.id === "case-suspend-recall" && hasSuspendedTrx ? (
+            <div className="bg-amber-950/90 border border-amber-500 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs animate-pulse">
+              <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span className="font-bold text-white">Customer Returned:</span>
+              <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
+            </div>
+          ) : handedItems.length > 0 ? (
+            <div className="flex items-center gap-2 shrink-0">
+              {/* 1. Items to Scan */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="bg-emerald-900/90 text-emerald-200 border border-emerald-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
+                  Scan Items:
                 </span>
+                <div className="flex items-center gap-1.5 shrink-0">{handedItems}</div>
               </div>
-            )}
-          </div>
+
+              {/* 2. Payment Method */}
+              {tenderItems.length > 0 && (
+                <div className="flex items-center gap-1.5 shrink-0 pl-2 border-l border-gray-700">
+                  <span className="bg-blue-900/90 text-blue-200 border border-blue-600 text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded shrink-0">
+                    Tender at F4:
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">{tenderItems}</div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="bg-emerald-950/80 border border-emerald-600 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-emerald-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs">
+              <Info className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="font-bold text-white">Cashier Briefing:</span>
+              <span>
+                {currentCase.events[0]?.say || currentCase.events[0]?.note || "Verify terminal date/time and sign in."}
+              </span>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

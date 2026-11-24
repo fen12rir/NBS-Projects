@@ -15,7 +15,9 @@ import {
   ShieldAlert, 
   Building2,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 function getDefaultDestination(role?: string) {
@@ -35,6 +37,7 @@ function LoginForm() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingNotice, setPendingNotice] = useState<string | null>(null);
@@ -185,7 +188,7 @@ function LoginForm() {
           <div className="relative">
             <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
             <Input
-              type="password"
+              type={showPassword ? "text" : "password"}
               required
               placeholder="••••••••"
               value={password}
@@ -194,9 +197,22 @@ function LoginForm() {
                 setErrorMessage(null);
                 setPendingNotice(null);
               }}
-              className="pl-9 text-sm"
+              className="pl-9 pr-9 text-sm"
               autoComplete="current-password"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              title={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+            >
+              {showPassword ? (
+                <EyeOff className="w-4 h-4" />
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+            </button>
           </div>
         </div>
 

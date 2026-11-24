@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import { query, ensurePosCredentialColumns, generatePosCredentials } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth/admin-guard";
 import { destroyAllUserSessions } from "@/lib/auth/session";
 import { MOCK_TRAINEES } from "@/lib/auth/demo-admin-data";
 import { TRAINING_MODULES } from "@/data/modules";
+import { sendPosCredentialsEmail } from "@/lib/email";
 
 function getMockDossier(traineeId: string) {
   const match = MOCK_TRAINEES.find((t) => t.id === traineeId) || MOCK_TRAINEES[0];
@@ -102,6 +103,8 @@ function getMockDossier(traineeId: string) {
       status: match.status,
       rejectionReason: null,
       employeeId: match.employeeId,
+      posUsername: "241209",
+      posPassword: "241209",
       accessExpiresAt: match.accessExpiresAt,
       disabledReason: null,
       lastLoginAt: match.lastLoginAt,
@@ -138,9 +141,11 @@ export async function GET(
   }
 
   try {
+    await ensurePosCredentialColumns();
     const userRows = await query<any[]>(
       `SELECT u.id, u.full_name, u.email, u.contact_no, u.branch_code, u.role, u.status,
-              u.rejection_reason, u.employee_id, u.access_expires_at, u.suspended_from,
+              u.rejection_reason, u.employee_id, u.pos_username, u.pos_password,
+              u.access_expires_at, u.suspended_from,
               u.suspended_until, u.disabled_reason, u.failed_login_count, u.locked_until,
               u.last_login_at, u.created_at, b.name AS branch_name, b.region AS branch_region
        FROM users u
@@ -155,6 +160,17 @@ export async function GET(
     }
 
     const trainee = userRows[0];
+    if (trainee.status === "active" && (!trainee.pos_username || !trainee.pos_password)) {
+      const creds = generatePosCredentials(trainee.branch_code);
+      trainee.pos_username = trainee.pos_username || creds.posUsername;
+      trainee.pos_password = trainee.pos_password || creds.posPassword;
+      try {
+        await query(
+          "UPDATE users SET pos_username = ?, pos_password = ? WHERE id = ?",
+          [trainee.pos_username, trainee.pos_password, trainee.id]
+        );
+      } catch {}
+    }
 
     // Check branch scoping
     if (!isSuper && trainee.branch_code !== admin.branchCode) {
@@ -218,6 +234,8 @@ export async function GET(
         status: trainee.status,
         rejectionReason: trainee.rejection_reason,
         employeeId: trainee.employee_id,
+        posUsername: trainee.pos_username,
+        posPassword: trainee.pos_password,
         accessExpiresAt: trainee.access_expires_at,
         disabledReason: trainee.disabled_reason,
         lockedUntil: trainee.locked_until,
@@ -289,8 +307,12 @@ export async function PATCH(
     }
 
     // Check trainee existence & branch
+    await ensurePosCredentialColumns();
     const userRows = await query<any[]>(
-      "SELECT id, full_name, branch_code, status FROM users WHERE id = ? LIMIT 1",
+      `SELECT u.id, u.full_name, u.email, u.branch_code, u.status, u.pos_username, u.pos_password, b.name AS branch_name
+       FROM users u
+       LEFT JOIN branches b ON u.branch_code = b.code
+       WHERE u.id = ? LIMIT 1`,
       [traineeId]
     );
 
@@ -305,6 +327,30 @@ export async function PATCH(
         { error: "Access denied. Trainee is assigned to a different branch." },
         { status: 403 }
       );
+    }
+
+    if (action === "resend_pos_credentials") {
+      const creds = generatePosCredentials(trainee.branch_code);
+      const posUsername = trainee.pos_username || creds.posUsername;
+      const posPassword = trainee.pos_password || creds.posPassword;
+      await query(
+        "UPDATE users SET pos_username = ?, pos_password = ? WHERE id = ?",
+        [posUsername, posPassword, traineeId]
+      );
+      const mailRes = await sendPosCredentialsEmail({
+        to: trainee.email,
+        fullName: trainee.full_name,
+        branchCode: trainee.branch_code,
+        branchName: trainee.branch_name,
+        posUsername,
+        posPassword,
+      });
+      return NextResponse.json({
+        success: true,
+        message: mailRes.sent
+          ? `POS Simulator credentials emailed to ${trainee.email}.`
+          : `POS credentials ready (${posUsername} / ${posPassword}). Configure SMTP in .env.local to send email.`,
+      });
     }
 
     // 1. Status Update (Activate / Deactivate)

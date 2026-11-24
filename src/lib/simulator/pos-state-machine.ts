@@ -58,7 +58,12 @@ export function createInitialPOSState(
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "numeric" });
   const timeStr = now.toLocaleTimeString("en-US", { hour12: false });
-  const randomTrx = "102320262999000400" + Math.floor(1000 + Math.random() * 9000);
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const yyyy = String(now.getFullYear());
+  const cleanBranch = (branchCode || "2999").padStart(4, "0").slice(0, 4);
+  const cleanReg = (terminalId || "0004").padStart(4, "0").slice(0, 4);
+  const randomTrx = `${mm}${dd}${yyyy}${cleanBranch}${cleanReg}00${Math.floor(1000 + Math.random() * 9000)}`;
 
   return {
     currentPage: "MAIN",
@@ -144,6 +149,7 @@ export type POSAction =
   | { type: "ADD_NON_MDSE_ITEM"; description: string; amount: number; referenceNo: string; sku?: string }
   | { type: "POST_VOID_TRANSACTION"; orNumber: string; reason: string }
   | { type: "APPLY_BEST_BUY"; promoName: string; promoSku: string; promoPrice: number; quantity?: number }
+  | { type: "SET_OPERATOR_CONTEXT"; cashierName: string; branchCode: string; terminalId?: string }
   | { type: "RESET_TRANSACTION" };
 
 export function posReducer(state: POSTransactionState, action: POSAction): POSTransactionState {
@@ -645,6 +651,25 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
           type: "success",
           text: `Added ${action.promoName} (${(action.promoPrice * qty).toFixed(2)} PHP).`,
         },
+      };
+    }
+
+    case "SET_OPERATOR_CONTEXT": {
+      const nextBranch = action.branchCode || state.branchCode;
+      const nextTerm = action.terminalId || state.terminalId;
+      const now = new Date();
+      const mm = String(now.getMonth() + 1).padStart(2, "0");
+      const dd = String(now.getDate()).padStart(2, "0");
+      const yyyy = String(now.getFullYear());
+      const cleanBranch = nextBranch.padStart(4, "0").slice(0, 4);
+      const cleanReg = nextTerm.padStart(4, "0").slice(0, 4);
+      const seq = (state.transactionNumber || "").slice(-6) || `00${Math.floor(1000 + Math.random() * 9000)}`;
+      return {
+        ...state,
+        cashierName: action.cashierName || state.cashierName,
+        branchCode: nextBranch,
+        terminalId: nextTerm,
+        transactionNumber: `${mm}${dd}${yyyy}${cleanBranch}${cleanReg}${seq}`,
       };
     }
 

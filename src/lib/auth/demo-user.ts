@@ -13,6 +13,8 @@ export interface AuthUser {
   branchName?: string;
   branchRegion?: string | null;
   employeeId?: string | null;
+  posUsername?: string | null;
+  posPassword?: string | null;
   accessExpiresAt?: string | null;
   isDemo?: boolean;
   avatarUrl?: string;
@@ -30,6 +32,8 @@ export const DEMO_TRAINEE_USER: AuthUser = {
   branchName: "NBS SM North Edsa",
   branchRegion: "NCR - North",
   employeeId: "NBS-EMP-2026-0891",
+  posUsername: "241209",
+  posPassword: "241209",
   isDemo: true,
 };
 
@@ -45,6 +49,8 @@ export const DEMO_ADMIN_USER: AuthUser = {
   branchName: "NBS SM North Edsa",
   branchRegion: "NCR - North",
   employeeId: "NBS-ADM-001",
+  posUsername: "241209",
+  posPassword: "241209",
   isDemo: true,
 };
 

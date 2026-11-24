@@ -187,11 +187,15 @@ export function ElectronicPaymentModal({
                       Redeem Amount:
                     </label>
                     <input
-                      type="number"
-                      step="0.01"
-                      max={150}
+                      type="text"
+                      inputMode="none"
+                      data-osk-numeric="true"
+                      autoComplete="off"
                       value={coinsRedeem}
-                      onChange={(e) => setCoinsRedeem(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (/^\d*\.?\d*$/.test(v)) setCoinsRedeem(v);
+                      }}
                       required
                       className="col-span-2 bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-white border-b-white px-2 py-1 text-xs font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                       autoFocus
@@ -223,10 +227,15 @@ export function ElectronicPaymentModal({
               <div className="grid grid-cols-3 items-center gap-2 pt-1 border-t border-gray-300">
                 <label className="text-xs font-bold text-gray-800 text-right">Amount Due (PHP):</label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="none"
+                  data-osk-numeric="true"
+                  autoComplete="off"
                   value={tenderAmount}
-                  onChange={(e) => setTenderAmount(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*\.?\d*$/.test(v)) setTenderAmount(v);
+                  }}
                   className="col-span-2 bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-white border-b-white px-2 py-1 text-xs font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
               </div>

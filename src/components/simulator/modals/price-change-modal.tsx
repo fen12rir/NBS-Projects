@@ -171,10 +171,15 @@ export function PriceChangeModal({
                   New Adjusted Unit Price (PHP):
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="none"
+                  data-osk-numeric="true"
+                  autoComplete="off"
                   value={newPrice}
-                  onChange={(e) => setNewPrice(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*\.?\d*$/.test(v)) setNewPrice(v);
+                  }}
                   placeholder="0.00"
                   required
                   className="w-full bg-white border-2 border-gray-600 px-3 py-1.5 text-center font-mono font-bold text-xl text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 shadow-inner"

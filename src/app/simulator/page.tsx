@@ -240,7 +240,14 @@ function SimulatorContent() {
   const [isIOS, setIsIOS] = useState(false);
 
   // In-App On-Screen Keyboard States
-  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return (
+      Boolean(window.matchMedia?.("(pointer: coarse)").matches) ||
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100) ||
+      "ontouchstart" in window
+    );
+  });
   const [oskFocusedField, setOskFocusedField] = useState<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [oskShiftY, setOskShiftY] = useState(0);
   const oskShiftRef = useRef(0);
@@ -254,7 +261,8 @@ function SimulatorContent() {
     if (typeof window === "undefined") return;
     const touch =
       Boolean(window.matchMedia?.("(pointer: coarse)").matches) ||
-      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100);
+      (typeof navigator !== "undefined" && navigator.maxTouchPoints > 0 && window.innerWidth < 1100) ||
+      "ontouchstart" in window;
     setIsTouchDevice(touch);
     try {
       window.localStorage.removeItem("nbs-pos-keyboard");
@@ -266,12 +274,23 @@ function SimulatorContent() {
     if (typeof document === "undefined") return;
     const stamp = (el: Element) => {
       if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return;
+      if (el instanceof HTMLInputElement && (el.type || "").toLowerCase() === "number") {
+        el.setAttribute("data-osk-orig-type", "number");
+        el.setAttribute("data-osk-numeric", "true");
+        try {
+          el.type = "text";
+        } catch {}
+      }
       const isTextField = isTextEditable(el as Element) || el.readOnly || el.disabled;
       if (!isTextField) return;
       if (!el.hasAttribute("data-osk-orig-inputmode")) {
         el.setAttribute("data-osk-orig-inputmode", el.getAttribute("inputmode") ?? "");
       }
       el.setAttribute("inputmode", "none");
+      el.setAttribute("autocomplete", "off");
+      el.setAttribute("autocorrect", "off");
+      el.setAttribute("autocapitalize", "off");
+      el.setAttribute("spellcheck", "false");
     };
     const restoreAll = () => {
       document.querySelectorAll("[data-osk-orig-inputmode]").forEach((el) => {
@@ -279,6 +298,14 @@ function SimulatorContent() {
         if (orig) el.setAttribute("inputmode", orig);
         else el.removeAttribute("inputmode");
         el.removeAttribute("data-osk-orig-inputmode");
+      });
+      document.querySelectorAll("[data-osk-orig-type]").forEach((el) => {
+        if (el instanceof HTMLInputElement) {
+          try {
+            el.type = el.getAttribute("data-osk-orig-type") || "text";
+          } catch {}
+        }
+        el.removeAttribute("data-osk-orig-type");
       });
     };
 
@@ -288,6 +315,27 @@ function SimulatorContent() {
     }
 
     document.querySelectorAll("input, textarea").forEach(stamp);
+
+    // Synchronous Pre-Focus Stamp
+    const origInputFocus = HTMLInputElement.prototype.focus;
+    const origTextareaFocus = HTMLTextAreaElement.prototype.focus;
+    HTMLInputElement.prototype.focus = function (options?: FocusOptions) {
+      stamp(this);
+      return origInputFocus.call(this, options);
+    };
+    HTMLTextAreaElement.prototype.focus = function (options?: FocusOptions) {
+      stamp(this);
+      return origTextareaFocus.call(this, options);
+    };
+
+    const handlePreTap = (e: Event) => {
+      if (e.target instanceof Element) {
+        stamp(e.target);
+        const closestInput = e.target.closest("input, textarea");
+        if (closestInput) stamp(closestInput);
+      }
+    };
+
     const observer = new MutationObserver((mutations) => {
       for (const m of mutations) {
         m.addedNodes.forEach((node) => {
@@ -312,13 +360,19 @@ function SimulatorContent() {
       if (outTimer) clearTimeout(outTimer);
       outTimer = setTimeout(syncFocused, 60);
     };
+    window.addEventListener("pointerdown", handlePreTap, true);
+    window.addEventListener("touchstart", handlePreTap, true);
     window.addEventListener("focusin", handleFocusIn, true);
     window.addEventListener("focusout", handleFocusOut, true);
     syncFocused();
 
     return () => {
+      HTMLInputElement.prototype.focus = origInputFocus;
+      HTMLTextAreaElement.prototype.focus = origTextareaFocus;
       observer.disconnect();
       if (outTimer) clearTimeout(outTimer);
+      window.removeEventListener("pointerdown", handlePreTap, true);
+      window.removeEventListener("touchstart", handlePreTap, true);
       window.removeEventListener("focusin", handleFocusIn, true);
       window.removeEventListener("focusout", handleFocusOut, true);
       setOskFocusedField(null);
@@ -907,8 +961,23 @@ function SimulatorContent() {
 
   const [state, dispatch] = useReducer(
     posReducer,
-    createInitialPOSState("Jan Angela")
+    createInitialPOSState(
+      user?.fullName || user?.name || "Cashier",
+      "0004",
+      user?.branchCode || "2438"
+    )
   );
+
+  useEffect(() => {
+    if (user) {
+      dispatch({
+        type: "SET_OPERATOR_CONTEXT",
+        cashierName: user.fullName || user.name || "Cashier",
+        branchCode: user.branchCode || "2438",
+        terminalId: "0004",
+      });
+    }
+  }, [user]);
 
   const examTenderKind = examSession?.cases[examCaseIndex]?.events.find(
     (e) => e.tender?.kind === "CREDIT_CARD" || e.tender?.kind === "GCASH" || e.tender?.kind === "MAYA"
@@ -1320,7 +1389,40 @@ function SimulatorContent() {
 
   const handleLoginSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const userToSubmit = loginUsername.trim() || "241209";
+    const enteredUser = loginUsername.trim();
+    const enteredPass = loginPassword.trim();
+    const expectedUser = user?.posUsername?.trim();
+    const expectedPass = user?.posPassword?.trim();
+
+    if (expectedUser && expectedPass && !user?.isDemo) {
+      if (enteredUser !== expectedUser || enteredPass !== expectedPass) {
+        triggerErrorEffect("Invalid POS UserName or Password. Check the POS credentials sent to your email.");
+        showPosAlert(
+          "Invalid POS UserName or Password. Please enter the unique POS credentials sent to your email.",
+          "USER LOGIN ERROR",
+          "error"
+        );
+        return;
+      }
+    } else if (!enteredUser || !enteredPass) {
+      triggerErrorEffect("Please enter both your POS UserName and Password.");
+      showPosAlert(
+        "Please enter both your POS UserName and Password to sign in to the register.",
+        "USER LOGIN REQUIRED",
+        "warning"
+      );
+      return;
+    }
+
+    const userToSubmit = enteredUser || expectedUser || "241209";
+    if (user) {
+      dispatch({
+        type: "SET_OPERATOR_CONTEXT",
+        cashierName: user.fullName || user.name || state.cashierName,
+        branchCode: user.branchCode || state.branchCode,
+        terminalId: "0004",
+      });
+    }
     setTerminalMode("ACTIVE_REGISTER");
     validateScenarioStep("LOGIN_SUBMIT", userToSubmit);
     if (isExamMode) {
@@ -4250,6 +4352,7 @@ function SimulatorContent() {
                 setLoginPassword("");
               }}
               autoFocus={
+                !isTouchDevice &&
                 !isExamCompleted &&
                 !timedOut &&
                 !(activeScenario && currentStepIndex >= activeScenario.steps.length)
@@ -4832,8 +4935,8 @@ function SimulatorContent() {
                             <div>
                               <div>TrxNo &nbsp; &nbsp; &nbsp;: {state.transactionNumber}</div>
                               <div className="flex justify-between">
-                                <span>Clerk &nbsp; &nbsp; &nbsp;: 241209</span>
-                                <span>Term. No.: 0003</span>
+                                <span>Clerk &nbsp; &nbsp; &nbsp;: {user?.posUsername || loginUsername || state.cashierName}</span>
+                                <span>Term. No.: {state.terminalId || "0004"}</span>
                               </div>
                             </div>
 
@@ -5344,13 +5447,18 @@ function SimulatorContent() {
                                   </label>
                                   <input
                                     ref={cashTenderInputRef}
-                                    type="number"
-                                    step="0.01"
+                                    type="text"
+                                    inputMode="none"
+                                    data-osk-numeric="true"
+                                    autoComplete="off"
                                     value={lnqrCashTenderInput}
-                                    onChange={(e) => setLnqrCashTenderInput(e.target.value)}
+                                    onChange={(e) => {
+                                      const v = e.target.value;
+                                      if (/^\d*\.?\d*$/.test(v)) setLnqrCashTenderInput(v);
+                                    }}
                                     placeholder={(totals.totalAmount - (sulitCoinsRedeemedAmount || 0)).toFixed(2)}
                                     className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
-                                    autoFocus
+                                    autoFocus={!isTouchDevice}
                                   />
                                   <button
                                     type="submit"

@@ -12,6 +12,7 @@ import { TRAINING_MODULES } from "@/data/modules";
 import { getScenarioForLesson } from "@/data/scenarios";
 import { 
   getLocalProgress, 
+  fetchProgressFromMariaDb,
   markLessonAsCompleted, 
   UserProgress 
 } from "@/lib/progress/progress-store";
@@ -126,6 +127,12 @@ function LessonDetailContent() {
 
   useEffect(() => {
     setProgress(getLocalProgress());
+    fetchProgressFromMariaDb().then((merged) => {
+      if (merged) setProgress(merged);
+    });
+    const handleStorageUpdate = () => setProgress(getLocalProgress());
+    window.addEventListener("nbs_progress_updated", handleStorageUpdate);
+    return () => window.removeEventListener("nbs_progress_updated", handleStorageUpdate);
   }, []);
 
   useEffect(() => {
@@ -181,7 +188,16 @@ function LessonDetailContent() {
     ? `/simulator?scenario=${lessonScenario.id}&lesson=${currentLesson.id}&module=${currentModule.id}`
     : `/simulator?module=${currentModule.id}&lesson=${currentLesson.id}`;
 
+  const hasCompletedPractice =
+    !lessonScenario ||
+    fromPractice ||
+    (Array.isArray(progress.scenarioAttempts) &&
+      progress.scenarioAttempts.some(
+        (a) => a.scenarioId === lessonScenario.id && a.passed
+      ));
+
   const handleMarkComplete = () => {
+    if (!hasCompletedPractice) return;
     const updated = markLessonAsCompleted(currentLesson.id, currentModule.id);
     setProgress(updated);
     setJustCompleted(true);
@@ -538,9 +554,13 @@ function LessonDetailContent() {
                 <CheckCircle2 className="w-5 h-5" />
                 <span>Lesson Completed! Progress saved.</span>
               </div>
+            ) : hasCompletedPractice ? (
+              <div className="text-xs text-emerald-700 font-semibold">
+                Practice completed! You can now mark this lesson as complete.
+              </div>
             ) : (
-              <div className="text-xs text-gray-500">
-                Review all steps above before marking complete.
+              <div className="text-xs text-amber-700 font-medium">
+                Complete the Practice Lesson in the POS Simulator first to unlock Mark Lesson Complete.
               </div>
             )}
           </div>
@@ -550,7 +570,13 @@ function LessonDetailContent() {
               <Button
                 variant="primary"
                 onClick={handleMarkComplete}
-                className="w-full sm:w-auto font-bold text-xs"
+                disabled={!hasCompletedPractice}
+                title={
+                  hasCompletedPractice
+                    ? "Mark Lesson Complete"
+                    : "Complete the Practice Lesson first"
+                }
+                className="w-full sm:w-auto font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Mark Lesson Complete
               </Button>

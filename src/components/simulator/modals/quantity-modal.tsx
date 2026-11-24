@@ -80,11 +80,15 @@ export function QuantityModal({
                   Please enter quantity
                 </div>
                 <input
-                  type="number"
-                  min="1"
-                  max="999"
+                  type="text"
+                  inputMode="none"
+                  data-osk-numeric="true"
+                  autoComplete="off"
                   value={qtyInput}
-                  onChange={(e) => setQtyInput(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (/^\d*$/.test(v)) setQtyInput(v);
+                  }}
                   autoFocus
                   className="w-full bg-white border border-[#404040] px-2 py-0.5 text-xs font-mono font-bold text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />

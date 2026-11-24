@@ -82,11 +82,16 @@ export function ChangeCheckModal({
           <div className="flex items-center space-x-2">
             <span className="text-lg font-bold font-mono text-gray-800">₱</span>
             <input
-              type="number"
-              step="0.01"
+              type="text"
+              inputMode="none"
+              data-osk-numeric="true"
+              autoComplete="off"
               autoFocus
               value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (/^\d*\.?\d*$/.test(v)) setInputVal(v);
+              }}
               placeholder="0.00"
               className="flex-1 bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-white border-b-white px-3 py-1.5 text-xl font-mono font-black text-center text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-[#006633]"
             />

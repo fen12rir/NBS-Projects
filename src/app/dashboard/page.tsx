@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TRAINING_MODULES } from "@/data/modules";
 import { TRAINING_SCENARIOS } from "@/data/scenarios";
-import { getLocalProgress, UserProgress } from "@/lib/progress/progress-store";
+import { getLocalProgress, fetchProgressFromMariaDb, UserProgress } from "@/lib/progress/progress-store";
 import { getLocalizedModule, useModuleLanguage } from "@/lib/i18n/module-language";
 import { ModuleLanguageToggle } from "@/components/ui/module-language-toggle";
 import { PortalLoadingScreen } from "@/components/ui/portal-loading-screen";
@@ -40,7 +40,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setProgress(getLocalProgress());
-  }, []);
+    if (user && !user.isDemo) {
+      fetchProgressFromMariaDb().then((merged) => {
+        if (merged) setProgress(merged);
+      });
+    }
+  }, [user]);
 
   if (isLoading) {
     return <PortalLoadingScreen message="Loading Training Portal Session..." />;
