@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const ttlSeconds = getSessionTtlSeconds();
+    // Session Cookie
     response.cookies.set({
       name: SESSION_COOKIE_NAME,
       value: rawToken,
@@ -181,7 +181,6 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       secure: isCookieSecure(),
       path: "/",
-      maxAge: ttlSeconds,
     });
 
     return response;

@@ -36,12 +36,53 @@ const AuthContext = createContext<AuthContextType>({
   signInWithGoogle: async () => {},
 });
 
+const TAB_SESSION_KEY = "nbs_tab_session_alive";
+const LAST_ACTIVE_KEY = "nbs_session_last_active";
+const INACTIVITY_TIMEOUT_MS = 30 * 60 * 1000;
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDemoMode, setIsDemoMode] = useState(false);
 
+  const clearClientAuthStorage = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      sessionStorage.removeItem(TAB_SESSION_KEY);
+      sessionStorage.removeItem("nbs_demo_active");
+      localStorage.removeItem("nbs_demo_active");
+      localStorage.removeItem(LAST_ACTIVE_KEY);
+      localStorage.removeItem("nbs_user_profile");
+      localStorage.removeItem("nbs_pos_training_progress_v1");
+      document.cookie = "nbs_demo_mode=; path=/; max-age=0";
+      window.dispatchEvent(new Event("nbs_progress_updated"));
+    } catch {}
+  }, []);
+
   const fetchSession = useCallback(async () => {
+    if (typeof window !== "undefined") {
+      try {
+        // Legacy Demo Flag Cleanup
+        localStorage.removeItem("nbs_demo_active");
+
+        const tabAlive = sessionStorage.getItem(TAB_SESSION_KEY);
+        const lastActiveRaw = localStorage.getItem(LAST_ACTIVE_KEY);
+        const lastActive = lastActiveRaw ? Number(lastActiveRaw) : 0;
+        const isInactiveExpired =
+          !lastActive || Date.now() - lastActive > INACTIVITY_TIMEOUT_MS;
+
+        // Stale Session Logout
+        if (!tabAlive || isInactiveExpired) {
+          await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+          clearClientAuthStorage();
+          setUser(null);
+          setIsDemoMode(false);
+          setIsLoading(false);
+          return;
+        }
+      } catch {}
+    }
+
     try {
       const res = await fetch("/api/auth/me", {
         method: "GET",
@@ -70,6 +111,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           };
           if (typeof window !== "undefined") {
             try {
+              sessionStorage.setItem(TAB_SESSION_KEY, "1");
+              localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
               localStorage.removeItem("nbs_pos_training_progress_v1");
               localStorage.setItem(
                 "nbs_user_profile",
@@ -88,9 +131,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Network or API failure
     }
 
-    // Check if user set local demo mode in localStorage
+    // Tab Demo Mode
     if (typeof window !== "undefined") {
-      const demoFlag = localStorage.getItem("nbs_demo_active");
+      const demoFlag = sessionStorage.getItem("nbs_demo_active");
       if (demoFlag === "admin") {
         setUser(DEMO_ADMIN_USER);
         setIsDemoMode(true);
@@ -107,11 +150,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setIsDemoMode(false);
     setIsLoading(false);
-  }, []);
+  }, [clearClientAuthStorage]);
 
   useEffect(() => {
     fetchSession();
   }, [fetchSession]);
+
+  // Inactivity Logout
+  useEffect(() => {
+    if (typeof window === "undefined" || !user) return;
+
+    let lastWrite = Date.now();
+    const recordActivity = () => {
+      const now = Date.now();
+      if (now - lastWrite > 15000) {
+        lastWrite = now;
+        try {
+          localStorage.setItem(LAST_ACTIVE_KEY, String(now));
+          sessionStorage.setItem(TAB_SESSION_KEY, "1");
+        } catch {}
+      }
+    };
+
+    const events = ["pointerdown", "keydown", "touchstart", "scroll"];
+    events.forEach((ev) => window.addEventListener(ev, recordActivity, { passive: true }));
+
+    const interval = setInterval(() => {
+      try {
+        const lastActiveRaw = localStorage.getItem(LAST_ACTIVE_KEY);
+        const lastActive = lastActiveRaw ? Number(lastActiveRaw) : Date.now();
+        if (Date.now() - lastActive > INACTIVITY_TIMEOUT_MS) {
+          void fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+          clearClientAuthStorage();
+          setUser(null);
+          setIsDemoMode(false);
+          window.location.href = "/login?expired=1";
+        }
+      } catch {}
+    }, 60 * 1000);
+
+    return () => {
+      events.forEach((ev) => window.removeEventListener(ev, recordActivity));
+      clearInterval(interval);
+    };
+  }, [user, clearClientAuthStorage]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -132,7 +214,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (typeof window !== "undefined") {
-        localStorage.removeItem("nbs_demo_active");
+        try {
+          sessionStorage.setItem(TAB_SESSION_KEY, "1");
+          sessionStorage.removeItem("nbs_demo_active");
+          localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+          localStorage.removeItem("nbs_demo_active");
+        } catch {}
       }
 
       await fetchSession();
@@ -175,14 +262,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Best-effort logout
     }
 
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("nbs_demo_active");
-      localStorage.removeItem("nbs_user_profile");
-      localStorage.removeItem("nbs_pos_training_progress_v1");
-      // Clear client-accessible cookies
-      document.cookie = "nbs_demo_mode=; path=/; max-age=0";
-      window.dispatchEvent(new Event("nbs_progress_updated"));
-    }
+    clearClientAuthStorage();
 
     setUser(null);
     setIsDemoMode(false);
@@ -201,14 +281,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const demoUser = mode === "admin" ? DEMO_ADMIN_USER : DEMO_TRAINEE_USER;
     if (typeof window !== "undefined") {
-      localStorage.setItem("nbs_demo_active", mode);
-      localStorage.removeItem("nbs_pos_training_progress_v1");
-      localStorage.setItem(
-        "nbs_user_profile",
-        JSON.stringify({ id: demoUser.id, email: demoUser.email, fullName: demoUser.fullName })
-      );
-      document.cookie = `nbs_demo_mode=${mode}; path=/; max-age=604800`;
-      window.dispatchEvent(new Event("nbs_progress_updated"));
+      try {
+        sessionStorage.setItem(TAB_SESSION_KEY, "1");
+        sessionStorage.setItem("nbs_demo_active", mode);
+        localStorage.setItem(LAST_ACTIVE_KEY, String(Date.now()));
+        localStorage.removeItem("nbs_demo_active");
+        localStorage.removeItem("nbs_pos_training_progress_v1");
+        localStorage.setItem(
+          "nbs_user_profile",
+          JSON.stringify({ id: demoUser.id, email: demoUser.email, fullName: demoUser.fullName })
+        );
+        document.cookie = `nbs_demo_mode=${mode}; path=/`;
+        window.dispatchEvent(new Event("nbs_progress_updated"));
+      } catch {}
     }
 
     setUser(demoUser);

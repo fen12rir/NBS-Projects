@@ -348,10 +348,16 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
 
     case "CONFIRM_MANAGER_OVERRIDE": {
       let updatedLineItems = state.lineItems;
+      let updatedDiscount = state.appliedDiscount;
+      let updatedZeroRated = state.isZeroRated;
+      let updatedComments = state.transactionComments;
       let lastMsg = "Manager Override approved (Training Mode Authorization).";
 
       if (state.managerOverrideTarget === "Transaction Void") {
         updatedLineItems = [];
+        updatedDiscount = null;
+        updatedZeroRated = false;
+        updatedComments = null;
         lastMsg = "Entire transaction voided by Manager Override.";
       }
 
@@ -360,6 +366,9 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         managerOverrideOpen: false,
         managerOverrideTarget: null,
         lineItems: updatedLineItems,
+        appliedDiscount: updatedDiscount,
+        isZeroRated: updatedZeroRated,
+        transactionComments: updatedComments,
         lastMessage: {
           type: "success",
           text: lastMsg,
@@ -417,6 +426,10 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
       return {
         ...state,
         lineItems: [],
+        appliedDiscount: null,
+        isZeroRated: false,
+        transactionComments: null,
+        pendingQuantity: 1,
         lastMessage: {
           type: "warning",
           text: "Entire transaction voided by manager authorization.",
@@ -439,6 +452,10 @@ export function posReducer(state: POSTransactionState, action: POSAction): POSTr
         ...state,
         isSuspended: true,
         lineItems: [],
+        appliedDiscount: null,
+        isZeroRated: false,
+        transactionComments: null,
+        pendingQuantity: 1,
         suspendedTransactions: [...state.suspendedTransactions, newSuspended],
         lastMessage: {
           type: "info",

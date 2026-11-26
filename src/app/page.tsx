@@ -18,7 +18,8 @@ import {
   Sparkles, 
   ArrowRight, 
   GraduationCap,
-  Lock
+  Lock,
+  X
 } from "lucide-react";
 
 export default function HomePage() {
@@ -482,18 +483,35 @@ export default function HomePage() {
 
       {/* Cashier Authentication Required Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overscroll-none touch-none">
-          <div className="bg-white max-w-md w-full max-h-[90dvh] overflow-y-auto border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0">
-                <Lock className="w-5 h-5" />
+        <div
+          onClick={() => setShowAuthModal(false)}
+          className="fixed inset-0 z-[200] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overscroll-none touch-none"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white max-w-md w-full max-h-[90dvh] overflow-y-auto border border-slate-200 rounded-2xl p-6 space-y-5 shadow-2xl relative"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-red-50 text-[#E4002B] flex items-center justify-center shrink-0">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+                    Cashier Sign In Required
+                  </h3>
+                  <p className="text-xs text-slate-500">NBS POS Training Portal</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 tracking-tight">
-                  Cashier Sign In Required
-                </h3>
-                <p className="text-xs text-slate-500">NBS POS Training Portal</p>
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                aria-label="Close modal"
+                title="Close"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
             
             <p className="text-sm text-slate-600 leading-relaxed">

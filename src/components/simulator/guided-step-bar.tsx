@@ -397,6 +397,10 @@ export function GuidedStepBar({
             <span>
               {isLessonPractice ? "Practice Complete!" : "Assessment Complete!"} Finished all steps.
             </span>
+            <span className="inline-flex items-center gap-1 text-emerald-200 font-semibold">
+              <span className="w-3 h-3 border-2 border-emerald-200 border-t-transparent rounded-full animate-spin" />
+              Loading results...
+            </span>
           </div>
         ) : (
           <>

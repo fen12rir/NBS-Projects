@@ -322,4 +322,26 @@ describe("Comprehensive Audit of All Scenarios and Modules", () => {
       });
     });
   });
+
+  it("verifies no simulator action handler calls validateScenarioStep twice synchronously", async () => {
+    const fs = await import("fs");
+    const path = await import("path");
+    const simSource = fs.readFileSync(
+      path.resolve(process.cwd(), "src/app/simulator/page.tsx"),
+      "utf-8"
+    );
+
+    // Consecutive Validation Check
+    const lines = simSource.split(/\r?\n/);
+    for (let i = 0; i < lines.length - 1; i++) {
+      const curr = lines[i].trim();
+      const next = lines[i + 1].trim();
+      const bothCallValidate =
+        curr.startsWith("validateScenarioStep(") && next.startsWith("validateScenarioStep(");
+      expect(
+        bothCallValidate,
+        `Consecutive validateScenarioStep calls found at lines ${i + 1}-${i + 2}: "${curr}" -> "${next}"`
+      ).toBe(false);
+    }
+  });
 });

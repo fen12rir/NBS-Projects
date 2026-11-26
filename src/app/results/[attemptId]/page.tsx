@@ -8,6 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getLocalProgress, AttemptRecord, UserProgress } from "@/lib/progress/progress-store";
+import { getScenarioById } from "@/data/scenarios";
 import { 
   CheckCircle2, 
   XCircle, 
@@ -63,8 +64,30 @@ export default function AssessmentResultPage() {
   }
 
   const isPassed = attempt.passed;
-  const isPracticalExam = Boolean(attempt.caseResults && attempt.caseResults.length > 0);
+  const isPracticalExam =
+    attempt.scenarioId === "exam-practical" ||
+    attempt.scenarioId === "scen-practical-assessment" ||
+    Boolean(attempt.caseResults && attempt.caseResults.length > 0);
   const isCertified = Boolean(progress?.certificationCompletedAt);
+
+  const matchedScenario = !isPracticalExam ? getScenarioById(attempt.scenarioId) : null;
+  const retryUrl = isPracticalExam
+    ? "/simulator?exam=practical"
+    : matchedScenario
+    ? `/simulator?scenario=${matchedScenario.id}${matchedScenario.moduleRef ? `&module=${matchedScenario.moduleRef}` : ""}${matchedScenario.lessonRef ? `&lesson=${matchedScenario.lessonRef}` : ""}`
+    : attempt.scenarioId
+    ? `/simulator?scenario=${attempt.scenarioId}`
+    : "/simulator";
+  const backDestinationUrl = matchedScenario?.lessonRef && matchedScenario?.moduleRef
+    ? `/modules/${matchedScenario.moduleRef}/lessons/${matchedScenario.lessonRef}`
+    : matchedScenario?.moduleRef
+    ? `/modules/${matchedScenario.moduleRef}`
+    : "/dashboard";
+  const backDestinationLabel = matchedScenario?.lessonRef
+    ? "Back to Lesson"
+    : matchedScenario?.moduleRef
+    ? "Back to Module"
+    : "Return to Course Dashboard";
 
   return (
     <LearningShell>
@@ -219,84 +242,86 @@ export default function AssessmentResultPage() {
         </div>
 
         {/* Certificate Callout Banner */}
-        {isPassed && isCertified ? (
-          <div className="bg-emerald-50 border-2 border-emerald-400/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
-            <div className="flex items-center space-x-3 sm:space-x-3.5">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
-                <Award className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-emerald-950 text-sm sm:text-base">
-                  Official NBS Cashier Certification Unlocked!
-                </h3>
-                <p className="text-xs text-emerald-800 leading-relaxed">
-                  You have successfully satisfied all curriculum modules and practical exam requirements. Your personalized certificate is ready.
-                </p>
-              </div>
-            </div>
-            <Link href="/certificate" className="shrink-0 w-full sm:w-auto">
-              <Button
-                size="sm"
-                className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
-              >
-                <Award className="w-4 h-4 shrink-0" />
-                <span>View &amp; Print Certificate</span>
-              </Button>
-            </Link>
-          </div>
-        ) : (
-          <div className="bg-red-50 border-2 border-red-300 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
-            <div className="flex items-center space-x-3 sm:space-x-3.5">
-              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#E4002B] text-white flex items-center justify-center shrink-0 shadow-sm">
-                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
-                  Official NBS Certification Locked (Requires ≥80% &amp; ≥6/7 Cases Passed)
-                </h3>
-                <div className="text-xs text-red-800 leading-relaxed space-y-1">
-                  {(() => {
-                    const passedCasesCount = attempt.caseResults
-                      ? attempt.caseResults.filter((c) => c.passed).length
-                      : attempt.stepsCompleted;
-                    const failedCasesCount = Math.max(0, attempt.totalSteps - passedCasesCount);
-
-                    if (attempt.score >= 80 && passedCasesCount < 6) {
-                      return (
-                        <p>
-                          You achieved an overall score of <strong>{attempt.score}%</strong> (meeting the 80% mark), but{" "}
-                          <strong>{passedCasesCount} of {attempt.totalSteps} customer cases were passed</strong> ({failedCasesCount} {failedCasesCount === 1 ? "case" : "cases"} missed critical SOP steps or tendered incorrect change). To earn official NBS certification, you must achieve <strong>both ≥80% overall score</strong> and pass <strong>at least 6 of the 7 customer cases</strong>.
-                        </p>
-                      );
-                    } else if (attempt.score >= 80) {
-                      return (
-                        <p>
-                          You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
-                          <strong>{failedCasesCount} customer {failedCasesCount === 1 ? "case" : "cases"} failed</strong>{" "}
-                          due to critical missed milestones. Certification requires passing at least 6 of the 7 cases (max 1 failed case).
-                        </p>
-                      );
-                    } else {
-                      return (
-                        <p>
-                          Trainee achieved <strong>{attempt.score}%</strong> ({passedCasesCount} of {attempt.totalSteps} cases passed). To unlock official National Book Store Cashier Certification, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
-                        </p>
-                      );
-                    }
-                  })()}
+        {isPracticalExam && (
+          isPassed && isCertified ? (
+            <div className="bg-emerald-50 border-2 border-emerald-400/60 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
+              <div className="flex items-center space-x-3 sm:space-x-3.5">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Award className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-emerald-950 text-sm sm:text-base">
+                    Official NBS Cashier Certification Unlocked!
+                  </h3>
+                  <p className="text-xs text-emerald-800 leading-relaxed">
+                    You have successfully satisfied all curriculum modules and practical exam requirements. Your personalized certificate is ready.
+                  </p>
                 </div>
               </div>
+              <Link href="/certificate" className="shrink-0 w-full sm:w-auto">
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
+                >
+                  <Award className="w-4 h-4 shrink-0" />
+                  <span>View &amp; Print Certificate</span>
+                </Button>
+              </Link>
             </div>
-            <Link href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"} className="shrink-0 w-full sm:w-auto">
-              <Button
-                size="sm"
-                className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
-              >
-                <RotateCcw className="w-4 h-4 shrink-0" />
-                <span>Retake Practical Exam</span>
-              </Button>
-            </Link>
-          </div>
+          ) : (
+            <div className="bg-red-50 border-2 border-red-300 p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 rounded-lg shadow-xs">
+              <div className="flex items-center space-x-3 sm:space-x-3.5">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#E4002B] text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-red-950 text-sm sm:text-base">
+                    Official NBS Certification Locked (Requires ≥80% &amp; ≥6/7 Cases Passed)
+                  </h3>
+                  <div className="text-xs text-red-800 leading-relaxed space-y-1">
+                    {(() => {
+                      const passedCasesCount = attempt.caseResults
+                        ? attempt.caseResults.filter((c) => c.passed).length
+                        : attempt.stepsCompleted;
+                      const failedCasesCount = Math.max(0, attempt.totalSteps - passedCasesCount);
+
+                      if (attempt.score >= 80 && passedCasesCount < 6) {
+                        return (
+                          <p>
+                            You achieved an overall score of <strong>{attempt.score}%</strong> (meeting the 80% mark), but{" "}
+                            <strong>{passedCasesCount} of {attempt.totalSteps} customer cases were passed</strong> ({failedCasesCount} {failedCasesCount === 1 ? "case" : "cases"} missed critical SOP steps or tendered incorrect change). To earn official NBS certification, you must achieve <strong>both ≥80% overall score</strong> and pass <strong>at least 6 of the 7 customer cases</strong>.
+                          </p>
+                        );
+                      } else if (attempt.score >= 80) {
+                        return (
+                          <p>
+                            You achieved an overall score of <strong>{attempt.score}%</strong>, but{" "}
+                            <strong>{failedCasesCount} customer {failedCasesCount === 1 ? "case" : "cases"} failed</strong>{" "}
+                            due to critical missed milestones. Certification requires passing at least 6 of the 7 cases (max 1 failed case).
+                          </p>
+                        );
+                      } else {
+                        return (
+                          <p>
+                            Trainee achieved <strong>{attempt.score}%</strong> ({passedCasesCount} of {attempt.totalSteps} cases passed). To unlock official National Book Store Cashier Certification, achieve an overall score of <strong>80% or higher</strong> and successfully pass at least 6 of the 7 customer cases in a single shift.
+                          </p>
+                        );
+                      }
+                    })()}
+                  </div>
+                </div>
+              </div>
+              <Link href={retryUrl} className="shrink-0 w-full sm:w-auto">
+                <Button
+                  size="sm"
+                  className="w-full sm:w-auto bg-[#E4002B] hover:bg-[#C10024] text-white font-bold text-xs flex items-center justify-center space-x-1.5 px-4 py-2 sm:py-2.5 shadow-sm"
+                >
+                  <RotateCcw className="w-4 h-4 shrink-0" />
+                  <span>Retake Practical Exam</span>
+                </Button>
+              </Link>
+            </div>
+          )
         )}
 
         {/* Practical Exam Per-Case Score Breakdown */}
@@ -409,7 +434,7 @@ export default function AssessmentResultPage() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
           <Link
-            href={isPracticalExam ? "/simulator?exam=practical" : "/simulator"}
+            href={retryUrl}
             className="w-full sm:w-auto"
           >
             <Button
@@ -417,17 +442,17 @@ export default function AssessmentResultPage() {
               className="w-full sm:w-auto font-bold text-xs bg-[#E4002B] hover:bg-[#C10024] text-white flex items-center justify-center space-x-2 cursor-pointer shadow-sm px-6 py-2.5"
             >
               <RotateCcw className="w-4 h-4" />
-              <span>{isPracticalExam ? "Retake Practical Exam" : "Retry Assessment"}</span>
+              <span>{isPracticalExam ? "Retake Practical Exam" : matchedScenario?.lessonRef ? "Practice Again" : "Retry Assessment"}</span>
             </Button>
           </Link>
 
-          <Link href="/dashboard" className="w-full sm:w-auto">
+          <Link href={backDestinationUrl} className="w-full sm:w-auto">
             <Button
               variant="outline"
               size="lg"
               className="w-full sm:w-auto font-bold text-xs border-gray-300 text-gray-700 hover:text-gray-900 cursor-pointer px-6 py-2.5"
             >
-              Return to Course Dashboard
+              {backDestinationLabel}
             </Button>
           </Link>
         </div>

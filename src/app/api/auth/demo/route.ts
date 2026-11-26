@@ -26,10 +26,9 @@ export async function POST(request: NextRequest) {
       message: `Entered demo mode as ${mode === "admin" ? "Super Administrator" : "Trainee Cashier"}`,
     });
 
-    const maxAge = 7 * 24 * 60 * 60; // 7 days
     const secure = isCookieSecure();
 
-    // Set session cookie
+    // Session Cookies
     response.cookies.set({
       name: SESSION_COOKIE_NAME,
       value: sessionToken,
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       secure,
       path: "/",
-      maxAge,
     });
 
     // Set demo mode cookie for middleware & client
@@ -48,7 +46,6 @@ export async function POST(request: NextRequest) {
       sameSite: "lax",
       secure,
       path: "/",
-      maxAge,
     });
 
     return response;

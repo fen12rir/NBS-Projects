@@ -61,6 +61,10 @@ function isActionMatch(expectedAction: string, loggedAction: string): boolean {
   if (expectedAction === "NAV_FOURTH" && (loggedAction === "PAGE_DOWN" || loggedAction === "NAV_FOURTH" || loggedAction === "PAGE_UP")) return true;
   // Lookup Aliases: directly selecting an item from Lookup satisfies the search query milestone
   if (expectedAction === "LOOKUP_QUERY" && (loggedAction === "LOOKUP_QUERY" || loggedAction === "LOOKUP_SEARCH" || loggedAction === "ADD_ITEM")) return true;
+  // Shift Close Reading & SDV Aliases
+  if (expectedAction === "SDV_CHECK" && (loggedAction === "SDV_CHECK" || loggedAction === "CLOSE_SDV")) return true;
+  if (expectedAction === "READING_Y" && (loggedAction === "READING_Y" || loggedAction === "PRINT_READING_Y" || loggedAction === "CLOSE_READING_Y")) return true;
+  if (expectedAction === "READING_Z" && (loggedAction === "READING_Z" || loggedAction === "CONFIRM_Z_CLEARING" || loggedAction === "PRINT_READING_Z" || loggedAction === "CLOSE_READING_Z")) return true;
   // Logout Aliases
   if (expectedAction === "TRIGGER_LOGOUT" && (loggedAction === "TRIGGER_LOGOUT" || loggedAction === "CONFIRM_LOGOUT_YES" || loggedAction === "LOGOUT")) return true;
   if (expectedAction === "CONFIRM_LOGOUT_YES" && (loggedAction === "TRIGGER_LOGOUT" || loggedAction === "CONFIRM_LOGOUT_YES" || loggedAction === "LOGOUT")) return true;

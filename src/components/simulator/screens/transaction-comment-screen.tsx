@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { ClipboardList } from "lucide-react";
 
 export interface TransactionComments {
   customerName?: string;
@@ -11,6 +12,11 @@ export interface TransactionComments {
 
 interface TransactionCommentScreenProps {
   initialComments?: TransactionComments;
+  cardDetails?: {
+    customerName: string;
+    tin: string;
+    address: string;
+  };
   trxNumber?: string;
   clerkName?: string;
   terminalId?: string;
@@ -22,6 +28,7 @@ interface TransactionCommentScreenProps {
 
 export function TransactionCommentScreen({
   initialComments,
+  cardDetails,
   trxNumber = "0216202629990003000658",
   clerkName = "Jan Angela",
   terminalId = "0003",
@@ -31,12 +38,20 @@ export function TransactionCommentScreen({
   onCancel,
 }: TransactionCommentScreenProps) {
   const [customerName, setCustomerName] = useState(
-    initialComments?.customerName || "JAN ANGELA CATINDIG"
+    initialComments?.customerName || ""
   );
-  const [tin, setTin] = useState(initialComments?.tin || "000-000-000");
+  const [tin, setTin] = useState(initialComments?.tin || "");
   const [address, setAddress] = useState(
-    initialComments?.address || "MANDALUYONG"
+    initialComments?.address || ""
   );
+
+  useEffect(() => {
+    if (initialComments) {
+      setCustomerName(initialComments.customerName || "");
+      setTin(initialComments.tin || "");
+      setAddress(initialComments.address || "");
+    }
+  }, [initialComments]);
 
   const [currentTime, setCurrentTime] = useState("");
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +89,13 @@ export function TransactionCommentScreen({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ customerName, tin, address });
+    onSave({
+      customerName:
+        customerName.trim() || cardDetails?.customerName || "PRIME HOLDINGS INC.",
+      tin: tin.trim() || cardDetails?.tin || "123-456-789-000",
+      address:
+        address.trim() || cardDetails?.address || "150 PIONEER ST. MANDALUYONG CITY",
+    });
   };
 
   return (
@@ -158,6 +179,22 @@ export function TransactionCommentScreen({
                 placeholder="ADDRESS"
                 className="w-full bg-white border-2 border-t-[#404040] border-l-[#404040] border-r-white border-b-white px-2 py-1 text-xs font-mono font-bold text-gray-900 uppercase focus:outline-none focus:ring-1 focus:ring-blue-600 shadow-inner"
               />
+              {cardDetails && (
+                <div className="flex justify-end pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCustomerName(cardDetails.customerName);
+                      setTin(cardDetails.tin);
+                      setAddress(cardDetails.address);
+                    }}
+                    className="cursor-pointer text-[10px] font-mono font-bold text-emerald-900 hover:text-emerald-950 bg-emerald-100 hover:bg-emerald-200 border border-emerald-500 rounded px-2 py-0.5 shadow-2xs transition-colors flex items-center"
+                    title="Copy Customer Name, TIN, and Address from the Customer Billing Card on the right"
+                  >
+                    <ClipboardList className="w-3 h-3 mr-1 inline-block" /> Auto-fill from Customer Card ({cardDetails.tin})
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Buttons: Ok & Cancel */}

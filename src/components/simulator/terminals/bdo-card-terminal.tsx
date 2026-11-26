@@ -7,6 +7,7 @@ interface BdoCardTerminalProps {
   authCode: string;
   generatedAt: Date | null;
   totalAmount: number;
+  terminalName?: string;
   onUseSlip?: () => void;
 }
 
@@ -16,9 +17,16 @@ export function BdoCardTerminal({
   authCode,
   generatedAt,
   totalAmount,
+  terminalName = "BDO",
   onUseSlip,
 }: BdoCardTerminalProps) {
   const dateObj = generatedAt || new Date();
+  const normalizedTerm = (terminalName || "BDO").toUpperCase();
+  const isEpsDebit = normalizedTerm.includes("EPS") || normalizedTerm.includes("DEBIT");
+  const isMetrobank = normalizedTerm.includes("METROBANK");
+  const headerBrand = isMetrobank ? "METROBANK" : "BDO";
+  const transactionTitle = isEpsDebit ? "BDO EPS (DEBIT SALE)" : "CARD SALE";
+  const cardTypeLabel = isEpsDebit ? "DEBIT / EPS" : "CREDIT";
 
   return (
     <aside
@@ -26,7 +34,7 @@ export function BdoCardTerminal({
       className="w-full max-w-[260px] rounded-md border-2 border-gray-700 bg-gray-800 p-3 shadow-2xl transition-all duration-300"
     >
       <div className="mb-2 flex items-center justify-between font-sans text-[10px] font-bold uppercase tracking-widest text-gray-300">
-        <span>Card Terminal</span>
+        <span>Hypercom ({isMetrobank ? "Metrobank" : isEpsDebit ? "BDO EPS" : "BDO"})</span>
         {onUseSlip && (
           <button
             type="button"
@@ -46,7 +54,12 @@ export function BdoCardTerminal({
         title={onUseSlip ? "Click receipt to fill Auth Code & Slip No. into POS" : undefined}
       >
         <header className="mb-4 text-center">
-          <div className="mb-2 text-3xl font-black tracking-tight">BDO</div>
+          <div className={`mb-2 font-black tracking-tight ${isMetrobank ? "text-xl" : "text-3xl"}`}>
+            {headerBrand}
+          </div>
+          {isEpsDebit && (
+            <div className="text-[9px] font-bold tracking-wider mb-1">EXPRESS PAYMENT SYSTEM</div>
+          )}
           <div>NATIONAL BOOK STORE</div>
           <div>OWNED &amp; OPERATED BY:</div>
           <div>ABACUS BOOK &amp; CARD CORPORATION</div>
@@ -74,10 +87,10 @@ export function BdoCardTerminal({
         </div>
 
         <div className="my-3 border-t border-dashed border-gray-500" />
-        <div className="text-center font-bold tracking-widest">CARD SALE</div>
+        <div className="text-center font-bold tracking-widest">{transactionTitle}</div>
         <div className="mt-2 space-y-1">
-          <div>CARD: ************</div>
-          <div>CARD TYPE: CREDIT</div>
+          <div>CARD: ************0000</div>
+          <div>CARD TYPE: {cardTypeLabel}</div>
           <div className="font-bold text-[12px]">
             APPROVAL CODE: {authCode}
           </div>

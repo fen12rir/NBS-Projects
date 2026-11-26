@@ -587,14 +587,14 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: The customer changed their mind about the pen. Press F7 (ITEM VOID) on the right function column.",
+        instruction: "Step 2: The customer changed their mind about the pen ( remember: we only use Item Void if we punched a wrong item, punched too many, or the customer changed his/her mind). Press F7 (ITEM VOID) on the right function column.",
         expectedAction: "ITEM_VOID",
         hint: "Click F7 Item Void on the right keypad or press F7.",
         errorFeedback: "Press F7 (ITEM VOID) to initiate line cancellation."
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: The Manager Override screen appears. Authorize the line void by clicking [Yes] (or pressing ENTER).",
+        instruction: "Step 3: The Manager Override screen appears. In the actual store, call your Store Supervisor or Branch Manager to authorize the void. Click [Yes] (or press ENTER) to confirm the override.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click [Yes] or press ENTER in the Manager Override screen.",
         errorFeedback: "Click [Yes] (or press ENTER) to approve the Item Void."
@@ -625,14 +625,14 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: Customer decides to cancel the entire sale. Press F8 (TRX VOID) on the right function column.",
+        instruction: "Step 7: The customer realizes they forgot their wallet and decides to cancel the entire sale. Press F8 (TRX VOID) on the right function column.",
         expectedAction: "TRX_VOID",
         hint: "Click F8 Trx Void on the right keypad or press F8.",
         errorFeedback: "Press F8 (TRX VOID) to cancel the entire transaction."
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Authorize the transaction void by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
+        instruction: "Step 8: Call your Store Supervisor or Branch Manager to authorize the Transaction Void on the Manager Override screen. Click [Yes] (or press ENTER).",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click [Yes] or press ENTER in the Manager Override screen.",
         errorFeedback: "Click [Yes] (or press ENTER) to approve the Transaction Void."
@@ -766,14 +766,14 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: On the Transaction Discount screen, select a discount category (e.g. PWD / Senior Citizen / LNQR Family Discount) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply the discount and return to the Main Screen.",
+        instruction: "Step 3: On the Transaction Discount screen, verify the customer's ID and call your Store Supervisor or Branch Manager for Manager Override. Select a discount category (e.g. PWD / Senior Citizen / LNQR Family Discount) and click [SELECT <Alt-Enter>] (or press Alt+Enter / ENTER) to apply the discount and return to the Main Screen.",
         expectedAction: "APPLY_DISCOUNT",
         hint: "Select a discount row (e.g. ZPWD or ZSEN 20%) and click [SELECT <Alt-Enter>] or press Alt+Enter / Enter.",
         errorFeedback: "Select a discount category and click [SELECT <Alt-Enter>] to apply it."
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Back on the Main Screen with the discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
+        instruction: "Step 4: Back on the Main Screen with the discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper, ₱240.00) into the Barcode field and press ENTER. (Notice that on the Main Screen, SubTotal and Total Sales still show the gross ₱240.00 - the discount deduction will display once you proceed to Payment and on the Receipt.)",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-PAP-003",
         hint: "Type NBS-PAP-003 in the yellow barcode input and press Enter.",
@@ -795,7 +795,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: Enter the Supervisor PIN ('9999' or '1234') and click 'Authorize (Enter)' to approve the price override.",
+        instruction: "Step 7: Call your Store Supervisor or Branch Manager to authorize the price override. Enter the Supervisor PIN ('9999' or '1234') and click 'Authorize (Enter)'.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Type 9999 in the Supervisor PIN box and press Enter.",
         errorFeedback: "Enter the Supervisor PIN (9999) and authorize the Price Change."
@@ -876,7 +876,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 9,
-        instruction: "Step 9: Authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
+        instruction: "Step 9: Call your Store Supervisor or Branch Manager to authorize access to the Recall screen by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click [Yes] or press ENTER in the Manager Override screen to open the Recall buffer.",
         errorFeedback: "Click [Yes] (or press ENTER) on the Manager Override screen to continue to Recall."
@@ -921,7 +921,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Back on the Main Screen with the discount applied, scan 'NBS-CAL-005' (Casio Scientific Calculator) into the Barcode field and press ENTER.",
+        instruction: "Step 4: Back on the Main Screen with the discount applied, scan 'NBS-CAL-005' (Casio Scientific Calculator, ₱420.00) into the Barcode field and press ENTER. (Note: The Main Screen keeps showing the gross ₱420.00; the discount only shows on the Payment Screen and Receipt.)",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-CAL-005",
         hint: "Type NBS-CAL-005 into the barcode field and press Enter.",
@@ -929,7 +929,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: Put the transaction on hold while the customer grabs another item: press F9 (SUSPEND).",
+        instruction: "Step 5: Put the transaction on hold while the customer grabs another item: press F9 (SUSPEND). (Suspending or voiding a transaction also resets any active discount on the register so it does not carry over to the next customer.)",
         expectedAction: "SUSPEND",
         hint: "Click F9 Suspend on the Main Screen.",
         errorFeedback: "Press F9 (SUSPEND) to hold the transaction."
@@ -1114,14 +1114,14 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: On the 3rd Screen, initiate a same-day receipt cancellation by pressing F2 (POST VOID).",
+        instruction: "Step 3: On the 3rd Screen, a receipt that was already paid and printed earlier in the shift needs to be cancelled and re-rung. Initiate a same-day receipt cancellation by pressing F2 (POST VOID).",
         expectedAction: "POST_VOID",
         hint: "Click F2 Post Void at the top of the 3rd Screen function column.",
         errorFeedback: "Press F2 (POST VOID) on the 3rd Screen."
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: Enter the supervisor PIN ('9999' or '1234') and click [Authorize (Enter)] to approve the Post Void.",
+        instruction: "Step 4: Call your Store Supervisor or Branch Manager to inspect the printed receipt and enter the supervisor PIN ('9999' or '1234'), then click [Authorize (Enter)] to approve the Post Void.",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Enter the supervisor PIN (9999 or 1234) and click [Authorize (Enter)].",
         errorFeedback: "Enter and authorize with the supervisor PIN (9999 or 1234)."
@@ -1299,9 +1299,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Transaction Comment screen, enter or review customer TIN and company details, then click [Ok] (or press ENTER) to return to the Main Screen.",
+        instruction: "Step 5: On the Transaction Comment screen, copy the customer's Company Name ('PRIME HOLDINGS INC.'), TIN ('123-456-789-000'), and Address ('150 PIONEER ST. MANDALUYONG CITY') from the Customer TIN / Billing Slip card shown beside the POS (or click [Use Details] / [Auto-fill from Customer Card]), then click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog to record corporate details.",
+        hint: "Copy the details from the Customer TIN / Billing Slip card on the right (or click Use Details), then click [Ok] or press ENTER.",
         errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
@@ -1329,8 +1329,8 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
   },
   {
     id: "scen-les-7-2",
-    title: "Lesson 7-2 Practice: Item Returns (F8) & Returned SKU Entry",
-    description: "Navigate to the 4th Screen, initiate an item Return (F8 Return) with SI verification, and scan the returned item barcode on the Main Screen.",
+    title: "Lesson 7-2 Practice: Item Returns (F8), Refunds (F10) & Zero-Rated Sales (F7)",
+    description: "Practice all three 4th-Screen exception workflows covered in Lesson 7-2: execute an item Return (F8) and scan the returned SKU on the Main Screen, process a Cash Refund (F10) with original ORNO, and authorize a Zero-Rated VAT-exempt sale (F7) with Supervisor Override.",
     moduleRef: "mod-7",
     lessonRef: "les-7-2",
     passingScore: 70,
@@ -1358,25 +1358,89 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 4,
-        instruction: "Step 4: On the 4th Screen, initiate a customer item return by pressing F8 (RETURN).",
+        instruction: "Step 4: First, let's practice an Item Return (F8). On the 4th Screen, initiate a customer item return by pressing F8 (RETURN).",
         expectedAction: "RETURN_EXCHANGE",
         hint: "Click F8 Return on the 4th Screen keypad.",
         errorFeedback: "Press F8 (RETURN) on the 4th Screen."
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: In SELECT STORE, choose 'Own Store' and click [Continue] (or press Alt+Enter), click [Yes] (or press ENTER) on MANAGER OVERRIDE, then verify the reason and ORNO on ITEM RETURN and click [Ok] (or press Alt+Enter / ENTER).",
+        instruction: "Step 5: In SELECT STORE, choose 'Own Store' and click [Continue] (or press Alt+Enter), call your Store Supervisor / Branch Manager and click [Yes] (or press ENTER) on MANAGER OVERRIDE, then verify the reason and ORNO on ITEM RETURN and click [Ok] (or press Alt+Enter / ENTER).",
         expectedAction: "CONFIRM_RETURN",
         hint: "Select 'Own Store' -> [Continue], click [Yes] on Manager Override, then click [Ok] on the ITEM RETURN dialog.",
         errorFeedback: "Complete Store Selection, Manager Override [Yes], and click [Ok] on ITEM RETURN."
       },
       {
         stepNumber: 6,
-        instruction: "Step 6: Back on the Main Screen ('Enter Refund UPC'), scan or enter the returned item SKU 'NBS-BK-001' and press ENTER to post the negative return line.",
+        instruction: "Step 6: Back on the Main Screen (notice the red 'Enter Refund UPC' label), scan or enter the returned item SKU 'NBS-BK-001' and press ENTER to post the negative return line.",
         expectedAction: "SCAN_REFUND_SKU",
         expectedData: "NBS-BK-001",
         hint: "Type NBS-BK-001 in the yellow 'Enter Refund UPC' box and press Enter.",
         errorFeedback: "Scan or enter 'NBS-BK-001' to record the returned item."
+      },
+      {
+        stepNumber: 7,
+        instruction: "Step 7: Next, let's practice a Cash Refund (F10). From the Main Screen, press F11 (PAGE UP) to jump directly back to the 4th Screen.",
+        expectedAction: "PAGE_UP",
+        hint: "Press F11 on your keyboard or click the F11 Page Up arrow button under the barcode box.",
+        errorFeedback: "Press F11 (PAGE UP) to jump directly to the 4th Screen."
+      },
+      {
+        stepNumber: 8,
+        instruction: "Step 8: On the 4th Screen, initiate a cash Refund by pressing F10 (REFUND).",
+        expectedAction: "REFUND",
+        hint: "Click F10 Refund at the bottom of the 4th Screen keypad.",
+        errorFeedback: "Press F10 (REFUND) on the 4th Screen."
+      },
+      {
+        stepNumber: 9,
+        instruction: "Step 9: Call your Store Supervisor or Branch Manager to authorize the refund by clicking [Yes] (or pressing ENTER) on the Manager Override screen.",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Click [Yes] or press ENTER in the Manager Override screen for Refund.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen to authorize the refund."
+      },
+      {
+        stepNumber: 10,
+        instruction: "Step 10: On the ITEM REFUND screen, verify the original ORNO and click [Ok] (or press Alt+Enter / ENTER) to continue to the refund confirmation screen.",
+        expectedAction: "REFUND_ORNO",
+        hint: "Verify the ORNO in the Refund form and click [Ok] or press Alt+Enter.",
+        errorFeedback: "Verify the ORNO and click [Ok] to continue to the refund confirmation screen."
+      },
+      {
+        stepNumber: 11,
+        instruction: "Step 11: On the CONFIRM REFUND screen, verify the Refund Reason and ORNO, then click [Yes] (or press ENTER) to complete the refund and return to the Main Screen.",
+        expectedAction: "CONFIRM_REFUND",
+        hint: "Click [Yes] or press ENTER on the Confirm Refund dialog.",
+        errorFeedback: "Click [Yes] (or press ENTER) to confirm the refund."
+      },
+      {
+        stepNumber: 12,
+        instruction: "Step 12: Finally, let's practice a Zero-Rated Sale (F7) - used in the store when a foreigner on vacation here in the Philippines is entitled to Zero VAT. Back on the Main Screen, press F11 (PAGE UP) to jump directly back to the 4th Screen.",
+        expectedAction: "PAGE_UP",
+        hint: "Press F11 on your keyboard or click the F11 Page Up arrow button.",
+        errorFeedback: "Press F11 (PAGE UP) to return to the 4th Screen."
+      },
+      {
+        stepNumber: 13,
+        instruction: "Step 13: On the 4th Screen, press F7 (ZERO RATED) to apply Zero VAT (0% VAT) for the foreign tourist / tax-exempt customer.",
+        expectedAction: "ZERO_RATED",
+        hint: "Click F7 Zero Rated on the 4th Screen keypad.",
+        errorFeedback: "Press F7 (ZERO RATED) on the 4th Screen."
+      },
+      {
+        stepNumber: 14,
+        instruction: "Step 14: Call your Store Supervisor or Branch Manager and click [Yes] (or press ENTER) on the Manager Override screen to authorize Zero Rated (which applies VAT exemption and returns to the Main Screen).",
+        expectedAction: "CONFIRM_OVERRIDE",
+        hint: "Click [Yes] or press ENTER in the Manager Override screen to apply Zero Rated.",
+        errorFeedback: "Click [Yes] (or press ENTER) in the Manager Override screen to authorize Zero Rated."
+      },
+      {
+        stepNumber: 15,
+        instruction: "Step 15: Back on the Main Screen (notice the blue 'ZERO' badge in Total Sales), scan or enter 'NBS-CAL-005' (Casio Scientific Calculator) and press ENTER to record the Zero-Rated item (Type 'VZ').",
+        expectedAction: "ADD_ITEM",
+        expectedData: "NBS-CAL-005",
+        hint: "Type NBS-CAL-005 in the yellow barcode input and press Enter.",
+        errorFeedback: "Scan or enter 'NBS-CAL-005' to complete the Zero-Rated sale practice."
       }
     ]
   },
@@ -1479,9 +1543,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 5,
-        instruction: "Step 5: On the Transaction Comment screen, enter or verify corporate billing information and click [Ok] (or press ENTER) to return to the Main Screen.",
+        instruction: "Step 5: On the Transaction Comment screen, enter the corporate billing information from the Customer TIN / Billing Slip card beside the POS (or click [Use Details] / [Auto-fill from Customer Card]) and click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog.",
+        hint: "Click [Use Details] on the Customer TIN / Billing Slip card (or type the details), then click [Ok] or press ENTER.",
         errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
@@ -1493,7 +1557,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 7,
-        instruction: "Step 7: Apply VAT Zero-Rating for the tax-exempt corporate buyer by pressing F7 (ZERO RATED) on the 4th Screen.",
+        instruction: "Step 7: Apply VAT Zero-Rating (used when a foreigner on vacation in the Philippines or a tax-exempt buyer is entitled to Zero VAT) by pressing F7 (ZERO RATED) on the 4th Screen.",
         expectedAction: "ZERO_RATED",
         hint: "Click F7 Zero Rated on the 4th Screen.",
         errorFeedback: "Press F7 (ZERO RATED) on the 4th Screen."
@@ -1663,17 +1727,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 8,
-        instruction: "Step 8: Swipe the credit card by entering its number and pressing Enter.",
+        instruction: "Step 8: On the 'Please Swipe Credit Card' screen, enter 16 zeros ('0000000000000000') per store procedure (or click [Fill 16 Zeros]) and press Enter (or click [Ok]).",
         expectedAction: "SWIPE_CARD",
-        hint: "Enter the card number in the Swipe Card field and submit it.",
-        errorFeedback: "Swipe or enter the credit card number to continue."
+        hint: "Enter 16 zeros (0000000000000000) in the Swipe Card field and press Enter or click [Ok].",
+        errorFeedback: "Enter 16 zeros (0000000000000000) in the Swipe Card field to continue."
       },
       {
         stepNumber: 9,
-        instruction: "Step 9: Verify the card holder, terminal, expiry, authorization code, and invoice details, then press Ok to finalize Customer 1's PHP 180.00 payment.",
+        instruction: "Step 9: On Card Payment Details, press 'H' then 'X' for Card Holder (so 'X' appears), select the Card Terminal/Hypercom ('BDO' for Credit/Sale, 'BDO EPS' for Debit, or 'METROBANK'), verify Valid Until (today's transaction date), enter the Authorization Code and Sales Slip No. from the terminal slip, then press Ok to finalize Customer 1's PHP 180.00 payment.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 180,
-        hint: "Review the card details and press Ok (or Enter) to complete Customer 1's payment.",
+        hint: "Press H then X for Card Holder, select BDO / BDO EPS / METROBANK, verify the terminal slip details, and press Ok (or Enter).",
         errorFeedback: "Complete the card details and confirm the PHP 180.00 payment."
       },
       {
@@ -2148,17 +2212,17 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 11,
-        instruction: "Step 11: Swipe the credit card by entering its number and pressing Enter.",
+        instruction: "Step 11: On 'Please Swipe Credit Card', enter 16 zeros ('0000000000000000') per store procedure (or click [Fill 16 Zeros]) and press Enter (or click [Ok]).",
         expectedAction: "SWIPE_CARD",
-        hint: "Enter the card number in the Swipe Card field and submit it.",
-        errorFeedback: "Swipe or enter the credit card number to continue."
+        hint: "Enter 16 zeros (0000000000000000) in the Swipe Card field and press Enter or click [Ok].",
+        errorFeedback: "Enter 16 zeros (0000000000000000) in the Swipe Card field to continue."
       },
       {
         stepNumber: 12,
-        instruction: "Step 12: Verify the terminal invoice and authorization code details and press Ok to finalize Customer 1's PHP 1,080.00 payment.",
+        instruction: "Step 12: On Card Payment Details, press 'H' then 'X' for Card Holder, verify Card Terminal/Hypercom ('BDO' for Credit/Sale, 'BDO EPS' for Debit, or 'METROBANK') and Valid Until (transaction date), copy the terminal invoice and authorization code details, and press Ok to finalize Customer 1's PHP 1,080.00 payment.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 1080,
-        hint: "Review the card details and press Ok.",
+        hint: "Press H then X for Card Holder, review the terminal slip details, and press Ok.",
         errorFeedback: "Complete the card details and confirm the PHP 1,080.00 payment."
       },
       {
@@ -2237,14 +2301,14 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 2,
-        instruction: "Step 2: Customer decides to cancel this item. Press F7 (ITEM VOID).",
+        instruction: "Step 2: Customer decides to cancel this item (remember: we only use Item Void if we punched a wrong item, punched too many, or the customer changed his/her mind). Press F7 (ITEM VOID).",
         expectedAction: "ITEM_VOID",
         hint: "Click F7 ITEM VOID in the right column or press F7.",
         errorFeedback: "Press F7 for Item Void."
       },
       {
         stepNumber: 3,
-        instruction: "Step 3: The Manager Override screen opens. Click [Yes] (or press ENTER) to authorize the void.",
+        instruction: "Step 3: The Manager Override screen opens. Call your Store Supervisor or Branch Manager to authorize the void, then click [Yes] (or press ENTER).",
         expectedAction: "CONFIRM_OVERRIDE",
         hint: "Click [Yes] or press ENTER in the Manager Override screen.",
         errorFeedback: "Click [Yes] (or press ENTER) to continue with the void."
@@ -2556,7 +2620,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 20,
-        instruction: "Step 20: Back on the Main Screen with the PWD discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper) into the Barcode field and press ENTER.",
+        instruction: "Step 20: Back on the Main Screen with the PWD discount active, scan or enter 'NBS-PAP-003' (A4 Copy Paper, ₱240.00) into the Barcode field and press ENTER.",
         expectedAction: "ADD_ITEM",
         expectedData: "NBS-PAP-003",
         hint: "Type NBS-PAP-003 in the yellow barcode input and press Enter.",
@@ -2564,7 +2628,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 21,
-        instruction: "Step 21: Back on the Main Screen, total price has been discounted. Press F4 (PAYMENT) to open the payment flow.",
+        instruction: "Step 21: Notice that on the Main Screen, SubTotal and Total Sales still show the gross ₱240.00 (the 20% PWD discount will appear once we open Payment and on the Receipt). Press F4 (PAYMENT) to open the payment flow.",
         expectedAction: "GO_PAYMENT",
         hint: "Click F4 PAYMENT on the right column or press F4.",
         errorFeedback: "Press F4 to open the payment screen."
@@ -2608,18 +2672,18 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 27,
-        instruction: "Step 27: Swipe the credit card by entering its number and pressing Enter.",
+        instruction: "Step 27: On 'Please Swipe Credit Card', enter 16 zeros ('0000000000000000') per store procedure (or click [Fill 16 Zeros]) and press Enter (or click [Ok]).",
         expectedAction: "SWIPE_CARD",
-        hint: "Enter the card number in the Swipe Card field and submit it.",
-        errorFeedback: "Swipe or enter the credit card number to continue."
+        hint: "Enter 16 zeros (0000000000000000) in the Swipe Card field and submit it.",
+        errorFeedback: "Enter 16 zeros (0000000000000000) in the Swipe Card field to continue."
       },
       {
         stepNumber: 28,
-        instruction: "Step 28: Enter the invoice and authorization code found on the terminal receipt to complete the card details and confirm the payment to finalize the receipt.",
+        instruction: "Step 28: Notice the Payment Screen and Electronic Journal now show the discounted amount due (₱192.00 after 20% PWD discount). On Card Payment Details, press 'H' then 'X' for Card Holder (so 'X' appears), select Card Terminal/Hypercom ('BDO' for Credit/Sale, 'BDO EPS' for Debit, or 'METROBANK'), verify Valid Until (today's transaction date), enter the Authorization Code and Sales Slip No. from the terminal receipt, and press Ok.",
         expectedAction: "CONFIRM_TENDER",
         expectedData: 192,
-        hint: "Review or enter the card holder, terminal, expiry, authorization code, and invoice details, then press Ok.",
-        errorFeedback: "Complete the card details and confirm the PHP 180.00 payment."
+        hint: "Press H then X for Card Holder, select BDO / BDO EPS / METROBANK, enter the authorization code and sales slip number, then press Ok.",
+        errorFeedback: "Complete the card details and confirm the discounted PHP 192.00 payment."
       },
 
       {
@@ -2652,9 +2716,9 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 33,
-        instruction: "Step 33: On the Transaction Comment screen, enter or verify corporate billing information and click [Ok] (or press ENTER) to return to the Main Screen.",
+        instruction: "Step 33: On the Transaction Comment screen, enter the corporate billing information from the Customer TIN / Billing Slip card shown beside the POS (or click [Use Details] / [Auto-fill from Customer Card]) and click [Ok] (or press ENTER) to return to the Main Screen.",
         expectedAction: "SAVE_TRX_COMMENT",
-        hint: "Click [Ok] or press ENTER in the Transaction Comment dialog.",
+        hint: "Click [Use Details] on the Customer TIN / Billing Slip card (or type the details), then click [Ok] or press ENTER.",
         errorFeedback: "Click [Ok] (or press ENTER) to save the transaction comment."
       },
       {
@@ -2666,7 +2730,7 @@ export const TRAINING_SCENARIOS: TrainingScenario[] = [
       },
       {
         stepNumber: 35,
-        instruction: "Step 35: Apply VAT Zero-Rating for the tax-exempt corporate buyer by pressing F7 (ZERO RATED) on the 4th Screen.",
+        instruction: "Step 35: Apply VAT Zero-Rating (used when a foreigner on vacation in the Philippines or a tax-exempt buyer is entitled to Zero VAT) by pressing F7 (ZERO RATED) on the 4th Screen.",
         expectedAction: "ZERO_RATED",
         hint: "Click F7 Zero Rated on the 4th Screen.",
         errorFeedback: "Press F7 (ZERO RATED) on the 4th Screen."

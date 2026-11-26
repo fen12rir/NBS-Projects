@@ -337,12 +337,12 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "For line cancellation: Press F7 (Item Void). The system requests manager override.",
-          "Select the cancellation reason code and press Alt + Enter.",
-          "Highlight the item to cancel and press Alt + Enter. Notice the quantity turns negative in the transaction log.",
-          "For total cancellation: Press F8 (Trx Void), confirm with 'Y', enter override, and choose reason."
+          "When to Use Item Void (F7) - Real Store Examples: Only use F7 (Item Void) when you need to remove a specific line item during an active transaction - for example: (1) you accidentally scanned or punched the wrong item, (2) the customer changed his/her mind about buying one of the items on the counter, or (3) you scanned or punched an item too many times (excess quantity).",
+          "Supervisor / Branch Manager Override Protocol: Because F7 (Item Void) and F8 (Trx Void) are restricted operations, you must call your Store Supervisor or Branch Manager to inspect the item/screen and enter their Manager Override credentials before the void can proceed.",
+          "For single-line cancellation (F7 Item Void): Press F7 (Item Void), call your Supervisor or Branch Manager to authorize the Manager Override screen, select the exact cancellation reason code (e.g. 'Customer Cancel' or 'Wrong Punch') and press Alt + Enter, then highlight the line item to cancel and press Alt + Enter. Notice the quantity turns negative in the transaction log.",
+          "When to Use Transaction Void (F8) - Real Store Examples: Use F8 (Trx Void) only when the entire transaction must be cancelled before payment - for example, the customer realized they forgot their wallet/cash and decides not to proceed with any items, or the entire sale was rung up by mistake. Call your Supervisor or Branch Manager for Manager Override, confirm with 'Y', and select the reason code."
         ],
-        keyCallouts: ["F7: Item Void", "F8: Trx Void", "Alt+Enter: Select & Confirm"]
+        keyCallouts: ["F7: Item Void (Wrong Punch / Changed Mind / Excess Punch)", "F8: Trx Void (Cancel Entire Sale)", "Call Supervisor / Branch Manager for Override", "Alt+Enter: Select & Confirm"]
       }
     ]
   },
@@ -412,10 +412,13 @@ export const TRAINING_MODULES: TrainingModule[] = [
         instructions: [
           "For Transaction Discounts (Senior Citizen, PWD, Employee, LNQR Family): Apply the discount FIRST before scanning or entering the customer's items (or before completing the transaction). Press F5 (Option) from the Main Screen to enter the 2nd Page.",
           "Press F6 (TRX Disc) on the 2nd Page to open the discount category list.",
-          "Select the appropriate discount (e.g., ZPWD for PWD 20%, ZSEN for Senior Citizen 20%, Employee 15%, or ZQFD for LNQR Family Discount), input customer ID details and manager override credentials when prompted, and press Alt + Enter (returns automatically to the Main Screen so you can scan items and proceed to payment).",
-          "For authorized unit price overrides on an already scanned item: Press F3 (Price Change) on the 2nd Page, input manager override credentials, enter the new unit price and reason, and confirm (returns automatically to Main Screen)."
+          "Call Your Supervisor / Branch Manager for Discount & Price Override: Applying a statutory/company discount or changing a unit price requires a Manager Override. In the actual store, verify the customer's physical Senior Citizen / PWD / Employee ID and booklet, then call your Store Supervisor or Branch Manager to verify and enter their Manager Override credentials.",
+          "Select the appropriate discount (e.g., ZPWD for PWD 20%, ZSEN for Senior Citizen 20%, Employee 15%, or ZQFD for LNQR Family Discount), input the customer ID details and have your Supervisor/Branch Manager authorize the override, then press Alt + Enter (returns automatically to the Main Screen so you can scan items and proceed to payment).",
+          "How Discounts Display on the POS: While on the Main Screen, SubTotal, the green LED display, and Total Sales continue showing the gross regular item prices without displaying the discount deduction. Once you press F4 (Payment) and proceed to the Payment Screen, the Sales box displays the discounted amount to be paid, and the Electronic Journal / Official Receipt prints the full discount breakdown (SubTotal, Less: Discount Name (-%), and discounted Amount Due).",
+          "Discount Reset on Trx Void or Suspend: If you cancel a sale via F8 (Trx Void) or hold a transaction via F9 (Suspend), any active discount is automatically cleared so it never carries over to the next customer.",
+          "When to Use Price Change (F3) - Real Store Example: Only use F3 (Price Change) on the 2nd Page when there is an authorized shelf-tag discrepancy or markdown approved by store management. Call your Supervisor or Branch Manager to input their Manager Override credentials, enter the new unit price and reason, and confirm (returns automatically to Main Screen)."
         ],
-        keyCallouts: ["F5: Option", "F3: Price Change", "F6: TRX Disc", "Alt+Enter: Apply"]
+        keyCallouts: ["F5: Option", "F3: Price Change (Call Supervisor Override)", "F6: TRX Disc (Call Manager & Show in Payment/Receipt)", "Alt+Enter: Apply"]
       },
       {
         id: "les-5-2",
@@ -465,10 +468,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "To suspend: Press F9 (Suspend) on Main Page, then press ENTER.",
-          "To recall: Go to 2nd Page via F5, press F7 (Recall), provide override, and pick the suspended transaction (returns automatically to Main Screen).",
-          "To open the cash drawer without a sale: Press F9 (No Sale) on 2nd Page and provide manager override credentials (returns automatically to Main Screen).",
-          "To reprint: Press F2 (Reprint) on 2nd Page, provide manager override, select OR number, and confirm."
+          "When to Use Suspend (F9) & Recall (F7) - Real Store Example: Use F9 (Suspend) on the Main Page when a customer is at the counter and realizes they need to run back to an aisle to grab an extra item or check their wallet, so you can hold their transaction and serve the next customer in line. Note: Suspending (or voiding via F8 Trx Void) automatically clears any applied Transaction Discount from the active register so the next customer starts with a clean transaction.",
+          "To recall a held sale: When the customer returns, go to the 2nd Page via F5, press F7 (Recall), call your Store Supervisor or Branch Manager to authorize the Manager Override screen, and pick the suspended transaction (returns automatically to Main Screen).",
+          "When to Use No Sale (F9 on 2nd Page) - Real Store Example: Only use F9 (No Sale) when a Supervisor needs to open the cash drawer without a sale (e.g., to break bills for change or conduct a spot cash audit). Call your Supervisor or Branch Manager to enter their Manager Override credentials.",
+          "When to Use Reprint (F2 on 2nd Page) - Real Store Example: Only use F2 (Reprint) if the receipt printer paper jammed or ran out of thermal paper during printing. Call your Supervisor or Branch Manager for Manager Override, select the Official Receipt (OR) number, and confirm."
         ],
         keyCallouts: ["F9 (Main): Suspend", "F7 (2nd): Recall", "F9 (2nd): No Sale", "F2 (2nd): Reprint"]
       }
@@ -553,10 +556,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "To cancel a completed receipt from earlier in the shift: Press F2 (Post Void) on the 3rd Page, provide Manager Override credentials, and confirm the OR number.",
-          "On the 3rd Page, press F10 (SDV) to verify Sales Data.",
+          "When to Use Post Void (F2 on 3rd Page) - Real Store Example: Unlike Trx Void (which cancels an unpaid transaction), use F2 (Post Void) only when a transaction was ALREADY paid and the Official Receipt was already printed earlier in the same shift - for example, the customer immediately realized the wrong payment tender was used or needs the completed receipt cancelled and re-rung. Call your Store Supervisor or Branch Manager to inspect the printed receipt and enter their Manager Override credentials, then confirm the OR number.",
+          "On the 3rd Page, press F10 (SDV) to verify Sales Data before printing your end-of-shift readings.",
           "Check whether the Header, Detail, and PayDetail counts are listed as 'Tally'.",
-          "If any row indicates 'Not Tally', take note of the discrepancy and immediately contact the Service Desk."
+          "If any row indicates 'Not Tally', take note of the discrepancy and immediately contact your Supervisor and the Service Desk."
         ],
         keyCallouts: ["F2 (3rd): Post Void", "F10 (3rd): SDV Check"]
       }
@@ -602,10 +605,11 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Press F5 three times to advance to the 4th Page (or press F11 Page Up from Main Screen to wrap directly to the 4th Page; use F12 to return to Main).",
-          "Press F3 (TRX Comment). Type the customer's registered company name, address, and TIN, then press OK (returns automatically to Main Screen).",
+          "Press F3 (TRX Comment). A 'Customer TIN / Billing Slip' card appears beside the POS register (similar to the BDO, Maya, and GCash slips) showing the customer's registered Company Name ('PRIME HOLDINGS INC.'), TIN ('123-456-789-000'), and Business Address ('150 PIONEER ST. MANDALUYONG CITY').",
+          "Type the customer's Company Name, TIN, and Address from the card into the Transaction Comment fields (or click [Use Details] on the card / [Auto-fill from Customer Card] inside the form), then press OK (returns automatically to Main Screen).",
           "These comments will automatically print on the official sales invoice receipt."
         ],
-        keyCallouts: ["F3 (4th): TRX Comment", "F11: Page Up", "F12: Page Down"]
+        keyCallouts: ["F3 (4th): TRX Comment", "Customer TIN / Billing Slip Card", "F11: Page Up", "F12: Page Down"]
       },
       {
         id: "les-7-2",
@@ -665,9 +669,10 @@ export const TRAINING_MODULES: TrainingModule[] = [
           }
         ],
         instructions: [
-          "For Returns: Press F8 (Return) on 4th Page, enter override, input customer Sales Invoice (SI), and enter returned GTIN.",
-          "For Refunds: Press F10 (Refund), supply manager override, and enter the original ORNO.",
-          "For Zero-Rated sales: Press F7 (Zero Rated) before scanning vatable items to apply VAT exemption."
+          "Always Call Your Supervisor or Branch Manager for Returns, Refunds & Zero-Rated Sales: All three 4th-Page exception workflows require physical inspection and Manager Override authorization by your Store Supervisor or Branch Manager.",
+          "For Item Returns / Exchange (F8 on 4th Page) - Real Store Example: Use F8 (Return) when a customer brings back a regular item (e.g., defective or wrong size/variant within the 7-day return policy) along with their original Sales Invoice (SI) to exchange it. Press F8 (Return), call your Supervisor or Branch Manager for Manager Override, input the original SI number and reason, and scan the returned item's GTIN barcode.",
+          "For Cash Refunds (F10 on 4th Page) - Real Store Example: Use F10 (Refund) when an approved return requires refunding the customer's payment from an original Official Receipt (ORNO). Press F10 (Refund), call your Supervisor or Branch Manager to authorize the Manager Override, and enter the original ORNO.",
+          "For Zero-Rated Sales (F7 on 4th Page) - Real Store Example: In the store, F7 (Zero Rated) is used when a foreigner / foreign tourist is on vacation here in the Philippines (or a diplomatic/PEZA-exempt buyer) so they are entitled to Zero VAT (0% VAT). Press F7 (Zero Rated) BEFORE scanning vatable items and call your Store Supervisor or Branch Manager to authorize the VAT exemption."
         ],
         keyCallouts: ["F8 (4th): Return", "F10 (4th): Refund", "F7 (4th): Zero Rated"]
       },
@@ -751,11 +756,12 @@ export const TRAINING_MODULES: TrainingModule[] = [
           "When all items are entered on the Main screen, press F4 (Payment).",
           "The BONUS BUY LIST appears first. If no bag is selected, press Alt+B (or click [CANCEL]) and confirm [Yes] to return to the Main Screen (only use [OK] Alt+Enter when a bonus bag checkbox is checked).",
           "Press F4 (Payment) again. In the Choose Option dialog, select option 1 (None) if the customer has no loyalty card (or 2 for LNC / 3 for LNQR).",
-          "On the Payment Screen, Cash is already selected by default — no need to press F2 again. Directly type the amount handed by the customer (e.g. 250.00 or 500.00).",
-          "Press Enter or click [Ok] to confirm tender.",
-          "Observe the calculated Change due to the customer and wait for the simulated receipt to generate."
+          "Note on Applied Discounts: Any Transaction Discount (such as Senior Citizen or PWD 20%) is hidden on the Main Screen but automatically takes effect here on the Payment Screen (Sales shows the discounted total due) and prints on the Electronic Journal receipt.",
+          "On the Payment Screen, Cash is already selected by default - no need to press F2 again. Directly type the amount handed by the customer (e.g. 250.00 or 500.00).",
+          "Partial Payment / Split Tender Accommodation: If the customer tenders an amount less than the total due, a 'Partial Payment / Split Tender Required' modal appears so you can accommodate another payment method (e.g., pay the remaining balance with Cash (F2) or Card / E-Wallet (F3)).",
+          "Press Enter or click [Ok] to confirm tender, observe the calculated Change due to the customer, and wait for the simulated receipt to generate."
         ],
-        keyCallouts: ["F4: Payment Flow", "Alt+B: Bonus Buy Cancel", "1: None (or 2/3 for Loyalty)", "Enter: Confirm Cash Tender"]
+        keyCallouts: ["F4: Payment Flow", "Alt+B: Bonus Buy Cancel", "1: None (or 2/3 for Loyalty)", "Split Tender: Partial Payment Prompt", "Enter: Confirm Cash Tender"]
       },
       {
         id: "les-8-2",
@@ -765,27 +771,30 @@ export const TRAINING_MODULES: TrainingModule[] = [
         visualAssets: [
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step1-f3.png",
-            caption: "Card Payment Step 1: Press F3 (Bank Card) on Payment Screen, choose Credit Card, and swipe or enter the card number.",
+            caption: "Card Payment Step 1: Press F3 (Bank Card), select CREDIT CARD, and on 'Please Swipe Credit Card' enter 16 zeros (0000000000000000) per store procedure.",
             alt: "Credit Card tender entry screen"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-cardpayment-step2-f3.png",
-            caption: "Card Payment Step 2: Copy the 6-character Authorization Code and 6-digit Invoice/Sales Slip # from the BDO POS terminal slip and press Ok.",
+            caption: "Card Payment Step 2: Press 'H' then 'X' so only 'X' appears in Card Holder, select Card Terminal/Hypercom (BDO for Credit/Sale, BDO EPS for Debit, or METROBANK), verify Valid Until (today's transaction date), copy the 6-character Auth Code and 6-digit Sales Slip # from the terminal slip, and press Ok.",
             alt: "Card authorization details prompt"
           },
           {
             src: "/assets/modules/module-8-payment-screens/images/pos-gcash-step1-f3.png",
-            caption: "GCash / Maya Tender: Press F3 (Bank Card), select GCASH or MAYA, and enter the transaction reference number shown on the terminal preview.",
+            caption: "GCash / Maya & Split Tender: Press F3 (Bank Card), select GCASH or MAYA, and enter the Amount and Reference No. If the payment is less than the balance due, use the Partial Payment modal to settle the remaining balance with Cash (F2) or Card/E-Wallet (F3).",
             alt: "GCash mobile wallet payment entry screen"
           }
         ],
         instructions: [
           "On the Payment Screen, press F3 (Bank Card) to open the card and electronic wallet selector.",
-          "For Credit/Debit Card: Select 'CREDIT CARD' and press [Ok]. Swipe or enter the card number and press Enter.",
-          "Inspect the BDO POS terminal receipt on the right, enter the Authorization Code and Sales Slip / Invoice No., and click [Ok] to complete the card payment.",
-          "For GCash or Maya: Press F3 (Bank Card), select 'GCASH' (or 'MAYA') and press [Ok]. Verify the Amount, copy the Reference No. from the terminal preview, and click [Ok]."
+          "Swipe Card Store Procedure (16 Zeros): For Credit/Debit Card, select 'CREDIT CARD' and press [Ok]. On the 'Please Swipe Credit Card' field, the actual store procedure is to enter 16 zeros ('0000000000000000' - or click [Fill 16 Zeros]) and press Enter or [Ok].",
+          "Card Holder Shortcut ('H' then 'X'): On the Card Payment Details page, press 'H' then 'X' on your keyboard (or tap [H→X]). Pressing 'H' activates the Card Holder field without typing 'H', and pressing 'X' places only 'X' in the Card Holder field.",
+          "Card Terminal / Hypercom Selection (BDO, BDO EPS, METROBANK): In the Card Terminal/Hypercom dropdown, select from 'BDO', 'BDO EPS', or 'METROBANK'. Take note that the Hypercom terminal prints a different receipt depending on what the customer used: for a Debit card, select 'BDO EPS' (prints BDO EPS DEBIT SALE); for a Credit card / regular Sale, select 'BDO' (prints CARD SALE); or select 'METROBANK' for Metrobank terminals.",
+          "Valid Until & Slip Details: Verify that 'Valid Until' is set to the date of the transaction (YYYY-MM-DD), copy the 6-character Authorization Code and 6-digit Sales Slip / Invoice No. from the Hypercom terminal slip on the right, and click [Ok].",
+          "For GCash or Maya: Press F3 (Bank Card), select 'GCASH' (or 'MAYA') and press [Ok]. Enter the Amount paid, copy the Reference No. from the terminal preview, and click [Ok].",
+          "Partial Payment / Split Tender Prompt: If the customer's GCash, E-Wallet, or Card payment is not enough to cover the full amount due (e.g., customer paid ₱200 in GCash on a ₱420 total), a 'Partial Payment / Split Tender Required' modal automatically appears so you can accommodate another payment method (such as paying the remaining balance with Cash (F2) or another Card/E-Wallet (F3))."
         ],
-        keyCallouts: ["F3: Bank Card", "CREDIT CARD: Swipe -> Auth Code & Slip No.", "GCASH / MAYA: Enter Reference No."]
+        keyCallouts: ["Swipe Card: 16 Zeros (0000000000000000)", "Card Holder: Press 'H' then 'X' -> X", "Hypercom: BDO (Credit/Sale) | BDO EPS (Debit) | METROBANK", "Valid Until: Transaction Date", "Partial Payment Modal: Split Tender Balance"]
       },
       {
         id: "les-8-3",
@@ -889,7 +898,7 @@ export const TRAINING_MODULES: TrainingModule[] = [
         ],
         instructions: [
           "Review function key actions across all 5 POS screens (Main, 2nd, 3rd, 4th, Payment).",
-          "Ensure you remember which operations require a manager override (Item Void, Trx Void, Reprint, Discounts, Readings).",
+          "Remember the Store Supervisor / Branch Manager Override Rule: In the store, whenever an operation requires a Manager Override - such as Item Void (F7, when you punched a wrong item, punched too many, or the customer changed their mind), Transaction Void (F8), Transaction Discounts (F6), Price Change (F3), Recall (F7), Reprint (F2), No Sale (F9), Post Void (F2), Zero-Rated (F7), Return (F8), or Refund (F10) - you must call your Supervisor or Branch Manager to verify and enter their override credentials.",
           "Proceed to the Practical POS Simulator to complete your graded cashier scenario."
         ],
         keyCallouts: ["Start Practical Assessment: Test your skills"]

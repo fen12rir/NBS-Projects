@@ -30,6 +30,7 @@ import { BdoCardTerminal } from "@/components/simulator/terminals/bdo-card-termi
 import { GcashTerminalPreview } from "@/components/simulator/terminals/gcash-terminal-preview";
 import { MayaTerminalReceipt } from "@/components/simulator/terminals/maya-terminal-receipt";
 import { NbsGiftCardPreview } from "@/components/simulator/terminals/nbs-gift-card-preview";
+import { CustomerBillingCardPreview } from "@/components/simulator/terminals/customer-billing-card-preview";
 import { CustomerPanel } from "@/components/simulator/customer-panel";
 import { ChangeCheckModal } from "@/components/simulator/modals/change-check-modal";
 import { PosAlertModal, PosAlertState } from "@/components/simulator/modals/pos-alert-modal";
@@ -97,7 +98,8 @@ import {
   Coins,
   Banknote,
   CreditCard,
-  ClipboardList
+  ClipboardList,
+  Loader2
 } from "lucide-react";
 
 export type POSTerminalMode = "START_OF_DAY_VERIFY" | "START_OF_DAY_INCORRECT" | "START_OF_DAY_CLOSE" | "POS_RELOADER" | "USER_LOGIN" | "ACTIVE_REGISTER";
@@ -155,11 +157,18 @@ function generateMayaReferenceNumber() {
 
 const TERMINAL_OPTIONS = [
   "-SELECT-",
-  "BDO POS",
-  "MAYA POS",
-  "TERMINAL 1",
-  "TERMINAL 2",
+  "BDO",
+  "BDO EPS",
+  "METROBANK",
 ];
+
+function getTodayIsoDate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
 const isEwalletCardType = (type: string) => {
   const t = (type || "").toUpperCase();
@@ -200,6 +209,7 @@ function SimulatorContent() {
   const [examActionLog, setExamActionLog] = useState<TraineeActionLog[]>([]);
   const examActionLogRef = useRef<TraineeActionLog[]>([]);
   const isAdvancingCaseRef = useRef(false);
+  const advanceCaseTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [caseResults, setCaseResults] = useState<CaseGradingResult[]>([]);
   const [caseStartTime, setCaseStartTime] = useState<number>(Date.now());
   const [isChangeCheckModalOpen, setIsChangeCheckModalOpen] = useState(false);
@@ -895,13 +905,24 @@ function SimulatorContent() {
   const [isCompletedReceiptOpen, setIsCompletedReceiptOpen] = useState(false);
   const [selectedBankCardType, setSelectedBankCardType] = useState("-SELECT-");
   const [bankCardSwipeNum, setBankCardSwipeNum] = useState("");
-  const [bankCardHolder, setBankCardHolder] = useState("X");
-  const [bankCardTerminal, setBankCardTerminal] = useState("BDO POS");
-  const [bankCardValidUntil, setBankCardValidUntil] = useState("2028-12-31");
+  const [bankCardHolder, setBankCardHolder] = useState("");
+  const [cardHolderHPressed, setCardHolderHPressed] = useState(false);
+  const cardHolderInputRef = useRef<HTMLInputElement>(null);
+  const [bankCardTerminal, setBankCardTerminal] = useState("BDO");
+  const [bankCardValidUntil, setBankCardValidUntil] = useState(() => getTodayIsoDate());
   const [bankCardAuthCode, setBankCardAuthCode] = useState("");
   const [bankCardSlipNo, setBankCardSlipNo] = useState("");
   const [bankCardRefNo, setBankCardRefNo] = useState("");
   const [bankCardAmountInput, setBankCardAmountInput] = useState("");
+  const [partialPayments, setPartialPayments] = useState<
+    Array<{ method: string; amount: number; reference?: string }>
+  >([]);
+  const [partialPaymentPrompt, setPartialPaymentPrompt] = useState<{
+    method: string;
+    tenderedAmount: number;
+    remainingBalance: number;
+    reference?: string;
+  } | null>(null);
   const [sulitCoinsEarnedAmount, setSulitCoinsEarnedAmount] = useState<number | null>(null);
   const [sulitCoinsRedeemedAmount, setSulitCoinsRedeemedAmount] = useState<number | null>(null);
   const [sulitCoinsRefNo, setSulitCoinsRefNo] = useState("");
@@ -984,26 +1005,35 @@ function SimulatorContent() {
   )?.tender?.kind;
 
   const isExternalReceiptShowing =
-    selectedTenderMethod === "BANK_CARD" &&
-    selectedBankCardType !== "-SELECT-" &&
-    bankCardStep !== "SELECT_TYPE" &&
-    (
-      selectedBankCardType === "CREDIT CARD" ||
-      selectedBankCardType === "VISA" ||
-      selectedBankCardType === "MASTERCARD" ||
-      (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
-      (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
-      (selectedBankCardType === "NBS GIFTCARD" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
-    );
+    isTrxCommentOpen ||
+    (selectedTenderMethod === "BANK_CARD" &&
+      selectedBankCardType !== "-SELECT-" &&
+      bankCardStep !== "SELECT_TYPE" &&
+      (
+        selectedBankCardType === "CREDIT CARD" ||
+        selectedBankCardType === "VISA" ||
+        selectedBankCardType === "MASTERCARD" ||
+        (selectedBankCardType === "GCASH" && bankCardStep === "EWALLET_DETAILS") ||
+        (selectedBankCardType === "MAYA" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF")) ||
+        (selectedBankCardType === "NBS GIFTCARD" && (bankCardStep === "EWALLET_DETAILS" || bankCardStep === "FINAL_TEAROFF"))
+      ));
 
-  const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" | "NBS_GIFTCARD" =
-    selectedBankCardType === "GCASH"
+  const activeExternalTerminalType: "BDO" | "GCASH" | "MAYA" | "NBS_GIFTCARD" | "TRX_COMMENT" =
+    isTrxCommentOpen
+      ? "TRX_COMMENT"
+      : selectedBankCardType === "GCASH"
       ? "GCASH"
       : selectedBankCardType === "MAYA"
       ? "MAYA"
       : selectedBankCardType === "NBS GIFTCARD"
       ? "NBS_GIFTCARD"
       : "BDO";
+
+  const currentCustomerBillingCard = {
+    customerName: "PRIME HOLDINGS INC.",
+    tin: "123-456-789-000",
+    address: "150 PIONEER ST. MANDALUYONG CITY",
+  };
 
   const currentGiftCardVoucher = "000044505";
 
@@ -1221,10 +1251,13 @@ function SimulatorContent() {
   const [isExamCompleted, setIsExamCompleted] = useState(false);
   const [completedAttemptId, setCompletedAttemptId] = useState<string | null>(null);
   const hasRecordedAttemptRef = useRef(false);
+  const completeScenarioTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const finishingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const COMPLETE_DELAY_SECONDS = 5;
+  const [finishingCountdown, setFinishingCountdown] = useState<number | null>(null);
 
-  const completeScenario = () => {
+  const completeScenario = (immediate = false) => {
     isExamCompletedRef.current = true;
-    setIsExamCompleted(true);
     isInputFocusedRef.current = false;
     setIsInputFocused(false);
     setKeyboardInset(0);
@@ -1233,11 +1266,51 @@ function SimulatorContent() {
     if (typeof document !== "undefined" && document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
+    if (completeScenarioTimerRef.current) {
+      clearTimeout(completeScenarioTimerRef.current);
+      completeScenarioTimerRef.current = null;
+    }
+    if (finishingIntervalRef.current) {
+      clearInterval(finishingIntervalRef.current);
+      finishingIntervalRef.current = null;
+    }
+    if (immediate || isExamMode) {
+      setFinishingCountdown(null);
+      setIsExamCompleted(true);
+    } else {
+      setFinishingCountdown(COMPLETE_DELAY_SECONDS);
+      finishingIntervalRef.current = setInterval(() => {
+        setFinishingCountdown((prev) => (prev != null && prev > 1 ? prev - 1 : prev));
+      }, 1000);
+      completeScenarioTimerRef.current = setTimeout(() => {
+        completeScenarioTimerRef.current = null;
+        if (finishingIntervalRef.current) {
+          clearInterval(finishingIntervalRef.current);
+          finishingIntervalRef.current = null;
+        }
+        setFinishingCountdown(null);
+        setIsExamCompleted(true);
+      }, COMPLETE_DELAY_SECONDS * 1000);
+    }
+  };
+
+  const cancelFinishingDelay = () => {
+    if (completeScenarioTimerRef.current) {
+      clearTimeout(completeScenarioTimerRef.current);
+      completeScenarioTimerRef.current = null;
+    }
+    if (finishingIntervalRef.current) {
+      clearInterval(finishingIntervalRef.current);
+      finishingIntervalRef.current = null;
+    }
+    setFinishingCountdown(null);
   };
 
   // Scenario Completion Handler
   useEffect(() => {
-    isExamCompletedRef.current = isExamCompleted || timedOut;
+    if (!completeScenarioTimerRef.current) {
+      isExamCompletedRef.current = isExamCompleted || timedOut;
+    }
     if (isExamCompleted || timedOut) {
       isInputFocusedRef.current = false;
       setIsInputFocused(false);
@@ -1252,6 +1325,17 @@ function SimulatorContent() {
       }
     }
   }, [isExamCompleted, timedOut, isFocusMode]);
+
+  useEffect(() => {
+    return () => {
+      if (completeScenarioTimerRef.current) {
+        clearTimeout(completeScenarioTimerRef.current);
+      }
+      if (finishingIntervalRef.current) {
+        clearInterval(finishingIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Error Feedback State
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
@@ -1305,6 +1389,7 @@ function SimulatorContent() {
     if (
       remainingSeconds === 0 &&
       !isExamCompleted &&
+      !isExamCompletedRef.current &&
       !timedOut &&
       (isExamMode || activeScenario?.timeLimitSeconds != null)
     ) {
@@ -1428,7 +1513,9 @@ function SimulatorContent() {
     if (isExamMode) {
       logExamAction("LOGIN_SUBMIT", userToSubmit);
       if (examSession?.cases[examCaseIndex]?.id === "case-open-shift") {
-        setTimeout(() => {
+        if (advanceCaseTimerRef.current) clearTimeout(advanceCaseTimerRef.current);
+        advanceCaseTimerRef.current = setTimeout(() => {
+          advanceCaseTimerRef.current = null;
           handleAdvanceExamCase();
         }, 800);
       }
@@ -1441,9 +1528,10 @@ function SimulatorContent() {
     setTerminalMode("USER_LOGIN");
     validateScenarioStep("CONFIRM_LOGOUT_YES");
     if (isExamMode) {
-      logExamAction("CONFIRM_LOGOUT_YES");
       if (examSession?.cases[examCaseIndex]?.id === "case-close-shift") {
-        setTimeout(() => {
+        if (advanceCaseTimerRef.current) clearTimeout(advanceCaseTimerRef.current);
+        advanceCaseTimerRef.current = setTimeout(() => {
+          advanceCaseTimerRef.current = null;
           handleAdvanceExamCase();
         }, 500);
       }
@@ -1515,9 +1603,15 @@ function SimulatorContent() {
     validateScenarioStep("SUBMIT_LNQR", customerQrInput);
   };
 
+  const getPartialPaidTotal = () =>
+    partialPayments.reduce((sum, p) => sum + p.amount, 0) + (sulitCoinsRedeemedAmount || 0);
+
+  const getRemainingBalanceDue = () =>
+    Math.max(0, Number((totals.totalAmount - getPartialPaidTotal()).toFixed(2)));
+
   const handleConfirmLnqrCashTender = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const netDue = Math.max(0, totals.totalAmount - (sulitCoinsRedeemedAmount || 0));
+    const netDue = getRemainingBalanceDue();
     const currentCaseTender = isExamMode && examSession
       ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CASH")?.tender?.amount
       : null;
@@ -1526,17 +1620,18 @@ function SimulatorContent() {
     if (!tenderVal || tenderVal <= 0) {
       return;
     }
-    if (tenderVal < netDue) {
-      showPosAlert(
-        `Amount tendered (₱${tenderVal.toFixed(2)}) is less than amount due (₱${netDue.toFixed(2)})!`,
-        "Tender Error",
-        "warning"
-      );
+    if (tenderVal < netDue - 0.009) {
+      const remainingBalance = Number(Math.max(0, netDue - tenderVal).toFixed(2));
+      setPartialPaymentPrompt({
+        method: "CASH",
+        tenderedAmount: Number(tenderVal.toFixed(2)),
+        remainingBalance,
+      });
       return;
     }
     setIsLnqrTenderProcessed(true);
     setIsFinalTenderStep(false);
-    dispatch({ type: "TENDER_PAYMENT", amount: tenderVal });
+    dispatch({ type: "TENDER_PAYMENT", amount: tenderVal + getPartialPaidTotal() });
     if (isExamMode) {
       setPendingCashTender(tenderVal);
     }
@@ -1563,8 +1658,12 @@ function SimulatorContent() {
         }, 800);
       }
     }, processingDelay);
-    validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
-    validateScenarioStep("CONFIRM_TENDER", tenderVal);
+    const expectedCashAction = activeScenario?.steps[currentStepIndex]?.expectedAction;
+    if (expectedCashAction === "SUBMIT_CASH_TENDER") {
+      validateScenarioStep("SUBMIT_CASH_TENDER", lnqrCashTenderInput);
+    } else {
+      validateScenarioStep("CONFIRM_TENDER", tenderVal);
+    }
   };
 
   const handleConfirmLnqrUpdated = () => {
@@ -1660,12 +1759,37 @@ function SimulatorContent() {
     if (!bankCardSlipNo.trim() && currentCardInvoice) {
       setBankCardSlipNo(currentCardInvoice);
     }
-    if (!bankCardRefNo.trim()) {
+    let resolvedRef = bankCardRefNo.trim();
+    if (!resolvedRef) {
       if (selectedBankCardType.toUpperCase() === "GCASH" && currentGcashRef) {
+        resolvedRef = currentGcashRef;
         setBankCardRefNo(currentGcashRef);
       } else if (selectedBankCardType.toUpperCase() === "MAYA" && currentMayaRef) {
+        resolvedRef = currentMayaRef;
         setBankCardRefNo(currentMayaRef);
       }
+    }
+
+    const remainingBefore = getRemainingBalanceDue();
+    const parsedInputAmt = parseFloat(bankCardAmountInput);
+    const effectiveCardAmount =
+      !isNaN(parsedInputAmt) && parsedInputAmt > 0 ? parsedInputAmt : remainingBefore;
+
+    if (effectiveCardAmount < remainingBefore - 0.009) {
+      const remainingBalance = Number(Math.max(0, remainingBefore - effectiveCardAmount).toFixed(2));
+      const methodLabel =
+        bankCardStep === "DETAILS"
+          ? bankCardTerminal && bankCardTerminal !== "-SELECT-"
+            ? bankCardTerminal
+            : selectedBankCardType
+          : selectedBankCardType;
+      setPartialPaymentPrompt({
+        method: methodLabel,
+        tenderedAmount: Number(effectiveCardAmount.toFixed(2)),
+        remainingBalance,
+        reference: resolvedRef || bankCardAuthCode || currentCardAuth || undefined,
+      });
+      return;
     }
 
     dispatch({ type: "TENDER_PAYMENT", amount: totals.totalAmount });
@@ -1675,7 +1799,9 @@ function SimulatorContent() {
     validateScenarioStep("CONFIRM_TENDER", totals.totalAmount);
     if (isExamMode) {
       logExamAction("CONFIRM_TENDER", selectedBankCardType);
-      setTimeout(() => {
+      if (advanceCaseTimerRef.current) clearTimeout(advanceCaseTimerRef.current);
+      advanceCaseTimerRef.current = setTimeout(() => {
+        advanceCaseTimerRef.current = null;
         handleAdvanceExamCase(0);
       }, 1200);
     }
@@ -1688,7 +1814,7 @@ function SimulatorContent() {
       return;
     }
 
-    const currentTotal = totals.totalAmount;
+    const currentTotal = getRemainingBalanceDue();
     if (tenderVal > currentTotal + 0.009) {
       const diff = tenderVal - currentTotal;
       const changeDifference = diff > 0 ? diff : 0;
@@ -1704,11 +1830,13 @@ function SimulatorContent() {
       setBankCardStep("SELECT_TYPE");
       return;
     } else if (tenderVal < currentTotal - 0.009) {
-      showPosAlert(
-        "Sodexho Amount is less than total transaction amount. Please enter the full amount or split tender.",
-        "Sodexho Amount Error",
-        "warning"
-      );
+      const remainingBalance = Number(Math.max(0, currentTotal - tenderVal).toFixed(2));
+      setPartialPaymentPrompt({
+        method: "SODEXHO",
+        tenderedAmount: Number(tenderVal.toFixed(2)),
+        remainingBalance,
+        reference: sodexhoNumber || "PP12345678",
+      });
       return;
     }
 
@@ -1735,6 +1863,12 @@ function SimulatorContent() {
   };
 
   const handleCloseCompletedReceipt = () => {
+    if (isExamMode && advanceCaseTimerRef.current) {
+      clearTimeout(advanceCaseTimerRef.current);
+      advanceCaseTimerRef.current = null;
+      handleAdvanceExamCase(0);
+      return;
+    }
     dispatch({ type: "CLOSE_PAYMENT" });
     dispatch({ type: "RESET_TRANSACTION" });
     setSelectedTenderMethod("CASH");
@@ -1755,11 +1889,14 @@ function SimulatorContent() {
     setSulitCoinsRefNo("");
     setIsConnectingLnqrServer(false);
     setBankCardSwipeNum("");
-    setBankCardHolder("X");
-    setBankCardTerminal("BDO POS");
-    setBankCardValidUntil("2028-12-31");
+    setBankCardHolder("");
+    setCardHolderHPressed(false);
+    setBankCardTerminal("BDO");
+    setBankCardValidUntil(getTodayIsoDate());
     setBankCardAuthCode("");
     setBankCardSlipNo("");
+    setPartialPayments([]);
+    setPartialPaymentPrompt(null);
     const examCardTender = isExamMode && examSession
       ? examSession.cases[examCaseIndex]?.events.find((e) => e.tender?.kind === "CREDIT_CARD")?.tender
       : null;
@@ -1814,7 +1951,8 @@ function SimulatorContent() {
   const handleConfirmEwalletType = (cardType: string) => {
     setSelectedBankCardType(cardType);
     validateScenarioStep("SELECT_CARD_TYPE", cardType);
-    setBankCardAmountInput((totals.totalAmount || 2990).toFixed(2));
+    const remainingDue = getRemainingBalanceDue();
+    setBankCardAmountInput((remainingDue || totals.totalAmount || 2990).toFixed(2));
     setBankCardRefNo("");
     if (cardType.toUpperCase() === "GCASH") {
       const examGcashTender = isExamMode && examSession
@@ -1884,7 +2022,13 @@ function SimulatorContent() {
         return;
       }
       if (bankCardStep === "SWIPE_CARD") {
-        validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
+        const swipeVal = bankCardSwipeNum.trim() || "0000000000000000";
+        setBankCardSwipeNum(swipeVal);
+        setBankCardHolder("");
+        setCardHolderHPressed(false);
+        setBankCardValidUntil(getTodayIsoDate());
+        setBankCardAmountInput((getRemainingBalanceDue() || totals.totalAmount || 0).toFixed(2));
+        validateScenarioStep("SWIPE_CARD", swipeVal);
         setBankCardStep("DETAILS");
         return;
       }
@@ -2074,8 +2218,12 @@ function SimulatorContent() {
     setSelectedVoidItemId(null);
     setPendingVoidReason(null);
     dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
-    validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
-    validateScenarioStep("CONFIRM_ITEM_VOID", pendingVoidReason || "Customer changed mind");
+    const expectedVoidAction = activeScenario?.steps[currentStepIndex]?.expectedAction;
+    if (expectedVoidAction === "CONFIRM_ITEM_VOID") {
+      validateScenarioStep("CONFIRM_ITEM_VOID", pendingVoidReason || "Customer Cancel");
+    } else {
+      validateScenarioStep("SCAN_VOID_SKU", selectedItem.sku);
+    }
   };
 
   useEffect(() => {
@@ -2387,6 +2535,40 @@ function SimulatorContent() {
 
       // 4e. Payment Screen Keybinds
       if (state.currentPage === "PAYMENT" || isLnqrCashPaymentOpen) {
+        if (partialPaymentPrompt) {
+          if (e.key === "Escape") {
+            e.preventDefault();
+            setPartialPaymentPrompt(null);
+            return;
+          }
+          return;
+        }
+        if (selectedTenderMethod === "BANK_CARD" && bankCardStep === "DETAILS") {
+          const activeEl = document.activeElement as HTMLElement | null;
+          const isCardHolderActive = activeEl === cardHolderInputRef.current;
+          const isOtherTextInputActive =
+            activeEl &&
+            activeEl.tagName === "INPUT" &&
+            !isCardHolderActive &&
+            !(activeEl as HTMLInputElement).readOnly;
+          if (!isOtherTextInputActive) {
+            if ((e.key === "h" || e.key === "H") && !e.ctrlKey && !e.altKey && !e.metaKey) {
+              e.preventDefault();
+              setCardHolderHPressed(true);
+              setBankCardHolder("");
+              cardHolderInputRef.current?.focus();
+              return;
+            }
+            if ((e.key === "x" || e.key === "X") && !e.ctrlKey && !e.altKey && !e.metaKey) {
+              if (cardHolderHPressed || isCardHolderActive) {
+                e.preventDefault();
+                setBankCardHolder("X");
+                setCardHolderHPressed(false);
+                return;
+              }
+            }
+          }
+        }
         if (isLnqrTenderProcessed || isFinalTenderStep) {
           if (!isFinalTenderStep) {
             // Processing Lock
@@ -2649,28 +2831,23 @@ function SimulatorContent() {
 
     let actionMatches = currentStep.expectedAction === actionId;
 
-    const modalConfirmActions = [
-      "CONFIRM_OVERRIDE",
-      "APPLY_DISCOUNT",
-      "CONFIRM_RECALL",
-      "CONFIRM_REPRINT",
-      "SAVE_TRX_COMMENT",
-      "CONFIRM_RETURN",
-      "CONFIRM_REFUND",
-      "CONFIRM_POST_VOID",
-      "CONFIRM_PRICE_CHANGE",
-      "CONFIRM_NON_MDSE",
-      "CONFIRM_NON_SALES",
-      "CONFIRM_BEST_BUY",
-      "CONFIRM_ITEM_VOID",
-      "CONFIRM_TRX_VOID",
-      "CONFIRM_SUSPEND",
-      "SCAN_VOID_SKU",
-      "SCAN_REFUND_SKU",
-    ];
+    // Override Match Guard
+    const nextStepExpected = activeScenario.steps[currentStepIndex + 1]?.expectedAction;
     if (
-      (currentStep.expectedAction === "CONFIRM_OVERRIDE" && modalConfirmActions.includes(actionId)) ||
-      (modalConfirmActions.includes(currentStep.expectedAction) && actionId === "CONFIRM_OVERRIDE")
+      currentStep.expectedAction === "CONFIRM_OVERRIDE" &&
+      (actionId === "CONFIRM_OVERRIDE" ||
+        (nextStepExpected !== actionId &&
+          [
+            "APPLY_DISCOUNT",
+            "CONFIRM_RECALL",
+            "CONFIRM_REPRINT",
+            "CONFIRM_RETURN",
+            "CONFIRM_REFUND",
+            "CONFIRM_POST_VOID",
+            "CONFIRM_PRICE_CHANGE",
+            "CONFIRM_ITEM_VOID",
+            "CONFIRM_TRX_VOID",
+          ].includes(actionId)))
     ) {
       actionMatches = true;
     }
@@ -2973,6 +3150,10 @@ function SimulatorContent() {
 
   const handleAdvanceExamCase = (userChange?: number) => {
     if (!examSession) return;
+    if (advanceCaseTimerRef.current) {
+      clearTimeout(advanceCaseTimerRef.current);
+      advanceCaseTimerRef.current = null;
+    }
     if (isAdvancingCaseRef.current) return;
     isAdvancingCaseRef.current = true;
 
@@ -3021,6 +3202,8 @@ function SimulatorContent() {
     setSulitCoinsRedeemedAmount(null);
     setSulitCoinsEarnedAmount(null);
     setSulitCoinsRefNo("");
+    setPartialPayments([]);
+    setPartialPaymentPrompt(null);
     setIsChangeCheckModalOpen(false);
     examActionLogRef.current = [];
     setExamActionLog([]);
@@ -3124,7 +3307,7 @@ function SimulatorContent() {
       setExamActionLog((prev) => [...prev, entry]);
       return true;
     }
-    if (!activeScenario || isExamCompleted) return true;
+    if (!activeScenario || isExamCompleted || isExamCompletedRef.current) return true;
     const currentStep = activeScenario.steps[currentStepIndex];
     if (!currentStep) return true;
 
@@ -3223,7 +3406,7 @@ function SimulatorContent() {
         predictedPage = prevMap[state.currentPage] || "MAIN";
       }
 
-      // If the current step and any consecutive steps are navigation steps, and the user reaches the screen needed by the upcoming non-navigation action (e.g. TRIGGER_LOGOUT on 2nd Screen via F11), auto-advance past those navigation steps!
+      // Nav Step Auto-Advance
       if (NAV_ACTIONS.has(currentStep.expectedAction)) {
         let lookaheadIdx = currentStepIndex;
         while (
@@ -3636,8 +3819,12 @@ function SimulatorContent() {
       });
       setIsRefundSkuMode(false);
       setPendingReturn(null);
-      validateScenarioStep("SCAN_REFUND_SKU", code);
-      validateScenarioStep("ADD_ITEM", code);
+      const currentExpected = activeScenario?.steps[currentStepIndex]?.expectedAction;
+      if (currentExpected === "ADD_ITEM") {
+        validateScenarioStep("ADD_ITEM", code);
+      } else {
+        validateScenarioStep("SCAN_REFUND_SKU", code);
+      }
       setBarcodeInput("");
       return;
     }
@@ -3760,7 +3947,14 @@ function SimulatorContent() {
       clearTimeout(tenderTimerRef.current);
       tenderTimerRef.current = null;
     }
+    if (advanceCaseTimerRef.current) {
+      clearTimeout(advanceCaseTimerRef.current);
+      advanceCaseTimerRef.current = null;
+    }
+    cancelFinishingDelay();
     dispatch({ type: "RESET_TRANSACTION" });
+    setPartialPayments([]);
+    setPartialPaymentPrompt(null);
     setCurrentStepIndex(0);
     setMistakes([]);
     setHintsUsed(0);
@@ -3822,6 +4016,8 @@ function SimulatorContent() {
       tenderTimerRef.current = null;
     }
     dispatch({ type: "RESET_TRANSACTION" });
+    setPartialPayments([]);
+    setPartialPaymentPrompt(null);
     setBarcodeInput("");
     setIsLnqrCashPaymentOpen(false);
     setIsLnqrTenderProcessed(false);
@@ -3833,12 +4029,31 @@ function SimulatorContent() {
 
   const handleFillBarcode = (code: string) => {
     setBarcodeInput(code);
+    if (isRefundSkuMode && pendingReturn) {
+      dispatch({
+        type: "PROCESS_RETURN_ITEM",
+        sku: code,
+        reason: pendingReturn.reason,
+        siNumber: pendingReturn.siNumber,
+      });
+      setIsRefundSkuMode(false);
+      setPendingReturn(null);
+      const currentExpected = activeScenario?.steps[currentStepIndex]?.expectedAction;
+      if (currentExpected === "ADD_ITEM") {
+        validateScenarioStep("ADD_ITEM", code);
+      } else {
+        validateScenarioStep("SCAN_REFUND_SKU", code);
+      }
+      setBarcodeInput("");
+      return;
+    }
     dispatch({ type: "ADD_ITEM_BY_CODE", code });
     validateScenarioStep("ADD_ITEM", code);
     setBarcodeInput("");
   };
 
   const handleSelectScenario = (scenarioId: string | null) => {
+    cancelFinishingDelay();
     resetGuidedSpeechMemory();
     if (!scenarioId) {
       setActiveScenario(null);
@@ -4415,8 +4630,12 @@ function SimulatorContent() {
                     validateScenarioStep("CONFIRM_RETURN", data.orNumber);
                   }}
                   onRefundOrnoSubmit={(orNumber: string) => {
-                    validateScenarioStep("SUBMIT_REFUND_ORNO", orNumber);
-                    validateScenarioStep("REFUND_ORNO", orNumber);
+                    const expectedRefundStep = activeScenario?.steps[currentStepIndex]?.expectedAction;
+                    if (expectedRefundStep === "SUBMIT_REFUND_ORNO") {
+                      validateScenarioStep("SUBMIT_REFUND_ORNO", orNumber);
+                    } else {
+                      validateScenarioStep("REFUND_ORNO", orNumber);
+                    }
                   }}
                   onConfirmRefund={(data) => {
                     dispatch({
@@ -4477,10 +4696,13 @@ function SimulatorContent() {
                     dispatch({ type: "VOID_TRANSACTION" });
                     setIsTrxVoidModalOpen(false);
                     setHasBonusBuyBeenPrompted(false);
+                    setPartialPayments([]);
+                    setPartialPaymentPrompt(null);
                     validateScenarioStep("CONFIRM_TRX_VOID", reason);
                     if (isExamMode && examSession?.cases[examCaseIndex]?.id === "case-trx-void") {
-                      logExamAction("CONFIRM_TRX_VOID", reason);
-                      setTimeout(() => {
+                      if (advanceCaseTimerRef.current) clearTimeout(advanceCaseTimerRef.current);
+                      advanceCaseTimerRef.current = setTimeout(() => {
+                        advanceCaseTimerRef.current = null;
                         handleAdvanceExamCase();
                       }, 1000);
                     }
@@ -4499,6 +4721,8 @@ function SimulatorContent() {
                     dispatch({ type: "SUSPEND_TRANSACTION" });
                     setIsSuspendModalOpen(false);
                     setHasBonusBuyBeenPrompted(false);
+                    setPartialPayments([]);
+                    setPartialPaymentPrompt(null);
                     validateScenarioStep("CONFIRM_SUSPEND");
                   }}
                   onCancel={() => setIsSuspendModalOpen(false)}
@@ -4604,8 +4828,9 @@ function SimulatorContent() {
                     dispatch({ type: "NAVIGATE_PAGE", page: "MAIN" });
                     validateScenarioStep("CONFIRM_RECALL", id);
                     if (isExamMode && examSession?.cases[examCaseIndex]?.id === "case-suspend-recall") {
-                      logExamAction("CONFIRM_RECALL", id);
-                      setTimeout(() => {
+                      if (advanceCaseTimerRef.current) clearTimeout(advanceCaseTimerRef.current);
+                      advanceCaseTimerRef.current = setTimeout(() => {
+                        advanceCaseTimerRef.current = null;
                         handleAdvanceExamCase();
                       }, 1200);
                     }
@@ -4630,7 +4855,7 @@ function SimulatorContent() {
                 <SdvModal
                   onClose={() => {
                     setIsSdvOpen(false);
-                    if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CLOSE_SDV") {
+                    if (isExamMode || activeScenario?.steps[currentStepIndex]?.expectedAction === "CLOSE_SDV") {
                       validateScenarioStep("CLOSE_SDV");
                     }
                   }}
@@ -4645,18 +4870,24 @@ function SimulatorContent() {
                   totalQty={totals.totalQty}
                   totalSales={totals.totalAmount}
                   onConfirmZClearing={() => {
-                    if (activeScenario?.steps[currentStepIndex]?.expectedAction === "CONFIRM_Z_CLEARING") {
+                    if (isExamMode || activeScenario?.steps[currentStepIndex]?.expectedAction === "CONFIRM_Z_CLEARING") {
                       validateScenarioStep("CONFIRM_Z_CLEARING");
                     }
                   }}
                   onPrint={() => {
+                    const printAction = readingsType === "Z" ? "PRINT_READING_Z" : "PRINT_READING_Y";
                     const expected = activeScenario?.steps[currentStepIndex]?.expectedAction;
-                    if (expected === "PRINT_READING_Y" || expected === "PRINT_READING_Z") {
-                      validateScenarioStep(expected);
+                    if (isExamMode || expected === "PRINT_READING_Y" || expected === "PRINT_READING_Z") {
+                      validateScenarioStep(expected === "PRINT_READING_Y" || expected === "PRINT_READING_Z" ? expected : printAction);
                     }
                   }}
                   onShowAlert={(msg, title, type) => showPosAlert(msg, title, type)}
-                  onClose={() => setReadingsType(null)}
+                  onClose={() => {
+                    if (isExamMode) {
+                      validateScenarioStep(readingsType === "Z" ? "CLOSE_READING_Z" : "CLOSE_READING_Y");
+                    }
+                    setReadingsType(null);
+                  }}
                 />
               ) : isBonusBuyOpen ? (
                 <BonusBuyScreen
@@ -4842,6 +5073,7 @@ function SimulatorContent() {
               ) : isTrxCommentOpen ? (
                 <TransactionCommentScreen
                   initialComments={state.transactionComments || undefined}
+                  cardDetails={currentCustomerBillingCard}
                   trxNumber={state.transactionNumber}
                   clerkName={state.cashierName}
                   branchCode={state.branchCode}
@@ -4895,7 +5127,8 @@ function SimulatorContent() {
                         const vatable = state.isZeroRated ? 0 : totalSales / 1.12;
                         const vatAmount = state.isZeroRated ? 0 : totalSales - vatable;
                         const tenderVal = parseFloat(lnqrCashTenderInput) ? parseFloat(lnqrCashTenderInput) : (isLnqrTenderProcessed ? 3000 : 0);
-                        const totalTenderVal = tenderVal + (sulitCoinsRedeemedAmount || 0);
+                        const partialPaidSum = partialPayments.reduce((sum, p) => sum + p.amount, 0);
+                        const totalTenderVal = tenderVal + (sulitCoinsRedeemedAmount || 0) + partialPaidSum;
                         const changeVal = Math.max(0, totalTenderVal - totalSales);
 
                         return (
@@ -4988,10 +5221,38 @@ function SimulatorContent() {
                                 <span>No. of Items</span>
                                 <span>{totals.totalQty || (state.lineItems.length > 0 ? state.lineItems.length : 2)}</span>
                               </div>
+                              {state.appliedDiscount && totals.discountAmount > 0 && (
+                                <>
+                                  <div className="flex justify-between font-bold">
+                                    <span>SubTotal</span>
+                                    <span>{totals.subtotal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex justify-between font-bold text-red-700">
+                                    <span>Less: {state.appliedDiscount.name} (-{state.appliedDiscount.percent}%)</span>
+                                    <span>-{totals.discountAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                </>
+                              )}
                               <div className="flex justify-between font-bold">
                                 <span>Amount Due</span>
                                 <span>{totalSales.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                               </div>
+                              {partialPayments.length > 0 && (
+                                <div className="pt-0.5 space-y-0.5 border-t border-dashed border-gray-300">
+                                  {partialPayments.map((pp, pIdx) => (
+                                    <div key={pIdx} className="flex justify-between font-bold text-blue-900">
+                                      <span>{pp.method}{pp.reference ? ` (${pp.reference})` : ""}</span>
+                                      <span>{pp.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                  ))}
+                                  {!isFinalTenderStep && !isLnqrTenderProcessed && (
+                                    <div className="flex justify-between font-bold text-amber-800">
+                                      <span>Remaining Balance</span>
+                                      <span>{Math.max(0, totalSales - partialPaidSum - (sulitCoinsRedeemedAmount || 0)).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                               {sulitCoinsRedeemedAmount !== null ? (
                                 <>
                                   <div className="flex justify-between font-bold text-red-600">
@@ -5236,7 +5497,7 @@ function SimulatorContent() {
                               <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
                                 {(selectedTenderMethod === "BANK_CARD"
                                   ? (totals.totalAmount || 0)
-                                  : (parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + (sulitCoinsRedeemedAmount || 0)
+                                  : (parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + getPartialPaidTotal()
                                 ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -5247,7 +5508,7 @@ function SimulatorContent() {
                               <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
                                 {(selectedTenderMethod === "BANK_CARD"
                                   ? 0
-                                  : Math.max(0, ((parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount)
+                                  : Math.max(0, ((parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0)) + getPartialPaidTotal()) - totals.totalAmount)
                                 ).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -5277,7 +5538,7 @@ function SimulatorContent() {
                                 {/* Cash Drawer Status Indicator */}
                                 {(() => {
                                   const tenderVal = parseFloat(lnqrCashTenderInput) || (isLnqrTenderProcessed ? 3000 : 0);
-                                  const totalTender = tenderVal + (sulitCoinsRedeemedAmount || 0);
+                                  const totalTender = tenderVal + getPartialPaidTotal();
                                   const changeDue = Math.max(0, totalTender - totals.totalAmount);
                                   const hasChange = changeDue > 0;
                                   return (
@@ -5346,10 +5607,10 @@ function SimulatorContent() {
                                 )}
                                 <span className="bg-white text-black font-sans font-bold text-xl px-4 py-1 border border-gray-300 min-w-[170px] text-right shadow-inner">
                                   {selectedTenderMethod === "BANK_CARD"
-                                    ? "0.00"
+                                    ? getPartialPaidTotal().toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                                     : isLnqrTenderProcessed
-                                    ? Math.max(0, ((parseFloat(lnqrCashTenderInput) || 0) + (sulitCoinsRedeemedAmount || 0)) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                                    : (parseFloat(lnqrCashTenderInput) || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    ? Math.max(0, ((parseFloat(lnqrCashTenderInput) || 0) + getPartialPaidTotal()) - totals.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                    : ((parseFloat(lnqrCashTenderInput) || 0) + getPartialPaidTotal()).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </span>
                               </div>
                             )}
@@ -5442,6 +5703,11 @@ function SimulatorContent() {
                             ) : selectedTenderMethod === "CASH" ? (
                               !isLnqrTenderProcessed ? (
                                 <form onSubmit={handleConfirmLnqrCashTender} className="w-full max-w-xs space-y-2 flex flex-col items-center font-sans">
+                                  {partialPayments.length > 0 && (
+                                    <div className="bg-amber-50 border border-amber-400 px-3 py-1 rounded text-center text-[11px] font-bold text-amber-900">
+                                      Remaining Balance Due: ₱{getRemainingBalanceDue().toFixed(2)}
+                                    </div>
+                                  )}
                                   <label className="text-xs font-bold text-gray-900 text-center font-sans">
                                     Enter Amount:
                                   </label>
@@ -5456,7 +5722,7 @@ function SimulatorContent() {
                                       const v = e.target.value;
                                       if (/^\d*\.?\d*$/.test(v)) setLnqrCashTenderInput(v);
                                     }}
-                                    placeholder={(totals.totalAmount - (sulitCoinsRedeemedAmount || 0)).toFixed(2)}
+                                    placeholder={getRemainingBalanceDue().toFixed(2)}
                                     className="w-56 bg-white border-2 border-gray-600 px-3 py-1 text-center font-mono font-bold text-xl text-gray-900 shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-600"
                                     autoFocus={!isTouchDevice}
                                   />
@@ -5722,10 +5988,16 @@ function SimulatorContent() {
                                 <form
                                   onSubmit={(e) => {
                                     e.preventDefault();
-                                    validateScenarioStep("SWIPE_CARD", bankCardSwipeNum || "4000123456789010");
+                                    const swipeVal = bankCardSwipeNum.trim() || "0000000000000000";
+                                    setBankCardSwipeNum(swipeVal);
+                                    setBankCardHolder("");
+                                    setCardHolderHPressed(false);
+                                    setBankCardValidUntil(getTodayIsoDate());
+                                    setBankCardAmountInput((getRemainingBalanceDue() || totals.totalAmount || 0).toFixed(2));
+                                    validateScenarioStep("SWIPE_CARD", swipeVal);
                                     setBankCardStep("DETAILS");
                                   }}
-                                  className="w-full flex flex-col items-center justify-center space-y-3 font-sans select-none"
+                                  className="w-full flex flex-col items-center justify-center space-y-2.5 font-sans select-none"
                                 >
                                   <div className="text-gray-900 font-bold text-sm tracking-wide">
                                     Please Swipe Credit Card
@@ -5735,10 +6007,21 @@ function SimulatorContent() {
                                       type="text"
                                       value={bankCardSwipeNum}
                                       onChange={(e) => setBankCardSwipeNum(e.target.value)}
-                                      placeholder=""
+                                      placeholder="0000000000000000"
+                                      maxLength={16}
                                       autoFocus
-                                      className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600"
+                                      className="w-full bg-white border-2 border-gray-600 px-3 py-1 font-mono text-sm font-bold text-gray-900 shadow-inner focus:outline-none focus:ring-1 focus:ring-blue-600 text-center tracking-widest"
                                     />
+                                  </div>
+                                  <div className="flex items-center gap-2 text-[10px] text-gray-700 font-mono">
+                                    <span>Store procedure: enter 16 zeros (0000000000000000)</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setBankCardSwipeNum("0000000000000000")}
+                                      className="px-1.5 py-0.5 bg-blue-100 hover:bg-blue-200 text-blue-900 border border-blue-400 rounded font-bold cursor-pointer"
+                                    >
+                                      Fill 16 Zeros
+                                    </button>
                                   </div>
                                 </form>
                               ) : (
@@ -5764,18 +6047,65 @@ function SimulatorContent() {
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
                                     <span className="col-span-2 font-bold text-gray-800">Card Holder</span>
-                                    <input
-                                      type="text"
-                                      value={bankCardHolder}
-                                      onChange={(e) => setBankCardHolder(e.target.value)}
-                                      className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold uppercase"
-                                    />
+                                    <div className="col-span-3 flex items-center gap-1">
+                                      <input
+                                        ref={cardHolderInputRef}
+                                        type="text"
+                                        value={bankCardHolder}
+                                        placeholder={cardHolderHPressed ? "Now press X..." : "Press H then X"}
+                                        onKeyDown={(e) => {
+                                          if ((e.key === "h" || e.key === "H") && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setCardHolderHPressed(true);
+                                            setBankCardHolder("");
+                                            return;
+                                          }
+                                          if ((e.key === "x" || e.key === "X") && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            setBankCardHolder("X");
+                                            setCardHolderHPressed(false);
+                                            return;
+                                          }
+                                        }}
+                                        onChange={(e) => {
+                                          const raw = e.target.value.toUpperCase();
+                                          if (raw === "H") {
+                                            setCardHolderHPressed(true);
+                                            setBankCardHolder("");
+                                            return;
+                                          }
+                                          if (raw === "HX" || raw === "X" || (cardHolderHPressed && raw.endsWith("X"))) {
+                                            setBankCardHolder("X");
+                                            setCardHolderHPressed(false);
+                                            return;
+                                          }
+                                          setBankCardHolder(raw);
+                                        }}
+                                        className={`w-full bg-white border px-2 py-0.5 font-mono text-xs font-bold uppercase ${
+                                          cardHolderHPressed ? "border-blue-600 ring-1 ring-blue-500 bg-blue-50" : "border-gray-500"
+                                        }`}
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setBankCardHolder("X");
+                                          setCardHolderHPressed(false);
+                                        }}
+                                        title="Store shortcut: Press 'H' then 'X' to set Card Holder to X"
+                                        className="shrink-0 px-1.5 py-0.5 bg-gray-200 hover:bg-gray-300 border border-gray-500 text-[10px] font-mono font-bold text-gray-900 cursor-pointer"
+                                      >
+                                        H→X
+                                      </button>
+                                    </div>
                                   </div>
                                   <div className="grid grid-cols-5 items-center gap-1">
                                     <span className="col-span-2 font-bold text-gray-800">Card Terminal/Hypercom</span>
                                     <select
                                       value={bankCardTerminal}
                                       onChange={(e) => setBankCardTerminal(e.target.value)}
+                                      title="Select BDO for Credit/Sale, BDO EPS for Debit, or METROBANK"
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold"
                                     >
                                       {TERMINAL_OPTIONS.map((opt) => (
@@ -5799,8 +6129,14 @@ function SimulatorContent() {
                                     <span className="col-span-2 font-bold text-gray-800">Credit Amount</span>
                                     <input
                                       type="text"
-                                      readOnly
-                                      value={(totals.totalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                      value={
+                                        bankCardAmountInput ||
+                                        (getRemainingBalanceDue() || totals.totalAmount || 0).toFixed(2)
+                                      }
+                                      onChange={(e) => {
+                                        const v = e.target.value;
+                                        if (/^\d*\.?\d*$/.test(v)) setBankCardAmountInput(v);
+                                      }}
                                       className="col-span-3 bg-white border border-gray-500 px-2 py-0.5 font-mono text-xs font-bold text-blue-900"
                                     />
                                   </div>
@@ -6322,7 +6658,7 @@ function SimulatorContent() {
 
                   <div className="bg-[#FFF275] p-2 flex flex-col justify-center flex-1">
                     <div className="text-center font-bold text-xs text-gray-900 tracking-wide mb-1 font-sans">
-                      <div>
+                      <div className={isRefundSkuMode ? "text-[#E4002B] font-extrabold" : ""}>
                         {isVoidSkuMode ? "Select Item to Void" : isRefundSkuMode ? "Enter Refund UPC" : "Scan or Enter UPC"}
                       </div>
                       {isVoidSkuMode && (
@@ -6475,7 +6811,7 @@ function SimulatorContent() {
                       <div className="text-[#4ADE80] font-bold">Unit Price:</div>
                     </div>
                     <div className="text-right space-y-1">
-                      <div className="text-[#38BDF8] font-bold">{totals.totalAmount.toFixed(2)}</div>
+                      <div className="text-[#38BDF8] font-bold">{totals.subtotal.toFixed(2)}</div>
                       <div className="text-white font-bold">{totals.totalQty}</div>
                       <div className="text-[#4ADE80] font-bold">
                         {lastItem ? lastItem.unitPrice.toFixed(2) : "0.00"}
@@ -6485,7 +6821,7 @@ function SimulatorContent() {
 
                   {/* Huge Bright Green Total Display */}
                   <div className="text-right text-4xl sm:text-5xl font-mono font-bold text-[#00FF66] tracking-wider pt-2">
-                    {totals.totalAmount.toFixed(2)}
+                    {totals.subtotal.toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -6579,7 +6915,7 @@ function SimulatorContent() {
                       handleAction(kDef.actionId);
                     }}
                     className={
-                      "w-full flex-1 min-h-[50px] p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
+                      "w-full flex-1 min-h-0 p-1 flex flex-col items-center justify-center border font-sans select-none shadow-sm transition-all " +
                       (kDef.disabled
                         ? "bg-gray-400 border-gray-500 text-gray-600 cursor-not-allowed opacity-50"
                         : isVoidSkuHighlight
@@ -6635,14 +6971,9 @@ function SimulatorContent() {
                     ZERO
                   </span>
                 )}
-                {state.appliedDiscount && (
-                  <span className="bg-yellow-400 text-gray-900 text-[9px] px-1 py-0.5 font-bold uppercase rounded">
-                    -{state.appliedDiscount.percent}%
-                  </span>
-                )}
               </div>
               <span className="font-mono font-bold text-sm bg-white px-3 h-[24px] flex items-center justify-end border border-gray-400 text-gray-900 min-w-[70px] text-right shadow-inner">
-                {totals.totalAmount.toFixed(2)}
+                {totals.subtotal.toFixed(2)}
               </span>
             </div>
 
@@ -6661,10 +6992,27 @@ function SimulatorContent() {
           </>
         )}
         </div>
-        {/* EXTERNAL CARD / EWALLET TERMINAL SLIP BESIDE POS */}
+        {/* Terminal Slip */}
         {isExternalReceiptShowing && (
           <div className="shrink-0 flex items-center justify-center animate-in fade-in slide-in-from-right-4 duration-300">
-            {activeExternalTerminalType === "GCASH" ? (
+            {activeExternalTerminalType === "TRX_COMMENT" ? (
+              <CustomerBillingCardPreview
+                customerName={currentCustomerBillingCard.customerName}
+                tin={currentCustomerBillingCard.tin}
+                address={currentCustomerBillingCard.address}
+                onUseDetails={() => {
+                  dispatch({
+                    type: "SET_TRANSACTION_COMMENTS",
+                    comments: {
+                      customerName: currentCustomerBillingCard.customerName,
+                      tin: currentCustomerBillingCard.tin,
+                      address: currentCustomerBillingCard.address,
+                      remarks: state.transactionComments?.remarks || "",
+                    },
+                  });
+                }}
+              />
+            ) : activeExternalTerminalType === "GCASH" ? (
               <GcashTerminalPreview
                 isExternalReceiptShowing={isExternalReceiptShowing}
                 referenceNumber={currentGcashRef}
@@ -6690,7 +7038,8 @@ function SimulatorContent() {
                 invoiceNumber={currentCardInvoice}
                 authCode={currentCardAuth}
                 generatedAt={cardReceiptGeneratedAt || new Date()}
-                totalAmount={totals.totalAmount || 2990}
+                totalAmount={getRemainingBalanceDue() || totals.totalAmount || 2990}
+                terminalName={bankCardTerminal}
                 onUseSlip={() => {
                   setBankCardAuthCode(currentCardAuth);
                   setBankCardSlipNo(currentCardInvoice);
@@ -6879,7 +7228,39 @@ function SimulatorContent() {
 
       
 
-      {/* CONGRATULATIONS PRACTICE COMPLETE POPUP */}
+      {/* Results Loader */}
+      {finishingCountdown != null && !isExamCompleted && !timedOut && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[450] w-[min(92vw,420px)] bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl font-sans select-none pointer-events-none"
+        >
+          <div className="bg-[#228B22] text-white px-3 py-1.5 flex items-center gap-2 border-b border-green-900">
+            <CheckCircle className="w-4 h-4" />
+            <span className="font-bold text-xs tracking-wide uppercase">All Steps Finished!</span>
+          </div>
+          <div className="px-4 py-3 flex items-center gap-3">
+            <Loader2 className="w-6 h-6 text-[#228B22] animate-spin shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900">Preparing your results...</p>
+              <p className="text-xs text-slate-700">
+                Check the POS screen to see what happened. Results in{" "}
+                <span className="font-bold text-[#228B22]">{finishingCountdown}s</span>
+              </p>
+              <div className="mt-2 h-2 w-full bg-white border border-[#808080] overflow-hidden">
+                <div
+                  key={`finishing-bar-${completedAttemptId ?? "pending"}`}
+                  className="h-full bg-[#228B22]"
+                  style={{ animation: `nbsFinishingBar ${COMPLETE_DELAY_SECONDS}s linear forwards` }}
+                />
+              </div>
+            </div>
+          </div>
+          <style>{`@keyframes nbsFinishingBar { from { width: 0%; } to { width: 100%; } }`}</style>
+        </div>
+      )}
+
+      {/* Practice Complete Modal */}
       <ScenarioCompleteModal
         isOpen={isExamCompleted || timedOut}
         timedOut={timedOut}
@@ -6892,6 +7273,128 @@ function SimulatorContent() {
         onResetExam={handleResetExam}
         attemptId={completedAttemptId}
       />
+
+      {/* Split Tender Modal */}
+      {partialPaymentPrompt && (
+        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/60 p-4 font-sans select-none">
+          <div className="w-full max-w-md bg-[#D4D0C8] border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow-2xl">
+            {/* Title Bar */}
+            <div className="bg-[#228B22] text-white px-3 py-1.5 flex items-center justify-between border-b border-green-900">
+              <span className="font-bold text-xs tracking-wide uppercase">
+                Partial Payment / Split Tender Required
+              </span>
+              <button
+                type="button"
+                onClick={() => setPartialPaymentPrompt(null)}
+                className="w-5 h-5 bg-[#D4D0C8] text-gray-900 font-bold text-xs flex items-center justify-center border border-t-white border-l-white border-r-[#404040] border-b-[#404040] hover:bg-red-600 hover:text-white cursor-pointer"
+                aria-label="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-4 space-y-3 text-xs text-gray-900">
+              <p className="font-bold text-gray-900 leading-relaxed">
+                The {partialPaymentPrompt.method} payment of{" "}
+                <span className="font-mono text-blue-900">
+                  ₱{partialPaymentPrompt.tenderedAmount.toFixed(2)}
+                </span>{" "}
+                is less than the balance due. How would the customer like to pay the remaining balance?
+              </p>
+
+              <div className="bg-white border-2 border-gray-500 p-2.5 font-mono text-xs space-y-1 shadow-inner">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Amount Due:</span>
+                  <span className="font-bold">₱{totals.totalAmount.toFixed(2)}</span>
+                </div>
+                {partialPayments.map((pp, idx) => (
+                  <div key={idx} className="flex justify-between text-blue-900">
+                    <span>Paid ({pp.method}):</span>
+                    <span className="font-bold">-₱{pp.amount.toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="flex justify-between text-emerald-800">
+                  <span>Current Tender ({partialPaymentPrompt.method}):</span>
+                  <span className="font-bold">-₱{partialPaymentPrompt.tenderedAmount.toFixed(2)}</span>
+                </div>
+                <div className="border-t border-dashed border-gray-400 pt-1 flex justify-between text-sm font-extrabold text-red-700">
+                  <span>Remaining Balance:</span>
+                  <span>₱{partialPaymentPrompt.remainingBalance.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <div className="text-[11px] font-bold text-gray-800">
+                  Accommodate another payment method for the balance:
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const recorded = partialPaymentPrompt;
+                      setPartialPayments((prev) => [
+                        ...prev,
+                        {
+                          method: recorded.method,
+                          amount: recorded.tenderedAmount,
+                          reference: recorded.reference,
+                        },
+                      ]);
+                      setPartialPaymentPrompt(null);
+                      setSelectedTenderMethod("CASH");
+                      setSelectedBankCardType("-SELECT-");
+                      setBankCardStep("SELECT_TYPE");
+                      setIsLnqrCashPaymentOpen(true);
+                      setIsLnqrTenderProcessed(false);
+                      setIsFinalTenderStep(false);
+                      setLnqrCashTenderInput(recorded.remainingBalance.toFixed(2));
+                    }}
+                    className="px-3 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <Banknote className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span>Pay Balance with Cash (F2)</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const recorded = partialPaymentPrompt;
+                      setPartialPayments((prev) => [
+                        ...prev,
+                        {
+                          method: recorded.method,
+                          amount: recorded.tenderedAmount,
+                          reference: recorded.reference,
+                        },
+                      ]);
+                      setPartialPaymentPrompt(null);
+                      setSelectedTenderMethod("BANK_CARD");
+                      setSelectedBankCardType("-SELECT-");
+                      setBankCardStep("SELECT_TYPE");
+                      setBankCardAmountInput(recorded.remainingBalance.toFixed(2));
+                    }}
+                    className="px-3 py-2 bg-[#D4D0C8] hover:bg-[#E2E0DC] active:bg-[#BDB8AF] text-xs font-bold text-gray-900 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] shadow flex items-center justify-center gap-1.5 cursor-pointer"
+                  >
+                    <CreditCard className="w-4 h-4 text-blue-700 shrink-0" />
+                    <span>Card / E-Wallet (F3)</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end pt-2 border-t border-gray-400">
+                <button
+                  type="button"
+                  onClick={() => setPartialPaymentPrompt(null)}
+                  className="px-4 py-1 bg-[#D4D0C8] hover:bg-[#E2E0DC] text-xs font-bold text-gray-800 border-2 border-t-white border-l-white border-r-[#404040] border-b-[#404040] cursor-pointer"
+                >
+                  Cancel / Edit Amount
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* POS Green Beveled Alert Modal */}
       <PosAlertModal alert={posAlert} onClose={() => setPosAlert(null)} />

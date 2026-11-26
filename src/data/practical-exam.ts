@@ -79,14 +79,14 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
     id: "case-open-shift",
     title: "Morning Shift Opening & Cashier Sign-In",
     customerName: "Store Supervisor",
-    customerQuote: "Good morning! Please verify the terminal date and time, reload the POS, and log in with your cashier ID (241209) to open the register.",
+    customerQuote: "Good morning! Please verify the terminal date and time, reload the POS, and log in with your POS UserName and Password to open the register.",
     difficulty: 1,
     targetSeconds: 60,
     modulesCovered: ["mod-2"],
     events: [
       {
-        say: "Verify the terminal date and time on the Start of Day screen. If correct, press Yes, close the setup dialog, and reload into User Login.",
-        note: "Cashier credentials: User ID 241209, Password default.",
+        say: "Verify the terminal date and time on the Start of Day screen. If correct, press Yes, close the setup dialog (Ctrl+Alt+C), reload into User Login (F5), and sign in with your POS credentials (check the User icon in the top-right header if needed; Demo POS UserName: 241209 / Password: 9999).",
+        note: "Cashier credentials: Use your assigned POS UserName and Password (or 241209 / 9999 in Demo Mode).",
       },
     ],
     milestones: [
@@ -349,15 +349,15 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 9. Credit Card Sale with BDO Terminal Slip
   {
     id: "case-pay-credit-card",
-    title: "Credit Card Payment with BDO POS Slip",
+    title: "Credit Card Payment with BDO Hypercom Slip",
     customerName: "Atty. Fernando Gomez",
-    customerQuote: "Charging this Parker Sonnet pen to my Visa Credit Card, please.",
+    customerQuote: "Charging this Parker Sonnet pen to my BDO Visa Credit Card, please. (Remember store SOP: 16 zeros on Swipe Card, press 'H' then 'X' for Card Holder, select 'BDO' for Credit/Sale or 'BDO EPS' for Debit, and verify today's date in Valid Until.)",
     difficulty: 2,
     targetSeconds: 70,
     modulesCovered: ["mod-8"],
     events: [
       {
-        say: "Here is my BDO Visa credit card.",
+        say: "Here is my BDO Visa credit card. (Store SOP: enter 16 zeros on Swipe Card, press 'H' then 'X' for Card Holder, select 'BDO' for Credit/Sale or 'BDO EPS' for Debit in Card Terminal/Hypercom, verify today's date in Valid Until, and copy the Auth Code & Sales Slip No.)",
         hands: [
           { sku: "505", barcode: "505", qty: 1, label: "Parker Sonnet Rollerball Pen", unitPrice: 2990.0 },
         ],
@@ -371,8 +371,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       { id: "m-f4-2", action: "GO_PAYMENT", label: "Open Choose Option", points: 5 },
       { id: "m-opt-none", action: "CHOOSE_LNQR_OPTION", expectedData: 1, label: "Select 1. None", points: 5 },
       { id: "m-f3-card", action: "PAY_CARD", label: "Press F3 Bank Card", points: 10, critical: true },
-      { id: "m-sel-cc", action: "SELECT_CARD_TYPE", expectedData: "CREDIT CARD", label: "Select CREDIT CARD", points: 15, critical: true },
-      { id: "m-confirm-cc", action: "CONFIRM_TENDER", label: "Input Slip Details & Confirm [Ok]", points: 20, critical: true },
+      { id: "m-sel-cc", action: "SELECT_CARD_TYPE", expectedData: "CREDIT CARD", label: "Select CREDIT CARD", points: 10, critical: true },
+      { id: "m-swipe-cc", action: "SWIPE_CARD", label: "Enter 16 Zeros (0000000000000000) on Swipe Card", points: 5 },
+      { id: "m-confirm-cc", action: "CONFIRM_TENDER", label: "Press H->X for Card Holder, Select BDO Terminal, Input Slip Details & Confirm [Ok]", points: 20, critical: true },
     ],
     finalChecks: {
       tenderMethod: "BANK_CARD",
@@ -382,9 +383,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 10. Mid-Sale Correction: Item Void with Manager Override
   {
     id: "case-item-void",
-    title: "Mid-Sale Item Cancellation (Item Void)",
+    title: "Mid-Sale Item Cancellation (Item Void - Customer Changed Mind)",
     customerName: "Jessica Lee",
-    customerQuote: "Wait! I changed my mind about the copy paper. Please remove it from my bill. I'll just take the notebook.",
+    customerQuote: "Wait! I changed my mind about the copy paper. Please call your Supervisor to void it from my bill - I'll just take the notebook.",
     difficulty: 2,
     targetSeconds: 75,
     modulesCovered: ["mod-4", "mod-8"],
@@ -398,7 +399,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
       {
         triggerAfterAction: "ADD_ITEM",
-        say: "Actually, please void the A4 Copy Paper (₱240). I don't have enough cash.",
+        say: "Actually, I changed my mind - please call your Supervisor/Branch Manager to void the A4 Copy Paper (₱240) using F7 Item Void.",
         tender: { kind: "CASH", amount: 100 },
       },
     ],
@@ -406,7 +407,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       { id: "m-scan-1", action: "ADD_ITEM", label: "Scan First Item", points: 5 },
       { id: "m-scan-2", action: "ADD_ITEM", label: "Scan Second Item", points: 5 },
       { id: "m-req-void", action: "ITEM_VOID", label: "Press F7 Item Void", points: 10, critical: true },
-      { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Manager Override Sign-Off", points: 15, critical: true },
+      { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Supervisor / Manager Override Sign-Off", points: 15, critical: true },
       { id: "m-sel-void-sku", action: "SCAN_VOID_SKU", expectedData: "NBS-PAP-003", label: "Select NBS-PAP-003 to Void", points: 15, critical: true },
       { id: "m-f4-1", action: "GO_PAYMENT", label: "Press F4 Payment", points: 5 },
       { id: "m-bb-cancel", action: "CONFIRM_BEST_BUY", label: "Dismiss Bonus Buy", points: 5 },
@@ -424,9 +425,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 11. Customer Leaves: Transaction Void
   {
     id: "case-trx-void",
-    title: "Customer Abandons Sale: Transaction Void",
+    title: "Customer Abandons Sale: Transaction Void (Supervisor Override)",
     customerName: "Dante Alcantara",
-    customerQuote: "Oh no! I forgot my wallet at the coffee shop! Please cancel everything, I'm so sorry!",
+    customerQuote: "Oh no! I forgot my wallet at the coffee shop! Please call your Supervisor to cancel the whole transaction (F8 Trx Void), I'm so sorry!",
     difficulty: 2,
     targetSeconds: 50,
     modulesCovered: ["mod-4"],
@@ -440,14 +441,14 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
       {
         triggerAfterAction: "ADD_ITEM",
-        say: "Never mind, cancel the whole transaction! I don't have money on me.",
+        say: "Never mind, please call your Supervisor/Branch Manager to cancel the whole transaction (F8 Trx Void)! I don't have money on me.",
       },
     ],
     milestones: [
       { id: "m-scan-1", action: "ADD_ITEM", label: "Scan Item 1", points: 5 },
       { id: "m-scan-2", action: "ADD_ITEM", label: "Scan Item 2", points: 5 },
       { id: "m-trx-void", action: "TRX_VOID", label: "Press F8 Transaction Void", points: 15, critical: true },
-      { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Manager Override Sign-Off", points: 15, critical: true },
+      { id: "m-override", action: "CONFIRM_OVERRIDE", label: "Supervisor / Manager Override Sign-Off", points: 15, critical: true },
       { id: "m-reason", action: "CONFIRM_TRX_VOID", label: "Confirm Trx Void Reason", points: 10, critical: true },
     ],
     finalChecks: {},
@@ -456,15 +457,15 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 12. PWD / Senior Citizen Statutory Discount
   {
     id: "case-discount-pwd",
-    title: "Statutory 20% PWD Discount Application",
+    title: "Statutory 20% PWD Discount Application (Supervisor Override)",
     customerName: "Corazon Aquino",
-    customerQuote: "Good morning, dear. Here is my PWD booklet and ID for my discount on this notebook. Paying cash.",
+    customerQuote: "Good morning, dear. Here is my PWD booklet and ID for my 20% discount on this notebook (apply F6 Trx Disc on the 2nd Screen first with Supervisor Override; the discounted amount will show in Payment and Receipt). Paying ₱100 cash.",
     difficulty: 2,
     targetSeconds: 70,
     modulesCovered: ["mod-5", "mod-8"],
     events: [
       {
-        say: "Here is my government-issued PWD ID (ID #PWD-2024-0091). Please apply my 20% PWD discount on the 2nd Screen (F5 Option -> F6 Trx Disc -> ZPWD) before completing the sale.",
+        say: "Here is my government-issued PWD ID (ID #PWD-2024-0091). Please call your Supervisor to apply my 20% PWD discount on the 2nd Screen (F5 Option -> F6 Trx Disc -> ZPWD) before scanning, then proceed to F4 Payment where the discounted ₱28.00 total will show.",
         hands: [
           { sku: "NBS-BK-001", barcode: "NBS-BK-001", qty: 1, label: "NBS Classic Notebook Spiral 80L", unitPrice: 35.0 },
         ],
@@ -491,9 +492,9 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 13. Suspend Sale & Recall
   {
     id: "case-suspend-recall",
-    title: "Suspend Sale (Customer Forgot Item) & Recall",
+    title: "Suspend Sale (Customer Forgot Item) & Recall (Supervisor Override)",
     customerName: "Eduardo Manalo",
-    customerQuote: "Wait, I forgot an eraser in aisle 3! Please hold my items so you can serve the customer behind me.",
+    customerQuote: "Wait, I forgot an eraser in aisle 3! Please hold my items (F9 Suspend) so you can serve the customer behind me.",
     difficulty: 2,
     targetSeconds: 70,
     modulesCovered: ["mod-5"],
@@ -510,7 +511,7 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
       },
       {
         triggerAfterAction: "CONFIRM_SUSPEND",
-        say: "I'm back with the eraser! Please recall my transaction (go to 2nd Screen -> F7 Recall, select transaction and confirm).",
+        say: "I'm back with the eraser! Please call your Supervisor to recall my transaction (go to 2nd Screen -> F7 Recall, authorize Supervisor Override, select transaction and confirm).",
       },
     ],
     milestones: [
@@ -525,15 +526,15 @@ export const PRACTICAL_CASE_POOL: PracticalExamCase[] = [
   // 14. Corporate Invoice: Transaction Comments (TIN & Company Details)
   {
     id: "case-trx-comment-tin",
-    title: "Corporate Purchase: Add Buyer TIN & Company Info",
+    title: "Corporate Purchase: Add Buyer TIN & Company Info from Customer Card",
     customerName: "Ms. Cynthia Villar (Purchaser)",
-    customerQuote: "Good day! Our office is purchasing 5 sets of copy paper. Please enter our company TIN and address on the Official Receipt.",
+    customerQuote: "Good day! Our office is purchasing copy paper. Please enter our company TIN and address from our Customer TIN / Billing Slip card into F3 Trx Comment (4th Screen).",
     difficulty: 3,
     targetSeconds: 85,
     modulesCovered: ["mod-7", "mod-8"],
     events: [
       {
-        say: "Please bill to: Prime Holdings Inc., TIN: 123-456-789-000, 150 Pioneer St. Mandaluyong.",
+        say: "Please bill to: Prime Holdings Inc., TIN: 123-456-789-000, 150 Pioneer St. Mandaluyong City (shown on the Customer TIN / Billing Slip card beside the POS when you open 4th Screen -> F3 Trx Comment).",
         hands: [
           { sku: "NBS-PAP-003", barcode: "NBS-PAP-003", qty: 1, label: "A4 Copy Paper 80gsm", unitPrice: 240.0 },
         ],

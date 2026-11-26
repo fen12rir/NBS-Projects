@@ -11,8 +11,8 @@ export function hashToken(token: string): string {
 }
 
 export function getSessionTtlSeconds(): number {
-  const days = Number(process.env.SESSION_TTL_DAYS) || 7;
-  return days * 24 * 60 * 60;
+  const hours = Number(process.env.SESSION_TTL_HOURS) || 8;
+  return Math.max(1800, Math.round(hours * 60 * 60));
 }
 
 export function isCookieSecure(): boolean {

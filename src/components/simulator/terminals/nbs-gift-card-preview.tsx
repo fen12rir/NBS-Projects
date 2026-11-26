@@ -34,7 +34,7 @@ export function NbsGiftCardPreview({
       {/* Physical NBS Gift Card Back */}
       <div
         onClick={onUseCode}
-        className={`w-full rounded-xl bg-gradient-to-br from-[#D91424] via-[#C8102E] to-[#A60B20] border border-red-400/40 shadow-xl overflow-hidden text-white flex flex-col justify-between ${
+        className={`w-full rounded-xl bg-[#C8102E] border border-red-400/40 shadow-xl overflow-hidden text-white flex flex-col justify-between ${
           onUseCode ? "cursor-pointer hover:ring-2 hover:ring-yellow-300 transition-all" : ""
         }`}
         title={onUseCode ? "Click card to fill Voucher Code into POS" : undefined}

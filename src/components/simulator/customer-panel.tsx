@@ -151,11 +151,11 @@ export function CustomerPanel({
               ? "LNQR (Redeem ₱29 Coins)"
               : "LNQR Barcode (Earn Sulit Coins: Choose Option 3)"
             : ev.shows === "PWD_ID"
-            ? "PWD ID"
+            ? "PWD ID (2nd Screen -> F6 Trx Disc -> ZPWD; Discount shows in Payment)"
             : ev.shows === "SENIOR_ID"
-            ? "Senior ID"
+            ? "Senior ID (2nd Screen -> F6 Trx Disc -> ZSEN; Discount shows in Payment)"
             : ev.shows === "TIN_INFO"
-            ? "TIN Info"
+            ? "TIN / Billing Card (4th Screen -> F3 Trx Comment -> Use Details)"
             : "Receipt"}
         </span>
       </div>
@@ -181,7 +181,7 @@ export function CustomerPanel({
           <span className="text-[11px] sm:text-xs text-gray-300 italic shrink-0">
             &ldquo;
             {currentCase.id === "case-suspend-recall" && hasSuspendedTrx
-              ? "I'm back with the eraser! Please recall my transaction: Press F5 (2nd Screen) -> F9 (Recall) -> Select and Confirm Transaction."
+              ? "I'm back with the eraser! Please recall my transaction: Press F5 (2nd Screen) -> F7 (Recall) -> Authorize Supervisor Override -> Select and Confirm Transaction."
               : currentCase.customerQuote}
             &rdquo;
           </span>
@@ -213,7 +213,7 @@ export function CustomerPanel({
             <div className="bg-amber-950/90 border border-amber-500 rounded px-2 py-0.5 flex items-center gap-x-1.5 text-amber-200 font-sans shadow-sm shrink-0 text-[11px] sm:text-xs animate-pulse">
               <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
               <span className="font-bold text-white">Customer Returned:</span>
-              <span>Press F5 (2nd Screen) &rarr; F9 (Recall) &rarr; Select transaction &amp; Confirm.</span>
+              <span>Press F5 (2nd Screen) &rarr; F7 (Recall) &rarr; Authorize Supervisor Override &rarr; Select transaction &amp; Confirm.</span>
             </div>
           ) : handedItems.length > 0 ? (
             <div className="flex items-center gap-2 shrink-0">
